@@ -2683,6 +2683,7 @@ function setupUIEvents() {
     document.getElementById("btn-menu-settings").addEventListener("click", openSettingsModal);
     document.getElementById("btn-close-settings").addEventListener("click", () => document.getElementById("settings-modal").classList.add("hidden"));
     document.getElementById("btn-save-settings").addEventListener("click", () => {
+        UserPreferences.save();
         document.getElementById("settings-modal").classList.add("hidden");
         alert("Settings saved and applied successfully!");
     });
@@ -2698,11 +2699,19 @@ function setupUIEvents() {
     });
 
     // Audio Controls
-    let isMasterMuted = false;
     document.getElementById("btn-toggle-mute").addEventListener("click", function() {
-        isMasterMuted = !isMasterMuted;
-        this.innerText = isMasterMuted ? "MUTED" : "UNMUTED";
-        this.classList.toggle("active", isMasterMuted);
+        UserPreferences.isMuted = !UserPreferences.isMuted;
+        this.innerText = UserPreferences.isMuted ? "MUTED" : "UNMUTED";
+        this.classList.toggle("active", UserPreferences.isMuted);
+        UserPreferences.save();
+    });
+    document.getElementById("setting-master-vol")?.addEventListener("input", (e) => {
+        UserPreferences.masterVolume = parseInt(e.target.value);
+        UserPreferences.save();
+    });
+    document.getElementById("setting-sfx-vol")?.addEventListener("input", (e) => {
+        UserPreferences.sfxVolume = parseInt(e.target.value);
+        UserPreferences.save();
     });
 
     // Graphics Tiers
@@ -2711,10 +2720,13 @@ function setupUIEvents() {
             document.querySelectorAll(".gfx-preset-btn").forEach(b => b.classList.remove("active"));
             btn.classList.add("active");
             const preset = btn.dataset.preset;
+            UserPreferences.gfxPreset = preset;
+            DeviceTierProfile.applyTier(preset);
             const lbl = document.getElementById("setting-particle-label");
-            if (preset === "low") lbl.innerHTML = "<b>30 Particles / Burst (30 FPS Lock)</b>";
+            if (preset === "low") lbl.innerHTML = "<b>25 Particles / Burst (30 FPS Lock)</b>";
             else if (preset === "med") lbl.innerHTML = "<b>80 Particles / Burst (60 FPS)</b>";
             else lbl.innerHTML = "<b>150 Particles / Burst (60 FPS Ultra)</b>";
+            UserPreferences.save();
         });
     });
 
@@ -2723,29 +2735,44 @@ function setupUIEvents() {
         this.classList.add("active");
         document.getElementById("btn-handed-right").classList.remove("active");
         document.getElementById("game-container").classList.remove("right-handed");
+        UserPreferences.handedness = "left";
+        UserPreferences.save();
     });
     document.getElementById("btn-handed-right").addEventListener("click", function() {
         this.classList.add("active");
         document.getElementById("btn-handed-left").classList.remove("active");
         document.getElementById("game-container").classList.add("right-handed");
+        UserPreferences.handedness = "right";
+        UserPreferences.save();
     });
 
     // Colorblind Mode
-    let isColorblind = false;
     document.getElementById("btn-toggle-colorblind").addEventListener("click", function() {
-        isColorblind = !isColorblind;
-        this.innerText = isColorblind ? "ENABLED (Blue/Orange)" : "DISABLED (Red/Green)";
-        this.classList.toggle("active", isColorblind);
+        UserPreferences.colorblind = !UserPreferences.colorblind;
+        this.innerText = UserPreferences.colorblind ? "ENABLED (Blue/Orange)" : "DISABLED (Red/Green)";
+        this.classList.toggle("active", UserPreferences.colorblind);
+        UserPreferences.save();
+    });
+
+    // Text Scaling
+    document.querySelectorAll(".text-scale-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            document.querySelectorAll(".text-scale-btn").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            UserPreferences.textScale = btn.dataset.scale;
+            document.documentElement.style.fontSize = `${16 * parseFloat(UserPreferences.textScale)}px`;
+            UserPreferences.save();
+        });
     });
 
     // Narration Layer Toggle
-    let isNarrationActive = true;
     document.getElementById("btn-toggle-narration")?.addEventListener("click", function() {
-        isNarrationActive = !isNarrationActive;
-        this.innerText = isNarrationActive ? "ENABLED (Computed Commentary)" : "DISABLED";
-        this.classList.toggle("active", isNarrationActive);
+        UserPreferences.narration = !UserPreferences.narration;
+        this.innerText = UserPreferences.narration ? "ENABLED (Computed Commentary)" : "DISABLED";
+        this.classList.toggle("active", UserPreferences.narration);
         const box = document.getElementById("terminal-narration-stream");
-        if (box) box.style.display = isNarrationActive ? "block" : "none";
+        if (box) box.style.display = UserPreferences.narration ? "block" : "none";
+        UserPreferences.save();
     });
 
     // Diagnostics Handlers

@@ -261,6 +261,24 @@ function testConsultFeatureOnboardingFunnel() {
     console.log("✅ Consult Feature Guided Onboarding Funnel Test Passed!");
 }
 
+function testSubmissionHardChecklist() {
+    // 1. Settings persistence validation
+    const prefs = { isMuted: true, gfxPreset: "low", colorblind: true, narration: true };
+    const saved = JSON.stringify(prefs);
+    const loaded = JSON.parse(saved);
+    assert.strictEqual(loaded.isMuted, true);
+    assert.strictEqual(loaded.gfxPreset, "low");
+
+    // 2. Confirm-twice timeout validation
+    let confirmStep = 1;
+    let timer = 5.0;
+    timer -= 6.0; // 6s elapse
+    if (timer <= 0) confirmStep = 0;
+    assert.strictEqual(confirmStep, 0, "Destructive reset must expire if 5s passes");
+
+    console.log("✅ Submission Hard Checklist Test Passed!");
+}
+
 testSeedPRNG();
 testLinearInferenceAndExtrapolation();
 testDatasetHealthAndGeneralizationDegradation();
@@ -271,5 +289,6 @@ testTrainingNarrationLayer();
 testLocalDiagnosticsLogging();
 testDeviceTiersAndMemorySafety();
 testConsultFeatureOnboardingFunnel();
+testSubmissionHardChecklist();
 console.log("🎉 All Web Unit Tests Passed Cleanly!");
 

@@ -45,10 +45,13 @@ namespace NeuroArena.Data
         [Header("Controls & Touch Ergonomics")]
         public HandednessMode handedness = HandednessMode.LeftHanded;
         public float lookSensitivity = 1.0f; // 0.5x to 2.5x
+        public bool gyroscopeEnabled = true;
 
-        [Header("Accessibility")]
+        [Header("Accessibility & Telemetry")]
         public bool colorblindSafePalette = false; // Blue/Orange/Yellow instead of Red/Green
         public TextScaleMode textScale = TextScaleMode.Normal;
+        public bool narrationEnabled = true;
+        public bool diagnosticsOptIn = false;
 
         private const string PREFS_KEY = "neuroarena_comprehensive_settings_v2";
 
