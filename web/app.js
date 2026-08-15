@@ -1535,6 +1535,62 @@ function setupInputListeners() {
     document.getElementById("look-zone").addEventListener("pointerdown", (e) => { isLookDragging = true; lastLookX = e.clientX; lastLookY = e.clientY; });
 }
 
+// --- 10.1 GYROSCOPE & DEVICE ORIENTATION SENSOR ---
+let gyroState = {
+    enabled: true,
+    hasSensor: false,
+    lastAlpha: null,
+    lastBeta: null,
+    lastGamma: null
+};
+
+function recenterCameraOrbit() {
+    if (playerMesh) {
+        cameraOrbit.yaw = playerMesh.rotation.y + Math.PI;
+    } else {
+        cameraOrbit.yaw = 0;
+    }
+    cameraOrbit.pitch = 0.35;
+    cameraOrbit.distance = 7.5;
+    gyroState.lastAlpha = null;
+    gyroState.lastBeta = null;
+    gyroState.lastGamma = null;
+}
+
+function initDeviceOrientationSensor() {
+    if (typeof window !== "undefined" && window.DeviceOrientationEvent) {
+        const handleOrientation = (e) => {
+            if (!gyroState.enabled || e.gamma === null || e.beta === null) return;
+            gyroState.hasSensor = true;
+
+            if (gyroState.lastGamma !== null && gyroState.lastBeta !== null) {
+                const isLandscape = window.innerWidth > window.innerHeight;
+                let dYaw = 0, dPitch = 0;
+
+                if (isLandscape) {
+                    dYaw = (e.beta - gyroState.lastBeta) * 0.015;
+                    dPitch = (e.gamma - gyroState.lastGamma) * 0.015;
+                } else {
+                    dYaw = (e.gamma - gyroState.lastGamma) * 0.015;
+                    dPitch = (e.beta - gyroState.lastBeta) * 0.015;
+                }
+
+                // Threshold filter to avoid sensor jitter
+                if (Math.abs(dYaw) > 0.002) cameraOrbit.yaw -= dYaw;
+                if (Math.abs(dPitch) > 0.002) {
+                    cameraOrbit.pitch = Math.max(0.1, Math.min(1.2, cameraOrbit.pitch + dPitch));
+                }
+            }
+
+            gyroState.lastAlpha = e.alpha;
+            gyroState.lastBeta = e.beta;
+            gyroState.lastGamma = e.gamma;
+        };
+
+        window.addEventListener("deviceorientation", handleOrientation, true);
+    }
+}
+
 function updateGame(deltaTime) {
     let moveX = joystickInput.x, moveZ = joystickInput.y;
     if (inputKeys.a) moveX -= 1; if (inputKeys.d) moveX += 1;
@@ -2554,6 +2610,26 @@ function setupUIEvents() {
         runDatasetShiftSimulation(typeA, typeB, ratioA);
     });
 
+    // Recenter Camera Orbit Controls (HUD & Settings)
+    document.getElementById("btn-hud-recenter")?.addEventListener("click", () => {
+        recenterCameraOrbit();
+        playVictoryPassSFX();
+    });
+
+    document.getElementById("btn-settings-recenter")?.addEventListener("click", () => {
+        recenterCameraOrbit();
+        playVictoryPassSFX();
+    });
+
+    document.getElementById("btn-toggle-gyro")?.addEventListener("click", () => {
+        gyroState.enabled = !gyroState.enabled;
+        const btn = document.getElementById("btn-toggle-gyro");
+        if (btn) {
+            btn.innerText = gyroState.enabled ? "ENABLED (Blended Look)" : "DISABLED (Touch Only)";
+            btn.style.color = gyroState.enabled ? "#4ade80" : "#94a3b8";
+        }
+    });
+
     // Seed Randomizer
     document.getElementById("btn-random-seed").addEventListener("click", () => {
         const rnd = generateRandomSeed();
@@ -2621,6 +2697,7 @@ window.addEventListener("DOMContentLoaded", () => {
     initializePlaythroughSeed("NEURO-8842");
     generatePPMIEmbeddings();
     init3DWorld();
+    initDeviceOrientationSensor();
     loadModelVault();
     loadProfileSlots();
     initSplashScreen();

@@ -27,14 +27,25 @@ namespace NeuroArena.Core
         [SerializeField] private float rotationSmoothSpeed = 18f;
 
         [Header("Collision Avoidance")]
-        [SerializeField] private LayerMask collisionLayers = ~0;
-        [SerializeField] private float collisionRadius = 0.25f;
-        [SerializeField] private float collisionBuffer = 0.2f;
+        [Header("Gyroscope & Motion Sensors")]
+        [SerializeField] private bool enableGyroLook = true;
+        [SerializeField] private float gyroSensitivityX = 1.6f;
+        [SerializeField] private float gyroSensitivityY = 1.3f;
 
+        public static CameraController Instance { get; private set; }
+        public bool IsGyroEnabled => enableGyroLook && hasGyroHardware;
+        public bool HasGyroHardware => hasGyroHardware;
+
+        private bool hasGyroHardware = false;
         private float yaw = 0f;
         private float pitch = 22f;
         private float currentDistance;
         private Vector3 currentVelocity;
+
+        private void Awake()
+        {
+            if (Instance == null) Instance = this;
+        }
 
         private void Start()
         {
@@ -42,6 +53,14 @@ namespace NeuroArena.Core
             if (target != null)
             {
                 yaw = target.eulerAngles.y;
+            }
+
+            // Check hardware gyroscope support
+            hasGyroHardware = SystemInfo.supportsGyroscope;
+            if (hasGyroHardware && enableGyroLook)
+            {
+                Input.gyro.enabled = true;
+                Input.gyro.updateInterval = 0.016f; // 60 Hz sensor polling
             }
         }
 
@@ -55,21 +74,37 @@ namespace NeuroArena.Core
 
         private void HandleOrbitInput()
         {
-            Vector2 lookInput = Vector2.zero;
+            Vector2 touchLookInput = Vector2.zero;
 
-            // 1. Read touch look zone delta
+            // 1. Read touch look zone delta (Fine-tuning)
             if (TouchLookZone.Instance != null && TouchLookZone.Instance.LookDelta.sqrMagnitude > 0.001f)
             {
-                lookInput = TouchLookZone.Instance.LookDelta;
+                touchLookInput = TouchLookZone.Instance.LookDelta;
             }
-            // 2. Editor / Mouse Drag Fallback (Right Click or Left Click Drag on right side)
+            // 2. Editor / Mouse Drag Fallback
             else if (Input.GetMouseButton(1) || (Input.GetMouseButton(0) && Input.mousePosition.x > Screen.width * 0.5f))
             {
-                lookInput = new Vector2(Input.GetAxis("Mouse X") * 2.5f, -Input.GetAxis("Mouse Y") * 2.5f);
+                touchLookInput = new Vector2(Input.GetAxis("Mouse X") * 2.5f, -Input.GetAxis("Mouse Y") * 2.5f);
             }
 
-            yaw += lookInput.x * lookSensitivityX;
-            pitch -= lookInput.y * lookSensitivityY;
+            // 3. Read Hardware Gyroscope (Broad orientation)
+            float gyroDeltaYaw = 0f;
+            float gyroDeltaPitch = 0f;
+
+            if (hasGyroHardware && enableGyroLook && Input.gyro.enabled)
+            {
+                Vector3 rotRate = Input.gyro.rotationRateUnbiased;
+                // In landscape mode: rotRate.y is horizontal yaw, rotRate.x is vertical pitch
+                if (Mathf.Abs(rotRate.x) > 0.02f || Mathf.Abs(rotRate.y) > 0.02f)
+                {
+                    gyroDeltaYaw = -rotRate.y * gyroSensitivityX * 45f * Time.deltaTime;
+                    gyroDeltaPitch = -rotRate.x * gyroSensitivityY * 45f * Time.deltaTime;
+                }
+            }
+
+            // 4. Concurrently Blend Gyro + Touch Look
+            yaw += (touchLookInput.x * lookSensitivityX) + gyroDeltaYaw;
+            pitch -= (touchLookInput.y * lookSensitivityY) - gyroDeltaPitch;
             pitch = Mathf.Clamp(pitch, minPitchAngle, maxPitchAngle);
         }
 
@@ -95,6 +130,34 @@ namespace NeuroArena.Core
             // Smooth damping
             transform.position = Vector3.Lerp(transform.position, finalPosition, Time.deltaTime * positionSmoothSpeed);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * rotationSmoothSpeed);
+        }
+
+        /// <summary>
+        /// Recenter/Calibrate camera facing directly behind player forward heading.
+        /// </summary>
+        public void RecenterCamera()
+        {
+            if (target != null)
+            {
+                yaw = target.eulerAngles.y;
+            }
+            pitch = 22f;
+            currentDistance = defaultDistance;
+        }
+
+        public void SetGyroEnabled(bool enabled)
+        {
+            enableGyroLook = enabled;
+            if (hasGyroHardware)
+            {
+                Input.gyro.enabled = enabled;
+            }
+        }
+
+        public void SetGyroSensitivity(float multiplier)
+        {
+            gyroSensitivityX = 1.6f * multiplier;
+            gyroSensitivityY = 1.3f * multiplier;
         }
 
         public void SetTarget(Transform newTarget)

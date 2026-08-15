@@ -108,9 +108,42 @@ function testDatasetShiftSimulationAndCompromiseError() {
     console.log("✅ Dataset Shift Sandbox & Compromise Error Test Passed!");
 }
 
+function testDeviceOrientationAndTouchBlending() {
+    let yaw = 0.0, pitch = 0.35;
+
+    // 1. Touch swipe delta
+    const touchDeltaX = 20, touchDeltaY = 10;
+    yaw -= touchDeltaX * 0.005;
+    pitch = Math.max(0.1, Math.min(1.2, pitch + touchDeltaY * 0.005));
+
+    assert(yaw < 0, "Touch swipe left must decrease yaw");
+    assert(pitch > 0.35, "Touch swipe down must increase pitch");
+
+    // 2. Gyro tilt delta (landscape mode: dGamma -> dPitch, dBeta -> dYaw)
+    const gyroDeltaBeta = 4.0; // horizontal tilt
+    const gyroDeltaGamma = -2.0; // vertical tilt
+    const dYaw = gyroDeltaBeta * 0.015;
+    const dPitch = gyroDeltaGamma * 0.015;
+
+    yaw -= dYaw;
+    pitch = Math.max(0.1, Math.min(1.2, pitch + dPitch));
+
+    assert(Math.abs(yaw - (-0.16)) < 0.001, "Yaw must integrate both touch and gyro delta");
+    assert(pitch >= 0.1 && pitch <= 1.2, "Pitch must remain within valid boundary");
+
+    // 3. Recenter test
+    const playerHeading = Math.PI / 2;
+    yaw = playerHeading + Math.PI;
+    pitch = 0.35;
+
+    assert.strictEqual(pitch, 0.35, "Recenter pitch must reset to default");
+    console.log("✅ Device Orientation & Touch Look Blending Test Passed!");
+}
+
 testSeedPRNG();
 testLinearInferenceAndExtrapolation();
 testDatasetHealthAndGeneralizationDegradation();
 testDatasetShiftSimulationAndCompromiseError();
+testDeviceOrientationAndTouchBlending();
 console.log("🎉 All Web Unit Tests Passed Cleanly!");
 

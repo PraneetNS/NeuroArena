@@ -226,7 +226,7 @@ namespace NeuroArena.UI
 
         private void DrawControlsTab(float scale)
         {
-            GUILayout.Label("<b>TOUCH SCHEME & ERGONOMICS:</b>", sectionHeaderStyle);
+            GUILayout.Label("<b>TOUCH SCHEME, SENSORS & ERGONOMICS:</b>", sectionHeaderStyle);
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("🕹️ <b>Handedness:</b>", labelStyle, GUILayout.Width(130 * scale));
@@ -240,9 +240,39 @@ namespace NeuroArena.UI
             }
             GUILayout.EndHorizontal();
 
-            GUILayout.Space(8 * scale);
-            GUILayout.Label($"👁️ <b>Look Sensitivity:</b> {settings.lookSensitivity:F1}x", labelStyle);
+            GUILayout.Space(6 * scale);
+            GUILayout.Label($"👁️ <b>Touch Look Sensitivity:</b> {settings.lookSensitivity:F1}x", labelStyle);
             settings.lookSensitivity = GUILayout.HorizontalSlider(settings.lookSensitivity, 0.5f, 2.5f);
+
+            GUILayout.Space(10 * scale);
+            GUILayout.Label("<b>🧭 GYROSCOPE & MOTION ORIENTATION (ANDROID):</b>", subHeaderStyle);
+
+            bool hasGyro = CameraController.Instance != null && CameraController.Instance.HasGyroHardware;
+            bool isGyroOn = CameraController.Instance != null && CameraController.Instance.IsGyroEnabled;
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("🧭 <b>Gyro Look:</b>", labelStyle, GUILayout.Width(130 * scale));
+            string gyroBtnLabel = isGyroOn ? "<color=#4ADE80>ENABLED (Blended Look)</color>" : (hasGyro ? "<color=#94A3B8>DISABLED (Touch Only)</color>" : "<color=#F87171>NO SENSOR (Touch Fallback)</color>");
+            if (GUILayout.Button(gyroBtnLabel, buttonStyle, GUILayout.Height(28 * scale)))
+            {
+                if (CameraController.Instance != null)
+                {
+                    CameraController.Instance.SetGyroEnabled(!isGyroOn);
+                }
+            }
+            GUILayout.EndHorizontal();
+
+            GUILayout.Space(8 * scale);
+            GUI.color = new Color(0.2f, 0.85f, 1f);
+            if (GUILayout.Button("🎯 <b>RECENTER / CALIBRATE CAMERA</b>", buttonStyle, GUILayout.Height(34 * scale)))
+            {
+                if (CameraController.Instance != null)
+                {
+                    CameraController.Instance.RecenterCamera();
+                }
+            }
+            GUI.color = Color.white;
+            GUILayout.Label("<color=#94A3B8><i>Gyro handles broad physical orientation; touch swipe provides fine-tuning.</i></color>", labelStyle);
         }
 
         private void DrawAccessibilityTab(float scale)

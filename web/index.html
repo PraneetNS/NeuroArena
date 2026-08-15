@@ -135,6 +135,7 @@
                 <button id="btn-toggle-drawer" class="hud-icon-btn glow-cyan" title="Inventory Drawer">🎒</button>
                 <button id="btn-data-inspector" class="hud-icon-btn glow-amber" title="Dataset Inspector">📊</button>
                 <button id="btn-leaderboard" class="hud-icon-btn glow-green" title="Leaderboards">🏆</button>
+                <button id="btn-hud-recenter" class="hud-icon-btn" title="Recenter Camera">🎯</button>
                 <button id="btn-open-settings" class="hud-icon-btn" title="Settings">⚙️</button>
             </div>
 
@@ -282,6 +283,14 @@
                     <div class="setting-row">
                         <label>👁️ Look Sensitivity:</label>
                         <input type="range" id="setting-look-sens" min="5" max="25" value="10" class="cyber-slider">
+                    </div>
+                    <div class="setting-row">
+                        <label>🧭 Gyroscope Look (Device Orientation):</label>
+                        <button id="btn-toggle-gyro" class="pill-btn">ENABLED (Blended Look)</button>
+                    </div>
+                    <div class="setting-row">
+                        <label>🎯 Camera Alignment:</label>
+                        <button id="btn-settings-recenter" class="action-btn glow-cyan" style="min-height:36px;">🎯 RECENTER / CALIBRATE CAMERA</button>
                     </div>
                 </div>
 
