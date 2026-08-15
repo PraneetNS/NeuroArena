@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NeuroArena: Gradients of the Wild</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@400;600;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- Three.js for 3D WebGL Rendering -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- GSAP for High-Performance UI Motion Layer -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+</head>
+<body>
+    <div id="game-container">
+        <!-- 1. ANIMATED SPLASH SCREEN (2.5S SKIPPABLE) -->
+        <div id="splash-screen" class="splash-overlay">
+            <div class="splash-content">
+                <h1 class="splash-logo">⚡ NEURO-ARENA</h1>
+                <div class="splash-sublogo">GRADIENTS OF THE WILD  |  3D MACHINE LEARNING SIMULATION</div>
+                <div class="splash-sweep-bar"></div>
+                <div class="splash-prompt">Tap anywhere or press any key to skip</div>
+            </div>
+        </div>
+
+        <!-- 2. FIRST-LAUNCH PROFILE CREATION MODAL -->
+        <div id="first-launch-profile-modal" class="modal-overlay hidden">
+            <div class="glass-modal profile-creation-card">
+                <div class="modal-header">
+                    <h2>🌟 CREATE YOUR ARCHITECT PROFILE</h2>
+                </div>
+                <div class="profile-creation-body">
+                    <label>Choose Architect Codename:</label>
+                    <input type="text" id="input-architect-name" value="Ada-Architect" class="cyber-input" spellcheck="false">
+
+                    <label style="margin-top: 12px;">Select Avatar Matrix:</label>
+                    <div class="avatar-grid">
+                        <button class="avatar-btn active" data-avatar="🤖" title="ADA Companion Drone">🤖</button>
+                        <button class="avatar-btn" data-avatar="🧠" title="Cybernetic Synapse">🧠</button>
+                        <button class="avatar-btn" data-avatar="⚡" title="Tensor Knight">⚡</button>
+                        <button class="avatar-btn" data-avatar="🌌" title="Star Architect">🌌</button>
+                        <button class="avatar-btn" data-avatar="🔮" title="Quantum Sage">🔮</button>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn-save-first-profile" class="action-btn glow-cyan">🚀 Initialize Profile & Enter Arena</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2.5 GLOBAL ERROR BOUNDARY CRASH RECOVERY MODAL -->
+        <div id="error-boundary-modal" class="modal-overlay hidden" style="z-index: 9999;">
+            <div class="glass-modal error-recovery-card">
+                <div class="modal-header">
+                    <h2>⚠️ SOMETHING WENT WRONG</h2>
+                </div>
+                <div class="error-recovery-body">
+                    <p style="font-size: 13px; line-height: 1.5; color: #f1f5f9;">
+                        An unexpected simulation exception occurred, but <b>your progress, model weights, and profile data were safely preserved</b> in emergency backup storage.
+                    </p>
+                    <div class="error-log-box" id="error-log-snippet">Error: WebGL context restore / syntax boundary</div>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn-error-reload" class="action-btn glow-cyan">🔄 Reload Simulation</button>
+                    <button id="btn-error-dismiss" class="action-btn">✕ Dismiss & Continue</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. BIOME LOADING SCREEN (WITH ROTATING CODEX FACTS & MINIMUM TIMER) -->
+        <div id="loading-screen" class="loading-overlay hidden">
+            <div class="loading-content">
+                <div class="loading-biome-title" id="loading-biome-name">⚡ CALIBRATING BIOME 1: THE LINEAR STEPPES</div>
+                <div class="loading-bar-container">
+                    <div id="loading-progress-fill" class="loading-bar-fill" style="width: 0%;"></div>
+                </div>
+                <div class="loading-status-row">
+                    <span id="loading-status-text">INITIALIZING WEIGHTS...</span>
+                    <span id="loading-pct-text">0%</span>
+                </div>
+                <div class="loading-tip-card" id="loading-codex-tip">
+                    💡 <b>CODEX FACT:</b> Gradient Descent steps downhill along the negative gradient: w ← w - η·∇J.
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen Flash Overlay -->
+        <div id="screen-flash-overlay"></div>
+
+        <!-- 3D Canvas Container -->
+        <canvas id="three-canvas"></canvas>
+
+        <!-- In-Game HUD Layer (Optimized for Motion Clarity) -->
+        <div id="hud-layer" class="ui-layer">
+            <!-- 0. FLOATING NON-BLOCKING MASCOT SPEECH BUBBLE -->
+            <div id="mascot-bubble" class="glass-mascot-bubble hidden">
+                <div class="mascot-avatar">🤖</div>
+                <div class="mascot-content">
+                    <div class="mascot-name">ADA [AI COMPANION]</div>
+                    <div id="mascot-text" class="mascot-dialogue">Welcome to NeuroArena, Architect!</div>
+                </div>
+            </div>
+
+            <!-- 1. TOP-CENTER PRIMARY OBJECTIVE & THRESHOLD BANNER -->
+            <div id="objective-banner" class="glass-objective-card">
+                <div class="objective-header">
+                    <span class="objective-icon">🎯</span>
+                    <span id="objective-title" class="objective-text">HARVEST CRYSTALS & CALIBRATE TERMINAL</span>
+                </div>
+                <div class="objective-progress-bar">
+                    <div id="objective-progress-fill" class="progress-fill" style="width: 0%;"></div>
+                </div>
+                <div class="objective-footer">
+                    <span id="objective-threshold">TARGET: <b>MSE ≤ 0.10</b></span>
+                    <span id="objective-status" class="status-amber"><b>0/18 COLLECTED</b></span>
+                </div>
+            </div>
+
+            <!-- 2. TOP-RIGHT CONTROLS (MINIMUM 44x44dp TOUCH TARGETS) -->
+            <div id="top-right-hud" class="hud-controls-group">
+                <button id="btn-open-models-hud" class="hud-icon-btn glow-cyan" title="My Models Archive">💾</button>
+                <button id="btn-open-profile-hud" class="hud-icon-btn glow-cyan" title="Architect Profile"><span id="hud-avatar-icon">🤖</span></button>
+                <button id="btn-open-codex" class="hud-icon-btn glow-cyan" title="ML Codex / Journal">📖</button>
+                <button id="btn-daily-challenge" class="hud-icon-btn glow-amber" title="Daily Seeded Challenge">📅</button>
+                <button id="btn-toggle-drawer" class="hud-icon-btn glow-cyan" title="Inventory Drawer">🎒</button>
+                <button id="btn-data-inspector" class="hud-icon-btn glow-amber" title="Dataset Inspector">📊</button>
+                <button id="btn-leaderboard" class="hud-icon-btn glow-green" title="Leaderboards">🏆</button>
+                <button id="btn-open-settings" class="hud-icon-btn" title="Settings">⚙️</button>
+            </div>
+
+            <!-- 3. EXPANDABLE INVENTORY DRAWER WITH LIVE DATASET STATS -->
+            <div id="inventory-drawer" class="glass-drawer hidden">
+                <div class="drawer-header">🎒 COLLECTED RESOURCES</div>
+                <div class="drawer-row"><span class="icon cyan">◆</span> Feature Crystals (X): <b id="drawer-x-count">0</b></div>
+                <div class="drawer-row"><span class="icon amber">▲</span> Target Shards (Y): <b id="drawer-y-count">0</b></div>
+                <div class="drawer-row"><span class="icon green">●</span> Paired Datasets (N): <b id="drawer-n-count">0</b></div>
+
+                <div class="drawer-divider"></div>
+                <div class="drawer-header cyan-text">📊 LIVE DATASET STATS</div>
+                <div class="stats-card-mini">
+                    <div class="drawer-stat-row">
+                        <span>Sample Size (N):</span>
+                        <b id="stats-sample-count" class="green-text">0</b>
+                    </div>
+                    <div id="stats-class-balance-section" class="hidden">
+                        <div class="drawer-stat-row">
+                            <span>Class Balance:</span>
+                            <span id="stats-class-ratio" class="stat-mono">0: 0% | 1: 0%</span>
+                        </div>
+                        <div class="class-balance-track">
+                            <div id="stats-class-balance-fill" class="class-balance-bar" style="width: 50%;"></div>
+                        </div>
+                    </div>
+                    <div id="stats-continuous-section">
+                        <div class="drawer-stat-row">
+                            <span>Feature X Range:</span>
+                            <b id="stats-range-x" class="stat-mono text-cyan">[0.0, 0.0]</b>
+                        </div>
+                        <div class="drawer-stat-row">
+                            <span>Target Y Range:</span>
+                            <b id="stats-range-y" class="stat-mono text-amber">[0.0, 0.0]</b>
+                        </div>
+                        <div class="drawer-stat-row">
+                            <span>Mean & Std (μ ± σ):</span>
+                            <b id="stats-mean-std-x" class="stat-mono">X: 0.0 ± 0.0</b>
+                        </div>
+                        <div class="drawer-stat-row">
+                            <span>Target (μ ± σ):</span>
+                            <b id="stats-mean-std-y" class="stat-mono">Y: 0.0 ± 0.0</b>
+                        </div>
+                        <div class="drawer-stat-row" id="stats-pearson-row">
+                            <span>Pearson r(X, Y):</span>
+                            <b id="stats-pearson-val" class="stat-mono text-green">+0.00</b>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. BOTTOM-RIGHT BIOME RADAR & WAYPOINT TRACKER -->
+            <div id="biome-radar" class="glass-radar">
+                <canvas id="radar-canvas" width="80" height="80"></canvas>
+                <div class="radar-label" id="radar-biome-label">LAB ➔</div>
+            </div>
+
+            <!-- In-World Proximity Action Prompt -->
+            <div id="lab-proximity-prompt" class="hidden">
+                <button id="btn-open-terminal" class="pulse-glow-btn">⚡ OPEN FORMULA TERMINAL</button>
+                <div class="prompt-sub">Press [E] or Tap to calibrate model</div>
+            </div>
+
+            <!-- Mobile Touch Controls -->
+            <div id="touch-controls">
+                <div id="joystick-zone"><div id="joystick-base"><div id="joystick-stick"></div></div></div>
+                <div id="look-zone"></div>
+            </div>
+        </div>
+
+        <!-- Comprehensive Settings Modal -->
+        <div id="settings-modal" class="modal-overlay hidden">
+            <div class="glass-modal settings-modal-card">
+                <div class="modal-header">
+                    <h2>⚙️ SETTINGS & ACCESSIBILITY</h2>
+                    <button id="btn-close-settings" class="close-btn">✕</button>
+                </div>
+                <!-- Settings Tabs -->
+                <div class="settings-tabs-row">
+                    <button class="settings-tab-btn active" data-tab="tab-audio">🔊 Audio</button>
+                    <button class="settings-tab-btn" data-tab="tab-graphics">📱 Graphics</button>
+                    <button class="settings-tab-btn" data-tab="tab-controls">🎮 Controls</button>
+                    <button class="settings-tab-btn" data-tab="tab-access">👁️ Access</button>
+                    <button class="settings-tab-btn" data-tab="tab-reset">⚠️ Reset</button>
+                </div>
+
+                <div class="settings-tab-pane" id="tab-audio">
+                    <div class="setting-row">
+                        <label>🔊 Master Volume:</label>
+                        <input type="range" id="setting-master-vol" min="0" max="100" value="85" class="cyber-slider">
+                    </div>
+                    <div class="setting-row">
+                        <label>⚡ SFX Synthesis Volume:</label>
+                        <input type="range" id="setting-sfx-vol" min="0" max="100" value="90" class="cyber-slider">
+                    </div>
+                    <div class="setting-row">
+                        <label>🔇 Master Audio Mute:</label>
+                        <button id="btn-toggle-mute" class="pill-btn">UNMUTED</button>
+                    </div>
+                </div>
+
+                <div class="settings-tab-pane hidden" id="tab-graphics">
+                    <div class="setting-row">
+                        <label>📱 Graphics Preset:</label>
+                        <div class="btn-group">
+                            <button class="gfx-preset-btn pill-btn" data-preset="low">Low (30 FPS)</button>
+                            <button class="gfx-preset-btn pill-btn" data-preset="med">Medium</button>
+                            <button class="gfx-preset-btn pill-btn active" data-preset="high">High (60 FPS)</button>
+                        </div>
+                    </div>
+                    <div class="setting-row">
+                        <label>🎆 Particle Density Limit:</label>
+                        <span id="setting-particle-label" class="cyan-text"><b>80 Particles / Burst</b></span>
+                    </div>
+                </div>
+
+                <div class="settings-tab-pane hidden" id="tab-controls">
+                    <div class="setting-row">
+                        <label>🕹️ Touch Handedness:</label>
+                        <div class="btn-group">
+                            <button id="btn-handed-left" class="pill-btn active">Left-Handed</button>
+                            <button id="btn-handed-right" class="pill-btn">Right-Handed</button>
+                        </div>
+                    </div>
+                    <div class="setting-row">
+                        <label>👁️ Look Sensitivity:</label>
+                        <input type="range" id="setting-look-sens" min="5" max="25" value="10" class="cyber-slider">
+                    </div>
+                </div>
+
+                <div class="settings-tab-pane hidden" id="tab-access">
+                    <div class="setting-row">
+                        <label>🎨 Colorblind-Safe Palette:</label>
+                        <button id="btn-toggle-colorblind" class="pill-btn">DISABLED (Red/Green)</button>
+                    </div>
+                    <div class="setting-row">
+                        <label>🔤 UI Text Scaling:</label>
+                        <div class="btn-group">
+                            <button class="text-scale-btn pill-btn active" data-scale="1.0">100%</button>
+                            <button class="text-scale-btn pill-btn" data-scale="1.25">125%</button>
+                            <button class="text-scale-btn pill-btn" data-scale="1.5">150%</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-tab-pane hidden" id="tab-reset">
+                    <p style="font-size:11px; color:#f87171; line-height:1.4;">Warning: Resetting will erase all save slots, profile records, and model vaults.</p>
+                    <div style="margin-top:14px;">
+                        <button id="btn-settings-reset-progress" class="action-btn" style="background:#ef4444; border-color:#f87171;">🗑️ Reset All Progress & Profiles</button>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button id="btn-save-settings" class="action-btn glow-cyan">💾 Save Preferences</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 'My Models' Gallery Modal -->
+        <div id="my-models-modal" class="modal-overlay hidden">
+            <div class="glass-modal my-models-modal-container">
+                <div class="modal-header">
+                    <h2>💾 MY MODELS :: TRAINED ARCHITECT ARCHIVE & VAULT</h2>
+                    <button id="btn-close-models" class="close-btn">✕</button>
+                </div>
+                <div class="models-modal-body">
+                    <div class="models-gallery-header">
+                        <span>Select a successfully trained model to inspect its frozen training graph and parameters:</span>
+                    </div>
+                    <div class="models-grid" id="models-cards-grid"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Read-Only Model Inspector Modal -->
+        <div id="model-inspector-modal" class="modal-overlay hidden">
+            <div class="glass-modal model-inspector-container">
+                <div class="modal-header">
+                    <h2>🔍 MODEL INSPECTOR :: READ-ONLY PARAMETER & GRAPH VIEW</h2>
+                    <button id="btn-close-inspector" class="close-btn">✕</button>
+                </div>
+                <div class="inspector-modal-body">
+                    <div class="inspector-header-box">
+                        <h3 id="inspector-model-title">Adam MLP Classifier</h3>
+                        <div class="inspector-meta" id="inspector-meta-text">Biome 5: Deep Citadel | Seed #NEURO-8842</div>
+                    </div>
+                    <div class="inspector-stats-row">
+                        <div class="stat-pill"><span class="label">Test Accuracy:</span> <b id="inspector-acc-val" class="text-green">94.2%</b></div>
+                        <div class="stat-pill"><span class="label">Final Loss:</span> <b id="inspector-loss-val" class="text-amber">J = 0.0245</b></div>
+                        <div class="stat-pill"><span class="label">Boss Status:</span> <b class="text-green">🏆 Conquered</b></div>
+                    </div>
+                    <div class="inspector-graph-card">
+                        <div class="graph-card-title">📉 FROZEN LOSS CURVE OSCILLOSCOPE SNAPSHOT</div>
+                        <canvas id="inspector-canvas" width="460" height="180"></canvas>
+                    </div>
+                    <div class="inspector-params-box">
+                        <div class="params-label">⚙️ WEIGHTS & HYPERPARAMETERS:</div>
+                        <pre id="inspector-params-text" class="params-pre"></pre>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn-back-to-gallery" class="action-btn glow-cyan">⬅ Back to Models Gallery</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Player Profile Modal (Visual Stat Cards) -->
+        <div id="profile-modal" class="modal-overlay hidden">
+            <div class="glass-modal profile-modal-container">
+                <div class="modal-header">
+                    <h2>👤 ARCHITECT PROFILE & LIFETIME ML RECORD</h2>
+                    <button id="btn-close-profile" class="close-btn">✕</button>
+                </div>
+                <div class="profile-modal-body">
+                    <div class="slots-bar">
+                        <span class="slot-label">Save Slot:</span>
+                        <button class="slot-btn active" data-slot="0">Slot 1 (Active)</button>
+                        <button class="slot-btn" data-slot="1">Slot 2</button>
+                        <button class="slot-btn" data-slot="2">Slot 3</button>
+                    </div>
+
+                    <div class="profile-header-card">
+                        <div class="profile-avatar-large" id="profile-card-avatar">🤖</div>
+                        <div class="profile-info-col">
+                            <h3 id="profile-card-name">Ada-Architect</h3>
+                            <div class="profile-meta-row">
+                                <span>⏱️ Playtime: <b id="profile-card-playtime">12m 45s</b></span>
+                                <span>📅 Joined: <b id="profile-card-date">2026-08-15</b></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="profile-stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-card-title">🗺️ BIOME MASTERY</div>
+                            <div class="stat-card-value text-green" id="profile-stat-biomes">1/6</div>
+                            <div class="stat-card-sub">Boss Gates Conquered</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-title">🏁 GRAND PRIX WIN-RATE</div>
+                            <div class="stat-card-value text-amber" id="profile-stat-grandprix">100.0%</div>
+                            <div class="stat-card-sub" id="profile-stat-races">1 Wins / 1 Races</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-title">📅 DAILY STREAK</div>
+                            <div class="stat-card-value text-cyan" id="profile-stat-streak">1 Day</div>
+                            <div class="stat-card-sub" id="profile-stat-best-streak">Best Streak: 1 Day</div>
+                        </div>
+                    </div>
+
+                    <div class="biome-records-card">
+                        <div class="records-title">📊 BEST RECORDED METRICS PER BIOME:</div>
+                        <div class="records-list" id="profile-biome-records-list"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Codex / ML Journal Modal -->
+        <div id="codex-modal" class="modal-overlay hidden">
+            <div class="glass-modal codex-modal-container">
+                <div class="modal-header">
+                    <h2>📖 CODEX & MACHINE LEARNING JOURNAL</h2>
+                    <button id="btn-close-codex" class="close-btn">✕</button>
+                </div>
+                <div class="codex-split-view">
+                    <div class="codex-sidebar" id="codex-sidebar-list"></div>
+                    <div class="codex-detail" id="codex-detail-pane">
+                        <h3 id="codex-card-title">Select an unlocked concept card</h3>
+                        <div class="codex-section">
+                            <div class="codex-label">1. EXACT MATHEMATICAL FORMULATION:</div>
+                            <pre class="codex-math-box" id="codex-math-content"></pre>
+                        </div>
+                        <div class="codex-section">
+                            <div class="codex-label">2. INTUITIVE PLAIN-ENGLISH CONCEPT:</div>
+                            <p id="codex-plain-content"></p>
+                        </div>
+                        <div class="codex-section">
+                            <div class="codex-label">3. REAL-WORLD AI APPLICATIONS:</div>
+                            <p id="codex-apps-content"></p>
+                        </div>
+                        <div class="codex-skin-badge" id="codex-skin-badge">🎨 Mastery Cosmetic: Obsidian Gradient</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Boss Replay Stat Card Modal -->
+        <div id="replay-card-modal" class="modal-overlay hidden">
+            <div class="glass-modal replay-card-container">
+                <div class="modal-header">
+                    <h2>🎴 BOSS DEFEAT & REPLAY STAT CARD</h2>
+                    <button id="btn-close-replay-card" class="close-btn">✕</button>
+                </div>
+                <div class="card-export-wrapper">
+                    <canvas id="stat-card-canvas" width="480" height="280"></canvas>
+                </div>
+                <div class="card-actions-row">
+                    <button id="btn-download-card" class="action-btn glow-cyan">💾 Download Image Card</button>
+                    <button id="btn-copy-card" class="action-btn glow-amber">📋 Copy Card Data</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Leaderboard Modal -->
+        <div id="leaderboard-modal" class="modal-overlay hidden">
+            <div class="glass-modal">
+                <div class="modal-header">
+                    <h2>🏆 ASYNC GHOST & DAILY LEADERBOARD (HELD-OUT TEST SET)</h2>
+                    <button id="btn-close-leaderboard" class="close-btn">✕</button>
+                </div>
+                <div class="table-container">
+                    <table class="tree-split-table">
+                        <thead><tr><th>Rank</th><th>Model / Architect</th><th>Held-Out Accuracy</th><th>Seed</th></tr></thead>
+                        <tbody id="leaderboard-rows">
+                            <tr><td>🥇 #1</td><td class="cyan-text">You (5-Tree Bagging Party)</td><td class="green-text"><b>93.3%</b></td><td>#NEURO-8842</td></tr>
+                            <tr><td>🥈 #2</td><td class="cyan-text">Grandmaster Ada (Adam MLP)</td><td class="green-text"><b>90.0%</b></td><td>#NEURO-8842</td></tr>
+                            <tr><td>🥉 #3</td><td class="cyan-text">Ghost Overfitter-X (Depth=8)</td><td class="fail-text"><b>66.7%</b></td><td>#NEURO-8842</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dataset Inspector 2.0 Modal -->
+        <div id="dataset-modal" class="modal-overlay hidden">
+            <div class="glass-modal dataset-inspector-modal">
+                <div class="modal-header">
+                    <h2>📊 DATASET INSPECTOR 2.0 :: MODEL INTERPRETABILITY</h2>
+                    <button id="btn-close-data-modal" class="close-btn">✕</button>
+                </div>
+                <div class="stats-summary" id="dataset-stats-summary">
+                    🧬 Pearson r(X, Y) = <b>+0.892</b> | Samples: <b>36</b> | Seed: <b>#NEURO-8842</b>
+                </div>
+
+                <div class="inspector-scroll-area">
+                    <div class="inspector-section">
+                        <div class="inspector-section-title">1. PERMUTATION FEATURE IMPORTANCE (SHUFFLE ACCURACY DROP)</div>
+                        <div id="importance-bars-container" class="importance-bars-list"></div>
+                    </div>
+                    <div class="inspector-section">
+                        <div class="inspector-section-title">2. DECISION TREE PER-SPLIT READOUT (MEAN DECREASE IN IMPURITY - MDI)</div>
+                        <table class="tree-split-table">
+                            <thead><tr><th>Node</th><th>Split Condition</th><th>Impurity Δ</th><th>Contribution</th><th>Samples</th></tr></thead>
+                            <tbody>
+                                <tr><td>#1 (Root)</td><td class="cyan-text">x₁ ≤ 1.25</td><td>0.48 ➔ 0.18</td><td class="green-text"><b>48.2%</b></td><td>N = 36</td></tr>
+                                <tr><td>#2 (Left)</td><td class="cyan-text">x₂ ≤ -0.80</td><td>0.32 ➔ 0.08</td><td class="green-text"><b>31.5%</b></td><td>N = 18</td></tr>
+                                <tr><td>#3 (Right)</td><td class="cyan-text">x₁ ≤ 3.10</td><td>0.24 ➔ 0.04</td><td class="green-text"><b>20.3%</b></td><td>N = 18</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Full-Screen Formula Terminal Modal -->
+        <div id="terminal-modal" class="modal-overlay hidden">
+            <div class="terminal-container glass-terminal" id="terminal-window-container">
+                <div class="terminal-header">
+                    <div class="terminal-title">⚡ <span id="terminal-mode-title">OPTIMIZER, ENSEMBLE & VECTOR FORGE</span></div>
+                    <div class="skin-swatches-row">
+                        <span class="skin-label">Skin:</span>
+                        <button class="skin-btn active" data-skin="obsidian" title="Obsidian Gradient" style="background:#f59e0b;"></button>
+                        <button class="skin-btn" data-skin="biolum" title="Bioluminescent Neon" style="background:#14b8a6;"></button>
+                        <button class="skin-btn" data-skin="glacial" title="Glacial Crystal" style="background:#38bdf8;"></button>
+                        <button class="skin-btn" data-skin="canopy" title="Living Canopy" style="background:#10b981;"></button>
+                        <button class="skin-btn" data-skin="citadel" title="Cyber Citadel" style="background:#a855f7;"></button>
+                        <button class="skin-btn" data-skin="astral" title="Astral Hologram" style="background:#e0e7ff;"></button>
+                    </div>
+                    <button id="btn-close-terminal" class="close-btn">✕ Exit</button>
+                </div>
+                <div class="terminal-telemetry-bar" id="terminal-seed-telemetry">
+                    🧬 SEED: #NEURO-8842 | Noise σ=0.28 | Outliers=5% | Overlap ρ=0.15 | Scale=(1.4x, 1.2x)
+                </div>
+                <div class="terminal-status" id="terminal-status-bar">
+                    <span class="status-indicator live">● READY</span> | Train model, summon Bagging Party, or query Vector Retrieval!
+                </div>
+
+                <div class="terminal-scroll-area">
+                    <div class="terminal-section">
+                        <div class="section-title">1. MODEL EXPRESSION BUILDER</div>
+                        <input type="text" id="terminal-formula-input" value="y = 2.45x + 1.15" spellcheck="false" class="cyber-input">
+                        <div class="preset-row">
+                            <button id="preset-linear" class="preset-btn">⚡ Linear</button>
+                            <button id="preset-logistic" class="preset-btn">⚡ Logistic</button>
+                            <button id="preset-polynomial" class="preset-btn">❄️ Poly Ridge</button>
+                            <button id="preset-tree" class="preset-btn">🌿 Decision Tree</button>
+                            <button id="preset-mlp" class="preset-btn">🧠 2-Layer MLP</button>
+                            <button id="preset-embeddings" class="preset-btn glow-cyan">🌌 Biome 6 Embeddings</button>
+                        </div>
+                    </div>
+
+                    <div class="terminal-section">
+                        <div class="section-title">2. VECTOR SEARCH / RAG QUERY & COSINE SIMILARITY</div>
+                        <div class="rag-query-row">
+                            <input type="text" id="rag-query-input" value="frost" class="cyber-rag-input" placeholder="Enter concept token (e.g. frost, fire, neural)...">
+                            <button id="btn-rag-query" class="rag-btn glow-cyan">🔍 Retrieve Top-K Vectors</button>
+                            <button id="btn-vector-analogy" class="rag-btn glow-amber">🧮 Analogy: fire - heat + cold</button>
+                        </div>
+                        <div id="rag-results-box" class="rag-results-container">
+                            <div class="rag-card"><span class="word">1. ice</span> <span class="sim">Cosine Sim = <b>0.942</b></span></div>
+                            <div class="rag-card"><span class="word">2. snow</span> <span class="sim">Cosine Sim = <b>0.915</b></span></div>
+                            <div class="rag-card"><span class="word">3. glacier</span> <span class="sim">Cosine Sim = <b>0.884</b></span></div>
+                        </div>
+                    </div>
+
+                    <div class="terminal-section">
+                        <div class="section-title">3. OPTIMIZERS, BAGGING PARTY & ASYNC GHOST DUEL</div>
+                        <div class="party-duel-row">
+                            <button id="btn-summon-party" class="party-btn glow-green">🌲 SUMMON BAGGING PARTY (5 TREES)</button>
+                            <button id="btn-ghost-duel" class="duel-btn glow-amber">⚔️ DUEL GHOST OVERFITTER-X</button>
+                            <button id="btn-swap-ghost" class="swap-btn">🔄 Swap Rival</button>
+                        </div>
+                    </div>
+
+                    <div class="terminal-section">
+                        <div class="section-title">4. LIVE MATHEMATICAL DUAL-GRAPH VISUALIZER</div>
+                        <div class="graphs-viewport">
+                            <div class="graph-card">
+                                <div class="graph-card-title" id="graph-left-title">🌌 2D EMBEDDING VECTOR SPACE</div>
+                                <canvas id="canvas-loss-graph" width="380" height="200"></canvas>
+                            </div>
+                            <div class="graph-card">
+                                <div class="graph-card-title" id="graph-right-title">🧬 PAIRWISE COSINE SIMILARITY</div>
+                                <canvas id="canvas-scatter-graph" width="380" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="benchmark-banner" class="hidden"></div>
+                </div>
+
+                <div class="terminal-footer">
+                    <button id="btn-train-weapon" class="action-btn glow-cyan">🧠 TRAIN / RETRIEVE</button>
+                    <button id="btn-grand-prix" class="action-btn glow-amber">🏁 4-WAY OPTIMIZER GRAND PRIX</button>
+                    <button id="btn-view-replay-card" class="action-btn">🎴 Stat Card</button>
+                    <button id="btn-return-world" class="action-btn">✕ Return</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Menu Overlay -->
+        <div id="main-menu" class="modal-overlay">
+            <div class="menu-container glass-card">
+                <h1 class="game-logo">⚡ NEURO-ARENA</h1>
+                <div class="game-sublogo">GRADIENTS OF THE WILD  |  3D ML SIMULATOR</div>
+
+                <div class="seed-input-container">
+                    <label>🎲 PLAYTHROUGH SEED:</label>
+                    <div class="seed-input-row">
+                        <input type="text" id="menu-seed-input" value="NEURO-8842" spellcheck="false" class="cyber-seed-input">
+                        <button id="btn-random-seed" class="seed-btn glow-cyan">🎲 Random</button>
+                    </div>
+                </div>
+
+                <div class="menu-actions">
+                    <button id="btn-continue-game" class="menu-btn primary glow-green disabled">⚔️ CONTINUE GAME</button>
+                    <div id="save-info-label" class="menu-sublabel">No local save found</div>
+                    <button id="btn-new-game" class="menu-btn glow-cyan">🌟 NEW GAME (APPLY SEED)</button>
+                    <button id="btn-menu-daily" class="menu-btn glow-amber">📅 PLAY DAILY CHALLENGE</button>
+                    <button id="btn-menu-models" class="menu-btn glow-cyan">💾 MY MODELS (VAULT)</button>
+                    <button id="btn-menu-profile" class="menu-btn">👤 ARCHITECT PROFILE</button>
+                    <button id="btn-menu-codex" class="menu-btn">📖 CODEX & ML JOURNAL</button>
+                    <button id="btn-menu-settings" class="menu-btn">⚙️ SETTINGS & AUDIO</button>
+                    <button id="btn-biome-map" class="menu-btn">🗺️ BIOME PROGRESSION MAP</button>
+                    <button id="btn-reset-save" class="menu-btn danger">🗑️ Reset Local Save</button>
+                    <button id="btn-quit-game" class="menu-btn">🚪 QUIT GAME</button>
+                </div>
+
+                <div id="biome-map-subpanel" class="hidden">
+                    <h3>🗺️ 6-BIOME PROGRESSION</h3>
+                    <ul class="biome-list" id="biome-list-element">
+                        <li><b>1. The Linear Steppes (Linear Regression)</b> <span class="unlocked">UNLOCKED</span></li>
+                        <li><b>2. The Binary Marshlands (Logistic Classification)</b> <span class="locked">LOCKED</span></li>
+                        <li><b>3. The Variance Tundra (Regularization)</b> <span class="locked">LOCKED</span></li>
+                        <li><b>4. The Branching Canopy (Decision Trees)</b> <span class="locked">LOCKED</span></li>
+                        <li><b>5. The Deep Synapse Citadel (Neural Networks)</b> <span class="locked">LOCKED</span></li>
+                        <li><b>6. The Semantic Expanse (Embeddings & Cosine Sim)</b> <span class="locked">LOCKED</span></li>
+                    </ul>
+                    <button id="btn-close-biome-map" class="menu-btn small">Back</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Game Script -->
+    <script src="app.js"></script>
+</body>
+</html>
