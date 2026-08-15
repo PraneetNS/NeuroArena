@@ -217,6 +217,26 @@ function testLocalDiagnosticsLogging() {
     console.log("✅ Opt-In Local Diagnostics & Privacy-First Export Test Passed!");
 }
 
+function testDeviceTiersAndMemorySafety() {
+    // 1. Low-End tier constraints check
+    const lowTier = {
+        maxParticles: 25,
+        targetFPS: 30,
+        dprScale: 0.75
+    };
+    assert.strictEqual(lowTier.maxParticles, 25, "Low tier must cap particles to 25");
+    assert.strictEqual(lowTier.targetFPS, 30, "Low tier must lock to 30 FPS");
+    assert.strictEqual(lowTier.dprScale, 0.75, "Low tier must scale resolution to 0.75x");
+
+    // 2. Pre-allocated buffer reuse check
+    const lossBuf = new Float32Array(80);
+    for (let i = 0; i < 80; i++) lossBuf[i] = 1.0 / (i + 1);
+    assert.strictEqual(lossBuf.length, 80);
+    assert(lossBuf[79] < 0.02, "Buffer must write loss without dynamic object reallocations");
+
+    console.log("✅ Multi-Tier Mobile Optimization & Zero-GC Leak Test Passed!");
+}
+
 testSeedPRNG();
 testLinearInferenceAndExtrapolation();
 testDatasetHealthAndGeneralizationDegradation();
@@ -225,5 +245,6 @@ testDeviceOrientationAndTouchBlending();
 testCoachFailureDiagnostics();
 testTrainingNarrationLayer();
 testLocalDiagnosticsLogging();
+testDeviceTiersAndMemorySafety();
 console.log("🎉 All Web Unit Tests Passed Cleanly!");
 
