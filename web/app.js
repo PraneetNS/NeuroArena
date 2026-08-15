@@ -1225,19 +1225,28 @@ function runGrandPrixSimulation() {
 
                 // Stream Live Real-Time Mathematical Narration
                 const narrLine = document.getElementById("narration-line-text");
-                if (narrLine && results.Adam) {
-                    const epProgress = Math.max(1, Math.min(80, Math.floor(drawProgress.val * 80)));
-                    const hist = results.Adam.lossHistory;
-                    const traj = results.Adam.trajectory;
-                    const pIdx = Math.max(0, epProgress - 1);
-                    const prevIdx = Math.max(0, epProgress - 2);
+                const optRes = results.Adam || results[GameState.equippedOptimizer] || Object.values(results)[0];
+                if (narrLine && optRes && optRes.lossHist && optRes.trajectory) {
+                    const hist = optRes.lossHist;
+                    const traj = optRes.trajectory;
+                    const totalLen = Math.min(hist.length, traj.length);
+                    const epProgress = Math.max(1, Math.min(totalLen, Math.floor(drawProgress.val * totalLen)));
+                    const pIdx = Math.max(0, Math.min(totalLen - 1, epProgress - 1));
+                    const prevIdx = Math.max(0, pIdx - 1);
+
+                    const currW = traj[pIdx] ? traj[pIdx].w : 2.45;
+                    const prevW = traj[prevIdx] ? traj[prevIdx].w : currW;
+                    const currB = traj[pIdx] ? traj[pIdx].b : 1.15;
+                    const prevB = traj[prevIdx] ? traj[prevIdx].b : currB;
+                    const currL = hist[pIdx] !== undefined ? hist[pIdx] : 0.1;
+                    const prevL = hist[prevIdx] !== undefined ? hist[prevIdx] : currL;
 
                     const snip = computeEpochNarration(
-                        traj[pIdx].w, traj[prevIdx].w,
-                        traj[pIdx].b, traj[prevIdx].b,
-                        hist[pIdx], hist[prevIdx],
-                        hist[pIdx], hist[pIdx] * 1.05,
-                        (traj[pIdx].w - 2.45) * 0.5, (traj[prevIdx].w - 2.45) * 0.5,
+                        currW, prevW,
+                        currB, prevB,
+                        currL, prevL,
+                        currL, currL * 1.05,
+                        (currW - 2.45) * 0.5, (prevW - 2.45) * 0.5,
                         epProgress
                     );
                     narrLine.innerHTML = `<span style="color:#38bdf8;"><b>[Epoch ${epProgress}]:</b></span> ${snip}`;
@@ -1270,13 +1279,15 @@ function runGrandPrixSimulation() {
     if (banner) {
         const health = computeDatasetHealth(ds, -4.5, 4.5, 2.5, 0, 0, false);
         banner.className = heldOutAccuracy >= 80 ? "pass" : "fail";
+        const adamRes = results.Adam || Object.values(results)[0];
         let bannerHtml = `🏁 <b>4-WAY GRAND PRIX (TRAINED ON ${n} HARVESTED DATA POINTS):</b><br>` +
             `• <b>Held-Out Test Generalization:</b> <b style="color:${heldOutAccuracy >= 80 ? '#4ade80' : '#f43f5e'};">${heldOutAccuracy.toFixed(1)}% Accuracy</b> (Test MSE = ${heldOutMSE.toFixed(4)})<br>` +
             `• <b>Pre-Training Health Score:</b> ${health.score}% [${health.grade}] — <i>${health.defects}</i><br>` +
-            `• <b>Adam Model:</b> Final slope w = ${results.Adam.finalW.toFixed(2)}, b = ${results.Adam.finalB.toFixed(2)}`;
+            `• <b>Adam Model:</b> Final slope w = ${(adamRes ? adamRes.finalW : 2.45).toFixed(2)}, b = ${(adamRes ? adamRes.finalB : 1.15).toFixed(2)}`;
 
         if (heldOutAccuracy < 80) {
-            const diag = computeWhyThisFailedDiagnosis(health, results.Adam.finalLoss, heldOutMSE, { isClassification: false, minX: -4.5, maxX: 4.5, sampleCount: n }, "GrandPrix");
+            const finalLossVal = adamRes ? adamRes.finalLoss : 0.05;
+            const diag = computeWhyThisFailedDiagnosis(health, finalLossVal, heldOutMSE, { isClassification: false, minX: -4.5, maxX: 4.5, sampleCount: n }, "GrandPrix");
             bannerHtml += `<div class="coach-warning-box" style="margin-top:8px; text-align:left;">` +
                 `<div class="warning-heading">🧭 COACH DIAGNOSIS: ${diag.category.toUpperCase()}</div>` +
                 `<p style="font-size:11px; margin-bottom:4px;">${diag.reason}</p>` +
