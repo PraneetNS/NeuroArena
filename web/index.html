@@ -301,11 +301,11 @@
             </div>
         </div>
 
-        <!-- Read-Only Model Inspector Modal -->
+        <!-- Read-Only Model Inspector & Stage 29 Consult Modal -->
         <div id="model-inspector-modal" class="modal-overlay hidden">
             <div class="glass-modal model-inspector-container">
                 <div class="modal-header">
-                    <h2>🔍 MODEL INSPECTOR :: READ-ONLY PARAMETER & GRAPH VIEW</h2>
+                    <h2>🔍 MODEL ARCHIVE & STAGE 29 CONSULT INTERFACE</h2>
                     <button id="btn-close-inspector" class="close-btn">✕</button>
                 </div>
                 <div class="inspector-modal-body">
@@ -318,13 +318,58 @@
                         <div class="stat-pill"><span class="label">Final Loss:</span> <b id="inspector-loss-val" class="text-amber">J = 0.0245</b></div>
                         <div class="stat-pill"><span class="label">Boss Status:</span> <b class="text-green">🏆 Conquered</b></div>
                     </div>
-                    <div class="inspector-graph-card">
-                        <div class="graph-card-title">📉 FROZEN LOSS CURVE OSCILLOSCOPE SNAPSHOT</div>
-                        <canvas id="inspector-canvas" width="460" height="180"></canvas>
+
+                    <!-- Stage 29 Inspector Tabs -->
+                    <div class="settings-tabs-bar" style="margin-top: 8px;">
+                        <button id="inspector-tab-loss" class="settings-tab-btn active">📉 Loss Curve Snapshot</button>
+                        <button id="inspector-tab-consult" class="settings-tab-btn glow-amber">💬 Consult / Interrogate (Chat)</button>
                     </div>
-                    <div class="inspector-params-box">
-                        <div class="params-label">⚙️ WEIGHTS & HYPERPARAMETERS:</div>
-                        <pre id="inspector-params-text" class="params-pre"></pre>
+
+                    <!-- Tab 1: Frozen Loss Snapshot -->
+                    <div id="inspector-pane-loss">
+                        <div class="inspector-graph-card">
+                            <div class="graph-card-title">📉 FROZEN LOSS CURVE OSCILLOSCOPE SNAPSHOT</div>
+                            <canvas id="inspector-canvas" width="460" height="180"></canvas>
+                        </div>
+                        <div class="inspector-params-box">
+                            <div class="params-label">⚙️ WEIGHTS & HYPERPARAMETERS:</div>
+                            <pre id="inspector-params-text" class="params-pre"></pre>
+                        </div>
+                    </div>
+
+                    <!-- Tab 2: Stage 29 Model Consult / Interrogate Chat -->
+                    <div id="inspector-pane-consult" class="hidden">
+                        <div class="consult-domain-telemetry" id="consult-domain-info">
+                            📊 <b>EMPIRICAL TRAINING DOMAIN:</b> X ∈ [-4.5, 4.5] | μ=0.0, σ=2.5 | Samples: N=24
+                        </div>
+
+                        <!-- Quick Test Chips -->
+                        <div class="consult-chip-row">
+                            <button class="consult-chip-btn" data-val="1.8">🎯 In-Domain (X=1.8)</button>
+                            <button class="consult-chip-btn" data-val="4.4">⚠️ Boundary (X=4.4)</button>
+                            <button class="consult-chip-btn chip-warn" data-val="14.5">⚡ Extrapolation Error (X=14.5)</button>
+                            <button class="consult-chip-btn chip-warn" data-val="-12.0">⚡ Far Extrapolation (X=-12.0)</button>
+                        </div>
+
+                        <!-- Query Input Bar -->
+                        <div class="consult-query-bar">
+                            <input type="text" id="consult-query-input" placeholder="Enter query input X (e.g. 2.5, 16.0)..." class="cyber-input" value="1.8">
+                            <button id="btn-consult-send-query" class="pulse-glow-btn" style="min-width: 140px; padding: 6px 14px; font-size: 11px;">⚡ Send Query</button>
+                        </div>
+
+                        <!-- Extended Decision Boundary Canvas -->
+                        <div class="inspector-graph-card" style="margin-top: 8px;">
+                            <div class="graph-card-title">🗺️ EMPIRICAL DOMAIN VS UNCHARTED TERRITORY DECISION PROJECTION</div>
+                            <canvas id="consult-decision-canvas" width="460" height="150"></canvas>
+                        </div>
+
+                        <!-- Chat Message Log Stream -->
+                        <div class="consult-chat-stream" id="consult-chat-stream-box">
+                            <div class="chat-bubble chat-bubble-model">
+                                <div class="chat-bubble-sender">🤖 MODEL INFERENCE REPL:</div>
+                                <div class="chat-bubble-text">Ready for interrogation. Enter any numerical input to test genuine mathematical model evaluation and observe in-domain interpolation vs out-of-domain extrapolation error.</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">

@@ -1553,13 +1553,33 @@ function saveModelVault() {
     localStorage.setItem("neuroarena_model_vault", JSON.stringify(TrainedModelVault));
 }
 
+let activeInspectedModel = null;
+
 function archiveCurrentModelToVault(bossTitle = "Linear Steppes Boss") {
+    const ds = GameState.collectedDataset || [];
+    let minX = -4.5, maxX = 4.5, minY = -10, maxY = 12, meanX = 0, stdX = 2.5, meanY = 1.15, stdY = 6.2;
+    if (ds.length > 0) {
+        minX = Math.min(...ds.map(p => p.x !== undefined ? p.x : p.x1));
+        maxX = Math.max(...ds.map(p => p.x !== undefined ? p.x : p.x1));
+        minY = Math.min(...ds.map(p => p.y !== undefined ? p.y : p.x2));
+        maxY = Math.max(...ds.map(p => p.y !== undefined ? p.y : p.x2));
+        meanX = ds.reduce((acc, p) => acc + (p.x !== undefined ? p.x : p.x1), 0) / ds.length;
+        stdX = Math.sqrt(ds.reduce((acc, p) => acc + Math.pow((p.x !== undefined ? p.x : p.x1) - meanX, 2), 0) / ds.length) || 2.5;
+    }
+
+    const finalW = lastRaceResults && lastRaceResults[GameState.equippedOptimizer] ? lastRaceResults[GameState.equippedOptimizer].finalW : GameState.profile.trueW;
+    const finalB = lastRaceResults && lastRaceResults[GameState.equippedOptimizer] ? lastRaceResults[GameState.equippedOptimizer].finalB : GameState.profile.trueB;
+
     const newRecord = {
         id: `m-${Date.now().toString().slice(-6)}`,
         name: `${GameState.equippedOptimizer} Model (Seed #${GameState.playthroughSeed})`,
         biome: `Biome ${GameState.currentBiome + 1}: ${CodexCurriculum[GameState.currentBiome]?.subtitle || "Arena"}`,
         architecture: `${GameState.equippedOptimizer} Architecture`,
-        weights: `w = ${GameState.profile.trueW.toFixed(3)}, b = ${GameState.profile.trueB.toFixed(3)} | Noise σ = ${GameState.profile.noiseLevel.toFixed(2)}`,
+        weights: `w = ${finalW.toFixed(3)}, b = ${finalB.toFixed(3)} | Noise σ = ${GameState.profile.noiseLevel.toFixed(2)}`,
+        weightW: finalW,
+        weightB: finalB,
+        minX, maxX, minY, maxY, meanX, stdDevX: stdX, meanY, stdDevY: stdY,
+        trainingPoints: ds.map(p => ({ x: p.x !== undefined ? p.x : p.x1, y: p.y !== undefined ? p.y : p.x2, classLabel: p.classLabel, isOutlier: p.isOutlier })),
         lossCurve: lastRaceResults && lastRaceResults[GameState.equippedOptimizer] ? lastRaceResults[GameState.equippedOptimizer].lossHist.slice(0, 40) : [0.8, 0.4, 0.15, 0.024],
         finalLoss: GameState.lastLoss,
         accuracy: GameState.lastAccuracy,
@@ -1598,11 +1618,29 @@ function renderModelGallery() {
 }
 
 function openModelInspector(m) {
+    activeInspectedModel = m;
     document.getElementById("inspector-model-title").innerText = m.name;
     document.getElementById("inspector-meta-text").innerText = `${m.biome} | Seed #${m.seed} | ${m.timestamp}`;
     document.getElementById("inspector-acc-val").innerText = `${m.accuracy.toFixed(1)}%`;
     document.getElementById("inspector-loss-val").innerText = `J = ${m.finalLoss.toFixed(4)}`;
     document.getElementById("inspector-params-text").innerText = m.weights;
+
+    // Reset tabs
+    document.getElementById("inspector-tab-loss").classList.add("active");
+    document.getElementById("inspector-tab-consult").classList.remove("active");
+    document.getElementById("inspector-pane-loss").classList.remove("hidden");
+    document.getElementById("inspector-pane-consult").classList.add("hidden");
+
+    // Telemetry in consult tab
+    const domInfo = document.getElementById("consult-domain-info");
+    if (domInfo) {
+        const minX = m.minX !== undefined ? m.minX.toFixed(1) : "-4.5";
+        const maxX = m.maxX !== undefined ? m.maxX.toFixed(1) : "4.5";
+        const mu = m.meanX !== undefined ? m.meanX.toFixed(1) : "0.0";
+        const sigma = m.stdDevX !== undefined ? m.stdDevX.toFixed(2) : "2.5";
+        const nPts = m.trainingPoints ? m.trainingPoints.length : 24;
+        domInfo.innerHTML = `📊 <b>EMPIRICAL TRAINING DOMAIN:</b> X ∈ [${minX}, ${maxX}] | μ = ${mu}, σ = ${sigma} | Stored Samples: N = ${nPts}`;
+    }
 
     // Draw Frozen Loss Graph on Canvas
     const canvas = document.getElementById("inspector-canvas");
@@ -1621,10 +1659,153 @@ function openModelInspector(m) {
     }
     ctx.stroke();
 
+    renderConsultDecisionGraph(m, null);
+
     const inspectorModal = document.getElementById("model-inspector-modal");
     inspectorModal.classList.remove("hidden");
     if (typeof gsap !== "undefined") {
         gsap.fromTo(inspectorModal.querySelector(".glass-modal"), { scale: 0.88, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: "back.out(1.5)" });
+    }
+}
+
+// Stage 29 Model Consult / Interrogate Inference Execution
+function executeConsultQuery(qX) {
+    if (!activeInspectedModel) return;
+    const m = activeInspectedModel;
+    const minX = m.minX !== undefined ? m.minX : -4.5;
+    const maxX = m.maxX !== undefined ? m.maxX : 4.5;
+    const sigma = m.stdDevX !== undefined ? m.stdDevX : 2.5;
+
+    // 1. Compute nearest neighbor distance
+    let dMin = Infinity;
+    if (m.trainingPoints && m.trainingPoints.length > 0) {
+        m.trainingPoints.forEach(p => {
+            const dist = Math.abs(qX - p.x);
+            if (dist < dMin) dMin = dist;
+        });
+    } else {
+        if (qX < minX) dMin = minX - qX;
+        else if (qX > maxX) dMin = qX - maxX;
+        else dMin = 0.25;
+    }
+
+    // 2. Extrapolation Condition Check
+    const isExtrap = (qX < minX - 0.2 * sigma) || (qX > maxX + 0.2 * sigma) || (dMin > 1.35 * sigma);
+
+    // 3. Genuine Mathematical Inference (No fake results)
+    const w = m.weightW !== undefined ? m.weightW : 2.45;
+    const b = m.weightB !== undefined ? m.weightB : 1.15;
+    const predY = w * qX + b;
+    const mathStr = `ŷ = (${w.toFixed(3)}) · (${qX.toFixed(2)}) + (${b.toFixed(3)}) = ${predY.toFixed(3)}`;
+
+    const stream = document.getElementById("consult-chat-stream-box");
+
+    // Add User Bubble
+    const userBubble = document.createElement("div");
+    userBubble.className = "chat-bubble chat-bubble-user";
+    userBubble.innerHTML = `<div class="chat-bubble-sender">👤 QUERY:</div>Predict target value for input feature <b>X = ${qX.toFixed(2)}</b>`;
+    stream.appendChild(userBubble);
+
+    // Add Model Inference Response Bubble
+    const modelBubble = document.createElement("div");
+    if (isExtrap) {
+        playFailureSFX();
+        modelBubble.className = "chat-bubble chat-bubble-extrapolation";
+        modelBubble.innerHTML = `
+            <div class="chat-bubble-sender warn">⚠️ [LOW CONFIDENCE :: EXTRAPOLATION ERROR]</div>
+            <div class="extrapolation-alert-badge">OUT-OF-DISTRIBUTION QUERY</div>
+            <div><b>Model Evaluation (Genuine Inference):</b> <code style="color:#fde047;">${mathStr}</code></div>
+            <div style="margin-top:6px; font-size:10.5px; color:#fecdd3;">
+                <b>Extrapolation Diagnostic:</b> This input (X = ${qX.toFixed(2)}) lies far outside the empirical domain [${minX.toFixed(1)}, ${maxX.toFixed(1)}] the model was trained on (Nearest sample distance Δ = ${dMin.toFixed(2)} > 1.35σ).<br>
+                <i>Linear and neural models evaluate mathematical equations unconditionally, confidently projecting decision boundaries into empty uncharted space without any empirical support.</i>
+            </div>
+        `;
+    } else {
+        playVictoryPassSFX();
+        modelBubble.className = "chat-bubble chat-bubble-model";
+        modelBubble.innerHTML = `
+            <div class="chat-bubble-sender" style="color:#4ade80;">✓ [HIGH CONFIDENCE :: IN-DOMAIN INTERPOLATION]</div>
+            <div><b>Model Evaluation (Genuine Inference):</b> <code style="color:#86efac;">${mathStr}</code></div>
+            <div style="margin-top:4px; font-size:10.5px; color:#cbd5e1;">
+                Query input lies safely within the training domain [${minX.toFixed(1)}, ${maxX.toFixed(1)}]. Nearest empirical sample is Δ = ${dMin.toFixed(2)} away.
+            </div>
+        `;
+    }
+    stream.appendChild(modelBubble);
+    stream.scrollTop = stream.scrollHeight;
+
+    // Update Decision Canvas
+    renderConsultDecisionGraph(m, { queryX: qX, predictedY: predY, isExtrapolation: isExtrap });
+}
+
+function renderConsultDecisionGraph(model, latestQuery) {
+    const canvas = document.getElementById("consult-decision-canvas");
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#04070c";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const minX = model.minX !== undefined ? model.minX : -4.5;
+    const maxX = model.maxX !== undefined ? model.maxX : 4.5;
+    const w = model.weightW !== undefined ? model.weightW : 2.45;
+    const b = model.weightB !== undefined ? model.weightB : 1.15;
+
+    const cx = canvas.width / 2;
+    const cy = canvas.height / 2;
+    const scaleX = canvas.width / 32;
+    const scaleY = canvas.height / 36;
+
+    // 1. Draw In-Domain Zone Shading
+    const domPx1 = cx + minX * scaleX;
+    const domPx2 = cx + maxX * scaleX;
+    ctx.fillStyle = "rgba(2, 132, 199, 0.15)";
+    ctx.fillRect(domPx1, 0, domPx2 - domPx1, canvas.height);
+    ctx.strokeStyle = "rgba(56, 189, 248, 0.4)";
+    ctx.strokeRect(domPx1, 0, domPx2 - domPx1, canvas.height);
+
+    // Labels for in-domain vs uncharted space
+    ctx.font = "9px 'JetBrains Mono', monospace";
+    ctx.fillStyle = "rgba(56, 189, 248, 0.8)";
+    ctx.fillText("[EMPIRICAL TRAINING DOMAIN]", domPx1 + 6, 14);
+    ctx.fillStyle = "rgba(244, 63, 94, 0.6)";
+    ctx.fillText("[UNCHARTED TERRITORY]", 8, 14);
+    ctx.fillText("[UNCHARTED TERRITORY]", canvas.width - 130, 14);
+
+    // 2. Draw Empirical Training Points
+    const pts = model.trainingPoints || [];
+    pts.forEach(p => {
+        const px = cx + p.x * scaleX;
+        const py = cy - p.y * scaleY;
+        ctx.fillStyle = p.isOutlier ? "#f59e0b" : "#38bdf8";
+        ctx.beginPath();
+        ctx.arc(px, py, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+    });
+
+    // 3. Visually Extend Decision Boundary / Fitted Line Straight Across Entire Uncharted Canvas
+    ctx.strokeStyle = "#facc15";
+    ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    const gX1 = -16, gY1 = w * gX1 + b;
+    const gX2 = 16, gY2 = w * gX2 + b;
+    ctx.moveTo(cx + gX1 * scaleX, cy - gY1 * scaleY);
+    ctx.lineTo(cx + gX2 * scaleX, cy - gY2 * scaleY);
+    ctx.stroke();
+
+    // 4. Draw Query Point & Radar Indicator
+    if (latestQuery) {
+        const qpx = cx + latestQuery.queryX * scaleX;
+        const qpy = cy - latestQuery.predictedY * scaleY;
+        ctx.fillStyle = latestQuery.isExtrapolation ? "#f43f5e" : "#4ade80";
+        ctx.beginPath();
+        ctx.arc(qpx, qpy, 5.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = "#fff";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(qpx, qpy, 9.0, 0, Math.PI * 2);
+        ctx.stroke();
     }
 }
 
@@ -2016,6 +2197,43 @@ function setupUIEvents() {
     });
     document.getElementById("btn-close-data-modal").addEventListener("click", () => {
         document.getElementById("dataset-modal").classList.add("hidden");
+    });
+
+    // Stage 29 Model Inspector & Consult Tabs
+    document.getElementById("inspector-tab-loss")?.addEventListener("click", () => {
+        document.getElementById("inspector-tab-loss").classList.add("active");
+        document.getElementById("inspector-tab-consult").classList.remove("active");
+        document.getElementById("inspector-pane-loss").classList.remove("hidden");
+        document.getElementById("inspector-pane-consult").classList.add("hidden");
+    });
+    document.getElementById("inspector-tab-consult")?.addEventListener("click", () => {
+        document.getElementById("inspector-tab-consult").classList.add("active");
+        document.getElementById("inspector-tab-loss").classList.remove("active");
+        document.getElementById("inspector-pane-consult").classList.remove("hidden");
+        document.getElementById("inspector-pane-loss").classList.add("hidden");
+        if (activeInspectedModel) renderConsultDecisionGraph(activeInspectedModel, null);
+    });
+
+    // Stage 29 Consult Query Submit
+    document.getElementById("btn-consult-send-query")?.addEventListener("click", () => {
+        const raw = document.getElementById("consult-query-input").value.trim();
+        const val = parseFloat(raw);
+        if (!isNaN(val)) executeConsultQuery(val);
+    });
+    document.getElementById("consult-query-input")?.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+            const val = parseFloat(e.target.value.trim());
+            if (!isNaN(val)) executeConsultQuery(val);
+        }
+    });
+
+    // Stage 29 Quick Test Chips
+    document.querySelectorAll(".consult-chip-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const val = parseFloat(btn.dataset.val);
+            document.getElementById("consult-query-input").value = val;
+            executeConsultQuery(val);
+        });
     });
 
     // Seed Randomizer

@@ -147,15 +147,164 @@ namespace NeuroArena.UI
                 GUILayout.Label($"⚙️ <b>Optimized Weights & Hyperparameters:</b> <color=#38BDF8>{selectedModel.parameterSummary}</color>", metricStyle);
                 GUILayout.EndVertical();
 
-                GUILayout.Space(10 * scale);
+                GUILayout.Space(6 * scale);
 
-                // Read-Only Mini Loss Curve Canvas
-                GUILayout.Label("📉 <b>FROZEN TRAINING LOSS OSCILLOSCOPE SNAPSHOT:</b>", headerTitleStyle);
-                Rect graphRect = GUILayoutUtility.GetRect(w - 20 * scale, 150 * scale);
-                DrawMiniLossGraph(graphRect, selectedModel.lossCurveHistory);
+                // Tab Switcher: Loss Curve vs Stage 29 Consult Chat
+                GUILayout.BeginHorizontal();
+                GUI.color = inspectorTabIndex == 0 ? new Color(0.2f, 0.85f, 1f) : Color.white;
+                if (GUILayout.Button("📉 Loss Oscilloscope", buttonStyle, GUILayout.Width(160 * scale), GUILayout.Height(30 * scale))) inspectorTabIndex = 0;
+                GUILayout.Space(6 * scale);
+                GUI.color = inspectorTabIndex == 1 ? new Color(0.95f, 0.6f, 0.2f) : Color.white;
+                if (GUILayout.Button("💬 Consult / Interrogate (Chat)", buttonStyle, GUILayout.Width(220 * scale), GUILayout.Height(30 * scale))) inspectorTabIndex = 1;
+                GUI.color = Color.white;
+                GUILayout.EndHorizontal();
+
+                GUILayout.Space(8 * scale);
+
+                if (inspectorTabIndex == 0)
+                {
+                    // Read-Only Mini Loss Curve Canvas
+                    GUILayout.Label("📉 <b>FROZEN TRAINING LOSS OSCILLOSCOPE SNAPSHOT:</b>", headerTitleStyle);
+                    Rect graphRect = GUILayoutUtility.GetRect(w - 20 * scale, 150 * scale);
+                    DrawMiniLossGraph(graphRect, selectedModel.lossCurveHistory);
+                }
+                else
+                {
+                    // Stage 29 Model Consult / Interrogate Mode
+                    DrawConsultInterrogateView(scale, w);
+                }
             }
 
             GUILayout.EndArea();
+        }
+
+        private int inspectorTabIndex = 0;
+        private string queryInputText = "2.0";
+        private List<ConsultInferenceResult> chatHistory = new List<ConsultInferenceResult>();
+        private GUIStyle glitchCardStyle;
+        private GUIStyle promptBtnStyle;
+
+        private void DrawConsultInterrogateView(float scale, float w)
+        {
+            GUILayout.BeginVertical(cardStyle);
+            GUILayout.Label("💬 <b>STAGE 29 :: MODEL CONSULT / INTERROGATE (INFERENCE REPL)</b>", headerTitleStyle);
+            GUILayout.Label($"<b>Empirical Training Domain:</b> X ∈ [{selectedModel.minX:F1}, {selectedModel.maxX:F1}] | μ={selectedModel.meanX:F1} | σ={selectedModel.stdDevX:F2}", metricStyle);
+
+            // Quick scenario test buttons
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("🎯 In-Domain (X=1.8)", promptBtnStyle, GUILayout.Height(24 * scale))) RunQuery(1.8f);
+            if (GUILayout.Button("⚠️ Boundary (X=4.4)", promptBtnStyle, GUILayout.Height(24 * scale))) RunQuery(4.4f);
+            if (GUILayout.Button("⚡ Extrapolation Error (X=14.5)", promptBtnStyle, GUILayout.Height(24 * scale))) RunQuery(14.5f);
+            if (GUILayout.Button("⚡ Far Extrapolation (X=-12.0)", promptBtnStyle, GUILayout.Height(24 * scale))) RunQuery(-12.0f);
+            GUILayout.EndHorizontal();
+
+            // Query Input Bar
+            GUILayout.Space(4 * scale);
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("<b>Query Input (X):</b>", metricStyle, GUILayout.Width(110 * scale));
+            queryInputText = GUILayout.TextField(queryInputText, GUILayout.Width(100 * scale), GUILayout.Height(26 * scale));
+            GUILayout.Space(6 * scale);
+            GUI.color = new Color(0.2f, 0.85f, 1f);
+            if (GUILayout.Button("⚡ Send Query (Genuine Inference)", buttonStyle, GUILayout.Height(26 * scale)))
+            {
+                if (float.TryParse(queryInputText, out float val)) RunQuery(val);
+            }
+            GUI.color = Color.white;
+            GUILayout.EndHorizontal();
+            GUILayout.EndVertical();
+
+            GUILayout.Space(6 * scale);
+
+            // 2D Extended Decision Boundary Canvas
+            Rect graphRect = GUILayoutUtility.GetRect(w - 20 * scale, 130 * scale);
+            DrawConsultDecisionGraph(graphRect, selectedModel, chatHistory.Count > 0 ? chatHistory[chatHistory.Count - 1] : (ConsultInferenceResult?)null);
+
+            GUILayout.Space(6 * scale);
+
+            // Chat Message Stream
+            if (chatHistory.Count > 0)
+            {
+                var latest = chatHistory[chatHistory.Count - 1];
+                if (latest.isExtrapolation)
+                {
+                    GUI.color = new Color(1f, 0.35f, 0.45f, 1f);
+                    GUILayout.BeginVertical(glitchCardStyle);
+                    GUILayout.Label($"⚠️ <b>[LOW CONFIDENCE :: EXTRAPOLATION ERROR]</b>", cardTitleStyle);
+                    GUILayout.Label($"<b>Model Output (Genuine Inference):</b> {latest.mathEquationUsed}", cardTitleStyle);
+                    GUILayout.Label(latest.explanationText, metricStyle);
+                    GUILayout.EndVertical();
+                    GUI.color = Color.white;
+                }
+                else
+                {
+                    GUI.color = new Color(0.3f, 0.9f, 0.5f, 1f);
+                    GUILayout.BeginVertical(cardStyle);
+                    GUILayout.Label($"✓ <b>[HIGH CONFIDENCE :: IN-DOMAIN INTERPOLATION]</b>", cardTitleStyle);
+                    GUILayout.Label($"<b>Model Output:</b> {latest.mathEquationUsed}", cardTitleStyle);
+                    GUILayout.Label(latest.explanationText, metricStyle);
+                    GUILayout.EndVertical();
+                    GUI.color = Color.white;
+                }
+            }
+        }
+
+        private void RunQuery(float qX)
+        {
+            queryInputText = qX.ToString("F1");
+            var res = NeuroArena.ML.ModelConsultEngine.ConsultModel(selectedModel, qX);
+            chatHistory.Add(res);
+        }
+
+        private void DrawConsultDecisionGraph(Rect rect, TrainedModelRecord model, ConsultInferenceResult? latestQuery)
+        {
+            Color prev = GUI.color;
+            GUI.color = new Color(0.04f, 0.06f, 0.10f, 0.95f);
+            GUI.DrawTexture(rect, whitePixel);
+
+            // Draw Uncharted Territory Shading
+            float cx = rect.x + rect.width * 0.5f;
+            float cy = rect.y + rect.height * 0.5f;
+            float scaleX = rect.width / 32f;
+            float scaleY = rect.height / 32f;
+
+            // Domain Bounding Box (In-Domain Territory)
+            float domX1 = cx + model.minX * scaleX;
+            float domX2 = cx + model.maxX * scaleX;
+            Rect inDomainRect = new Rect(domX1, rect.y + 4, Mathf.Max(20, domX2 - domX1), rect.height - 8);
+
+            GUI.color = new Color(0.12f, 0.28f, 0.45f, 0.25f);
+            GUI.DrawTexture(inDomainRect, whitePixel);
+
+            // Labels: In-Domain vs Uncharted Space
+            GUI.color = new Color(0.4f, 0.8f, 1f, 0.7f);
+            GUI.Label(new Rect(domX1 + 4, rect.y + 4, 120, 16), "<b>[TRAINING DOMAIN]</b>", metricStyle);
+            GUI.color = new Color(0.9f, 0.4f, 0.4f, 0.7f);
+            GUI.Label(new Rect(rect.x + 6, rect.y + 4, 140, 16), "<b>[UNCHARTED TERRITORY]</b>", metricStyle);
+
+            // Draw Extended Straight Decision Line Slicing Blindly Through Space
+            GUI.color = new Color(0.95f, 0.75f, 0.25f, 0.85f);
+            for (float gx = -15f; gx <= 15f; gx += 0.4f)
+            {
+                float gy = model.weightW * gx + model.weightB;
+                float px = cx + gx * scaleX;
+                float py = cy - gy * scaleY;
+                if (px >= rect.x && px <= rect.xMax && py >= rect.y && py <= rect.yMax)
+                {
+                    GUI.DrawTexture(new Rect(px, py, 2, 2), whitePixel);
+                }
+            }
+
+            // Draw Query Point with Radar Indicator
+            if (latestQuery.HasValue)
+            {
+                var q = latestQuery.Value;
+                float qpx = cx + q.queryX * scaleX;
+                float qpy = cy - q.predictedValue * scaleY;
+                GUI.color = q.isExtrapolation ? new Color(1f, 0.25f, 0.4f) : new Color(0.2f, 1f, 0.5f);
+                GUI.DrawTexture(new Rect(qpx - 4, qpy - 4, 8, 8), whitePixel);
+            }
+
+            GUI.color = prev;
         }
 
         private void DrawMiniLossGraph(Rect rect, float[] lossHistory)
@@ -211,6 +360,22 @@ namespace NeuroArena.UI
                 bg.Apply();
                 cardStyle.normal.background = bg;
                 cardStyle.padding = new RectOffset((int)(8 * scale), (int)(8 * scale), (int)(8 * scale), (int)(8 * scale));
+            }
+
+            if (glitchCardStyle == null)
+            {
+                glitchCardStyle = new GUIStyle(GUI.skin.box);
+                Texture2D bg = new Texture2D(1, 1);
+                bg.SetPixel(0, 0, new Color(0.24f, 0.06f, 0.10f, 0.95f));
+                bg.Apply();
+                glitchCardStyle.normal.background = bg;
+                glitchCardStyle.padding = new RectOffset((int)(8 * scale), (int)(8 * scale), (int)(8 * scale), (int)(8 * scale));
+            }
+
+            if (promptBtnStyle == null)
+            {
+                promptBtnStyle = new GUIStyle(GUI.skin.button) { fontSize = (int)(9 * scale), fontStyle = FontStyle.Bold, richText = true };
+                promptBtnStyle.normal.textColor = new Color(0.9f, 0.95f, 1f);
             }
 
             if (cardTitleStyle == null)
