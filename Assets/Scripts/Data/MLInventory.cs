@@ -61,6 +61,12 @@ namespace NeuroArena.Data
         public IReadOnlyList<ClassificationSample> ClassificationDataset => classificationDataset.AsReadOnly();
         public IReadOnlyList<DataPoint> TundraDataset => tundraDataset.AsReadOnly();
         public DatasetStatistics LiveStats => cachedStats;
+        public DatasetHealthMetrics LiveHealth => cachedHealth;
+
+        public event Action<DatasetStatistics> OnDatasetStatsChanged;
+        public event Action<DatasetHealthMetrics> OnDatasetHealthChanged;
+        private DatasetStatistics cachedStats;
+        private DatasetHealthMetrics cachedHealth = DatasetHealthMetrics.Default;
 
         private void Awake()
         {
@@ -189,8 +195,82 @@ namespace NeuroArena.Data
                 }
             }
 
+            ComputeDatasetHealth();
             OnDatasetStatsChanged?.Invoke(cachedStats);
+            OnDatasetHealthChanged?.Invoke(cachedHealth);
             return cachedStats;
+        }
+
+        private void ComputeDatasetHealth()
+        {
+            int n = cachedStats.sampleCount;
+            if (n == 0)
+            {
+                cachedHealth = DatasetHealthMetrics.Default;
+                return;
+            }
+
+            float balance = 100f;
+            float cleanliness = 100f;
+            float coverage = 100f;
+            int outliers = 0;
+            List<string> defects = new List<string>();
+
+            // 1. Balance Score
+            if (cachedStats.isClassification)
+            {
+                float skew = Mathf.Abs(cachedStats.class0Ratio - cachedStats.class1Ratio);
+                balance = Mathf.Clamp01(1.0f - skew) * 100f;
+                if (balance < 60f) defects.Add($"Class Imbalance ({(cachedStats.class0Ratio * 100f):F0}/{(cachedStats.class1Ratio * 100f):F0})");
+            }
+            else
+            {
+                // Feature dispersion symmetry
+                float span = cachedStats.maxX - cachedStats.minX;
+                balance = Mathf.Clamp01(cachedStats.stdDevX / Mathf.Max(1f, span * 0.4f)) * 100f;
+            }
+
+            // 2. Outlier Cleanliness
+            if (!cachedStats.isClassification && dataset.Count > 0)
+            {
+                for (int i = 0; i < dataset.Count; i++)
+                {
+                    float expectedY = 2.45f * dataset[i].x + 1.15f;
+                    if (Mathf.Abs(dataset[i].y - expectedY) > 5.5f) outliers++;
+                }
+                float outlierRatio = (float)outliers / dataset.Count;
+                cleanliness = Mathf.Clamp01(1.0f - outlierRatio * 3.5f) * 100f;
+                if (outliers > 0) defects.Add($"{outliers} High Outlier(s)");
+            }
+
+            // 3. Domain Coverage
+            float domainSpan = cachedStats.maxX - cachedStats.minX;
+            float spanScore = Mathf.Clamp01(domainSpan / 7.5f);
+            float countScore = Mathf.Clamp01((float)n / 10f);
+            coverage = (spanScore * 0.65f + countScore * 0.35f) * 100f;
+            if (coverage < 60f) defects.Add("Narrow Feature Domain (Risk of Extrapolation)");
+
+            // 4. Aggregate Health Score
+            float totalScore = balance * 0.35f + cleanliness * 0.35f + coverage * 0.30f;
+            totalScore = Mathf.Clamp(totalScore, 5f, 100f);
+
+            string grade = totalScore >= 85f ? "EXCELLENT" : (totalScore >= 70f ? "GOOD" : (totalScore >= 50f ? "FAIR" : "CRITICAL / SKEWED"));
+            string defectSummary = defects.Count > 0 ? string.Join(" • ", defects) : "Clean & Balanced Empirical Dataset";
+            string forecast = totalScore >= 80f ? "High Generalization (Expected Test Accuracy > 90%)" :
+                              (totalScore >= 55f ? "Moderate Generalization (Expected Test Accuracy ~75-85%)" :
+                              "Severe Generalization Failure Predicted on Held-Out Test Set (<65%)");
+
+            cachedHealth = new DatasetHealthMetrics
+            {
+                healthScore = totalScore,
+                balanceScore = balance,
+                cleanlinessScore = cleanliness,
+                coverageScore = coverage,
+                outlierCount = outliers,
+                healthGrade = grade,
+                primaryDefect = defectSummary,
+                expectedGeneralization = forecast
+            };
         }
 
         public void AddFeatureValue(float x, string biome = "Linear Steppes")

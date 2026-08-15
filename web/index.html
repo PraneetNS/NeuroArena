@@ -184,6 +184,26 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="drawer-divider"></div>
+                <div class="drawer-header" style="color: #38bdf8;">🩺 DATASET HEALTH SCORE</div>
+                <div class="health-card-container" id="drawer-health-card">
+                    <div class="drawer-stat-row">
+                        <span>Health Score:</span>
+                        <b id="drawer-health-score-val" class="green-text">100% [EXCELLENT]</b>
+                    </div>
+                    <div class="health-gauge-track">
+                        <div id="drawer-health-gauge-fill" class="health-gauge-fill" style="width: 100%; background: #4ade80;"></div>
+                    </div>
+                    <div class="health-submetrics-row">
+                        <span>Bal: <b id="health-sub-balance" class="text-cyan">100%</b></span>
+                        <span>Clean: <b id="health-sub-clean" class="text-green">100%</b></span>
+                        <span>Cover: <b id="health-sub-cover" class="text-amber">100%</b></span>
+                    </div>
+                    <div class="health-defects-box" id="drawer-health-defects-text">
+                        ✓ Clean & balanced dataset
+                    </div>
+                </div>
             </div>
 
             <!-- 4. BOTTOM-RIGHT BIOME RADAR & WAYPOINT TRACKER -->
@@ -605,6 +625,25 @@
                             <div class="graph-card">
                                 <div class="graph-card-title" id="graph-right-title">🧬 PAIRWISE COSINE SIMILARITY</div>
                                 <canvas id="canvas-scatter-graph" width="380" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="terminal-section" id="terminal-health-section">
+                        <div class="section-title">⚡ PRE-TRAINING DATASET HEALTH SCORE & FORECAST</div>
+                        <div class="terminal-health-card" id="terminal-health-card">
+                            <div class="health-main-row">
+                                <span class="health-score-badge" id="term-health-badge">🩺 HEALTH: 100% [EXCELLENT]</span>
+                                <span class="health-sub-breakdown" id="term-health-breakdown">⚖️ Bal: 100% | 🧹 Clean: 100% | 🌐 Cover: 100%</span>
+                            </div>
+                            <div class="health-gauge-track" style="margin: 6px 0;">
+                                <div id="term-health-gauge-fill" class="health-gauge-fill" style="width: 100%; background: #4ade80;"></div>
+                            </div>
+                            <div class="health-forecast-row">
+                                <span>🔮 <b>Held-Out Test Forecast:</b> <span id="term-health-forecast" class="text-green">High Generalization (>90% test acc expected)</span></span>
+                            </div>
+                            <div class="health-defect-alert" id="term-health-defect">
+                                ⚠️ <i>Empirical dataset is balanced and clean.</i>
                             </div>
                         </div>
                     </div>

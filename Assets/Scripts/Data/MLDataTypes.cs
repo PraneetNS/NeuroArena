@@ -111,4 +111,29 @@ namespace NeuroArena.Data
             isClassification = false
         };
     }
+
+    [Serializable]
+    public struct DatasetHealthMetrics
+    {
+        public float healthScore;        // 0 to 100%
+        public float balanceScore;       // 0 to 100% (class balance or residual symmetry)
+        public float cleanlinessScore;   // 0 to 100% (absence of severe outliers)
+        public float coverageScore;      // 0 to 100% (spatial breadth of feature domain)
+        public int outlierCount;
+        public string healthGrade;       // EXCELLENT, GOOD, FAIR, POOR
+        public string primaryDefect;     // Summary diagnosis of defect
+        public string expectedGeneralization; // Pre-training test performance forecast
+
+        public static DatasetHealthMetrics Default => new DatasetHealthMetrics
+        {
+            healthScore = 100f,
+            balanceScore = 100f,
+            cleanlinessScore = 100f,
+            coverageScore = 100f,
+            outlierCount = 0,
+            healthGrade = "EXCELLENT",
+            primaryDefect = "No empirical samples collected yet.",
+            expectedGeneralization = "Harvest at least 3 empirical tokens in the biome."
+        };
+    }
 }

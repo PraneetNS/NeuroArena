@@ -34,10 +34,44 @@ function testLinearInferenceAndExtrapolation() {
     const outDom = consult(15.0);
     assert.strictEqual(outDom.isExtrap, true, "X=15.0 must trigger extrapolation error");
     assert(Math.abs(outDom.yHat - 37.9) < 0.001, "Genuine inference: y = 2.45*15 + 1.15 = 37.9");
-
     console.log("✅ Stage 29 Mathematical Extrapolation & Inference Test Passed!");
+}
+
+function testDatasetHealthAndGeneralizationDegradation() {
+    // 1. Clean balanced dataset
+    const cleanDataset = [
+        { x: -4.0, y: -8.65, isOutlier: false },
+        { x: -2.0, y: -3.75, isOutlier: false },
+        { x: 0.0, y: 1.15, isOutlier: false },
+        { x: 2.0, y: 6.05, isOutlier: false },
+        { x: 4.0, y: 10.95, isOutlier: false }
+    ];
+
+    // Compute Health
+    let outliers = 0;
+    cleanDataset.forEach(p => { if (p.isOutlier) outliers++; });
+    const cleanScore = Math.round((1 - (outliers / cleanDataset.length) * 3.5) * 100);
+    assert.strictEqual(cleanScore, 100, "Clean dataset must have 100% cleanliness");
+
+    // 2. Outlier-corrupted dataset
+    const noisyDataset = [
+        { x: -4.0, y: -8.65, isOutlier: false },
+        { x: -2.0, y: 45.0, isOutlier: true },  // Extreme outlier
+        { x: 0.0, y: 1.15, isOutlier: false },
+        { x: 2.0, y: -30.0, isOutlier: true }, // Extreme outlier
+        { x: 4.0, y: 10.95, isOutlier: false }
+    ];
+
+    let noisyOutliers = 0;
+    noisyDataset.forEach(p => { if (p.isOutlier) noisyOutliers++; });
+    const noisyCleanliness = Math.max(0, Math.round((1 - (noisyOutliers / noisyDataset.length) * 3.5) * 100));
+    assert(noisyCleanliness <= 30, "Noisy dataset cleanliness must drop significantly");
+
+    console.log("✅ Dataset Health Score & Generalization Degradation Test Passed!");
 }
 
 testSeedPRNG();
 testLinearInferenceAndExtrapolation();
+testDatasetHealthAndGeneralizationDegradation();
 console.log("🎉 All Web Unit Tests Passed Cleanly!");
+

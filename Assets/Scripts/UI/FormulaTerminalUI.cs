@@ -295,8 +295,25 @@ namespace NeuroArena.UI
 
         private void DrawPassFailSection(float scale)
         {
+            // Pre-Training Dataset Health Telemetry Card
+            GUILayout.Space(4 * scale);
+            GUILayout.Label("<b>3. PRE-TRAINING DATASET HEALTH SCORE & GENERALIZATION FORECAST</b>", sectionHeaderStyle);
+
+            DatasetHealthMetrics health = MLInventory.Instance != null ? MLInventory.Instance.LiveHealth : DatasetHealthMetrics.Default;
+            string healthCol = health.healthScore >= 80f ? "#4ADE80" : (health.healthScore >= 50f ? "#FBBF24" : "#F43F5E");
+
+            GUILayout.BeginVertical(panelBoxStyle);
+            GUILayout.Label($"🩺 <b>DATASET HEALTH:</b> <color={healthCol}><b>{health.healthScore:F0}% [{health.healthGrade}]</b></color>  |  <b>Balance:</b> {health.balanceScore:F0}%  |  <b>Cleanliness:</b> {health.cleanlinessScore:F0}%  |  <b>Coverage:</b> {health.coverageScore:F0}%", labelStyle);
+            GUILayout.Label($"🔮 <b>Held-Out Test Forecast:</b> <color=#E2E8F0>{health.expectedGeneralization}</color>", labelStyle);
+            if (!string.IsNullOrEmpty(health.primaryDefect))
+            {
+                GUILayout.Label($"⚠️ <b>Dataset Defects:</b> <color=#FDA4AF>{health.primaryDefect}</color>", labelStyle);
+            }
+            GUILayout.EndVertical();
+
             if (!isBiomeCalibrationPassed.HasValue) return;
 
+            GUILayout.Space(6 * scale);
             GUILayout.Label("<b>4. EVALUATION & VICTORY BANNER</b>", sectionHeaderStyle);
             bool passed = isBiomeCalibrationPassed.Value;
             if (passed)
@@ -306,7 +323,7 @@ namespace NeuroArena.UI
             }
             else
             {
-                string msg = lastDuelResult.HasValue ? lastDuelResult.Value.victoryNarrative : "⚠️ <b>CALIBRATION FAILED: TUNE PARAMETERS.</b>";
+                string msg = lastDuelResult.HasValue ? lastDuelResult.Value.victoryNarrative : "⚠️ <b>CALIBRATION FAILED: TUNE PARAMETERS OR CURATE CLEANER DATASET.</b>";
                 GUILayout.Label(msg, bannerFailStyle, GUILayout.Height(55 * scale));
             }
         }

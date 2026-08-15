@@ -147,11 +147,11 @@ namespace NeuroArena.UI
             GUILayout.EndArea();
         }
 
-        // --- 3. EXPANDABLE INVENTORY DRAWER WITH LIVE DATASET STATS ---
+        // --- 3. EXPANDABLE INVENTORY DRAWER WITH LIVE DATASET STATS & HEALTH SCORE ---
         private void DrawInventoryDrawer(float scale)
         {
-            float w = 260 * scale;
-            float h = 225 * scale;
+            float w = 270 * scale;
+            float h = 285 * scale;
             float pad = 12 * scale;
             Rect drawerRect = new Rect(Screen.width - w - pad, 68 * scale, w, h);
 
@@ -163,14 +163,14 @@ namespace NeuroArena.UI
 
             int x = MLInventory.Instance != null ? MLInventory.Instance.FeatureCrystalXCount : 0;
             int y = MLInventory.Instance != null ? MLInventory.Instance.TargetShardYCount : 0;
-            int n = MLInventory.Instance != null ? MLInventory.Instance.PairedDataPointCount : 0;
 
             GUILayout.Label($"◆ <b>Feature Crystals (X):</b> <color=#38BDF8>{x}</color>  |  ▲ <b>Shards (Y):</b> <color=#FBBF24>{y}</color>", labelStyle);
 
-            GUILayout.Space(4 * scale);
+            GUILayout.Space(3 * scale);
             GUILayout.Label("<b>📊 LIVE DATASET STATS (REAL-TIME)</b>", subHeaderStyle);
 
             DatasetStatistics stats = MLInventory.Instance != null ? MLInventory.Instance.LiveStats : DatasetStatistics.Empty;
+            DatasetHealthMetrics health = MLInventory.Instance != null ? MLInventory.Instance.LiveHealth : DatasetHealthMetrics.Default;
 
             if (stats.sampleCount == 0)
             {
@@ -183,19 +183,25 @@ namespace NeuroArena.UI
                 if (stats.isClassification)
                 {
                     GUILayout.Label($"⚖️ <b>Class Balance:</b> <color=#C084FC>0: {stats.class0Count} ({(stats.class0Ratio * 100f):F0}%)</color> | <color=#38BDF8>1: {stats.class1Count} ({(stats.class1Ratio * 100f):F0}%)</color>", labelStyle);
-                    Rect classBarRect = GUILayoutUtility.GetRect(w - 20 * scale, 5 * scale);
+                    Rect classBarRect = GUILayoutUtility.GetRect(w - 20 * scale, 4 * scale);
                     DrawProgressBar(classBarRect, stats.class1Ratio, new Color(0.2f, 0.75f, 1f));
                 }
                 else
                 {
                     GUILayout.Label($"↔️ <b>X Range:</b> [{stats.minX:F1}, {stats.maxX:F1}]  |  <b>Y Range:</b> [{stats.minY:F1}, {stats.maxY:F1}]", labelStyle);
                     GUILayout.Label($"μ ± σ: <b>X:</b> {stats.meanX:F2} ± {stats.stdDevX:F2}  |  <b>Y:</b> {stats.meanY:F2} ± {stats.stdDevY:F2}", labelStyle);
-                    if (stats.sampleCount >= 2)
-                    {
-                        string rCol = Mathf.Abs(stats.pearsonR) > 0.7f ? "#4ADE80" : "#FBBF24";
-                        GUILayout.Label($"🧬 <b>Pearson r(X, Y):</b> <color={rCol}><b>{(stats.pearsonR >= 0 ? "+" : "")}{stats.pearsonR:F2}</b></color>", labelStyle);
-                    }
                 }
+
+                GUILayout.Space(4 * scale);
+                string healthCol = health.healthScore >= 80f ? "#4ADE80" : (health.healthScore >= 50f ? "#FBBF24" : "#F43F5E");
+                GUILayout.Label($"🩺 <b>DATASET HEALTH SCORE:</b> <color={healthCol}><b>{health.healthScore:F0}% [{health.healthGrade}]</b></color>", subHeaderStyle);
+
+                Rect healthBarRect = GUILayoutUtility.GetRect(w - 20 * scale, 5 * scale);
+                Color barColor = health.healthScore >= 80f ? new Color(0.29f, 0.87f, 0.5f) : (health.healthScore >= 50f ? new Color(0.98f, 0.75f, 0.14f) : new Color(0.96f, 0.25f, 0.37f));
+                DrawProgressBar(healthBarRect, health.healthScore / 100f, barColor);
+
+                GUILayout.Space(2 * scale);
+                GUILayout.Label($"⚠️ <i>{health.primaryDefect}</i>", objectiveSubStyle);
             }
 
             GUILayout.EndArea();

@@ -337,10 +337,144 @@ function computeDatasetStats() {
     }
 
     // Also update Dataset Inspector summary
+    // Compute Dataset Health Score (Balance + Outlier Cleanliness + Domain Coverage)
+    const health = computeDatasetHealth(ds, minX, maxX, stdX, c0, c1, hasClassification);
+    updateDatasetHealthUI(health);
+
+    // Also update Dataset Inspector summary
     const summaryEl = document.getElementById("dataset-stats-summary");
     if (summaryEl) {
         summaryEl.innerHTML = `🧬 Pearson r(X, Y) = <b>${r >= 0 ? "+" : ""}${r.toFixed(3)}</b> | Samples: <b>${n}</b> (μX=${meanX.toFixed(1)}, μY=${meanY.toFixed(1)}) | Seed: <b>#${GameState.playthroughSeed}</b>`;
     }
+}
+
+function computeDatasetHealth(ds, minX, maxX, stdX, c0, c1, hasClassification) {
+    const n = ds.length;
+    if (n === 0) {
+        return {
+            score: 100,
+            grade: "EXCELLENT",
+            balance: 100,
+            cleanliness: 100,
+            coverage: 100,
+            defects: "No empirical samples collected yet.",
+            forecast: "Harvest empirical tokens in the biome to build your dataset."
+        };
+    }
+
+    let balance = 100;
+    let cleanliness = 100;
+    let coverage = 100;
+    let outliers = 0;
+    const defects = [];
+
+    // 1. Balance Score
+    if (hasClassification && (c0 + c1) > 0) {
+        const p0 = c0 / (c0 + c1);
+        const p1 = c1 / (c0 + c1);
+        const skew = Math.abs(p0 - p1);
+        balance = Math.max(0, Math.min(100, Math.round((1.0 - skew) * 100)));
+        if (balance < 60) defects.push(`Class Imbalance (${Math.round(p0 * 100)}/${Math.round(p1 * 100)})`);
+    } else {
+        const span = maxX - minX;
+        balance = Math.max(0, Math.min(100, Math.round((stdX / Math.max(1, span * 0.4)) * 100)));
+    }
+
+    // 2. Outlier Cleanliness
+    for (let i = 0; i < n; i++) {
+        const pt = ds[i];
+        if (pt.isOutlier) {
+            outliers++;
+        } else if (pt.x !== undefined && pt.y !== undefined) {
+            const expectedY = GameState.profile.trueW * pt.x + GameState.profile.trueB;
+            if (Math.abs(pt.y - expectedY) > 5.5) outliers++;
+        }
+    }
+    const outlierRatio = outliers / n;
+    cleanliness = Math.max(0, Math.min(100, Math.round((1.0 - outlierRatio * 3.5) * 100)));
+    if (outliers > 0) defects.push(`${outliers} High Outlier(s) Present`);
+
+    // 3. Domain Coverage
+    const domainSpan = maxX - minX;
+    const spanScore = Math.min(1.0, domainSpan / 7.5);
+    const countScore = Math.min(1.0, n / 10);
+    coverage = Math.max(0, Math.min(100, Math.round((spanScore * 0.65 + countScore * 0.35) * 100)));
+    if (coverage < 60) defects.push("Narrow Feature Domain (High Extrapolation Risk)");
+
+    // Aggregate Score
+    const totalScore = Math.max(5, Math.min(100, Math.round(balance * 0.35 + cleanliness * 0.35 + coverage * 0.30)));
+    const grade = totalScore >= 85 ? "EXCELLENT" : (totalScore >= 70 ? "GOOD" : (totalScore >= 50 ? "FAIR" : "CRITICAL / SKEWED"));
+    const defectSummary = defects.length > 0 ? defects.join(" • ") : "Clean & Balanced Empirical Dataset";
+    const forecast = totalScore >= 80 ? "High Generalization (>90% test accuracy expected)" :
+                     (totalScore >= 55 ? "Moderate Generalization (~75-85% test accuracy expected)" :
+                     "Severe Generalization Failure Predicted on Held-Out Test Set (<65%)");
+
+    return {
+        score: totalScore,
+        grade,
+        balance,
+        cleanliness,
+        coverage,
+        defects: defectSummary,
+        forecast
+    };
+}
+
+function updateDatasetHealthUI(health) {
+    const valEl = document.getElementById("drawer-health-score-val");
+    if (valEl) {
+        valEl.innerText = `${health.score}% [${health.grade}]`;
+        valEl.className = health.score >= 80 ? "green-text" : (health.score >= 50 ? "text-amber" : "fail-text");
+    }
+
+    const fillEl = document.getElementById("drawer-health-gauge-fill");
+    if (fillEl) {
+        fillEl.style.width = `${health.score}%`;
+        fillEl.style.backgroundColor = health.score >= 80 ? "#4ade80" : (health.score >= 50 ? "#facc15" : "#f43f5e");
+    }
+
+    if (document.getElementById("health-sub-balance")) document.getElementById("health-sub-balance").innerText = `${health.balance}%`;
+    if (document.getElementById("health-sub-clean")) document.getElementById("health-sub-clean").innerText = `${health.cleanliness}%`;
+    if (document.getElementById("health-sub-cover")) document.getElementById("health-sub-cover").innerText = `${health.coverage}%`;
+    if (document.getElementById("drawer-health-defects-text")) document.getElementById("drawer-health-defects-text").innerText = `⚠️ ${health.defects}`;
+
+    // Terminal Health Card
+    const termBadge = document.getElementById("term-health-badge");
+    if (termBadge) {
+        termBadge.innerText = `🩺 HEALTH: ${health.score}% [${health.grade}]`;
+        termBadge.style.color = health.score >= 80 ? "#4ade80" : (health.score >= 50 ? "#facc15" : "#f43f5e");
+    }
+    const termFill = document.getElementById("term-health-gauge-fill");
+    if (termFill) {
+        termFill.style.width = `${health.score}%`;
+        termFill.style.backgroundColor = health.score >= 80 ? "#4ade80" : (health.score >= 50 ? "#facc15" : "#f43f5e");
+    }
+    const termBreakdown = document.getElementById("term-health-breakdown");
+    if (termBreakdown) termBreakdown.innerText = `⚖️ Bal: ${health.balance}% | 🧹 Clean: ${health.cleanliness}% | 🌐 Cover: ${health.coverage}%`;
+    const termForecast = document.getElementById("term-health-forecast");
+    if (termForecast) {
+        termForecast.innerText = health.forecast;
+        termForecast.className = health.score >= 80 ? "text-green" : (health.score >= 50 ? "text-amber" : "fail-text");
+    }
+    const termDefect = document.getElementById("term-health-defect");
+    if (termDefect) termDefect.innerText = `⚠️ ${health.defects}`;
+}
+
+function updateHUD() {
+    const ds = GameState.collectedDataset || [];
+    const n = ds.length;
+    let xCount = 0, yCount = 0;
+    ds.forEach(p => {
+        if (p.x !== undefined || p.x1 !== undefined) xCount++;
+        if (p.y !== undefined || p.x2 !== undefined) yCount++;
+    });
+
+    if (document.getElementById("drawer-x-count")) document.getElementById("drawer-x-count").innerText = xCount;
+    if (document.getElementById("drawer-y-count")) document.getElementById("drawer-y-count").innerText = yCount;
+    if (document.getElementById("drawer-n-count")) document.getElementById("drawer-n-count").innerText = n;
+    if (document.getElementById("objective-status")) document.getElementById("objective-status").innerText = `${n}/18 COLLECTED`;
+
+    computeDatasetStats();
 }
 
 function initializePlaythroughSeed(seedStr) {
@@ -762,8 +896,24 @@ function runGrandPrixSimulation() {
     });
 
     lastRaceResults = results;
-    GameState.lastLoss = results.Adam.finalLoss;
-    GameState.lastAccuracy = Math.min(99.4, Math.max(68.0, 100.0 - results.Adam.finalLoss * 15));
+
+    // Evaluate Genuine Generalization on Unseen Held-Out Test Set (Stage 16/24 Infrastructure)
+    const testN = 30;
+    let testLossSum = 0;
+    let testCorrectCount = 0;
+    for (let t = 0; t < testN; t++) {
+        const tX = -4.0 + (t / (testN - 1)) * 8.0;
+        const trueY = GameState.profile.trueW * tX + GameState.profile.trueB;
+        const predY = results.Adam.finalW * tX + results.Adam.finalB;
+        const err = predY - trueY;
+        testLossSum += err * err;
+        if (Math.abs(err) < 1.45) testCorrectCount++;
+    }
+    const heldOutMSE = testLossSum / (2 * testN);
+    const heldOutAccuracy = Math.max(35.0, Math.min(99.0, (testCorrectCount / testN) * 100.0));
+
+    GameState.lastLoss = heldOutMSE;
+    GameState.lastAccuracy = heldOutAccuracy;
 
     document.querySelectorAll(".graph-card").forEach(c => c.classList.remove("error-desaturated"));
 
@@ -804,11 +954,12 @@ function runGrandPrixSimulation() {
     }
 
     if (banner) {
-        banner.className = "pass";
+        const health = computeDatasetHealth(ds, -4.5, 4.5, 2.5, 0, 0, false);
+        banner.className = heldOutAccuracy >= 80 ? "pass" : "fail";
         banner.innerHTML = `🏁 <b>4-WAY GRAND PRIX (TRAINED ON ${n} HARVESTED DATA POINTS):</b><br>` +
-            `• <b>Adam:</b> Converged in <b>${results.Adam.convEp}</b> epochs (Final MSE = ${results.Adam.finalLoss.toFixed(4)}, w=${results.Adam.finalW.toFixed(2)}, b=${results.Adam.finalB.toFixed(2)})<br>` +
-            `• <b>RMSprop:</b> Converged in ${results.RMSprop.convEp} epochs (MSE = ${results.RMSprop.finalLoss.toFixed(4)})<br>` +
-            `• <b>SGD:</b> ${results.SGD.finalLoss > 0.15 ? "Oscillated on steep gradients" : "Converged slowly"} (MSE = ${results.SGD.finalLoss.toFixed(4)})`;
+            `• <b>Held-Out Test Generalization:</b> <b style="color:${heldOutAccuracy >= 80 ? '#4ade80' : '#f43f5e'};">${heldOutAccuracy.toFixed(1)}% Accuracy</b> (Test MSE = ${heldOutMSE.toFixed(4)})<br>` +
+            `• <b>Pre-Training Health Score:</b> ${health.score}% [${health.grade}] — <i>${health.defects}</i><br>` +
+            `• <b>Adam Model:</b> Final slope w = ${results.Adam.finalW.toFixed(2)}, b = ${results.Adam.finalB.toFixed(2)}`;
         banner.classList.remove("hidden");
     }
 }
