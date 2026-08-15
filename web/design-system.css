@@ -1,0 +1,83 @@
+/* ==========================================================================
+   NEURO-ARENA: UNIFIED DESIGN SYSTEM TOKENS (CSS VARIABLES)
+   Defines 6 Biome Palettes, 8px Spacing Grid, Typography, Radii & Glow Rules
+   ========================================================================== */
+
+:root {
+    /* --- 1. TYPOGRAPHY TOKENS --- */
+    --font-display-mono: 'JetBrains Mono', 'Fira Code', monospace;
+    --font-ui-sans: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+    /* --- 2. 8PX SPACING GRID SCALE --- */
+    --space-1: 8px;
+    --space-2: 16px;
+    --space-3: 24px;
+    --space-4: 32px;
+    --space-5: 40px;
+    --space-6: 48px;
+    --space-8: 64px;
+
+    /* --- 3. CORNER RADII SCALE --- */
+    --radius-sm: 6px;
+    --radius-md: 12px;
+    --radius-lg: 18px;
+    --radius-full: 9999px;
+
+    /* --- 4. 6 PER-BIOME COLOR PALETTES --- */
+    
+    /* Biome 1: The Linear Steppes (Amber / Earth) */
+    --biome1-primary: #f59e0b;
+    --biome1-secondary: #78350f;
+    --biome1-accent: #fbbf24;
+    --biome1-bg: rgba(28, 25, 23, 0.95);
+    --biome1-border: rgba(245, 158, 11, 0.35);
+    --biome1-glow: 0 0 20px rgba(245, 158, 11, 0.5);
+
+    /* Biome 2: The Binary Marshlands (Teal / Violet) */
+    --biome2-primary: #14b8a6;
+    --biome2-secondary: #8b5cf6;
+    --biome2-accent: #2dd4bf;
+    --biome2-bg: rgba(4, 47, 46, 0.95);
+    --biome2-border: rgba(20, 184, 166, 0.35);
+    --biome2-glow: 0 0 20px rgba(20, 184, 166, 0.5);
+
+    /* Biome 3: The Variance Tundra (Ice-Blue / Frost) */
+    --biome3-primary: #38bdf8;
+    --biome3-secondary: #0c4a6e;
+    --biome3-accent: #bae6fd;
+    --biome3-bg: rgba(8, 47, 73, 0.95);
+    --biome3-border: rgba(56, 189, 248, 0.35);
+    --biome3-glow: 0 0 20px rgba(56, 189, 248, 0.5);
+
+    /* Biome 4: The Branching Canopy (Emerald Green / Gold) */
+    --biome4-primary: #10b981;
+    --biome4-secondary: #064e3b;
+    --biome4-accent: #fbbf24;
+    --biome4-bg: rgba(2, 44, 34, 0.95);
+    --biome4-border: rgba(16, 185, 129, 0.35);
+    --biome4-glow: 0 0 20px rgba(16, 185, 129, 0.5);
+
+    /* Biome 5: The Deep Synapse Citadel (Neon Purple / Cyan) */
+    --biome5-primary: #a855f7;
+    --biome5-secondary: #06b6d4;
+    --biome5-accent: #22d3ee;
+    --biome5-bg: rgba(15, 23, 42, 0.95);
+    --biome5-border: rgba(168, 85, 247, 0.35);
+    --biome5-glow: 0 0 20px rgba(168, 85, 247, 0.5);
+
+    /* Biome 6: The Semantic Expanse (Starlit White / Holographic) */
+    --biome6-primary: #f8fafc;
+    --biome6-secondary: #818cf8;
+    --biome6-accent: #38bdf8;
+    --biome6-bg: rgba(2, 6, 23, 0.96);
+    --biome6-border: rgba(248, 250, 252, 0.40);
+    --biome6-glow: 0 0 24px rgba(129, 140, 248, 0.6);
+
+    /* --- 5. GLOBAL UI & GLASSMORPHISM TOKENS --- */
+    --ui-bg-glass: rgba(7, 11, 18, 0.94);
+    --ui-border-glass: 1px solid rgba(56, 189, 248, 0.25);
+    --ui-backdrop-blur: blur(16px);
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --text-highlight: #38bdf8;
+}
