@@ -667,23 +667,52 @@ function triggerMascotDialogue(text, duration = 8000) {
 }
 
 function updateTutorialState() {
+    const btnTerm = document.getElementById("btn-open-terminal");
+    const btnTrain = document.getElementById("btn-train-weapon");
+    const btnModels = document.getElementById("btn-open-models-hud");
+    const btnQuery = document.getElementById("btn-query-model");
+
     if (GameState.tutorialStep === 0) {
         triggerMascotDialogue("Welcome, Architect! I'm ADA. See that glowing Feature Crystal (X) ahead? Let's harvest it to collect sample data!", 9000);
         document.getElementById("objective-title").innerText = "HARVEST 1ST FEATURE CRYSTAL (X)";
-        document.getElementById("btn-open-terminal").classList.remove("pulsing-target");
+        btnTerm?.classList.remove("pulsing-target");
+        btnTrain?.classList.remove("pulsing-target");
+        btnModels?.classList.remove("pulsing-target");
     } else if (GameState.tutorialStep === 1) {
         triggerMascotDialogue("Great extraction! That crystal contains linear gradient energy. Follow your radar to the glowing Lab Station!", 9000);
         document.getElementById("objective-title").innerText = "ENTER THE LAB STATION";
-        document.getElementById("btn-open-terminal").classList.add("pulsing-target");
+        btnTerm?.classList.add("pulsing-target");
+        btnTrain?.classList.remove("pulsing-target");
+        btnModels?.classList.remove("pulsing-target");
     } else if (GameState.tutorialStep === 2) {
         triggerMascotDialogue("I've pre-filled your model expression: y = wx + b. Hit the pulsing TRAIN button to run Gradient Descent!", 9000);
         document.getElementById("objective-title").innerText = "CALIBRATE & TRAIN MODEL";
-        document.getElementById("btn-train-weapon").classList.add("pulsing-target");
+        btnTerm?.classList.remove("pulsing-target");
+        btnTrain?.classList.add("pulsing-target");
+        btnModels?.classList.remove("pulsing-target");
     } else if (GameState.tutorialStep === 3) {
-        triggerMascotDialogue("Look at that loss curve converge! The weights are optimized. You are ready to conquer the wild gradients. The arena is yours!", 10000);
+        GameState.tutorialStep = 4;
+        updateTutorialState();
+    } else if (GameState.tutorialStep === 4) {
+        triggerMascotDialogue("Incredible victory, Architect! Your newly trained model is archived in the Vault. Let's inspect its inner mechanics! Tap '💾 MY MODELS' on your HUD.", 10000);
+        document.getElementById("objective-title").innerText = "OPEN MODEL VAULT (💾 MY MODELS)";
+        btnTerm?.classList.remove("pulsing-target");
+        btnTrain?.classList.remove("pulsing-target");
+        btnModels?.classList.add("pulsing-target");
+    } else if (GameState.tutorialStep === 5) {
+        triggerMascotDialogue("Enter X = 8.5 to query your model and observe how continuous functions extrapolate into uncharted territory!", 10000);
+        document.getElementById("objective-title").innerText = "INTERROGATE MODEL (QUERY X = 8.5)";
+        btnModels?.classList.remove("pulsing-target");
+        btnQuery?.classList.add("pulsing-target");
+        const inputQ = document.getElementById("input-consult-x");
+        if (inputQ) inputQ.value = "8.5";
+    } else if (GameState.tutorialStep === 6) {
+        triggerMascotDialogue("Notice how the line slices straight into empty space? That's Extrapolation Error in action! You now know how continuous models reason outside their data domain.", 11000);
         document.getElementById("objective-title").innerText = "EXPLORE & TRAIN ALL 6 BIOMES";
-        document.getElementById("btn-train-weapon").classList.remove("pulsing-target");
-        document.getElementById("btn-open-terminal").classList.remove("pulsing-target");
+        btnTerm?.classList.remove("pulsing-target");
+        btnTrain?.classList.remove("pulsing-target");
+        btnModels?.classList.remove("pulsing-target");
+        btnQuery?.classList.remove("pulsing-target");
     }
 }
 
@@ -2251,9 +2280,12 @@ function renderModelGallery() {
         return;
     }
 
-    TrainedModelVault.forEach(m => {
+    TrainedModelVault.forEach((m, idx) => {
         const card = document.createElement("div");
         card.className = "model-gallery-card";
+        if (GameState.tutorialStep === 4 && idx === 0) {
+            card.classList.add("pulsing-target");
+        }
         card.innerHTML = `
             <div class="model-card-header">
                 <span class="model-card-title">🧠 ${m.name}</span>
@@ -2262,7 +2294,14 @@ function renderModelGallery() {
             <div class="model-card-stats">Acc: <b>${m.accuracy.toFixed(1)}%</b> | Loss: <b>${m.finalLoss.toFixed(4)}</b></div>
             <div class="model-card-footer">🧬 #${m.seed} | 📅 ${m.timestamp}</div>
         `;
-        card.addEventListener("click", () => openModelInspector(m));
+        card.addEventListener("click", () => {
+            openModelInspector(m);
+            if (GameState.tutorialStep === 4) {
+                GameState.tutorialStep = 5;
+                document.getElementById("inspector-tab-consult")?.click();
+                updateTutorialState();
+            }
+        });
         grid.appendChild(card);
     });
 }
@@ -2386,6 +2425,12 @@ function executeConsultQuery(qX) {
 
     // Update Decision Canvas
     renderConsultDecisionGraph(m, { queryX: qX, predictedY: predY, isExtrapolation: isExtrap });
+
+    if (GameState.tutorialStep === 5) {
+        GameState.tutorialStep = 6;
+        updateTutorialState();
+        saveGame();
+    }
 }
 
 function renderConsultDecisionGraph(model, latestQuery) {

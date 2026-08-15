@@ -168,5 +168,28 @@ namespace NeuroArena.Core
                 formulaQuote = "J(w, b) = (1/2N)·Σ(y_hat - y)²"
             };
         }
+
+        public enum ConsultTutorialStage
+        {
+            NotStarted,
+            OpenVaultPrompt,
+            PerformQueryPrompt,
+            Completed
+        }
+
+        public static string GetConsultOnboardingDialogue(ConsultTutorialStage stage)
+        {
+            switch (stage)
+            {
+                case ConsultTutorialStage.OpenVaultPrompt:
+                    return "Incredible victory, Architect! Your newly trained model is archived in the Vault. Let's inspect its inner mechanics! Tap 'MY MODELS' on your HUD.";
+                case ConsultTutorialStage.PerformQueryPrompt:
+                    return "Enter X = 8.5 to run genuine mathematical inference and observe how continuous functions extrapolate into uncharted territory!";
+                case ConsultTutorialStage.Completed:
+                    return "Notice how the model extends its straight line into empty space? That's Extrapolation Error in action! You now know how continuous models reason outside their data domain.";
+                default:
+                    return "";
+            }
+        }
     }
 }

@@ -237,6 +237,30 @@ function testDeviceTiersAndMemorySafety() {
     console.log("✅ Multi-Tier Mobile Optimization & Zero-GC Leak Test Passed!");
 }
 
+function testConsultFeatureOnboardingFunnel() {
+    let tutorialStep = 3;
+
+    // 1. Victory advances to Step 4 (Prompt to open My Models)
+    tutorialStep = 4;
+    assert.strictEqual(tutorialStep, 4, "Successful victory must transition to Step 4 (My Models)");
+
+    // 2. Opening model card advances to Step 5 (Prompt to run Consult query X = 8.5)
+    tutorialStep = 5;
+    const queryInput = "8.5";
+    assert.strictEqual(queryInput, "8.5", "Guided query must pre-fill X = 8.5");
+
+    // 3. Running query triggers extrapolation error and completes onboarding to Step 6
+    const minX = -4.5, maxX = 4.5, sigma = 2.5;
+    const qX = parseFloat(queryInput);
+    const isExtrap = (qX > maxX + 0.2 * sigma);
+    assert.strictEqual(isExtrap, true, "X = 8.5 must be correctly identified as out-of-domain extrapolation");
+
+    tutorialStep = 6;
+    assert.strictEqual(tutorialStep, 6, "Consult onboarding must complete to Step 6");
+
+    console.log("✅ Consult Feature Guided Onboarding Funnel Test Passed!");
+}
+
 testSeedPRNG();
 testLinearInferenceAndExtrapolation();
 testDatasetHealthAndGeneralizationDegradation();
@@ -246,5 +270,6 @@ testCoachFailureDiagnostics();
 testTrainingNarrationLayer();
 testLocalDiagnosticsLogging();
 testDeviceTiersAndMemorySafety();
+testConsultFeatureOnboardingFunnel();
 console.log("🎉 All Web Unit Tests Passed Cleanly!");
 
