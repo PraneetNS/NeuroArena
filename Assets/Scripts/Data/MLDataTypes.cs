@@ -136,4 +136,18 @@ namespace NeuroArena.Data
             expectedGeneralization = "Harvest at least 3 empirical tokens in the biome."
         };
     }
+
+    [Serializable]
+    public struct DatasetShiftMetrics
+    {
+        public string sourceBiomeA;
+        public string sourceBiomeB;
+        public float mixRatioA;          // e.g. 0.50 (50% A, 50% B)
+        public float distributionDivergence; // Divergence distance between distribution parameters
+        public string shiftCategory;     // Covariate Shift P(X), Concept Drift P(Y|X), Subpopulation Shift
+        public float compromiseLoss;     // Training MSE on blended mixture
+        public float lossOnDistributionA;// Evaluated on pure Held-Out A
+        public float lossOnDistributionB;// Evaluated on pure Held-Out B
+        public string pedagogicalExplanation; // Explanation of why model struggled
+    }
 }

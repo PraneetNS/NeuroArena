@@ -232,10 +232,13 @@ namespace NeuroArena.UI
             }
             GUI.color = Color.white;
             GUILayout.EndHorizontal();
+        }
 
-            GUILayout.Space(6 * scale);
+        private void DrawBaggingAndDuelParty(float scale)
+        {
+            if (isSandboxShiftMode) return;
 
-            // Party & Duel Action Row
+            GUILayout.Space(2 * scale);
             GUILayout.BeginHorizontal();
             GUI.color = new Color(0.3f, 1f, 0.6f);
             if (GUILayout.Button("🌲 <b>SUMMON BAGGING PARTY (5 TREES)</b>", actionBtnStyle, GUILayout.Height(32 * scale)))
@@ -310,6 +313,14 @@ namespace NeuroArena.UI
                 GUILayout.Label($"⚠️ <b>Dataset Defects:</b> <color=#FDA4AF>{health.primaryDefect}</color>", labelStyle);
             }
             GUILayout.EndVertical();
+
+            if (lastShiftResult.HasValue && isSandboxShiftMode)
+            {
+                GUILayout.Space(6 * scale);
+                GUILayout.Label("<b>4. DATASET SHIFT DIAGNOSTIC & CONFLICT REPORT</b>", sectionHeaderStyle);
+                GUILayout.Label(lastShiftResult.Value.pedagogicalExplanation, bannerFailStyle, GUILayout.Height(75 * scale));
+                return;
+            }
 
             if (!isBiomeCalibrationPassed.HasValue) return;
 
@@ -407,6 +418,29 @@ namespace NeuroArena.UI
             isShowingDuel = false;
             isShowingRace = false;
             liveLossHistory.Clear();
+
+            if (isSandboxShiftMode && MLInventory.Instance != null)
+            {
+                var mixed = MLInventory.Instance.MixBiomeDatasets(sandboxBiomeA, sandboxBiomeB, sandboxMixRatio, out DatasetShiftMetrics shift);
+                lastShiftResult = shift;
+
+                cachedLinearX = new float[mixed.Count];
+                cachedLinearY = new float[mixed.Count];
+                for (int i = 0; i < mixed.Count; i++) { cachedLinearX[i] = mixed[i].x; cachedLinearY[i] = mixed[i].y; }
+
+                displayW = (2.45f * sandboxMixRatio) + (-1.80f * (1f - sandboxMixRatio));
+                displayB = (1.15f * sandboxMixRatio) + (6.20f * (1f - sandboxMixRatio));
+
+                for (int ep = 0; ep < 30; ep++)
+                {
+                    float loss = shift.compromiseLoss + Mathf.Exp(-ep * 0.15f) * 2.0f;
+                    liveLossHistory.Add(loss);
+                }
+
+                isBiomeCalibrationPassed = false;
+                statusMessage = $"<color=#FDA4AF>DATASET SHIFT SIMULATION:</color> High Compromise MSE (J = {shift.compromiseLoss:F4}) | Model failed on pure test distributions!";
+                return;
+            }
 
             int sampleCount = (MLInventory.Instance != null) ? 
                 (isNeuralMode || isTreeMode ? MLInventory.Instance.ClassificationSamplesCount : MLInventory.Instance.PairedSamplesCount) : 0;

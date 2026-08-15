@@ -642,8 +642,37 @@
                             <div class="health-forecast-row">
                                 <span>🔮 <b>Held-Out Test Forecast:</b> <span id="term-health-forecast" class="text-green">High Generalization (>90% test acc expected)</span></span>
                             </div>
-                            <div class="health-defect-alert" id="term-health-defect">
-                                ⚠️ <i>Empirical dataset is balanced and clean.</i>
+                    <div class="terminal-section" id="terminal-shift-sandbox-section">
+                        <div class="section-title" style="display:flex; justify-content:space-between; align-items:center;">
+                            <span>🧪 DATASET SHIFT SANDBOX (CONCEPT DRIFT)</span>
+                            <button id="btn-toggle-shift-sandbox" class="preset-btn" style="min-height:30px; font-size:10px;">⚡ Toggle Sandbox</button>
+                        </div>
+                        <div id="shift-sandbox-controls" class="shift-sandbox-box hidden">
+                            <div class="shift-row-flex">
+                                <div class="shift-select-col">
+                                    <label style="font-size:10px; color:#38bdf8;">Distribution A:</label>
+                                    <select id="shift-select-a" class="cyber-select">
+                                        <option value="steppes">Biome 1: Linear Steppes (y = 2.45x + 1.15)</option>
+                                        <option value="marshlands">Biome 2: Marshlands (Logistic)</option>
+                                    </select>
+                                </div>
+                                <div class="shift-select-col">
+                                    <label style="font-size:10px; color:#fb923c;">Distribution B:</label>
+                                    <select id="shift-select-b" class="cyber-select">
+                                        <option value="tundra_shifted">Biome 3: Shifted Tundra (y = -1.80x + 6.20)</option>
+                                        <option value="tundra_poly">Biome 3: Oscillatory Polynomial</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="shift-slider-row" style="margin-top:6px;">
+                                <div style="display:flex; justify-content:space-between; font-size:11px;">
+                                    <span>Blend Mixture:</span>
+                                    <b id="shift-ratio-label" class="text-cyan">50% A / 50% B</b>
+                                </div>
+                                <input type="range" id="shift-mix-slider" min="5" max="95" value="50" style="width:100%; margin-top:4px;">
+                            </div>
+                            <div style="margin-top:8px;">
+                                <button id="btn-run-shift-sim" class="action-btn glow-amber" style="width:100%; min-height:44px;">💥 TRAIN ON CONFLICTING MIXTURE & OBSERVE STRUGGLE</button>
                             </div>
                         </div>
                     </div>

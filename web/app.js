@@ -981,6 +981,123 @@ function trainEquippedWeapon() {
     }
 }
 
+// --- DATASET SHIFT SANDBOX SIMULATION ---
+function runDatasetShiftSimulation(typeA, typeB, ratioA) {
+    const totalN = 32;
+    const countA = Math.round(totalN * ratioA);
+    const countB = totalN - countA;
+
+    const slopeA = 2.45, biasA = 1.15;
+    const slopeB = -1.80, biasB = 6.20;
+
+    const mixedPts = [];
+
+    // Sample from Distribution A (Cyan)
+    for (let i = 0; i < countA; i++) {
+        const x = -3.5 + (i / Math.max(1, countA - 1)) * 7.0;
+        const y = slopeA * x + biasA + (Math.random() - 0.5) * 0.5;
+        mixedPts.push({ x, y, dist: "A" });
+    }
+
+    // Sample from Distribution B (Orange)
+    for (let i = 0; i < countB; i++) {
+        const x = -3.5 + (i / Math.max(1, countB - 1)) * 7.0;
+        const y = (typeB === "tundra_poly" ? (0.45 * x * x - 2.8) : (slopeB * x + biasB)) + (Math.random() - 0.5) * 0.5;
+        mixedPts.push({ x, y, dist: "B" });
+    }
+
+    // Compute Compromise OLS Fit
+    let sumX = 0, sumY = 0;
+    mixedPts.forEach(p => { sumX += p.x; sumY += p.y; });
+    const meanX = sumX / mixedPts.length, meanY = sumY / mixedPts.length;
+    let num = 0, den = 0;
+    mixedPts.forEach(p => {
+        num += (p.x - meanX) * (p.y - meanY);
+        den += (p.x - meanX) * (p.x - meanX);
+    });
+    const compW = den > 1e-6 ? num / den : 0;
+    const compB = meanY - compW * meanX;
+
+    // Calculate compromise MSE loss
+    let totalLoss = 0;
+    mixedPts.forEach(p => {
+        const pred = compW * p.x + compB;
+        const err = pred - p.y;
+        totalLoss += err * err;
+    });
+    const compMSE = totalLoss / (2 * mixedPts.length);
+
+    playFailureSFX();
+    triggerFailureFeedback();
+
+    // Render Dual-Color Scatter Canvas
+    const canvasS = document.getElementById("canvas-scatter-graph");
+    if (canvasS) {
+        const ctxS = canvasS.getContext("2d");
+        ctxS.fillStyle = "#04070c";
+        ctxS.fillRect(0, 0, canvasS.width, canvasS.height);
+
+        const cx = canvasS.width / 2, cy = canvasS.height / 2;
+        const scaleX = canvasS.width / 18, scaleY = canvasS.height / 24;
+
+        // Draw scatter points
+        mixedPts.forEach(p => {
+            ctxS.fillStyle = p.dist === "A" ? "#38bdf8" : "#fb923c";
+            ctxS.beginPath();
+            ctxS.arc(cx + p.x * scaleX, cy - p.y * scaleY, 4, 0, Math.PI * 2);
+            ctxS.fill();
+        });
+
+        // Draw compromise line
+        ctxS.strokeStyle = "#facc15";
+        ctxS.lineWidth = 2.5;
+        ctxS.beginPath();
+        ctxS.moveTo(cx - 8 * scaleX, cy - (compW * -8 + compB) * scaleY);
+        ctxS.lineTo(cx + 8 * scaleX, cy - (compW * 8 + compB) * scaleY);
+        ctxS.stroke();
+
+        ctxS.font = "bold 10px JetBrains Mono, monospace";
+        ctxS.fillStyle = "#38bdf8";
+        ctxS.fillText("● Dist A (Steppes)", 10, 15);
+        ctxS.fillStyle = "#fb923c";
+        ctxS.fillText("● Dist B (Tundra Shift)", 10, 28);
+    }
+
+    // Render Loss Graph showing high compromise plateau
+    const canvasL = document.getElementById("canvas-loss-graph");
+    if (canvasL) {
+        const ctxL = canvasL.getContext("2d");
+        ctxL.fillStyle = "#04070c";
+        ctxL.fillRect(0, 0, canvasL.width, canvasL.height);
+
+        ctxL.strokeStyle = "#f43f5e";
+        ctxL.lineWidth = 2.2;
+        ctxL.beginPath();
+        for (let ep = 0; ep < 40; ep++) {
+            const px = 25 + (ep / 39) * (canvasL.width - 45);
+            const lossVal = compMSE + Math.exp(-ep * 0.12) * 2.5;
+            const py = (canvasL.height - 15) - (Math.min(lossVal, 8.0) / 8.0) * (canvasL.height - 30);
+            if (ep === 0) ctxL.moveTo(px, py); else ctxL.lineTo(px, py);
+        }
+        ctxL.stroke();
+
+        ctxL.fillStyle = "#f43f5e";
+        ctxL.font = "bold 11px JetBrains Mono, monospace";
+        ctxL.fillText(`💥 HIGH COMPROMISE LOSS: J = ${compMSE.toFixed(3)}`, 15, 20);
+    }
+
+    // Surface Pedagogical Banner
+    const banner = document.getElementById("benchmark-banner");
+    if (banner) {
+        banner.className = "fail";
+        banner.innerHTML = `⚠️ <b>DATASET SHIFT / CONCEPT DRIFT DETECTED:</b><br>` +
+            `• <b>Conflicting Mechanisms:</b> Mixed <b>${Math.round(ratioA * 100)}% Steppes</b> ($w_A = ${slopeA.toFixed(2)}$) with <b>${Math.round((1 - ratioA) * 100)}% Tundra</b> ($w_B = ${slopeB.toFixed(2)}$).<br>` +
+            `• <b>Model Struggle:</b> Single linear model forced into compromise ($w_{\\text{comp}} = ${compW.toFixed(2)}, b = ${compB.toFixed(2)}$) with elevated MSE ($J = ${compMSE.toFixed(4)}$).<br>` +
+            `• <i>Key ML Lesson: Models assume stationary i.i.d. distributions. Blending conflicting environments causes severe generalization failure!</i>`;
+        banner.classList.remove("hidden");
+    }
+}
+
 // --- 3D PARTICLE SHOCKWAVE POOL (CAPPED FOR MOBILE 60 FPS) ---
 let particleSystem = null;
 let particleGeo = null;
@@ -1281,6 +1398,36 @@ function spawnBiome6Runes(center) {
         scene.add(mesh);
         runeMeshes.push(mesh);
     });
+}
+
+function startBiomeLoadingSequence(biomeIndex, onComplete) {
+    GameState.currentBiome = biomeIndex;
+    const loadingOverlay = document.getElementById("loading-screen");
+    const titleEl = document.getElementById("loading-biome-name");
+    const progressEl = document.getElementById("loading-progress-fill");
+    const pctEl = document.getElementById("loading-pct-text");
+    const tipEl = document.getElementById("loading-codex-tip");
+
+    const cur = CodexCurriculum[biomeIndex] || CodexCurriculum[0];
+    if (titleEl) titleEl.innerText = `⚡ CALIBRATING BIOME ${biomeIndex + 1}: ${cur.subtitle.toUpperCase()}`;
+    if (tipEl) tipEl.innerHTML = `💡 <b>CODEX FACT:</b> ${cur.plain}`;
+
+    if (loadingOverlay) loadingOverlay.classList.remove("hidden");
+
+    let p = 0;
+    const timer = setInterval(() => {
+        p += 25;
+        if (progressEl) progressEl.style.width = `${p}%`;
+        if (pctEl) pctEl.innerText = `${p}%`;
+
+        if (p >= 100) {
+            clearInterval(timer);
+            setTimeout(() => {
+                if (loadingOverlay) loadingOverlay.classList.add("hidden");
+                if (typeof onComplete === "function") onComplete();
+            }, 250);
+        }
+    }, 80);
 }
 
 function spawnSeededCollectibles() {
@@ -2385,6 +2532,26 @@ function setupUIEvents() {
             document.getElementById("consult-query-input").value = val;
             executeConsultQuery(val);
         });
+    });
+
+    // Dataset Shift Sandbox Controls
+    document.getElementById("btn-toggle-shift-sandbox")?.addEventListener("click", () => {
+        const controls = document.getElementById("shift-sandbox-controls");
+        if (controls) controls.classList.toggle("hidden");
+    });
+
+    document.getElementById("shift-mix-slider")?.addEventListener("input", (e) => {
+        const rA = parseInt(e.target.value);
+        const rB = 100 - rA;
+        const lbl = document.getElementById("shift-ratio-label");
+        if (lbl) lbl.innerText = `${rA}% A / ${rB}% B`;
+    });
+
+    document.getElementById("btn-run-shift-sim")?.addEventListener("click", () => {
+        const typeA = document.getElementById("shift-select-a")?.value || "steppes";
+        const typeB = document.getElementById("shift-select-b")?.value || "tundra_shifted";
+        const ratioA = parseInt(document.getElementById("shift-mix-slider")?.value || "50") / 100.0;
+        runDatasetShiftSimulation(typeA, typeB, ratioA);
     });
 
     // Seed Randomizer

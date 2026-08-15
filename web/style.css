@@ -1559,3 +1559,38 @@ button:active {
     margin-top: 4px;
 }
 
+/* Dataset Shift Sandbox Styles */
+.shift-sandbox-box {
+    padding: 10px;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(244, 63, 94, 0.3);
+    border-radius: var(--radius-sm);
+    margin-top: 8px;
+}
+
+.shift-row-flex {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.shift-select-col {
+    flex: 1;
+    min-width: 140px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.cyber-select {
+    padding: 6px 8px;
+    background: rgba(2, 6, 23, 0.85);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    border-radius: var(--radius-sm);
+    color: #f1f5f9;
+    font-size: 11px;
+    font-family: var(--font-display-mono);
+    outline: none;
+}
+
+

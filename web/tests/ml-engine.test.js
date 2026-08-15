@@ -66,12 +66,51 @@ function testDatasetHealthAndGeneralizationDegradation() {
     noisyDataset.forEach(p => { if (p.isOutlier) noisyOutliers++; });
     const noisyCleanliness = Math.max(0, Math.round((1 - (noisyOutliers / noisyDataset.length) * 3.5) * 100));
     assert(noisyCleanliness <= 30, "Noisy dataset cleanliness must drop significantly");
-
     console.log("✅ Dataset Health Score & Generalization Degradation Test Passed!");
+}
+
+function testDatasetShiftSimulationAndCompromiseError() {
+    // Dist A: y = 2.45x + 1.15
+    // Dist B: y = -1.80x + 6.20
+    const slopeA = 2.45, biasA = 1.15;
+    const slopeB = -1.80, biasB = 6.20;
+
+    const mixed = [];
+    for (let i = 0; i < 10; i++) {
+        const x = -3 + i * 0.6;
+        mixed.push({ x, y: slopeA * x + biasA, dist: "A" });
+        mixed.push({ x, y: slopeB * x + biasB, dist: "B" });
+    }
+
+    let sumX = 0, sumY = 0;
+    mixed.forEach(p => { sumX += p.x; sumY += p.y; });
+    const meanX = sumX / mixed.length, meanY = sumY / mixed.length;
+    let num = 0, den = 0;
+    mixed.forEach(p => {
+        num += (p.x - meanX) * (p.y - meanY);
+        den += (p.x - meanX) * (p.x - meanX);
+    });
+    const compW = num / den;
+    const compB = meanY - compW * meanX;
+
+    // Compromise slope is forced between positive and negative
+    assert(compW < slopeA && compW > slopeB, "Compromise slope must fall between contradictory slopes");
+
+    let totalLoss = 0;
+    mixed.forEach(p => {
+        const pred = compW * p.x + compB;
+        const err = pred - p.y;
+        totalLoss += err * err;
+    });
+    const mse = totalLoss / (2 * mixed.length);
+    assert(mse > 2.0, "Conflicting data generation must yield high compromise MSE");
+
+    console.log("✅ Dataset Shift Sandbox & Compromise Error Test Passed!");
 }
 
 testSeedPRNG();
 testLinearInferenceAndExtrapolation();
 testDatasetHealthAndGeneralizationDegradation();
+testDatasetShiftSimulationAndCompromiseError();
 console.log("🎉 All Web Unit Tests Passed Cleanly!");
 

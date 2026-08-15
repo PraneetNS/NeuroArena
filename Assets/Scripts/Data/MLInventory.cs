@@ -434,6 +434,111 @@ namespace NeuroArena.Data
             for (int i = 0; i < valList.Count; i++) { xVal[i] = valList[i].x; yVal[i] = valList[i].y; }
         }
 
+        /// <summary>
+        /// Cross-Biome Satchel: Returns all structurally compatible empirical samples for a target biome,
+        /// allowing later biomes (e.g. Tundra polynomials) to seamlessly draw from earlier biomes (Steppes 1D points).
+        /// </summary>
+        public List<DataPoint> GetCompatibleSamplesForBiome(int targetBiomeIndex)
+        {
+            List<DataPoint> compatible = new List<DataPoint>();
+            if (targetBiomeIndex == 0 || targetBiomeIndex == 2) // Continuous 1D regression & Polynomials
+            {
+                compatible.AddRange(dataset);
+                compatible.AddRange(tundraDataset);
+            }
+            else
+            {
+                compatible.AddRange(dataset);
+            }
+            return compatible;
+        }
+
+        /// <summary>
+        /// Dataset Shift Sandbox: Deliberately blends empirical datasets from two distinct distributions/biomes,
+        /// demonstrating Covariate Shift P(X) and Concept Drift P(Y|X) as the model struggles to fit conflicting generators.
+        /// </summary>
+        public List<DataPoint> MixBiomeDatasets(string biomeA, string biomeB, float mixRatioA, out DatasetShiftMetrics shiftMetrics)
+        {
+            mixRatioA = Mathf.Clamp01(mixRatioA);
+            List<DataPoint> mixed = new List<DataPoint>();
+
+            // Generate representative sample pools for both distributions
+            int totalN = 24;
+            int countA = Mathf.RoundToInt(totalN * mixRatioA);
+            int countB = totalN - countA;
+
+            // Distribution A: Linear Steppes (y = 2.45x + 1.15)
+            float slopeA = 2.45f, biasA = 1.15f;
+            for (int i = 0; i < countA; i++)
+            {
+                float x = -3.5f + (i / Mathf.Max(1f, countA - 1f)) * 7.0f;
+                float y = slopeA * x + biasA + UnityEngine.Random.Range(-0.25f, 0.25f);
+                mixed.Add(new DataPoint(x, y, biomeA));
+            }
+
+            // Distribution B: Shifted / Non-linear Tundra (y = -1.80x + 6.20 or y = 0.5x^2 - 3.0)
+            float slopeB = -1.80f, biasB = 6.20f;
+            for (int i = 0; i < countB; i++)
+            {
+                float x = -3.5f + (i / Mathf.Max(1f, countB - 1f)) * 7.0f;
+                float y = slopeB * x + biasB + UnityEngine.Random.Range(-0.25f, 0.25f);
+                mixed.Add(new DataPoint(x, y, biomeB));
+            }
+
+            // Calculate compromise fit (OLS on mixed data)
+            float sumX = 0f, sumY = 0f;
+            for (int i = 0; i < mixed.Count; i++) { sumX += mixed[i].x; sumY += mixed[i].y; }
+            float meanX = sumX / mixed.Count, meanY = sumY / mixed.Count;
+            float num = 0f, den = 0f;
+            for (int i = 0; i < mixed.Count; i++)
+            {
+                num += (mixed[i].x - meanX) * (mixed[i].y - meanY);
+                den += (mixed[i].x - meanX) * (mixed[i].x - meanX);
+            }
+            float compW = den > 1e-6f ? num / den : 0f;
+            float compB = meanY - compW * meanX;
+
+            // Evaluate compromise MSE loss on blended mixture vs pure distributions
+            float totalCompLoss = 0f, lossA = 0f, lossB = 0f;
+            for (int i = 0; i < mixed.Count; i++)
+            {
+                float pred = compW * mixed[i].x + compB;
+                float err = pred - mixed[i].y;
+                totalCompLoss += err * err;
+            }
+            float compMSE = totalCompLoss / (2f * mixed.Count);
+
+            // Pure Test Loss on Distribution A & B
+            for (int i = 0; i < 20; i++)
+            {
+                float x = -3.0f + (i / 19f) * 6.0f;
+                float pred = compW * x + compB;
+                float errA = pred - (slopeA * x + biasA);
+                float errB = pred - (slopeB * x + biasB);
+                lossA += errA * errA;
+                lossB += errB * errB;
+            }
+            lossA /= 40f;
+            lossB /= 40f;
+
+            float divergence = Mathf.Abs(slopeA - slopeB) + Mathf.Abs(biasA - biasB);
+
+            shiftMetrics = new DatasetShiftMetrics
+            {
+                sourceBiomeA = biomeA,
+                sourceBiomeB = biomeB,
+                mixRatioA = mixRatioA,
+                distributionDivergence = divergence,
+                shiftCategory = "Concept Drift P(Y|X) + Covariate Shift",
+                compromiseLoss = compMSE,
+                lossOnDistributionA = lossA,
+                lossOnDistributionB = lossB,
+                pedagogicalExplanation = $"⚠️ DATASET SHIFT DETECTED:\nThe training dataset mixes two conflicting data-generating mechanisms (Slope A = {slopeA:F2} vs Slope B = {slopeB:F2}). A single continuous model cannot satisfy both simultaneously, resulting in a high compromise MSE (J = {compMSE:F4}) and severe generalization degradation on both pure held-out distributions!"
+            };
+
+            return mixed;
+        }
+
         public void ExportToSaveData(GameSaveData saveData)
         {
             saveData.featureCrystalsCount = featureCrystalsCount;
