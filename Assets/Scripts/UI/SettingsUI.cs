@@ -11,6 +11,7 @@ namespace NeuroArena.UI
         Graphics,
         Controls,
         Accessibility,
+        Diagnostics,
         DangerZone
     }
 
@@ -127,6 +128,7 @@ namespace NeuroArena.UI
             if (GUILayout.Button("📱 Graphics", currentTab == SettingsTab.Graphics ? activeTabStyle : buttonStyle, GUILayout.Height(30 * scale))) currentTab = SettingsTab.Graphics;
             if (GUILayout.Button("🎮 Controls", currentTab == SettingsTab.Controls ? activeTabStyle : buttonStyle, GUILayout.Height(30 * scale))) currentTab = SettingsTab.Controls;
             if (GUILayout.Button("👁️ Access", currentTab == SettingsTab.Accessibility ? activeTabStyle : buttonStyle, GUILayout.Height(30 * scale))) currentTab = SettingsTab.Accessibility;
+            if (GUILayout.Button("📋 Logs", currentTab == SettingsTab.Diagnostics ? activeTabStyle : buttonStyle, GUILayout.Height(30 * scale))) currentTab = SettingsTab.Diagnostics;
             if (GUILayout.Button("⚠️ Reset", currentTab == SettingsTab.DangerZone ? activeTabStyle : buttonStyle, GUILayout.Height(30 * scale))) currentTab = SettingsTab.DangerZone;
             GUILayout.EndHorizontal();
 
@@ -146,6 +148,9 @@ namespace NeuroArena.UI
                     break;
                 case SettingsTab.Accessibility:
                     DrawAccessibilityTab(scale);
+                    break;
+                case SettingsTab.Diagnostics:
+                    DrawDiagnosticsTab(scale);
                     break;
                 case SettingsTab.DangerZone:
                     DrawDangerZoneTab(scale);
@@ -305,6 +310,82 @@ namespace NeuroArena.UI
             }
             GUILayout.EndHorizontal();
             GUILayout.Label("<color=#94A3B8><i>Provides real-time plain-English commentary alongside the loss curve.</i></color>", labelStyle);
+        }
+
+        private Vector2 diagScrollPos = Vector2.zero;
+        private bool isShowingConsentModal = false;
+
+        private void DrawDiagnosticsTab(float scale)
+        {
+            GUILayout.Label("<b>LOCAL DIAGNOSTICS & BUG REPORTING:</b>", sectionHeaderStyle);
+            GUILayout.Label("<color=#94A3B8>100% Offline & Local-First: Zero network calls or automatic uploads. Logs session metrics and frame spikes to a local file for manual bug reporting.</color>", labelStyle);
+            GUILayout.Space(8 * scale);
+
+            var diag = LocalDiagnosticsLogger.Instance;
+            bool isOptedIn = diag != null && diag.IsEnabled;
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("📋 <b>Diagnostics Logging:</b>", labelStyle);
+            string status = isOptedIn ? "<color=#4ADE80>OPTED-IN (Recording)</color>" : "<color=#94A3B8>DISABLED (Off by Default)</color>";
+            if (GUILayout.Button(status, buttonStyle, GUILayout.Width(190 * scale), GUILayout.Height(28 * scale)))
+            {
+                if (!isOptedIn)
+                {
+                    isShowingConsentModal = true;
+                }
+                else
+                {
+                    diag?.SetConsent(false);
+                }
+            }
+            GUILayout.EndHorizontal();
+
+            if (isShowingConsentModal)
+            {
+                GUILayout.Space(8 * scale);
+                GUILayout.BeginVertical(panelStyle);
+                GUILayout.Label("🔒 <b>EXPLICIT DIAGNOSTICS CONSENT:</b>", sectionHeaderStyle);
+                GUILayout.Label("By opting in, NeuroArena will log session length, screen/biome transitions, frame-time spikes (>50ms), and error traces to a local file on your device. <b>No network calls or automatic uploads will ever occur.</b>", labelStyle);
+                GUILayout.Space(6 * scale);
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button("✅ <b>I CONSENT (ENABLE LOGGING)</b>", buttonStyle, GUILayout.Height(30 * scale)))
+                {
+                    diag?.SetConsent(true);
+                    isShowingConsentModal = false;
+                }
+                if (GUILayout.Button("✕ <b>CANCEL</b>", buttonStyle, GUILayout.Width(90 * scale), GUILayout.Height(30 * scale)))
+                {
+                    isShowingConsentModal = false;
+                }
+                GUILayout.EndHorizontal();
+                GUILayout.EndVertical();
+                return;
+            }
+
+            GUILayout.Space(8 * scale);
+            if (diag != null)
+            {
+                GUILayout.Label($"📊 <b>Spikes Recorded:</b> {diag.SpikesCount} | <b>Exceptions:</b> {diag.ExceptionsCount}", labelStyle);
+                GUILayout.Label($"📁 <b>File Path:</b> <color=#38BDF8>{diag.LogFilePath}</color>", labelStyle);
+
+                GUILayout.Space(6 * scale);
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button("📋 <b>COPY FULL LOG</b>", buttonStyle, GUILayout.Height(28 * scale)))
+                {
+                    GUIUtility.systemCopyBuffer = diag.ReadFullLog();
+                    Debug.Log("[Diagnostics] Full log copied to clipboard.");
+                }
+                if (GUILayout.Button("🗑️ <b>CLEAR LOG</b>", dangerButtonStyle, GUILayout.Height(28 * scale)))
+                {
+                    diag.ClearLog();
+                }
+                GUILayout.EndHorizontal();
+
+                GUILayout.Space(6 * scale);
+                diagScrollPos = GUILayout.BeginScrollView(diagScrollPos, GUILayout.Height(100 * scale));
+                GUILayout.TextArea(diag.ReadFullLog(), labelStyle);
+                GUILayout.EndScrollView();
+            }
         }
 
         private void DrawDangerZoneTab(float scale)

@@ -270,6 +270,7 @@
                     <button class="settings-tab-btn" data-tab="tab-graphics">📱 Graphics</button>
                     <button class="settings-tab-btn" data-tab="tab-controls">🎮 Controls</button>
                     <button class="settings-tab-btn" data-tab="tab-access">👁️ Access</button>
+                    <button class="settings-tab-btn" data-tab="tab-diagnostics">📋 Logs</button>
                     <button class="settings-tab-btn" data-tab="tab-reset">⚠️ Reset</button>
                 </div>
 
@@ -341,6 +342,27 @@
                     <div class="setting-row">
                         <label>🎙️ Live Training Narration:</label>
                         <button id="btn-toggle-narration" class="pill-btn">ENABLED (Computed Commentary)</button>
+                    </div>
+                </div>
+
+                <div class="settings-tab-pane hidden" id="tab-diagnostics">
+                    <p style="font-size:11px; color:#94a3b8; line-height:1.4; margin-bottom:10px;">
+                        <b>100% Offline & Local-First:</b> Logs session length, screen transitions, and frame spikes (>50ms) to a local file for manual bug reporting. Zero network calls or automatic uploads.
+                    </p>
+                    <div class="setting-row">
+                        <label>📋 Local Diagnostics:</label>
+                        <button id="btn-toggle-diagnostics" class="pill-btn">DISABLED (Off by Default)</button>
+                    </div>
+                    <div id="diagnostics-active-panel" class="hidden" style="margin-top:10px;">
+                        <div style="font-size:11px; color:#cbd5e1; margin-bottom:6px;">
+                            📊 <span id="diag-stats-spikes">0 Frame Spikes</span> | <span id="diag-stats-entries">0 Log Entries</span>
+                        </div>
+                        <div style="display:flex; gap:8px; margin-bottom:8px;">
+                            <button id="btn-export-diagnostics" class="action-btn glow-cyan" style="flex:1;">📥 Download .TXT Log</button>
+                            <button id="btn-copy-diagnostics" class="pill-btn" style="flex:1;">📋 Copy to Clipboard</button>
+                            <button id="btn-clear-diagnostics" class="pill-btn" style="color:#f87171;">🗑️ Clear</button>
+                        </div>
+                        <textarea id="diag-log-preview" class="diagnostics-textarea" readonly></textarea>
                     </div>
                 </div>
 
@@ -777,6 +799,31 @@
                         <li><b>6. The Semantic Expanse (Embeddings & Cosine Sim)</b> <span class="locked">LOCKED</span></li>
                     </ul>
                     <button id="btn-close-biome-map" class="menu-btn small">Back</button>
+                </div>
+            </div>
+        </div>
+        <!-- Explicit Diagnostics Consent Modal -->
+        <div id="modal-diagnostics-consent" class="modal-overlay hidden">
+            <div class="glass-modal consent-modal-card">
+                <div class="modal-header">
+                    <h2>🔒 LOCAL DIAGNOSTICS & BUG REPORTING CONSENT</h2>
+                    <button id="btn-cancel-consent-x" class="close-btn">✕</button>
+                </div>
+                <div class="consent-body" style="padding: 14px 18px;">
+                    <p style="font-size:12px; color:#cbd5e1; line-height:1.5; margin-bottom:12px;">
+                        Enable opt-in local diagnostics to help diagnose crashes and frame-time spikes when reporting bugs.
+                    </p>
+                    <div class="coach-advice-box" style="margin-bottom:12px;">
+                        <div class="advice-heading">🛡️ 100% OFFLINE & PRIVACY-FIRST GUARANTEE</div>
+                        <p>All logs are written exclusively to your local device memory. <b>Zero network calls, zero automatic uploads, and zero third-party telemetry.</b></p>
+                    </div>
+                    <div class="coach-principle-badge" style="margin-bottom:14px;">
+                        📋 <b>What gets logged locally:</b> Session elapsed duration, active screen/biome context, frame-time spikes (>50ms), and error traces.
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <button id="btn-confirm-consent" class="action-btn glow-green" style="flex:1;">✅ I Consent (Enable Local Logging)</button>
+                        <button id="btn-cancel-consent" class="pill-btn" style="min-width:90px;">Cancel</button>
+                    </div>
                 </div>
             </div>
         </div>

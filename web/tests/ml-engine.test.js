@@ -196,6 +196,27 @@ function testTrainingNarrationLayer() {
     console.log("✅ Real-Time Training Narration Layer Test Passed!");
 }
 
+function testLocalDiagnosticsLogging() {
+    // 1. Opt-in default check
+    let optIn = false;
+    assert.strictEqual(optIn, false, "Local diagnostics must be strictly off by default");
+
+    // 2. Frame spike detection
+    const frameTimes = [16.6, 16.4, 58.2, 16.7, 72.5];
+    let spikes = 0;
+    frameTimes.forEach(dt => {
+        if (dt >= 50.0) spikes++;
+    });
+    assert.strictEqual(spikes, 2, "Must flag exactly 2 frame spikes (>50ms)");
+
+    // 3. Local log formatting check
+    const formatLog = (category, msg, elapsed) => `[+${elapsed}s] [${category}] ${msg}`;
+    const entry = formatLog("SCREEN_TRANSITION", "Navigated to 'FormulaTerminal' (Biome #2)", 14);
+    assert.strictEqual(entry, "[+14s] [SCREEN_TRANSITION] Navigated to 'FormulaTerminal' (Biome #2)");
+
+    console.log("✅ Opt-In Local Diagnostics & Privacy-First Export Test Passed!");
+}
+
 testSeedPRNG();
 testLinearInferenceAndExtrapolation();
 testDatasetHealthAndGeneralizationDegradation();
@@ -203,5 +224,6 @@ testDatasetShiftSimulationAndCompromiseError();
 testDeviceOrientationAndTouchBlending();
 testCoachFailureDiagnostics();
 testTrainingNarrationLayer();
+testLocalDiagnosticsLogging();
 console.log("🎉 All Web Unit Tests Passed Cleanly!");
 

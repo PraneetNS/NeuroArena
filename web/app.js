@@ -977,6 +977,75 @@ function computeEpochNarration(currentW, prevW, currentB, prevB, currentLoss, pr
     return `Downhill step: loss reduced from ${prevLoss.toFixed(3)} to ${currentLoss.toFixed(3)} (ΔJ = -${deltaLoss.toFixed(3)}) as parameters update along the negative gradient.`;
 }
 
+// --- 7.7 OPT-IN LOCAL DIAGNOSTICS & BUG REPORTING LOGGER ---
+const LocalDiagnostics = {
+    enabled: localStorage.getItem("neuroarena_diagnostics_opt_in") === "true",
+    spikes: 0,
+    sessionStart: Date.now(),
+    entries: [],
+
+    log(category, message) {
+        if (!this.enabled) return;
+        const elapsedSec = Math.floor((Date.now() - this.sessionStart) / 1000);
+        const timestamp = new Date().toISOString();
+        const line = `[${timestamp} | +${elapsedSec}s] [${category}] ${message}`;
+        this.entries.push(line);
+        this.updateUI();
+    },
+
+    setConsent(optIn) {
+        this.enabled = optIn;
+        localStorage.setItem("neuroarena_diagnostics_opt_in", optIn ? "true" : "false");
+        if (optIn) {
+            this.log("CONSENT_GRANTED", `User opted in to local diagnostics. Platform: ${navigator.userAgent}. Zero network transmission.`);
+        } else {
+            this.log("CONSENT_REVOKED", "User opted out of diagnostics.");
+        }
+        this.updateUI();
+    },
+
+    clear() {
+        this.entries = [];
+        this.spikes = 0;
+        this.log("LOG_CLEARED", "Diagnostics log cleared by user.");
+        this.updateUI();
+    },
+
+    updateUI() {
+        const panel = document.getElementById("diagnostics-active-panel");
+        const btn = document.getElementById("btn-toggle-diagnostics");
+        const preview = document.getElementById("diag-log-preview");
+        const spikesEl = document.getElementById("diag-stats-spikes");
+        const entriesEl = document.getElementById("diag-stats-entries");
+
+        if (btn) {
+            btn.innerText = this.enabled ? "OPTED-IN (Recording)" : "DISABLED (Off by Default)";
+            btn.classList.toggle("active", this.enabled);
+        }
+        if (panel) {
+            panel.classList.toggle("hidden", !this.enabled);
+        }
+        if (spikesEl) spikesEl.innerText = `${this.spikes} Frame Spikes`;
+        if (entriesEl) entriesEl.innerText = `${this.entries.length} Log Entries`;
+        if (preview) preview.value = this.entries.join("\n");
+    },
+
+    exportLogFile() {
+        const text = this.entries.join("\n") || "[No diagnostics recorded yet.]";
+        const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `neuroarena_diagnostics_${GameState.playthroughSeed}_${Date.now()}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+};
+
+window.addEventListener("error", (e) => {
+    LocalDiagnostics.log("UNHANDLED_ERROR", `${e.message} at ${e.filename}:${e.lineno}`);
+});
+
 // --- 8. OPTIMIZER GRAND PRIX WITH GSAP PROGRESSIVE LOSS & CAMERA PUSH-IN ---
 let lastRaceResults = null;
 
@@ -2634,6 +2703,44 @@ function setupUIEvents() {
         if (box) box.style.display = isNarrationActive ? "block" : "none";
     });
 
+    // Diagnostics Handlers
+    document.getElementById("btn-toggle-diagnostics")?.addEventListener("click", () => {
+        if (!LocalDiagnostics.enabled) {
+            const modal = document.getElementById("modal-diagnostics-consent");
+            modal?.classList.remove("hidden");
+            if (typeof gsap !== "undefined") {
+                gsap.fromTo(modal.querySelector(".glass-modal"), { scale: 0.88, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: "back.out(1.5)" });
+            }
+        } else {
+            LocalDiagnostics.setConsent(false);
+        }
+    });
+
+    document.getElementById("btn-confirm-consent")?.addEventListener("click", () => {
+        LocalDiagnostics.setConsent(true);
+        document.getElementById("modal-diagnostics-consent")?.classList.add("hidden");
+    });
+
+    document.getElementById("btn-cancel-consent")?.addEventListener("click", () => {
+        document.getElementById("modal-diagnostics-consent")?.classList.add("hidden");
+    });
+    document.getElementById("btn-cancel-consent-x")?.addEventListener("click", () => {
+        document.getElementById("modal-diagnostics-consent")?.classList.add("hidden");
+    });
+
+    document.getElementById("btn-export-diagnostics")?.addEventListener("click", () => {
+        LocalDiagnostics.exportLogFile();
+    });
+
+    document.getElementById("btn-copy-diagnostics")?.addEventListener("click", () => {
+        navigator.clipboard?.writeText(LocalDiagnostics.entries.join("\n"));
+        alert("Diagnostics log copied to clipboard!");
+    });
+
+    document.getElementById("btn-clear-diagnostics")?.addEventListener("click", () => {
+        LocalDiagnostics.clear();
+    });
+
     // Confirm-Twice Reset Progress
     let resetStep = 0;
     let resetTimer = null;
@@ -2919,8 +3026,14 @@ let lastFrameTime = performance.now();
 
 function animate(now) {
     requestAnimationFrame(animate);
-    const deltaTime = Math.min((now - lastFrameTime) * 0.001, 0.1);
+    const rawDt = now - lastFrameTime;
+    const deltaTime = Math.min(rawDt * 0.001, 0.1);
     lastFrameTime = now;
+
+    if (rawDt >= 50 && LocalDiagnostics.enabled) {
+        LocalDiagnostics.spikes++;
+        LocalDiagnostics.log("PERF_SPIKE", `Frame Duration: ${rawDt.toFixed(1)}ms (FPS ~${Math.round(1000 / rawDt)}) | Biome: #${GameState.currentBiome}`);
+    }
 
     if (ProfileSlots[activeSaveSlot]) {
         ProfileSlots[activeSaveSlot].playtimeSec += deltaTime;
