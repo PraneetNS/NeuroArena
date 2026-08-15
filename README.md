@@ -52,26 +52,47 @@
 - **Defensive I/O Fallback:** Encapsulated in try/catch blocks; if both files fail, it gracefully initializes a fresh state instead of crashing to the operating system.
 - **Global Error Boundary & Emergency Auto-Save (`GlobalErrorBoundary.cs`):** Hooks fatal unhandled exceptions, writes stack traces to `neuroarena_crash.log`, triggers an emergency auto-save, and displays a friendly in-game recovery dialog (*"⚠️ Something went wrong, but your progress was safely preserved!"*).
 
+## 💬 Stage 29: Model Consult / Interrogate & Extrapolation Error Visualizer
+
+- **Genuine Mathematical Inference:** Arbitrary player queries execute pure analytical formulas ($\hat{y} = wx+b$, $\sigma(w^Tx+b)$, etc.) with zero faked outputs.
+- **Euclidean Distance & Domain Range Check:** Calculates nearest empirical training point distance $d_{\min} = \min_i \| X_{\text{query}} - X_{\text{train}, i} \|$.
+- **Extrapolation Error Framing:** Out-of-distribution inputs are specifically flagged as **Extrapolation Error** with a distinctive cyber-glitch chromatic framing and an honest educational diagnostic explaining how continuous functions blindly slice through empty space.
+- **Uncharted Territory Visualizer:** The interactive 2D graph displays the empirical training hull, shades the outer uncharted void, and extends the model's straight decision line across the empty canvas.
+
+---
+
+## 🎒 Live Real-Time Dataset Stats Panel
+
+- **Dynamic Training Pipeline:** Machine Learning models train genuinely on whatever empirical tokens the player harvests in the 3D world.
+- **Real-Time HUD Telemetry:** The expandable inventory drawer displays live sample size ($N$), class balance ratios with a dual-color progress gauge, feature value ranges $[\min(X), \max(X)]$, empirical moments ($\mu \pm \sigma$), and Pearson correlation $r(X, y)$.
+
+---
+
+## 🧪 Automated Testing & Verification
+
+Run the automated test suites:
+```bash
+# Web & JavaScript ML Verification
+node web/tests/ml-engine.test.js
+
+# Developer ML CLI & Extrapolation Inspector
+node scripts/ml-cli.js --seed NEURO-8842 --query 14.5
+```
+
 ---
 
 ## 🚀 How to Run & Play
 
-### Option A: Play Instantly in Your Browser (Three.js Web Client)
+### Web Client (PWA & Three.js 3D Simulation)
+Open [`web/index.html`](file:///d:/NeuroArena/web/index.html) in any modern browser or host using a static server:
+```bash
+npx serve web
+```
 
-The local server is running live at:
-
-👉 **[http://localhost:8080](http://localhost:8080)**
-
-1. Play seamlessly with automatic backup and error boundary crash protection!
-
----
-
-### Option B: Open in Unity Editor & Build Android APK
-
-1. Launch **Unity Hub** (Unity 2022.3 LTS or newer recommended).
-2. Open the project folder `d:\NeuroArena`.
-3. Open `Assets/Scenes/MainArena.unity` and click **Play** ▶️.
-4. To build for Android:
+### Unity Project (Android & WebGL)
+1. Open the project in **Unity 2022.3 LTS+**.
+2. Open the main scene at `Assets/Scenes/MainArena.unity` and click **Play** ▶️.
+3. To build for Android:
    - Go to `File -> Build Settings...`
    - Select **Android** and click **Switch Platform**.
    - Click **Build and Run** to deploy directly to your Android device via USB debugging.
