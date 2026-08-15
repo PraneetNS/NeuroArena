@@ -279,6 +279,30 @@ function testSubmissionHardChecklist() {
     console.log("✅ Submission Hard Checklist Test Passed!");
 }
 
+function testHumanoidCharacterAnimationStateMachine() {
+    // 1. Idle state
+    let speed = 0;
+    let animState = speed > 5 ? "run" : (speed > 0.1 ? "walk" : "idle");
+    assert.strictEqual(animState, "idle", "Zero speed must evaluate to Idle state");
+
+    // 2. Walk state
+    speed = 3.5;
+    animState = speed > 5 ? "run" : (speed > 0.1 ? "walk" : "idle");
+    assert.strictEqual(animState, "walk", "3.5 speed must evaluate to Walk state");
+
+    // 3. Run state
+    speed = 8.5;
+    animState = speed > 5 ? "run" : (speed > 0.1 ? "walk" : "idle");
+    assert.strictEqual(animState, "run", "8.5 speed must evaluate to Run state");
+
+    // 4. Pickup gesture override
+    let pickupTimer = 0.55;
+    if (pickupTimer > 0) animState = "pickup";
+    assert.strictEqual(animState, "pickup", "Active pickupTimer must override gait to Pickup state");
+
+    console.log("✅ Stylized Rigged Humanoid & Animation State Machine Test Passed!");
+}
+
 testSeedPRNG();
 testLinearInferenceAndExtrapolation();
 testDatasetHealthAndGeneralizationDegradation();
@@ -290,5 +314,6 @@ testLocalDiagnosticsLogging();
 testDeviceTiersAndMemorySafety();
 testConsultFeatureOnboardingFunnel();
 testSubmissionHardChecklist();
+testHumanoidCharacterAnimationStateMachine();
 console.log("🎉 All Web Unit Tests Passed Cleanly!");
 

@@ -1684,16 +1684,212 @@ function createTerrain() {
     scene.add(grid);
 }
 
+let playerLimbs = {
+    head: null,
+    torso: null,
+    leftArm: null,
+    rightArm: null,
+    leftForearm: null,
+    rightForearm: null,
+    leftLeg: null,
+    rightLeg: null,
+    leftCalf: null,
+    rightCalf: null
+};
+let playerAnimState = {
+    state: "idle", // idle, walk, run, jump, pickup
+    animTime: 0,
+    pickupTimer: 0
+};
+
 function createPlayerAvatar() {
     playerMesh = new THREE.Group();
-    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 1.4, 16), new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.3 }));
-    body.position.y = 0.7;
-    playerMesh.add(body);
-    const visor = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.18, 0.3), new THREE.MeshStandardMaterial({ color: 0x22d3ee, emissive: 0x06b6d4 }));
-    visor.position.set(0, 1.1, 0.3);
-    playerMesh.add(visor);
+
+    const matArmor = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.35, metalness: 0.2 });
+    const matAccent = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.4 });
+    const matVisor = new THREE.MeshStandardMaterial({ color: 0x22d3ee, emissive: 0x06b6d4, emissiveIntensity: 1.2 });
+    const matCore = new THREE.MeshStandardMaterial({ color: 0xfacc15, emissive: 0xfacc15, emissiveIntensity: 1.5 });
+
+    // 1. Torso / Chest
+    const torso = new THREE.Group();
+    torso.position.y = 0.85;
+    const chestMesh = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.6, 0.32), matArmor);
+    torso.add(chestMesh);
+
+    const coreMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.04, 16), matCore);
+    coreMesh.rotation.x = Math.PI / 2;
+    coreMesh.position.set(0, 0.1, 0.17);
+    torso.add(coreMesh);
+    playerMesh.add(torso);
+    playerLimbs.torso = torso;
+
+    // 2. Head & Visor
+    const head = new THREE.Group();
+    head.position.set(0, 0.48, 0);
+    const helmetMesh = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.36, 0.36), matArmor);
+    head.add(helmetMesh);
+    const visorMesh = new THREE.Mesh(new THREE.BoxGeometry(0.30, 0.12, 0.12), matVisor);
+    visorMesh.position.set(0, 0.02, 0.16);
+    head.add(visorMesh);
+    torso.add(head);
+    playerLimbs.head = head;
+
+    // 3. Left Arm
+    const leftArm = new THREE.Group();
+    leftArm.position.set(-0.35, 0.22, 0);
+    const lUpper = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.3, 0.16), matArmor);
+    lUpper.position.y = -0.15;
+    leftArm.add(lUpper);
+
+    const leftForearm = new THREE.Group();
+    leftForearm.position.set(0, -0.3, 0);
+    const lLower = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.28, 0.14), matAccent);
+    lLower.position.y = -0.14;
+    leftForearm.add(lLower);
+    leftArm.add(leftForearm);
+    torso.add(leftArm);
+    playerLimbs.leftArm = leftArm;
+    playerLimbs.leftForearm = leftForearm;
+
+    // 4. Right Arm
+    const rightArm = new THREE.Group();
+    rightArm.position.set(0.35, 0.22, 0);
+    const rUpper = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.3, 0.16), matArmor);
+    rUpper.position.y = -0.15;
+    rightArm.add(rUpper);
+
+    const rightForearm = new THREE.Group();
+    rightForearm.position.set(0, -0.3, 0);
+    const rLower = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.28, 0.14), matAccent);
+    rLower.position.y = -0.14;
+    rightForearm.add(rLower);
+    rightArm.add(rightForearm);
+    torso.add(rightArm);
+    playerLimbs.rightArm = rightArm;
+    playerLimbs.rightForearm = rightForearm;
+
+    // 5. Left Leg
+    const leftLeg = new THREE.Group();
+    leftLeg.position.set(-0.16, 0.58, 0);
+    const lThigh = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.36, 0.18), matArmor);
+    lThigh.position.y = -0.18;
+    leftLeg.add(lThigh);
+
+    const leftCalf = new THREE.Group();
+    leftCalf.position.set(0, -0.36, 0);
+    const lCalfMesh = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.34, 0.16), matAccent);
+    lCalfMesh.position.y = -0.17;
+    leftCalf.add(lCalfMesh);
+    const lBoot = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.1, 0.26), matArmor);
+    lBoot.position.set(0, -0.32, 0.04);
+    leftCalf.add(lBoot);
+    leftLeg.add(leftCalf);
+    playerMesh.add(leftLeg);
+    playerLimbs.leftLeg = leftLeg;
+    playerLimbs.leftCalf = leftCalf;
+
+    // 6. Right Leg
+    const rightLeg = new THREE.Group();
+    rightLeg.position.set(0.16, 0.58, 0);
+    const rThigh = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.36, 0.18), matArmor);
+    rThigh.position.y = -0.18;
+    rightLeg.add(rThigh);
+
+    const rightCalf = new THREE.Group();
+    rightCalf.position.set(0, -0.36, 0);
+    const rCalfMesh = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.34, 0.16), matAccent);
+    rCalfMesh.position.y = -0.17;
+    rightCalf.add(rCalfMesh);
+    const rBoot = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.1, 0.26), matArmor);
+    rBoot.position.set(0, -0.32, 0.04);
+    rightCalf.add(rBoot);
+    rightLeg.add(rightCalf);
+    playerMesh.add(rightLeg);
+    playerLimbs.rightLeg = rightLeg;
+    playerLimbs.rightCalf = rightCalf;
+
     playerMesh.position.copy(playerPos);
     scene.add(playerMesh);
+}
+
+function updateCharacterAnimation(dt, speed) {
+    if (!playerLimbs.torso) return;
+
+    playerAnimState.animTime += dt;
+    const t = playerAnimState.animTime;
+
+    if (playerAnimState.pickupTimer > 0) {
+        playerAnimState.pickupTimer -= dt;
+        playerAnimState.state = "pickup";
+
+        // Reach down pickup pose
+        playerLimbs.torso.rotation.x = 0.45;
+        playerLimbs.torso.rotation.y = 0.2;
+        playerLimbs.rightArm.rotation.x = 1.1;
+        playerLimbs.rightArm.rotation.z = -0.2;
+        playerLimbs.rightForearm.rotation.x = 0.5;
+        playerLimbs.leftArm.rotation.x = -0.3;
+        playerLimbs.leftLeg.rotation.x = 0.1;
+        playerLimbs.rightLeg.rotation.x = -0.2;
+        return;
+    }
+
+    if (speed > 5.0) {
+        // Run gait
+        playerAnimState.state = "run";
+        const phase = t * 13.0;
+        const swing = Math.sin(phase) * 0.85;
+        const armSwing = Math.sin(phase) * 0.95;
+
+        playerLimbs.torso.rotation.x = 0.25;
+        playerLimbs.torso.rotation.y = Math.sin(phase) * 0.08;
+        playerLimbs.leftLeg.rotation.x = swing;
+        playerLimbs.rightLeg.rotation.x = -swing;
+        playerLimbs.leftCalf.rotation.x = Math.max(0, -swing * 0.6);
+        playerLimbs.rightCalf.rotation.x = Math.max(0, swing * 0.6);
+
+        playerLimbs.leftArm.rotation.x = -armSwing;
+        playerLimbs.rightArm.rotation.x = armSwing;
+        playerLimbs.leftForearm.rotation.x = 0.4;
+        playerLimbs.rightForearm.rotation.x = 0.4;
+    } else if (speed > 0.1) {
+        // Walk gait
+        playerAnimState.state = "walk";
+        const phase = t * 7.5;
+        const swing = Math.sin(phase) * 0.5;
+        const armSwing = Math.sin(phase) * 0.55;
+
+        playerLimbs.torso.rotation.x = 0.08;
+        playerLimbs.torso.rotation.y = 0;
+        playerLimbs.leftLeg.rotation.x = swing;
+        playerLimbs.rightLeg.rotation.x = -swing;
+        playerLimbs.leftCalf.rotation.x = Math.max(0, -swing * 0.4);
+        playerLimbs.rightCalf.rotation.x = Math.max(0, swing * 0.4);
+
+        playerLimbs.leftArm.rotation.x = -armSwing;
+        playerLimbs.rightArm.rotation.x = armSwing;
+        playerLimbs.leftForearm.rotation.x = 0.2;
+        playerLimbs.rightForearm.rotation.x = 0.2;
+    } else {
+        // Idle breathing & posture
+        playerAnimState.state = "idle";
+        const breathe = Math.sin(t * 2.2) * 0.03;
+        playerLimbs.torso.position.y = 0.85 + breathe;
+        playerLimbs.torso.rotation.x = 0;
+        playerLimbs.torso.rotation.y = 0;
+
+        playerLimbs.leftLeg.rotation.x = 0;
+        playerLimbs.rightLeg.rotation.x = 0;
+        playerLimbs.leftCalf.rotation.x = 0;
+        playerLimbs.rightCalf.rotation.x = 0;
+
+        playerLimbs.leftArm.rotation.x = Math.sin(t * 1.5) * 0.08;
+        playerLimbs.leftArm.rotation.z = 0.12;
+        playerLimbs.rightArm.rotation.x = -Math.sin(t * 1.5) * 0.08;
+        playerLimbs.rightArm.rotation.z = -0.12;
+        playerLimbs.leftForearm.rotation.x = 0.1;
+        playerLimbs.rightForearm.rotation.x = 0.1;
+    }
 }
 
 function createMascotCompanion() {
@@ -1903,14 +2099,17 @@ function updateGame(deltaTime) {
     if (inputKeys.w) moveZ += 1; if (inputKeys.s) moveZ -= 1;
 
     const moveMag = Math.sqrt(moveX * moveX + moveZ * moveZ);
+    let speed = 0;
     if (moveMag > 0.01) {
+        speed = 9.5;
         const forward = new THREE.Vector3(-Math.sin(cameraOrbit.yaw), 0, -Math.cos(cameraOrbit.yaw));
         const right = new THREE.Vector3(Math.cos(cameraOrbit.yaw), 0, -Math.sin(cameraOrbit.yaw));
         const targetDir = right.multiplyScalar(moveX / Math.max(1, moveMag)).add(forward.multiplyScalar(moveZ / Math.max(1, moveMag))).normalize();
-        playerPos.add(targetDir.multiplyScalar(9.5 * deltaTime));
+        playerPos.add(targetDir.multiplyScalar(speed * deltaTime));
         playerMesh.rotation.y = Math.atan2(targetDir.x, targetDir.z);
     }
     playerMesh.position.copy(playerPos);
+    updateCharacterAnimation(deltaTime, speed);
 
     if (mascotMesh) {
         const mascotTarget = new THREE.Vector3(playerPos.x + 1.2, playerPos.y + 1.2 + Math.sin(performance.now() * 0.003) * 0.15, playerPos.z - 0.8);
@@ -1928,6 +2127,7 @@ function updateGame(deltaTime) {
         c.mesh.position.y = c.baseY + Math.sin(time + c.mesh.position.x) * 0.15;
         if (playerPos.distanceTo(c.mesh.position) < 1.4) {
             c.collected = true; scene.remove(c.mesh);
+            playerAnimState.pickupTimer = 0.55; // Trigger pickup gesture
 
             // Genuinely store picked-up coordinate payload into active dataset
             GameState.collectedDataset.push({
