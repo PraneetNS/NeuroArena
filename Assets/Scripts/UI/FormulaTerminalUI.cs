@@ -296,6 +296,10 @@ namespace NeuroArena.UI
             GUILayout.EndHorizontal();
         }
 
+        private CoachDiagnosisResult? lastCoachDiagnosis = null;
+        private bool isShowingPreflightCoach = false;
+        private static bool[] seenBiomeCoach = new bool[6];
+
         private void DrawPassFailSection(float scale)
         {
             // Pre-Training Dataset Health Telemetry Card
@@ -334,8 +338,20 @@ namespace NeuroArena.UI
             }
             else
             {
-                string msg = lastDuelResult.HasValue ? lastDuelResult.Value.victoryNarrative : "⚠️ <b>CALIBRATION FAILED: TUNE PARAMETERS OR CURATE CLEANER DATASET.</b>";
-                GUILayout.Label(msg, bannerFailStyle, GUILayout.Height(55 * scale));
+                GUILayout.BeginVertical(bannerFailStyle);
+                if (lastCoachDiagnosis.HasValue)
+                {
+                    var diag = lastCoachDiagnosis.Value;
+                    GUILayout.Label($"⚠️ <b>DIAGNOSIS: {diag.failureCategory.ToUpper()}</b>", labelStyle);
+                    GUILayout.Label(diag.computedDiagnosis, labelStyle);
+                    GUILayout.Space(4 * scale);
+                    GUILayout.Label($"💡 <b>COACH REMEDY:</b> <color=#FDE047>{diag.actionableRemedy}</color>", labelStyle);
+                }
+                else
+                {
+                    GUILayout.Label("⚠️ <b>CALIBRATION FAILED: TUNE PARAMETERS OR CURATE CLEANER DATASET.</b>", labelStyle);
+                }
+                GUILayout.EndVertical();
             }
         }
 
@@ -448,12 +464,19 @@ namespace NeuroArena.UI
             if (sampleCount < 3)
             {
                 isBiomeCalibrationPassed = false;
+                var stats = MLInventory.Instance != null ? MLInventory.Instance.LiveStats : DatasetStatistics.Empty;
+                var health = MLInventory.Instance != null ? MLInventory.Instance.LiveHealth : DatasetHealthMetrics.Default;
+                int currentBiome = BiomeManager.Instance != null ? BiomeManager.Instance.CurrentBiomeIndex : 0;
+                string opt = optimizerWeapons[selectedOptimizerIndex];
+                lastCoachDiagnosis = CoachSystem.DiagnoseFailure(stats, health, 2.5f, 2.5f, currentBiome, opt);
+
                 statusMessage = $"<color=#FF6666>⚠️ INSUFFICIENT SAMPLES (N = {sampleCount} < 3):</color> Harvest at least 3 empirical tokens in the biome before calibrating your model!";
                 return;
             }
 
             isTraining = true;
             isBiomeCalibrationPassed = true;
+            lastCoachDiagnosis = null;
             statusMessage = $"<color=#55FF55>MODEL CONVERGED (TRAINED ON {sampleCount} HARVESTED SAMPLES)!</color>";
             isTraining = false;
         }

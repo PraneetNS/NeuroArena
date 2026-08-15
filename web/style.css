@@ -1593,4 +1593,85 @@ button:active {
     outline: none;
 }
 
+/* Coach System Styles */
+.coach-preflight-card {
+    max-width: 520px;
+    background: rgba(15, 23, 42, 0.95);
+    border: 1.5px solid rgba(56, 189, 248, 0.5);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), 0 0 25px rgba(56, 189, 248, 0.25);
+    border-radius: var(--radius-md);
+    padding: 18px 20px;
+}
+
+.coach-header-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.coach-icon {
+    font-size: 28px;
+}
+
+.coach-sub {
+    font-size: 12px;
+    color: #38bdf8;
+    font-family: var(--font-display-mono);
+}
+
+.coach-principle-badge {
+    background: rgba(56, 189, 248, 0.15);
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    font-size: 12px;
+    color: #f8fafc;
+    margin: 12px 0;
+}
+
+.coach-advice-box {
+    background: rgba(34, 197, 94, 0.1);
+    border-left: 3px solid #22c55e;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+}
+
+.coach-advice-box .advice-heading {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #4ade80;
+    margin-bottom: 4px;
+}
+
+.coach-advice-box p {
+    font-size: 12px;
+    color: #cbd5e1;
+    line-height: 1.45;
+    margin: 0;
+}
+
+.coach-warning-box {
+    background: rgba(239, 68, 68, 0.1);
+    border-left: 3px solid #ef4444;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    padding: 10px 12px;
+    margin-bottom: 14px;
+}
+
+.coach-warning-box .warning-heading {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #f87171;
+    margin-bottom: 4px;
+}
+
+.coach-warning-box p {
+    font-size: 12px;
+    color: #cbd5e1;
+    line-height: 1.45;
+    margin: 0;
+}
+
+
 

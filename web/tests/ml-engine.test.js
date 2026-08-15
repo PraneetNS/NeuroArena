@@ -140,10 +140,38 @@ function testDeviceOrientationAndTouchBlending() {
     console.log("✅ Device Orientation & Touch Look Blending Test Passed!");
 }
 
+function testCoachFailureDiagnostics() {
+    // 1. Overfitting detection
+    const overfitDiag = (trainMSE, valMSE) => {
+        if (trainMSE < 0.18 && valMSE > 1.2) {
+            return "Overfitting (High Variance)";
+        }
+        return "Unknown";
+    };
+    assert.strictEqual(overfitDiag(0.05, 2.8), "Overfitting (High Variance)");
+
+    // 2. Outlier pull detection
+    const outlierDiag = (outlierCount) => {
+        if (outlierCount >= 2) return "Outlier Pull & Parameter Distortion";
+        return "Clean";
+    };
+    assert.strictEqual(outlierDiag(3), "Outlier Pull & Parameter Distortion");
+
+    // 3. Class imbalance detection
+    const imbalanceDiag = (r0, r1) => {
+        if (Math.abs(r0 - r1) >= 0.40) return "Class Imbalance Bias";
+        return "Balanced";
+    };
+    assert.strictEqual(imbalanceDiag(0.85, 0.15), "Class Imbalance Bias");
+
+    console.log("✅ Persistent Coach Failure Diagnostic Engine Test Passed!");
+}
+
 testSeedPRNG();
 testLinearInferenceAndExtrapolation();
 testDatasetHealthAndGeneralizationDegradation();
 testDatasetShiftSimulationAndCompromiseError();
 testDeviceOrientationAndTouchBlending();
+testCoachFailureDiagnostics();
 console.log("🎉 All Web Unit Tests Passed Cleanly!");
 

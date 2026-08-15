@@ -238,6 +238,7 @@ const GameState = {
     profile: { noiseLevel: 0.28, classOverlap: 0.15, outlierRate: 0.05, featureScaleX: 1.2, featureScaleY: 1.1, trueW: 2.45, trueB: 1.15 },
     currentBiome: 0,
     unlockedBiomes: [true, false, false, false, false, false],
+    seenBiomeCoachTips: [false, false, false, false, false, false],
     resources: { featureX: 0, targetY: 0, pairedN: 0, class0: 0, class1: 0, class2: 0, xorCores: 0, conceptRunes: 0 },
     collectedDataset: [], // Genuine empirical samples: [{ x, y, x1, x2, classLabel, type, isOutlier }]
     equippedSkin: "obsidian",
@@ -785,6 +786,156 @@ function renderEmbeddingVectorCanvases(results) {
     }
 }
 
+// --- 7.5 PERSISTENT COACH SYSTEM & FAILURE DIAGNOSTICS ---
+const BiomeCoachTips = [
+    {
+        title: "BIOME 1: THE LINEAR STEPPES DATA COACH",
+        paradigm: "1D Continuous Linear Regression",
+        principle: "Wide Spatial Domain Coverage [Span ≥ 7.0]",
+        guidance: "Harvest feature crystals across the entire biome from far left (X = -4) to far right (X = +4) to ensure your model learns the true global slope.",
+        avoid: "Avoid clustering all your samples in one narrow corner; models cannot extrapolate accurately into empty space."
+    },
+    {
+        title: "BIOME 2: THE BINARY MARSHLANDS DATA COACH",
+        paradigm: "Logistic Regression & Sigmoid Classification",
+        principle: "50/50 Class Balance (Purple vs Azure)",
+        guidance: "Collect an equal quantity of Class 0 (Purple Spores) and Class 1 (Azure Spores) along the decision boundary.",
+        avoid: "Avoid severe class imbalance (e.g. 90% Purple / 10% Azure); the model will simply predict the majority class and fail on minority cases."
+    },
+    {
+        title: "BIOME 3: THE VARIANCE TUNDRA DATA COACH",
+        paradigm: "Polynomial Regression & Regularization (L1/L2)",
+        principle: "Validation Split & Complexity Discipline",
+        guidance: "Reserve at least 20% of your samples for validation snow echoes. Equip L2 Ridge runes to penalize large, erratic polynomial weights.",
+        avoid: "Avoid using a degree-8 polynomial on only 5 training samples; high capacity will overfit noise and diverge on test curves."
+    },
+    {
+        title: "BIOME 4: THE BRANCHING CANOPY DATA COACH",
+        paradigm: "Decision Trees & Bagging Ensembles",
+        principle: "Orthogonal Axis Cuts & Diverse Subsampling",
+        guidance: "Gather samples spanning multiple coordinate quadrants. Combine 5 bootstrapped trees into a Bagging Party for robust consensus.",
+        avoid: "Avoid unpruned trees with depth > 6 on sparse data, which creates brittle single-sample leaves."
+    },
+    {
+        title: "BIOME 5: THE DEEP SYNAPSE CITADEL DATA COACH",
+        paradigm: "Multi-Layer Perceptrons & Non-Linear Activation",
+        principle: "XOR Symmetry & Non-Linear Separability",
+        guidance: "Collect all 4 quadrants of the XOR manifold. Use ReLU/Tanh activations to bend decision boundaries around non-linear clusters.",
+        avoid: "Avoid linear activations (y = w*x + b) for XOR puzzles; single-layer linear models cannot separate diagonal parity states."
+    },
+    {
+        title: "BIOME 6: THE SEMANTIC EXPANSE DATA COACH",
+        paradigm: "Vector Embeddings & Cosine Similarity",
+        principle: "Contextual Co-occurrence Windowing",
+        guidance: "Harvest related semantic runes (e.g. frost, ice, cold) in close proximity to maximize their continuous dot-product alignment.",
+        avoid: "Avoid isolated concept tokens with zero co-occurrence context; vector arithmetic requires shared semantic manifolds."
+    }
+];
+
+function showBiomePreflightCoach(biomeIndex, onDismiss) {
+    const tip = BiomeCoachTips[biomeIndex] || BiomeCoachTips[0];
+    const modal = document.getElementById("modal-biome-coach-preflight");
+    if (!modal) {
+        if (typeof onDismiss === "function") onDismiss();
+        return;
+    }
+
+    document.getElementById("coach-biome-title").innerText = tip.title;
+    document.getElementById("coach-paradigm-title").innerText = tip.paradigm;
+    document.getElementById("coach-principle-badge").innerHTML = `🔑 <b>KEY PRINCIPLE:</b> ${tip.principle}`;
+    document.getElementById("coach-guidance-text").innerText = tip.guidance;
+    document.getElementById("coach-avoid-text").innerText = tip.avoid;
+
+    modal.classList.remove("hidden");
+    if (typeof gsap !== "undefined") {
+        gsap.fromTo(modal.querySelector(".coach-preflight-card"), { scale: 0.85, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: "back.out(1.5)" });
+    }
+
+    const btnDismiss = document.getElementById("btn-dismiss-coach-preflight");
+    const handleDismiss = () => {
+        btnDismiss.removeEventListener("click", handleDismiss);
+        modal.classList.add("hidden");
+        GameState.seenBiomeCoachTips[biomeIndex] = true;
+        saveGameProgress();
+        if (typeof onDismiss === "function") onDismiss();
+    };
+    btnDismiss.addEventListener("click", handleDismiss);
+}
+
+function openFormulaTerminal() {
+    const biome = GameState.currentBiome;
+    if (!GameState.seenBiomeCoachTips[biome]) {
+        showBiomePreflightCoach(biome, () => {
+            openTerminalModalDirectly();
+        });
+    } else {
+        openTerminalModalDirectly();
+    }
+}
+
+function openTerminalModalDirectly() {
+    const modal = document.getElementById("terminal-modal");
+    if (modal) {
+        modal.classList.remove("hidden");
+        if (typeof gsap !== "undefined") {
+            gsap.fromTo(modal.querySelector(".glass-terminal"), { scale: 0.88, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.35, ease: "back.out(1.5)" });
+        }
+    }
+}
+
+function closeFormulaTerminal() {
+    const modal = document.getElementById("terminal-modal");
+    if (modal) modal.classList.add("hidden");
+}
+
+function computeWhyThisFailedDiagnosis(health, trainMSE, valMSE, stats, optType) {
+    if (optType === "SGD" && trainMSE > 1.2) {
+        return {
+            category: "Gradient Oscillation (SGD Step Instability)",
+            reason: `Vanilla SGD bounced across steep coordinate canyon walls with unscaled gradients. Loss plateaued at J = ${trainMSE.toFixed(3)}.`,
+            remedy: "Equip ⚡ RMSprop or 🔱 Adam in the Weapons Arsenal to adapt per-parameter learning rates."
+        };
+    }
+
+    if (trainMSE < 0.18 && valMSE > 1.2) {
+        return {
+            category: "Overfitting (High Variance)",
+            reason: `Your model achieved high training accuracy (J_train = ${trainMSE.toFixed(3)}), but validation error exploded to J_val = ${valMSE.toFixed(3)}. It memorized training noise.`,
+            remedy: "Reduce polynomial degree or collect at least 4 more diverse samples spanning the biome."
+        };
+    }
+
+    if (health && health.outliers >= 2) {
+        return {
+            category: "Outlier Pull & Parameter Distortion",
+            reason: `${health.outliers} extreme outlier token(s) corrupted your loss surface, pulling the fitted slope off-target.`,
+            remedy: "Discard outlier tokens from your Inventory Drawer or collect 4 clean crystals to dilute the error."
+        };
+    }
+
+    if (stats && stats.isClassification && Math.abs(stats.class0Ratio - stats.class1Ratio) >= 0.40) {
+        return {
+            category: "Class Imbalance Bias",
+            reason: `Dataset is heavily skewed (${Math.round(stats.class0Ratio * 100)}% vs ${Math.round(stats.class1Ratio * 100)}%). Decision line shifted toward majority class.`,
+            remedy: "Harvest more minority spores to balance class ratio to roughly 50/50."
+        };
+    }
+
+    if (stats && (stats.maxX - stats.minX) < 4.0) {
+        return {
+            category: "Narrow Domain Extrapolation Failure",
+            reason: `Data only spans [${stats.minX.toFixed(1)}, ${stats.maxX.toFixed(1)}]. The held-out test distribution contains points outside this range.`,
+            remedy: "Explore the outer edges of the 3D biome to harvest samples at X < -3.0 and X > +3.0."
+        };
+    }
+
+    return {
+        category: "Underfitting / Insufficient Samples",
+        reason: `Both training loss (J = ${trainMSE.toFixed(3)}) and test error are high. The model lacks sufficient empirical sample volume.`,
+        remedy: "Harvest at least 5 paired tokens across the biome before training."
+    };
+}
+
 // --- 8. OPTIMIZER GRAND PRIX WITH GSAP PROGRESSIVE LOSS & CAMERA PUSH-IN ---
 let lastRaceResults = null;
 
@@ -956,10 +1107,21 @@ function runGrandPrixSimulation() {
     if (banner) {
         const health = computeDatasetHealth(ds, -4.5, 4.5, 2.5, 0, 0, false);
         banner.className = heldOutAccuracy >= 80 ? "pass" : "fail";
-        banner.innerHTML = `🏁 <b>4-WAY GRAND PRIX (TRAINED ON ${n} HARVESTED DATA POINTS):</b><br>` +
+        let bannerHtml = `🏁 <b>4-WAY GRAND PRIX (TRAINED ON ${n} HARVESTED DATA POINTS):</b><br>` +
             `• <b>Held-Out Test Generalization:</b> <b style="color:${heldOutAccuracy >= 80 ? '#4ade80' : '#f43f5e'};">${heldOutAccuracy.toFixed(1)}% Accuracy</b> (Test MSE = ${heldOutMSE.toFixed(4)})<br>` +
             `• <b>Pre-Training Health Score:</b> ${health.score}% [${health.grade}] — <i>${health.defects}</i><br>` +
             `• <b>Adam Model:</b> Final slope w = ${results.Adam.finalW.toFixed(2)}, b = ${results.Adam.finalB.toFixed(2)}`;
+
+        if (heldOutAccuracy < 80) {
+            const diag = computeWhyThisFailedDiagnosis(health, results.Adam.finalLoss, heldOutMSE, { isClassification: false, minX: -4.5, maxX: 4.5, sampleCount: n }, "GrandPrix");
+            bannerHtml += `<div class="coach-warning-box" style="margin-top:8px; text-align:left;">` +
+                `<div class="warning-heading">🧭 COACH DIAGNOSIS: ${diag.category.toUpperCase()}</div>` +
+                `<p style="font-size:11px; margin-bottom:4px;">${diag.reason}</p>` +
+                `<p style="font-size:11px; color:#fde047;"><b>💡 Actionable Remedy:</b> ${diag.remedy}</p>` +
+                `</div>`;
+        }
+
+        banner.innerHTML = bannerHtml;
         banner.classList.remove("hidden");
     }
 }
