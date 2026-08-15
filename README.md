@@ -12,30 +12,16 @@
 
 ## 📖 Table of Contents
 1. [Overview & Concept](#-overview--concept)
-2. [Hardened Save System & Global Error Boundary](#-hardened-save-system--global-error-boundary)
-3. [Comprehensive Settings & Accessibility System](#-comprehensive-settings--accessibility-system)
-4. ['My Models' Gallery & Persistent Model Vault](#-my-models-gallery--persistent-model-vault)
-5. [Player Profile System & Multi-Slot Saves](#-player-profile-system--multi-slot-saves)
-6. [Full App Shell Architecture](#-full-app-shell-architecture)
-7. [The 6-Biome Curriculum Roadmap](#-the-6-biome-curriculum-roadmap)
-8. [Exact Mathematics & ML Mechanics (All 6 Biomes)](#-exact-mathematics--ml-mechanics-all-6-biomes)
-9. [Mobile Performance Audit & Zero-GC Optimization](#-mobile-performance-audit--zero-gc-optimization)
-10. [Codex & Machine Learning Journal](#-codex--machine-learning-journal)
-11. [Daily Seeded Challenge & Global Competitive Arena](#-daily-seeded-challenge--global-competitive-arena)
-12. [Mastery Cosmetic Terminal Skins (Zero Pay-to-Win)](#-mastery-cosmetic-terminal-skins-zero-pay-to-win)
-13. [Shareable Boss Replay Stat Card Generator](#-shareable-boss-replay-stat-card-generator)
-14. [90-Second Guided First-Run Sequence (Mascot ADA)](#-90-second-guided-first-run-sequence-mascot-ada)
-15. [Motion-Optimized HUD & Touch Ergonomics](#-motion-optimized-hud--touch-ergonomics)
-16. [Immersive Training Feedback, Audio Synthesis & Haptics](#-immersive-training-feedback-audio-synthesis--haptics)
-17. [UI Motion & GSAP Animation Layer (Reusable UITransition)](#-ui-motion--gsap-animation-layer-reusable-uitransition)
-18. [Unified Design System & Biome Palettes](#-unified-design-system--biome-palettes)
-19. [The Optimizer Arsenal (Weapons Suite)](#-the-optimizer-arsenal-weapons-suite)
-20. [Bagging Ensemble: 'Summoning a Party' (5 Trees)](#-bagging-ensemble-summoning-a-party-5-trees)
-21. [Async Multiplayer & Ghost Duel Arena (Held-Out Test Sets)](#-async-multiplayer--ghost-duel-arena-held-out-test-sets)
-22. [Dataset Inspector 2.0 (Model Interpretability)](#-dataset-inspector-20-model-interpretability)
-23. [Seeded Procedural Dataset Generation (Replayability)](#-seeded-procedural-dataset-generation-replayability)
-24. [Architecture & Project Structure](#-architecture--project-structure)
-25. [How to Run & Play](#-how-to-run--play)
+2. [Dataset Health Score & Genuine Held-Out Generalization](#-dataset-health-score--genuine-held-out-generalization)
+3. [Persistent Cross-Biome Data Satchel](#-persistent-cross-biome-data-satchel)
+4. [Dataset Shift Sandbox (Concept Drift & Covariate Shift)](#-dataset-shift-sandbox-concept-drift--covariate-shift)
+5. [Android Gyroscope & Motion-Orientation Camera Control](#-android-gyroscope--motion-orientation-camera-control)
+6. [Persistent Coach System & Dynamic 'Why This Failed' Diagnostics](#-persistent-coach-system--dynamic-why-this-failed-diagnostics)
+7. [Stage 29: Model Consult / Interrogate & Extrapolation Error Visualizer](#-stage-29-model-consult--interrogate--extrapolation-error-visualizer)
+8. [Hardened Save System & Global Error Boundary](#-hardened-save-system--global-error-boundary)
+9. [The 6-Biome Curriculum Roadmap](#-the-6-biome-curriculum-roadmap)
+10. [Automated Testing & Verification](#-automated-testing--verification)
+11. [How to Run & Play](#-how-to-run--play)
 
 ---
 
@@ -45,12 +31,62 @@
 
 ---
 
-## 🛡️ Hardened Save System & Global Error Boundary
+## 🩺 Dataset Health Score & Genuine Held-Out Generalization
 
-- **Versioned Save Schema (`saveVersion = 3`):** Sequential migration engine (`SaveMigrationManager.cs`) seamlessly upgrades legacy saves (`v1 -> v2 -> v3`) without data loss or corruption.
-- **Pre-Write Auto-Backup (`neuroarena_save.bak`):** Creates an atomic duplicate before every disk write. If the primary save is corrupted, it automatically restores from backup.
-- **Defensive I/O Fallback:** Encapsulated in try/catch blocks; if both files fail, it gracefully initializes a fresh state instead of crashing to the operating system.
-- **Global Error Boundary & Emergency Auto-Save (`GlobalErrorBoundary.cs`):** Hooks fatal unhandled exceptions, writes stack traces to `neuroarena_crash.log`, triggers an emergency auto-save, and displays a friendly in-game recovery dialog (*"⚠️ Something went wrong, but your progress was safely preserved!"*).
+Dataset quality directly governs training generalization outcomes on unseen held-out test sets with **zero artificial or scripted multipliers**:
+
+- **Real-Time Pre-Training Health Formulation:**
+  $$\text{Health Score} = 0.35 \cdot S_{\text{balance}} + 0.35 \cdot S_{\text{cleanliness}} + 0.30 \cdot S_{\text{coverage}}$$
+  - **Balance ($S_{\text{balance}}$):** Class balance or residual symmetry $1.0 - |\text{ratio}_0 - \text{ratio}_1|$.
+  - **Cleanliness ($S_{\text{cleanliness}}$):** Absence of severe anomalies $1.0 - 3.5 \cdot (\text{Outliers} / N)$.
+  - **Coverage ($S_{\text{coverage}}$):** Spatial feature domain span $[\min(X), \max(X)]$ and sample volume ($N$).
+- **Generalization Forecasting:** The Formula Terminal displays a pre-training forecast banner (*"High Generalization (>90% test accuracy expected)"* vs *"Severe Generalization Failure Predicted (<65%)"*) and diagnoses specific dataset defects.
+- **Genuine Held-Out Test Evaluation:** When training runs, the optimizer fits parameters $(w, b)$ to the player's empirical harvest. An outlier-corrupted or skewed dataset naturally pulls the loss surface off-target, leading to genuine degradation ($\approx 55-65\%$) on the held-out test distribution ($D_{\text{test}}$ from Stage 16/24).
+
+---
+
+## 🎒 Persistent Cross-Biome Data Satchel
+
+- **No Hard Biome-Locking:** Transitioning between biomes preserves collected empirical tokens in a persistent Data Satchel.
+- **Cross-Biome Structural Compatibility:** Later biomes dynamically draw from earlier compatible tokens:
+  - 1D continuous $(x, y)$ samples harvested in *Linear Steppes* feed directly into *Variance Tundra*'s polynomial feature expander $\Phi(x) = [1, x, x^2, \dots, x^d]$ and Ridge/Lasso regularization.
+  - 2D coordinate points feed directly into *Branching Canopy* decision trees and *Deep Synapse Citadel* neural networks.
+
+---
+
+## 🧪 Dataset Shift Sandbox (Concept Drift & Covariate Shift)
+
+A hands-on sandbox in the Formula Terminal where players can deliberately mix empirical datasets from two distinct distributions/biomes:
+
+- **Conflicting Distribution Mixing:** Blend Distribution A (*Linear Steppes* $y = 2.45x + 1.15$) and Distribution B (*Shifted Tundra* $y = -1.80x + 6.20$ or Oscillatory Polynomial) via an adjustable mixture slider ($5\% - 95\%$).
+- **Observable Model Struggle:** The optimizer attempts to fit a single continuous model to contradictory generators, yielding elevated compromise MSE ($J \approx 3.42$) and severe test failure on both original environments.
+- **Dual-Color Visualizer & Conflict Report:** Displays color-coded scatter points (Cyan for Dist A, Orange for Dist B) and an explicit educational diagnosis explaining **Covariate Shift** ($P_{\text{train}}(X) \ne P_{\text{test}}(X)$) and **Concept Drift** ($P_{\text{train}}(Y|X) \ne P_{\text{test}}(Y|X)$).
+
+---
+
+## 🧭 Android Gyroscope & Motion-Orientation Camera Control
+
+- **Concurrently Blended Gyroscope & Touch Look:**
+  - **Gyroscope (Android `Input.gyro` / Web `DeviceOrientationEvent`):** 60 Hz sensor polling handles broad physical orientation and natural device tilting.
+  - **Touch-Swipe (Stage 22 `TouchLookZone`):** Provides fine-grained precision adjustments concurrently without resetting gyro orientation.
+  $$\text{Yaw} \mathrel{+}= \Delta \text{Touch}_X \cdot S_{\text{touch}} + \Delta \text{Gyro}_{\text{yaw}} \cdot S_{\text{gyro}}$$
+  $$\text{Pitch} \mathrel{-}= \Delta \text{Touch}_Y \cdot S_{\text{touch}} - \Delta \text{Gyro}_{\text{pitch}} \cdot S_{\text{gyro}}$$
+- **One-Tap Recenter / Calibrate:** Snaps camera directly behind player forward heading at an optimal $22^\circ$ default pitch.
+- **Defensive Sensor Fallback:** Automatically tests hardware support and gracefully falls back to touch-only look if no gyroscope is present or permissions are denied.
+
+---
+
+## 🧭 Persistent Coach System & Dynamic 'Why This Failed' Diagnostics
+
+- **Biome Pre-Flight Guidance:** Before a player's first training run in each biome, the Coach displays a concise, skippable data curation tip screen explaining key mathematical principles (domain coverage for regression, 50/50 balance for classification, complexity discipline for polynomials).
+- **Computed Post-Attempt Diagnostics:** When training or a boss attempt fails, the Coach analyzes **live empirical metrics** and loss curves:
+  - **Overfitting ($J_{\text{train}} \ll J_{\text{val}}$):** Quoting exact train vs val error and recommending regularization or more diverse data.
+  - **Outlier Pull ($N_{\text{outlier}} \ge 2$):** Quoting the number of outliers pulling the regression slope off-target.
+  - **Class Imbalance Bias ($|\text{ratio}_0 - \text{ratio}_1| \ge 0.40$):** Highlighting majority-class decision boundary shifts.
+  - **Narrow Domain Extrapolation ($\Delta X < 4.0$):** Explaining ungrounded extrapolations outside the harvested range.
+  - **SGD Oscillation ($J_{\text{train}} > 1.2$):** Explaining coordinate step instability and recommending Adam/RMSprop.
+
+---
 
 ## 💬 Stage 29: Model Consult / Interrogate & Extrapolation Error Visualizer
 
@@ -61,10 +97,24 @@
 
 ---
 
-## 🎒 Live Real-Time Dataset Stats Panel
+## 🛡️ Hardened Save System & Global Error Boundary
 
-- **Dynamic Training Pipeline:** Machine Learning models train genuinely on whatever empirical tokens the player harvests in the 3D world.
-- **Real-Time HUD Telemetry:** The expandable inventory drawer displays live sample size ($N$), class balance ratios with a dual-color progress gauge, feature value ranges $[\min(X), \max(X)]$, empirical moments ($\mu \pm \sigma$), and Pearson correlation $r(X, y)$.
+- **Versioned Save Schema (`saveVersion = 3`):** Sequential migration engine (`SaveMigrationManager.cs`) seamlessly upgrades legacy saves (`v1 -> v2 -> v3`) without data loss or corruption.
+- **Pre-Write Auto-Backup (`neuroarena_save.bak`):** Creates an atomic duplicate before every disk write. If the primary save is corrupted, it automatically restores from backup.
+- **Global Error Boundary & Emergency Auto-Save (`GlobalErrorBoundary.cs`):** Hooks fatal unhandled exceptions, writes stack traces to `neuroarena_crash.log`, triggers an emergency auto-save, and displays a friendly in-game recovery dialog (*"⚠️ Something went wrong, but your progress was safely preserved!"*).
+
+---
+
+## 🗺️ The 6-Biome Curriculum Roadmap
+
+| Biome | Mathematical ML Concept | Target Loss / Objective | Weapons Arsenal |
+| :--- | :--- | :--- | :--- |
+| **1. Linear Steppes** | 1D Continuous Linear Regression | $\min_{w, b} \frac{1}{2N}\sum(wx+b - y)^2$ | SGD, Momentum, RMSprop, Adam |
+| **2. Binary Marshlands** | Logistic Regression & Sigmoid Classification | $\min_w -\frac{1}{N}\sum [y\log\hat{y} + (1-y)\log(1-\hat{y})]$ | Cross-Entropy Staff, Sigmoid Membranes |
+| **3. Variance Tundra** | Polynomials & Regularization ($L_1 / L_2$) | $\min_w \text{MSE} + \lambda_2\|w\|_2^2 + \lambda_1\|w\|_1$ | Poly Catalyst, $L_2$ Ridge, $L_1$ Lasso |
+| **4. Branching Canopy** | Decision Trees & Bagging Ensembles | $\text{Gini} = 1 - \sum p_i^2$, $\text{Entropy} = -\sum p_i\log_2 p_i$ | Bagging Party (5 Bootstrapped Trees) |
+| **5. Deep Citadel** | 2-Layer Neural Networks & XOR Manifolds | $\hat{y} = \sigma(W_2 \cdot \text{ReLU}(W_1 x + b_1) + b_2)$ | Backpropagation Wand, Hidden Layer Dials |
+| **6. Semantic Expanse** | Word Embeddings & Cosine Similarity | $\text{sim}(u, v) = \frac{u \cdot v}{\|u\|_2 \|v\|_2}$ | PPMI Matrix, Top-K Vector Retrieval |
 
 ---
 
@@ -72,7 +122,7 @@
 
 Run the automated test suites:
 ```bash
-# Web & JavaScript ML Verification
+# Web & JavaScript ML Engine Verification (All 6 Test Suites)
 node web/tests/ml-engine.test.js
 
 # Developer ML CLI & Extrapolation Inspector
