@@ -1725,36 +1725,6 @@ function spawnBiome6Runes(center) {
     });
 }
 
-function startBiomeLoadingSequence(biomeIndex, onComplete) {
-    GameState.currentBiome = biomeIndex;
-    const loadingOverlay = document.getElementById("loading-screen");
-    const titleEl = document.getElementById("loading-biome-name");
-    const progressEl = document.getElementById("loading-progress-fill");
-    const pctEl = document.getElementById("loading-pct-text");
-    const tipEl = document.getElementById("loading-codex-tip");
-
-    const cur = CodexCurriculum[biomeIndex] || CodexCurriculum[0];
-    if (titleEl) titleEl.innerText = `⚡ CALIBRATING BIOME ${biomeIndex + 1}: ${cur.subtitle.toUpperCase()}`;
-    if (tipEl) tipEl.innerHTML = `💡 <b>CODEX FACT:</b> ${cur.plain}`;
-
-    if (loadingOverlay) loadingOverlay.classList.remove("hidden");
-
-    let p = 0;
-    const timer = setInterval(() => {
-        p += 25;
-        if (progressEl) progressEl.style.width = `${p}%`;
-        if (pctEl) pctEl.innerText = `${p}%`;
-
-        if (p >= 100) {
-            clearInterval(timer);
-            setTimeout(() => {
-                if (loadingOverlay) loadingOverlay.classList.add("hidden");
-                if (typeof onComplete === "function") onComplete();
-            }, 250);
-        }
-    }, 80);
-}
-
 function spawnSeededCollectibles() {
     collectibles.forEach(c => scene.remove(c.mesh));
     collectibles = [];
@@ -2157,22 +2127,20 @@ function startBiomeLoadingSequence(biomeIndex, onComplete) {
     const statusTxt = document.getElementById("loading-status-text");
     const tipTxt = document.getElementById("loading-codex-tip");
 
-    const biomeNames = [
-        "BIOME 1: THE LINEAR STEPPES",
-        "BIOME 2: THE BINARY MARSHLANDS",
-        "BIOME 3: THE VARIANCE TUNDRA",
-        "BIOME 4: THE BRANCHING CANOPY",
-        "BIOME 5: THE DEEP SYNAPSE CITADEL",
-        "BIOME 6: THE SEMANTIC EXPANSE"
-    ];
+    const cur = CodexCurriculum[biomeIndex] || CodexCurriculum[0];
+    const biomeName = cur ? cur.subtitle.toUpperCase() : "THE LINEAR STEPPES";
 
-    document.getElementById("loading-biome-name").innerText = `⚡ CALIBRATING ${biomeNames[biomeIndex] || biomeNames[0]}`;
-    tipTxt.innerHTML = CodexTips[Math.floor(Math.random() * CodexTips.length)];
+    const titleEl = document.getElementById("loading-biome-name");
+    if (titleEl) titleEl.innerText = `⚡ CALIBRATING BIOME ${biomeIndex + 1}: ${biomeName}`;
+    if (tipTxt && typeof CodexTips !== "undefined" && Array.isArray(CodexTips) && CodexTips.length > 0) {
+        tipTxt.innerHTML = CodexTips[Math.floor(Math.random() * CodexTips.length)];
+    }
 
-    loader.classList.remove("hidden");
-    if (typeof gsap !== "undefined") gsap.set(loader, { opacity: 1 });
+    if (loader) {
+        loader.classList.remove("hidden");
+    }
 
-    const minDuration = 1800; // Enforced 1.8s minimum duration to prevent flicker
+    const minDuration = 1000;
     const startTime = performance.now();
 
     function step(now) {
@@ -2181,21 +2149,19 @@ function startBiomeLoadingSequence(biomeIndex, onComplete) {
         const eased = 1 - Math.pow(1 - p, 3);
         const pct = Math.round(eased * 100);
 
-        fill.style.width = `${pct}%`;
-        pctTxt.innerText = `${pct}%`;
-        if (pct < 35) statusTxt.innerText = "SYNCHRONIZING WEIGHTS...";
-        else if (pct < 75) statusTxt.innerText = "CALIBRATING TENSOR MESH...";
-        else statusTxt.innerText = "ENTERING ARENA...";
+        if (fill) fill.style.width = `${pct}%`;
+        if (pctTxt) pctTxt.innerText = `${pct}%`;
+        if (statusTxt) {
+            if (pct < 35) statusTxt.innerText = "SYNCHRONIZING WEIGHTS...";
+            else if (pct < 75) statusTxt.innerText = "CALIBRATING TENSOR MESH...";
+            else statusTxt.innerText = "ENTERING ARENA...";
+        }
 
         if (p < 1) {
             requestAnimationFrame(step);
         } else {
-            if (typeof gsap !== "undefined") {
-                gsap.to(loader, { opacity: 0, duration: 0.35, onComplete: () => { loader.classList.add("hidden"); if (onComplete) onComplete(); } });
-            } else {
-                loader.classList.add("hidden");
-                if (onComplete) onComplete();
-            }
+            if (loader) loader.classList.add("hidden");
+            if (typeof onComplete === "function") onComplete();
         }
     }
     requestAnimationFrame(step);
