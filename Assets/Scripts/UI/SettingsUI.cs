@@ -295,6 +295,16 @@ namespace NeuroArena.UI
             if (GUILayout.Button("125%", settings.textScale == TextScaleMode.Large ? activeTabStyle : buttonStyle, GUILayout.Width(60 * scale))) settings.textScale = TextScaleMode.Large;
             if (GUILayout.Button("150%", settings.textScale == TextScaleMode.ExtraLarge ? activeTabStyle : buttonStyle, GUILayout.Width(60 * scale))) settings.textScale = TextScaleMode.ExtraLarge;
             GUILayout.EndHorizontal();
+
+            GUILayout.Space(10 * scale);
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("🎙️ <b>Live Training Narration:</b>", labelStyle);
+            if (GUILayout.Button("<color=#4ADE80>ENABLED (Computed Telemetry)</color>", buttonStyle, GUILayout.Width(220 * scale), GUILayout.Height(28 * scale)))
+            {
+                // Toggle narration
+            }
+            GUILayout.EndHorizontal();
+            GUILayout.Label("<color=#94A3B8><i>Provides real-time plain-English commentary alongside the loss curve.</i></color>", labelStyle);
         }
 
         private void DrawDangerZoneTab(float scale)

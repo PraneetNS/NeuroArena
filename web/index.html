@@ -338,6 +338,10 @@
                             <button class="text-scale-btn pill-btn" data-scale="1.5">150%</button>
                         </div>
                     </div>
+                    <div class="setting-row">
+                        <label>🎙️ Live Training Narration:</label>
+                        <button id="btn-toggle-narration" class="pill-btn">ENABLED (Computed Commentary)</button>
+                    </div>
                 </div>
 
                 <div class="settings-tab-pane hidden" id="tab-reset">
@@ -661,6 +665,11 @@
                             <div class="graph-card">
                                 <div class="graph-card-title" id="graph-left-title">🌌 2D EMBEDDING VECTOR SPACE</div>
                                 <canvas id="canvas-loss-graph" width="380" height="200"></canvas>
+                                <!-- Live Real-Time Mathematical Narration Layer -->
+                                <div id="terminal-narration-stream" class="terminal-narration-box">
+                                    <div class="narration-header"><span class="pulse-dot"></span> 🎙️ LIVE TRAINING NARRATION:</div>
+                                    <div id="narration-line-text" class="narration-text">Ready to optimize. Hit Train to stream real-time mathematical commentary.</div>
+                                </div>
                             </div>
                             <div class="graph-card">
                                 <div class="graph-card-title" id="graph-right-title">🧬 PAIRWISE COSINE SIMILARITY</div>

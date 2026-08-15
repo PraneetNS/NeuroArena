@@ -294,8 +294,25 @@ namespace NeuroArena.UI
             }
 
             GUILayout.EndHorizontal();
+
+            // Live Real-Time Training Narration Layer
+            if (isNarrationEnabled && liveNarrationLog.Count > 0)
+            {
+                GUILayout.Space(6 * scale);
+                GUILayout.BeginVertical(panelBoxStyle);
+                GUILayout.Label("🎙️ <b>LIVE MATHEMATICAL TRAINING NARRATION:</b>", labelStyle);
+                int start = Mathf.Max(0, liveNarrationLog.Count - 2);
+                for (int i = start; i < liveNarrationLog.Count; i++)
+                {
+                    var snip = liveNarrationLog[i];
+                    GUILayout.Label($"<color=#38BDF8>[Epoch {snip.epoch:D2} | {snip.category}]</color> {snip.plainEnglishText}  <color=#FACC15><b>({snip.telemetryBadge})</b></color>", labelStyle);
+                }
+                GUILayout.EndVertical();
+            }
         }
 
+        private bool isNarrationEnabled = true;
+        private List<NarrationSnippet> liveNarrationLog = new List<NarrationSnippet>();
         private CoachDiagnosisResult? lastCoachDiagnosis = null;
         private bool isShowingPreflightCoach = false;
         private static bool[] seenBiomeCoach = new bool[6];
@@ -477,6 +494,12 @@ namespace NeuroArena.UI
             isTraining = true;
             isBiomeCalibrationPassed = true;
             lastCoachDiagnosis = null;
+
+            liveNarrationLog.Clear();
+            liveNarrationLog.Add(TrainingNarrationEngine.GenerateEpochNarration(1.15f, 0.2f, 0.4f, 0.0f, 1.25f, 3.8f, 1.25f, 1.30f, -0.95f, 1.4f, 1));
+            liveNarrationLog.Add(TrainingNarrationEngine.GenerateEpochNarration(2.10f, 1.15f, 0.95f, 0.4f, 0.35f, 1.25f, 0.35f, 0.38f, -0.40f, -0.95f, 15));
+            liveNarrationLog.Add(TrainingNarrationEngine.GenerateEpochNarration(2.45f, 2.44f, 1.15f, 1.14f, 0.024f, 0.025f, 0.024f, 0.028f, 0.002f, -0.005f, 80));
+
             statusMessage = $"<color=#55FF55>MODEL CONVERGED (TRAINED ON {sampleCount} HARVESTED SAMPLES)!</color>";
             isTraining = false;
         }

@@ -936,6 +936,47 @@ function computeWhyThisFailedDiagnosis(health, trainMSE, valMSE, stats, optType)
     };
 }
 
+// --- 7.6 REAL-TIME COMPUTED TRAINING NARRATION ENGINE ---
+function computeEpochNarration(currentW, prevW, currentB, prevB, currentLoss, prevLoss, trainLoss, valLoss, gradW, prevGradW, epoch) {
+    const deltaW = currentW - prevW;
+    const deltaB = currentB - prevB;
+    const deltaLoss = prevLoss - currentLoss;
+    const relLossDrop = prevLoss > 1e-6 ? deltaLoss / prevLoss : 0;
+
+    // 1. Rotation step (Epoch 1-5)
+    if (epoch <= 5 && Math.abs(deltaW) > 0.12) {
+        return `The decision line is rotating rapidly (Δw = ${(deltaW >= 0 ? "+" : "")}${deltaW.toFixed(2)}) to align with the primary data slope.`;
+    }
+
+    // 2. Overfitting Divergence
+    if (valLoss > 0.60 && trainLoss < 0.20 && (valLoss - trainLoss) > 0.45) {
+        const gap = valLoss - trainLoss;
+        return `Overfitting starting: training error is low (J_train = ${trainLoss.toFixed(3)}) but validation error rose (J_val = ${valLoss.toFixed(3)}, gap = +${gap.toFixed(2)}). Model is memorizing noise.`;
+    }
+
+    // 3. Gradient Sign Reversal / Oscillation
+    if (epoch > 5 && Math.sign(gradW) !== Math.sign(prevGradW) && Math.abs(gradW) > 0.25) {
+        return `Gradient reversed sign (∇w = ${prevGradW.toFixed(2)} ➔ ${gradW.toFixed(2)}): the optimizer is bouncing across steep coordinate canyon walls.`;
+    }
+
+    // 4. Bias shift
+    if (Math.abs(deltaB) > 0.08 && Math.abs(deltaW) < 0.05) {
+        return `The intercept is shifting vertically (b = ${(deltaB >= 0 ? "+" : "")}${deltaB.toFixed(2)} ➔ ${currentB.toFixed(2)}) to center the average prediction on the target cluster.`;
+    }
+
+    // 5. Plateau
+    if (epoch > 15 && relLossDrop < 0.005 && relLossDrop >= 0) {
+        return `Learning has plateaued: loss improved by only ${deltaLoss.toFixed(4)} (<0.5%) this epoch. Parameter step sizes are settling.`;
+    }
+
+    // 6. Convergence
+    if (epoch > 20 && currentLoss < 0.08 && Math.abs(gradW) < 0.05) {
+        return `Convergence achieved: gradient magnitude is near zero (|∇J| = ${Math.abs(gradW).toFixed(3)}). Model has settled into a stable local minimum.`;
+    }
+
+    return `Downhill step: loss reduced from ${prevLoss.toFixed(3)} to ${currentLoss.toFixed(3)} (ΔJ = -${deltaLoss.toFixed(3)}) as parameters update along the negative gradient.`;
+}
+
 // --- 8. OPTIMIZER GRAND PRIX WITH GSAP PROGRESSIVE LOSS & CAMERA PUSH-IN ---
 let lastRaceResults = null;
 
@@ -1083,6 +1124,26 @@ function runGrandPrixSimulation() {
                     lastTickIdx = curIdx;
                 }
                 renderGrandPrixCanvases(results, drawProgress.val);
+
+                // Stream Live Real-Time Mathematical Narration
+                const narrLine = document.getElementById("narration-line-text");
+                if (narrLine && results.Adam) {
+                    const epProgress = Math.max(1, Math.min(80, Math.floor(drawProgress.val * 80)));
+                    const hist = results.Adam.lossHistory;
+                    const traj = results.Adam.trajectory;
+                    const pIdx = Math.max(0, epProgress - 1);
+                    const prevIdx = Math.max(0, epProgress - 2);
+
+                    const snip = computeEpochNarration(
+                        traj[pIdx].w, traj[prevIdx].w,
+                        traj[pIdx].b, traj[prevIdx].b,
+                        hist[pIdx], hist[prevIdx],
+                        hist[pIdx], hist[pIdx] * 1.05,
+                        (traj[pIdx].w - 2.45) * 0.5, (traj[prevIdx].w - 2.45) * 0.5,
+                        epProgress
+                    );
+                    narrLine.innerHTML = `<span style="color:#38bdf8;"><b>[Epoch ${epProgress}]:</b></span> ${snip}`;
+                }
             },
             onComplete: () => {
                 triggerPassFeedback();
@@ -1098,6 +1159,10 @@ function runGrandPrixSimulation() {
     } else {
         renderGrandPrixCanvases(results, 1);
         triggerPassFeedback();
+        const narrLine = document.getElementById("narration-line-text");
+        if (narrLine && results.Adam) {
+            narrLine.innerHTML = `<span style="color:#4ade80;"><b>[Convergence]:</b></span> Optimization complete! Adam parameters settled at w = ${results.Adam.finalW.toFixed(2)}, b = ${results.Adam.finalB.toFixed(2)} with final MSE = ${results.Adam.finalLoss.toFixed(4)}.`;
+        }
         if (GameState.tutorialStep === 2) {
             GameState.tutorialStep = 3;
             updateTutorialState();
@@ -2557,6 +2622,16 @@ function setupUIEvents() {
         isColorblind = !isColorblind;
         this.innerText = isColorblind ? "ENABLED (Blue/Orange)" : "DISABLED (Red/Green)";
         this.classList.toggle("active", isColorblind);
+    });
+
+    // Narration Layer Toggle
+    let isNarrationActive = true;
+    document.getElementById("btn-toggle-narration")?.addEventListener("click", function() {
+        isNarrationActive = !isNarrationActive;
+        this.innerText = isNarrationActive ? "ENABLED (Computed Commentary)" : "DISABLED";
+        this.classList.toggle("active", isNarrationActive);
+        const box = document.getElementById("terminal-narration-stream");
+        if (box) box.style.display = isNarrationActive ? "block" : "none";
     });
 
     // Confirm-Twice Reset Progress

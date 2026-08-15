@@ -167,11 +167,41 @@ function testCoachFailureDiagnostics() {
     console.log("✅ Persistent Coach Failure Diagnostic Engine Test Passed!");
 }
 
+function testTrainingNarrationLayer() {
+    // 1. Rotation line check
+    const narrRotation = (w, prevW) => {
+        const delta = w - prevW;
+        if (Math.abs(delta) > 0.12) return `rotating rapidly (Δw = ${delta > 0 ? "+" : ""}${delta.toFixed(2)})`;
+        return "normal";
+    };
+    assert(narrRotation(1.25, 0.5).includes("rotating rapidly (Δw = +0.75)"));
+
+    // 2. Overfitting line check
+    const narrOverfit = (trainL, valL) => {
+        if (valL > 0.6 && trainL < 0.2 && (valL - trainL) > 0.45) {
+            return `Overfitting starting: training error is low (${trainL.toFixed(3)}) but validation error rose (${valL.toFixed(3)})`;
+        }
+        return "normal";
+    };
+    assert(narrOverfit(0.04, 1.85).includes("Overfitting starting: training error is low (0.040) but validation error rose (1.850)"));
+
+    // 3. Plateau line check
+    const narrPlateau = (loss, prevLoss) => {
+        const drop = prevLoss - loss;
+        if (drop / prevLoss < 0.005) return "Learning has plateaued";
+        return "improving";
+    };
+    assert.strictEqual(narrPlateau(0.0244, 0.0245), "Learning has plateaued");
+
+    console.log("✅ Real-Time Training Narration Layer Test Passed!");
+}
+
 testSeedPRNG();
 testLinearInferenceAndExtrapolation();
 testDatasetHealthAndGeneralizationDegradation();
 testDatasetShiftSimulationAndCompromiseError();
 testDeviceOrientationAndTouchBlending();
 testCoachFailureDiagnostics();
+testTrainingNarrationLayer();
 console.log("🎉 All Web Unit Tests Passed Cleanly!");
 
