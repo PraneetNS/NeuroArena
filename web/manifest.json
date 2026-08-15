@@ -1,0 +1,17 @@
+{
+  "name": "NeuroArena: Gradients of the Wild",
+  "short_name": "NeuroArena",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#020617",
+  "theme_color": "#0284c7",
+  "description": "3D Open-World Educational Action-Adventure governed by pure Machine Learning algorithms.",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}
