@@ -1,0 +1,28 @@
+﻿{
+  "name": "neuroarena-server",
+  "version": "1.0.0",
+  "description": "Standalone Node.js + Colyseus Real-Time Multiplayer State Relay Server for NeuroArena",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "test": "node test/server.test.js"
+  },
+  "keywords": [
+    "neuroarena",
+    "colyseus",
+    "multiplayer",
+    "threejs",
+    "unity",
+    "realtime"
+  ],
+  "author": "PraneetNS <savantpraneet@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "@colyseus/schema": "^2.0.35",
+    "colyseus": "^0.15.42",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "ws": "^8.18.0"
+  }
+}
