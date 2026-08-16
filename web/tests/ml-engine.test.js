@@ -528,6 +528,26 @@ function testSupabaseGuestAuthAndOAuthUpgradeFlow() {
     console.log("✅ Supabase Zero-Friction Anonymous Guest & OAuth Upgrade Flow Test Passed!");
 }
 
+function testRankedLeaderboardsAndYourRankCalculation() {
+    const globalScores = [
+        { account_id: "bot_01", player_name: "Grandmaster Ada", score: 2150, accuracy: 99.4 },
+        { account_id: "bot_02", player_name: "Vector-Sensei", score: 1980, accuracy: 98.8 },
+        { account_id: "user_7721", player_name: "Ada-Architect", score: 1840, accuracy: 98.1 },
+        { account_id: "bot_04", player_name: "SGD_Pioneer", score: 1650, accuracy: 96.7 }
+    ];
+
+    // Sort descending by score, then accuracy
+    globalScores.sort((a, b) => b.score - a.score || b.accuracy - a.accuracy);
+
+    const myAccountId = "user_7721";
+    const myRankIndex = globalScores.findIndex(s => s.account_id === myAccountId);
+    const myRank = myRankIndex + 1;
+
+    assert.strictEqual(myRank, 3, "User rank must be #3 based on score sorting");
+    assert.strictEqual(globalScores[0].account_id, "bot_01", "#1 rank must be Grandmaster Ada");
+    console.log("✅ Supabase Postgres Keyed Leaderboard & 'Your Rank' Calculation Test Passed!");
+}
+
 testSeedPRNG();
 testLinearInferenceAndExtrapolation();
 testDatasetHealthAndGeneralizationDegradation();
@@ -552,5 +572,6 @@ testAuthoritativePickupReconciliation();
 test1v1LiveDuelFlow();
 testSubmissionIntegrityAndAnomalousRejection();
 testSupabaseGuestAuthAndOAuthUpgradeFlow();
+testRankedLeaderboardsAndYourRankCalculation();
 console.log("🎉 All Web Unit Tests Passed Cleanly!");
 

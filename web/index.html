@@ -715,42 +715,62 @@
             </div>
         </div>
 
-        <!-- Leaderboard Modal -->
+        <!-- Ranked Global Leaderboard Modal (Supabase PostgreSQL Keyed) -->
         <div id="leaderboard-modal" class="modal-overlay hidden">
-            <div class="glass-modal">
+            <div class="glass-modal" style="max-width:840px; width:92%;">
                 <div class="modal-header">
-                    <h2>🏆 ASYNC GHOST & DAILY LEADERBOARD (HELD-OUT TEST SET)</h2>
+                    <h2>🏆 GLOBAL RANKED LEADERBOARDS (TOP 100)</h2>
                     <button id="btn-close-leaderboard" class="close-btn">✕</button>
                 </div>
-                <div class="table-container">
-                    <table class="tree-split-table">
+
+                <!-- Leaderboard Mode Tabs -->
+                <div style="display:flex; gap:8px; padding:12px 20px 0 20px; border-bottom:1px solid rgba(255,255,255,0.08);">
+                    <button id="tab-lb-duels" class="slot-btn active" style="font-weight:700; font-size:0.85rem;">⚔️ 1v1 Ranked Duels</button>
+                    <button id="tab-lb-daily" class="slot-btn" style="font-weight:700; font-size:0.85rem;">📅 Daily Seed Challenge</button>
+                </div>
+
+                <!-- Sticky "YOUR RANK" Highlight Banner -->
+                <div style="padding:12px 20px 6px 20px;">
+                    <div id="leaderboard-your-rank-card" class="stat-card" style="border:1.5px solid #38bdf8; background:rgba(14,165,233,0.12); display:flex; justify-content:space-between; align-items:center; padding:10px 16px;">
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <div style="font-size:1.6rem;">🎯</div>
+                            <div>
+                                <div style="font-size:0.75rem; color:#38bdf8; font-weight:800;">YOUR CURRENT STANDING</div>
+                                <div id="lb-your-name" style="font-size:1.05rem; font-weight:800; color:#fff;">Ada-Architect <span id="lb-your-build" style="font-size:0.75rem; color:#94a3b8;">[EXPLORER]</span></div>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:18px; text-align:right; font-family:var(--font-display-mono);">
+                            <div>
+                                <div style="font-size:0.72rem; color:#94a3b8;">GLOBAL RANK</div>
+                                <div id="lb-your-rank-num" style="font-size:1.25rem; font-weight:900; color:#facc15;">#14</div>
+                            </div>
+                            <div>
+                                <div style="font-size:0.72rem; color:#94a3b8;">SCORE / RATING</div>
+                                <div id="lb-your-score" style="font-size:1.25rem; font-weight:900; color:#38bdf8;">1420</div>
+                            </div>
+                            <div>
+                                <div style="font-size:0.72rem; color:#94a3b8;">RECORD / ACC</div>
+                                <div id="lb-your-acc" style="font-size:1.25rem; font-weight:900; color:#4ade80;">98.4%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scrollable Top 100 Leaderboard Table -->
+                <div class="table-container" style="max-height:360px; overflow-y:auto; padding:0 20px 16px 20px;">
+                    <table class="tree-split-table" style="width:100%;">
                         <thead>
                             <tr>
-                                <th>Rank</th>
-                                <th>Model / Architect</th>
-                                <th>Held-Out Accuracy</th>
-                                <th>Seed</th>
+                                <th style="width:10%;">Rank</th>
+                                <th style="width:35%;">Architect / Model</th>
+                                <th style="width:15%;">Build</th>
+                                <th style="width:15%;">Rating / Score</th>
+                                <th style="width:15%;">Test Accuracy</th>
+                                <th style="width:10%;">W / L</th>
                             </tr>
                         </thead>
                         <tbody id="leaderboard-rows">
-                            <tr>
-                                <td>🥇 #1</td>
-                                <td class="cyan-text">You (5-Tree Bagging Party)</td>
-                                <td class="green-text"><b>93.3%</b></td>
-                                <td>#NEURO-8842</td>
-                            </tr>
-                            <tr>
-                                <td>🥈 #2</td>
-                                <td class="cyan-text">Grandmaster Ada (Adam MLP)</td>
-                                <td class="green-text"><b>90.0%</b></td>
-                                <td>#NEURO-8842</td>
-                            </tr>
-                            <tr>
-                                <td>🥉 #3</td>
-                                <td class="cyan-text">Ghost Overfitter-X (Depth=8)</td>
-                                <td class="fail-text"><b>66.7%</b></td>
-                                <td>#NEURO-8842</td>
-                            </tr>
+                            <!-- Populated dynamically via LeaderboardManager -->
                         </tbody>
                     </table>
                 </div>
