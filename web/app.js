@@ -1667,21 +1667,111 @@ function init3DWorld() {
     setupInputListeners();
 }
 
-function createTerrain() {
+let currentTerrainMesh = null;
+let currentGridMesh = null;
+let currentWaterMesh = null;
+
+function createTerrain(biomeIndex = 0) {
+    if (currentTerrainMesh) { scene.remove(currentTerrainMesh); currentTerrainMesh.geometry.dispose(); }
+    if (currentGridMesh) { scene.remove(currentGridMesh); }
+    if (currentWaterMesh) { scene.remove(currentWaterMesh); currentWaterMesh.geometry.dispose(); }
+
     const geo = new THREE.PlaneGeometry(180, 180, 64, 64);
     geo.rotateX(-Math.PI / 2);
     const pos = geo.attributes.position;
+    const colors = [];
+    const color = new THREE.Color();
+
     for (let i = 0; i < pos.count; i++) {
         const x = pos.getX(i), z = pos.getZ(i);
         const dist = Math.sqrt(x * x + z * z);
-        const y = (Math.sin(x * 0.08) * Math.cos(z * 0.08) * 2.8) * Math.min(Math.max((dist - 10) / 25, 0), 1);
+        const centerFlatWeight = Math.min(Math.max((dist - 10) / 22, 0), 1);
+        let y = 0;
+
+        if (biomeIndex === 0) {
+            // Biome 1: Rolling Sand Dunes
+            const d1 = Math.sin(x * 0.045 + z * 0.025) * 3.8;
+            const d2 = Math.cos(z * 0.055) * 2.2;
+            y = (d1 + d2) * centerFlatWeight;
+            if (y > 2.0) color.setHex(0x78350f); else color.setHex(0xd97706);
+        } else if (biomeIndex === 1) {
+            // Biome 2: Uneven Wetland with Sunken Dips & Hollows
+            const m = Math.sin(x * 0.08) * Math.cos(z * 0.08) * 4.5;
+            y = (m - 1.2) * centerFlatWeight;
+            if (y < -0.2) color.setHex(0x064e3b); else color.setHex(0x059669);
+        } else if (biomeIndex === 2) {
+            // Biome 3: Jagged Glacial Ice Ridges & Sawtooth Crags
+            const ice1 = Math.abs(Math.sin(x * 0.07) * Math.cos(z * 0.07)) * 7.2;
+            const ice2 = Math.sin(x * 0.12 + z * 0.08) * 2.0;
+            y = (ice1 + ice2) * centerFlatWeight;
+            if (y > 3.0) color.setHex(0x0c4a6e); else color.setHex(0x0284c7);
+        } else if (biomeIndex === 3) {
+            // Biome 4: Dense Rolling Forest Hills & Canopy Layer
+            const hill = Math.sin(x * 0.035) * Math.cos(z * 0.035) * 5.2;
+            y = hill * centerFlatWeight;
+            if (y > 2.5) color.setHex(0x365314); else color.setHex(0x15803d);
+        } else if (biomeIndex === 4) {
+            // Biome 5: Quantized Architectural Basalt Terraces & Ring Steps
+            const ring = Math.cos(dist * 0.32) * 4.5;
+            y = (Math.round((ring + Math.sin(x * 0.05) * 2.5) / 1.5) * 1.5) * centerFlatWeight;
+            if (y > 2.0) color.setHex(0x1e1b4b); else color.setHex(0x581c87);
+        } else {
+            // Biome 6: Void Starfield with Floating Modular Platform Islands
+            const isIsland = dist < 16 || (Math.sin(x * 0.14) * Math.cos(z * 0.14) > 0.32);
+            if (isIsland) {
+                y = 1.8 + Math.sin(x * 0.04 + z * 0.04) * 0.6;
+                color.setHex(0x312e81);
+            } else {
+                y = -90; // Plunges into celestial abyss
+                color.setHex(0x020617);
+            }
+        }
+
+        // Boundary containment ridges for terrestrial biomes
+        if (biomeIndex !== 5 && (Math.abs(x) > 72 || Math.abs(z) > 72)) {
+            y += 8.5;
+        }
+
         pos.setY(i, y);
+        colors.push(color.r, color.g, color.b);
     }
+
+    geo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
     geo.computeVertexNormals();
-    scene.add(new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: 0x162022, roughness: 0.85 })));
-    const grid = new THREE.GridHelper(180, 45, 0x22d3ee, 0x1e293b);
-    grid.position.y = 0.05;
-    scene.add(grid);
+
+    const mat = new THREE.MeshStandardMaterial({
+        vertexColors: true,
+        roughness: 0.82,
+        metalness: 0.2,
+        flatShading: true
+    });
+    currentTerrainMesh = new THREE.Mesh(geo, mat);
+    currentTerrainMesh.receiveShadow = true;
+    scene.add(currentTerrainMesh);
+
+    // Add Wetland Water Basin Plane in Biome 1
+    if (biomeIndex === 1) {
+        const waterGeo = new THREE.PlaneGeometry(175, 175);
+        waterGeo.rotateX(-Math.PI / 2);
+        const waterMat = new THREE.MeshStandardMaterial({
+            color: 0x0891b2,
+            roughness: 0.1,
+            metalness: 0.8,
+            transparent: true,
+            opacity: 0.7
+        });
+        currentWaterMesh = new THREE.Mesh(waterGeo, waterMat);
+        currentWaterMesh.position.y = -0.3;
+        scene.add(currentWaterMesh);
+    }
+
+    // Grid Overlay (except in cosmic void of Biome 6)
+    if (biomeIndex !== 5) {
+        const gridCol = biomeIndex === 0 ? 0xf59e0b : (biomeIndex === 1 ? 0x10b981 : (biomeIndex === 2 ? 0x38bdf8 : 0x22c55e));
+        currentGridMesh = new THREE.GridHelper(180, 45, gridCol, 0x1e293b);
+        currentGridMesh.position.y = 0.05;
+        scene.add(currentGridMesh);
+    }
 }
 
 let playerLimbs = {
@@ -2969,6 +3059,7 @@ function setupUIEvents() {
 
     function startBiomeLoadingSequence(biomeIndex, onComplete) {
         GameState.currentBiome = biomeIndex;
+        createTerrain(biomeIndex);
         applyBiomeVisualTheme(biomeIndex);
         playerPos.set(0, 1.5, 0);
         if (playerMesh) playerMesh.position.set(0, 1.5, 0);

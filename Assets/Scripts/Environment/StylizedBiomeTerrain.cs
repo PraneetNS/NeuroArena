@@ -153,45 +153,57 @@ namespace NeuroArena.Environment
             float elevation = 0f;
             switch (biome)
             {
-                case 0: // Biome 1: The Linear Steppes (Rolling Terraced Plains)
-                    float n1 = Mathf.PerlinNoise(wx * noiseScale + 120f, wz * noiseScale + 120f);
-                    elevation = (n1 * maxElevation) * centerFlatWeight;
-                    if (distFromCenter > 22f) elevation = Mathf.Round(elevation / 0.8f) * 0.8f; // Terraced steps
+                case 0: // Biome 1: The Linear Steppes (Rolling Sand Dunes)
+                    float dune1 = Mathf.Sin(wx * 0.045f + wz * 0.025f) * 3.8f;
+                    float dune2 = Mathf.Cos(wz * 0.055f) * 2.2f;
+                    elevation = (dune1 + dune2) * centerFlatWeight;
                     break;
 
-                case 1: // Biome 2: The Binary Marshlands (Sunken Basin with Mound Islands)
-                    float n2 = Mathf.PerlinNoise(wx * noiseScale * 1.5f + 250f, wz * noiseScale * 1.5f + 250f);
-                    elevation = ((n2 - 0.45f) * (maxElevation * 1.2f)) * centerFlatWeight;
+                case 1: // Biome 2: The Binary Marshlands (Uneven Wetland with Sunken Dips & Basin Holes)
+                    float marshNoise = Mathf.PerlinNoise(wx * 0.08f + 250f, wz * 0.08f + 250f);
+                    elevation = ((marshNoise - 0.48f) * 5.2f) * centerFlatWeight;
                     break;
 
-                case 2: // Biome 3: The Variance Tundra (Jagged Glacial Ridges & Crags)
-                    float n3a = Mathf.PerlinNoise(wx * 0.05f + 300f, wz * 0.05f + 300f);
-                    float n3b = Mathf.PerlinNoise(wx * 0.1f + 500f, wz * 0.1f + 500f) * 0.5f;
-                    elevation = ((n3a + n3b) * maxElevation * 1.4f) * centerFlatWeight;
+                case 2: // Biome 3: The Variance Tundra (Jagged Glacial Ice Ridges & Sawtooth Crags)
+                    float foldedIce = Mathf.Abs(Mathf.PerlinNoise(wx * 0.065f + 300f, wz * 0.065f + 300f) - 0.5f) * 2.0f;
+                    float glacialSaw = Mathf.Sin(wx * 0.12f + wz * 0.08f) * 2.2f;
+                    elevation = (foldedIce * 7.5f + glacialSaw) * centerFlatWeight;
                     break;
 
-                case 3: // Biome 4: The Branching Canopy (Lush Tiered Terraces)
-                    float n4 = Mathf.PerlinNoise(wx * noiseScale * 0.8f + 400f, wz * noiseScale * 0.8f + 400f);
-                    elevation = (Mathf.Floor(n4 * 5f) * 1.2f) * centerFlatWeight;
+                case 3: // Biome 4: The Branching Canopy (Dense Rolling Forest Hills & Elevated Tier)
+                    float canopyHills = Mathf.Sin(wx * 0.035f) * Mathf.Cos(wz * 0.035f) * 4.8f;
+                    float canopyDetail = Mathf.PerlinNoise(wx * 0.08f + 400f, wz * 0.08f + 400f) * 2.5f;
+                    elevation = (canopyHills + canopyDetail) * centerFlatWeight;
                     break;
 
-                case 4: // Biome 5: The Deep Synapse Citadel (Hexagonal Basalt Elevation Rings)
-                    float ringPhase = Mathf.Cos(distFromCenter * 0.25f);
-                    elevation = (ringPhase * 2.5f + Mathf.PerlinNoise(wx * 0.06f, wz * 0.06f) * 3f) * centerFlatWeight;
+                case 4: // Biome 5: The Deep Synapse Citadel (Quantized Architectural Basalt Terraces)
+                    float ringPattern = Mathf.Cos(distFromCenter * 0.32f) * 4.5f;
+                    float rawElev = (ringPattern + Mathf.PerlinNoise(wx * 0.05f + 600f, wz * 0.05f + 600f) * 3.0f);
+                    elevation = (Mathf.Round(rawElev / 1.5f) * 1.5f) * centerFlatWeight;
                     break;
 
-                case 5: // Biome 6: The Semantic Expanse (Celestial Star Plateau)
-                    float n6 = Mathf.PerlinNoise(wx * 0.02f + 700f, wz * 0.02f + 700f);
-                    elevation = (n6 * 2.0f) * centerFlatWeight;
+                case 5: // Biome 6: The Semantic Expanse (Void Starfield with Floating Modular Platform Islands)
+                    bool isPlatform = distFromCenter < 16f || (Mathf.Sin(wx * 0.14f) * Mathf.Cos(wz * 0.14f) > 0.32f);
+                    if (isPlatform)
+                    {
+                        elevation = (1.8f + Mathf.Sin(wx * 0.04f + wz * 0.04f) * 0.6f);
+                    }
+                    else
+                    {
+                        elevation = -80f; // Deep void drop for cosmic starfield abyss
+                    }
                     break;
             }
 
-            // Natural outer boundary containment ridge
-            float boundaryDist = Mathf.Max(Mathf.Abs(wx), Mathf.Abs(wz));
-            if (boundaryDist > (terrainSize * 0.5f - 8f))
+            // Natural outer boundary containment ridge (except for cosmic void in Biome 6)
+            if (biome != 5)
             {
-                float ridgeT = Mathf.InverseLerp(terrainSize * 0.5f - 8f, terrainSize * 0.5f, boundaryDist);
-                elevation += ridgeT * ridgeHeight;
+                float boundaryDist = Mathf.Max(Mathf.Abs(wx), Mathf.Abs(wz));
+                if (boundaryDist > (terrainSize * 0.5f - 8f))
+                {
+                    float ridgeT = Mathf.InverseLerp(terrainSize * 0.5f - 8f, terrainSize * 0.5f, boundaryDist);
+                    elevation += ridgeT * ridgeHeight;
+                }
             }
 
             return elevation;
