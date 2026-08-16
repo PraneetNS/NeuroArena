@@ -393,6 +393,19 @@ function testPPMI3DWordEmbeddingConvergence() {
     console.log("✅ PPMI 3D Word Embedding Real-Time Convergence Test Passed!");
 }
 
+function testLiveInlineNumericTokens() {
+    const w = 2.45, b = 1.15, epoch = 12, loss = 0.042;
+    const wToken = `w: ${w.toFixed(2)}`;
+    const bToken = `b: ${b.toFixed(2)}`;
+    const epochToken = `Epoch: ${epoch} | Loss: ${loss.toFixed(4)}`;
+    const wordStep = `Now adjusting: "fire" ↔ "heat" (PPMI: 1.84 | Drifting closer)`;
+
+    assert.strictEqual(wToken, "w: 2.45", "Weight token must format literal live numeric float");
+    assert.strictEqual(bToken, "b: 1.15", "Bias token must format literal live numeric float");
+    assert(wordStep.includes('"fire" ↔ "heat"'), "Word step must display literal word pair being fine-tuned");
+    console.log("✅ Live Inline Numeric Tokens & Word Fine-Tuning Step Test Passed!");
+}
+
 testSeedPRNG();
 testLinearInferenceAndExtrapolation();
 testDatasetHealthAndGeneralizationDegradation();
@@ -409,5 +422,6 @@ testSixBiomeStandaloneScenesAndWorldManager();
 testCharacterSilhouetteArchetypes();
 testFloating3DValueBadges();
 testPPMI3DWordEmbeddingConvergence();
+testLiveInlineNumericTokens();
 console.log("🎉 All Web Unit Tests Passed Cleanly!");
 

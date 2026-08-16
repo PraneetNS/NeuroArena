@@ -831,6 +831,25 @@
                             <button id="preset-mlp" class="preset-btn">🧠 2-Layer MLP</button>
                             <button id="preset-embeddings" class="preset-btn glow-cyan">🌌 Biome 6 Embeddings</button>
                         </div>
+                        <!-- Live Numeric Parameter Token Strip (Turn-by-Turn Numerical Update) -->
+                        <div class="live-token-strip" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;">
+                            <div id="token-w-badge" class="stat-card" style="padding:6px 12px; font-family:'JetBrains Mono', monospace; font-size:12px; border:1px solid #38bdf8; background:rgba(14,165,233,0.12); flex:1; min-width:110px; text-align:center;">
+                                <span style="color:#94a3b8; font-size:10px; display:block;">WEIGHT (SLOPE)</span>
+                                <b id="token-w-val" class="text-cyan">w: 2.45</b>
+                            </div>
+                            <div id="token-b-badge" class="stat-card" style="padding:6px 12px; font-family:'JetBrains Mono', monospace; font-size:12px; border:1px solid #f59e0b; background:rgba(245,158,11,0.12); flex:1; min-width:110px; text-align:center;">
+                                <span style="color:#94a3b8; font-size:10px; display:block;">BIAS (INTERCEPT)</span>
+                                <b id="token-b-val" class="text-amber">b: 1.15</b>
+                            </div>
+                            <div id="token-epoch-badge" class="stat-card" style="padding:6px 12px; font-family:'JetBrains Mono', monospace; font-size:12px; border:1px solid #4ade80; background:rgba(34,197,94,0.12); flex:1; min-width:140px; text-align:center;">
+                                <span style="color:#94a3b8; font-size:10px; display:block;">TRAINING ITERATION</span>
+                                <b id="token-epoch-val" class="text-green">Epoch: 0 / Loss: 0.000</b>
+                            </div>
+                            <div id="token-word-step-badge" class="stat-card hidden" style="padding:6px 12px; font-family:'JetBrains Mono', monospace; font-size:12px; border:1px solid #c084fc; background:rgba(168,85,247,0.15); width:100%; text-align:left;">
+                                <span style="color:#c084fc; font-weight:700; font-size:10px; display:block;">🔤 FINE-TUNING STEP (WORD PAIR RELAXATION):</span>
+                                <b id="token-word-step-text" style="color:#f8fafc;">Now adjusting: "fire" ↔ "heat" (PPMI: 1.84 | Pulling closer)</b>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="terminal-section">

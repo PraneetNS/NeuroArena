@@ -1241,6 +1241,14 @@ function runGrandPrixSimulation() {
                     const currL = hist[pIdx] !== undefined ? hist[pIdx] : 0.1;
                     const prevL = hist[prevIdx] !== undefined ? hist[prevIdx] : currL;
 
+                    // Live Numeric Parameter Token Strip Update
+                    const wBadge = document.getElementById("token-w-val");
+                    const bBadge = document.getElementById("token-b-val");
+                    const epochBadge = document.getElementById("token-epoch-val");
+                    if (wBadge) wBadge.innerText = `w: ${currW.toFixed(2)}`;
+                    if (bBadge) bBadge.innerText = `b: ${currB.toFixed(2)}`;
+                    if (epochBadge) epochBadge.innerText = `Epoch: ${epProgress}/${totalLen} | Loss: ${currL.toFixed(4)}`;
+
                     const snip = computeEpochNarration(
                         currW, prevW,
                         currB, prevB,
@@ -3729,10 +3737,30 @@ function setupUIEvents() {
         });
     });
 
-    document.getElementById("preset-embeddings").addEventListener("click", () => {
+    document.getElementById("preset-embeddings")?.addEventListener("click", () => {
         document.getElementById("terminal-formula-input").value = "y = Embeddings(PPMI, Window=3, CosineSim ≥ 0.75)";
-        
+        const wordStepBadge = document.getElementById("token-word-step-badge");
+        const wordStepEl = document.getElementById("token-word-step-text");
+        if (wordStepBadge) wordStepBadge.classList.remove("hidden");
+
         trainPPMIEmbeddings3D(60, (ep, disp) => {
+            // Live Token Strip updates for NLP Mode
+            const pairIndex = (ep - 1) % SemanticVocabulary.length;
+            const w1 = SemanticVocabulary[pairIndex];
+            const w2 = SemanticVocabulary[(pairIndex + 1) % SemanticVocabulary.length];
+            if (wordStepEl) {
+                const ppVal = (ppmMatrix && ppmMatrix[pairIndex] && ppmMatrix[pairIndex][(pairIndex + 1) % SemanticVocabulary.length]) || 0;
+                const actionStr = ppVal > 0 ? "Drifting closer (attraction)" : "Drifting apart (repulsion)";
+                wordStepEl.innerHTML = `Now adjusting: <code>"${w1}"</code> ↔ <code>"${w2}"</code> (PPMI: ${ppVal.toFixed(2)} | ${actionStr})`;
+            }
+
+            const epochBadge = document.getElementById("token-epoch-val");
+            if (epochBadge) epochBadge.innerText = `Epoch: ${ep}/60 | Δp: ${disp.toFixed(3)}`;
+            const wBadge = document.getElementById("token-w-val");
+            const bBadge = document.getElementById("token-b-val");
+            if (wBadge) wBadge.innerText = `Dim: 3D`;
+            if (bBadge) bBadge.innerText = `Vocab: ${SemanticVocabulary.length}`;
+
             const canvasL = document.getElementById("canvas-loss-graph");
             if (canvasL) {
                 const ctxL = canvasL.getContext("2d");
