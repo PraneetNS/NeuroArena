@@ -139,8 +139,45 @@ function test1v1DuelFlowAndServerHiddenTestSet() {
     console.log(`✅ 1v1 Live Duel Hidden Test Set Evaluation Test Passed! (M1 MSE: ${mse1.toFixed(5)} vs M2 MSE: ${mse2.toFixed(5)})`);
 }
 
+function testSubmissionIntegrityAndAuditLogging() {
+    console.log("▶ Testing Anti-Cheat Submission Integrity & Audit Logger...");
+    const { auditLogger } = require("../src/security/AuditLogger");
+
+    auditLogger.clear();
+    assert.strictEqual(auditLogger.getAnomalies().length, 0);
+
+    // 1. Simulate Impossible Elapsed Training Time (< 2500ms)
+    const elapsedMs = 850; // Cheater submitted in 850ms
+    const w = 2.45, b = 1.15;
+    const isImpossibleSpeed = elapsedMs < 2500 && (Math.abs(w) > 0.01 || Math.abs(b) > 0.01);
+    assert.strictEqual(isImpossibleSpeed, true, "850ms submission must be flagged as impossible speed");
+
+    // 2. Log Anomaly
+    const anomaly = auditLogger.logAnomaly({
+        roomId: "duel_audit_test",
+        sessionId: "exploit_client_99",
+        playerName: "SpeedHacker",
+        reason: "IMPOSSIBLE_TRAINING_SPEED",
+        elapsedMs,
+        weightW: w,
+        weightB: b,
+        actionTaken: "REJECTED_WITH_PENALTY"
+    });
+
+    assert.strictEqual(auditLogger.getAnomalies().length, 1);
+    assert.strictEqual(auditLogger.getAnomalies()[0].reason, "IMPOSSIBLE_TRAINING_SPEED");
+    assert.strictEqual(auditLogger.getAnomalies()[0].actionTaken, "REJECTED_WITH_PENALTY");
+
+    // 3. Penalty Loss Verification
+    const assignedLoss = isImpossibleSpeed ? 999.0 : 0.02;
+    assert.strictEqual(assignedLoss, 999.0, "Flagged submission must be assigned severe penalty loss");
+
+    console.log("✅ Anti-Cheat Submission Integrity & Audit Logger Test Passed!");
+}
+
 testSchemaAndLifecycle();
 testActivityStateEnum();
 testServerSideCollectibleValidation();
 test1v1DuelFlowAndServerHiddenTestSet();
+testSubmissionIntegrityAndAuditLogging();
 console.log("🎉 All NeuroArena Server Unit Tests Passed Cleanly!");

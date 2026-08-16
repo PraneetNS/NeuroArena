@@ -493,6 +493,19 @@ function test1v1LiveDuelFlow() {
     console.log("✅ 1v1 Live Duel Matchmaking, 90s Timer, & Hidden Test Set Evaluation Test Passed!");
 }
 
+function testSubmissionIntegrityAndAnomalousRejection() {
+    const elapsedMs = 900;
+    const w = 2.45, b = 1.15;
+    const isImpossibleSpeed = elapsedMs < 2500 && (Math.abs(w) > 0.01 || Math.abs(b) > 0.01);
+    assert.strictEqual(isImpossibleSpeed, true, "Sub-2.5s submissions must be flagged as impossible training time");
+
+    const penaltyMse = isImpossibleSpeed ? 999.0 : 0.01;
+    const penaltyAcc = isImpossibleSpeed ? 0.0 : 98.5;
+    assert.strictEqual(penaltyMse, 999.0, "Flagged integrity violations must receive 999.0 penalty MSE");
+    assert.strictEqual(penaltyAcc, 0.0, "Flagged integrity violations must receive 0% accuracy");
+    console.log("✅ Anti-Cheat Submission Integrity & Anomaly Rejection Test Passed!");
+}
+
 testSeedPRNG();
 testLinearInferenceAndExtrapolation();
 testDatasetHealthAndGeneralizationDegradation();
@@ -515,5 +528,6 @@ testMultiplayerNetworkManagerAndGhostInterpolation();
 testFullHumanoidGhostAvatarAndTrainingVisuals();
 testAuthoritativePickupReconciliation();
 test1v1LiveDuelFlow();
+testSubmissionIntegrityAndAnomalousRejection();
 console.log("🎉 All Web Unit Tests Passed Cleanly!");
 

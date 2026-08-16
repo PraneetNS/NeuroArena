@@ -12,6 +12,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+const { auditLogger } = require("./security/AuditLogger");
+
 // 1. Healthcheck & Telemetry Endpoints
 app.get("/health", (req, res) => {
     res.json({
@@ -29,6 +31,14 @@ app.get("/api/status", (req, res) => {
         port: PORT,
         rooms: ["arena_room", "duel_room"],
         documentation: "https://github.com/PraneetNS/NeuroArena"
+    });
+});
+
+// Anti-Cheat & Security Audit Review Endpoint
+app.get("/api/security/anomalies", (req, res) => {
+    res.json({
+        totalFlagged: auditLogger.getAnomalies().length,
+        anomalies: auditLogger.getAnomalies()
     });
 });
 

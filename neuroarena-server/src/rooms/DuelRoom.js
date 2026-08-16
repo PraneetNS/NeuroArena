@@ -1,12 +1,13 @@
-﻿const colyseus = require("colyseus");
+const colyseus = require("colyseus");
 const { Room } = colyseus;
 const { DuelRoomState } = require("../schema/DuelRoomState");
 const { PlayerSchema } = require("../schema/ArenaRoomState");
+const { auditLogger } = require("../security/AuditLogger");
 
 /**
  * 1v1 Private Duel Match Room.
  * Implements FIFO 2-player matchmaking, synchronized 90s training timer,
- * and authoritative server-side hidden test set evaluation.
+ * lightweight anti-cheat submission integrity validation, and authoritative hidden test set evaluation.
  */
 class DuelRoom extends Room {
     onCreate(options) {
@@ -14,9 +15,10 @@ class DuelRoom extends Room {
         this.setState(new DuelRoomState());
         this.setPatchRate(100);
 
-        this.submissions = new Map(); // sessionId -> { weightW, weightB, name, build }
+        this.submissions = new Map(); // sessionId -> { weightW, weightB, name, build, flagged, reason }
         this.hiddenTestSet = this.generateHiddenTestSet();
         this.matchInterval = null;
+        this.matchStartTime = 0;
 
         // 1. Transform / Live presence relay during duel
         this.onMessage("transform", (client, message) => {
@@ -30,21 +32,60 @@ class DuelRoom extends Room {
             }
         });
 
-        // 2. Player Submits Trained Model Weights
+        // 2. Player Submits Trained Model Weights (With Integrity Checks)
         this.onMessage("submit_weights", (client, message) => {
             const player = this.state.players.get(client.sessionId);
             const w = (typeof message.weightW === "number") ? message.weightW : 0;
             const b = (typeof message.weightB === "number") ? message.weightB : 0;
+            const now = Date.now();
+            const elapsedMs = this.matchStartTime > 0 ? (now - this.matchStartTime) : 0;
 
-            console.log(`[DuelRoom] Received model weights from ${client.sessionId}: w=${w.toFixed(4)}, b=${b.toFixed(4)}`);
+            console.log(`[DuelRoom] Received model weights from ${client.sessionId}: w=${w.toFixed(4)}, b=${b.toFixed(4)} (Elapsed: ${elapsedMs}ms)`);
+
+            let isFlagged = false;
+            let flagReason = "";
+
+            // --- INTEGRITY CHECK 1: Numeric Validity & Finite Bounds ---
+            if (isNaN(w) || isNaN(b) || !isFinite(w) || !isFinite(b) || Math.abs(w) > 500 || Math.abs(b) > 500) {
+                isFlagged = true;
+                flagReason = "MALFORMED_OR_OUT_OF_BOUNDS_WEIGHTS";
+            }
+
+            // --- INTEGRITY CHECK 2: Impossible Training Speed Check ---
+            // Physical limit: Collecting crystals and optimizing a model cannot plausibly occur in under 2.5s (2500ms)
+            if (!isFlagged && elapsedMs < 2500 && (Math.abs(w) > 0.01 || Math.abs(b) > 0.01)) {
+                isFlagged = true;
+                flagReason = "IMPOSSIBLE_TRAINING_SPEED";
+            }
+
+            if (isFlagged) {
+                // Log anomaly to server audit logger for review
+                auditLogger.logAnomaly({
+                    roomId: this.roomId,
+                    sessionId: client.sessionId,
+                    playerName: player ? player.name : "Unknown",
+                    reason: flagReason,
+                    elapsedMs,
+                    weightW: w,
+                    weightB: b,
+                    actionTaken: "REJECTED_WITH_PENALTY"
+                });
+
+                client.send("submission_rejected", {
+                    reason: flagReason,
+                    message: `Submission rejected by Anti-Cheat: Implausible training speed (${elapsedMs}ms < 2500ms).`
+                });
+            }
 
             this.submissions.set(client.sessionId, {
                 sessionId: client.sessionId,
                 name: player ? player.name : "Architect",
                 characterBuild: player ? player.characterBuild : "explorer",
-                weightW: w,
-                weightB: b,
-                submittedAt: Date.now()
+                weightW: isFlagged ? 0 : w,
+                weightB: isFlagged ? 0 : b,
+                flagged: isFlagged,
+                flagReason: flagReason,
+                submittedAt: now
             });
 
             // Notify opponent that player finished training
@@ -113,6 +154,7 @@ class DuelRoom extends Room {
     startActiveMatch() {
         this.state.status = "active";
         this.state.timerSec = 90;
+        this.matchStartTime = Date.now();
 
         this.broadcast("match_started", {
             durationSec: 90,
@@ -154,8 +196,26 @@ class DuelRoom extends Room {
                 name: player.name,
                 characterBuild: player.characterBuild,
                 weightW: 0,
-                weightB: 0
+                weightB: 0,
+                flagged: false,
+                flagReason: ""
             };
+
+            if (sub.flagged) {
+                // Integrity violation: Assign severe penalty score
+                results.push({
+                    sessionId: player.id,
+                    name: player.name,
+                    characterBuild: player.characterBuild,
+                    weightW: 0,
+                    weightB: 0,
+                    mseLoss: 999.0,
+                    accuracy: 0.0,
+                    flagged: true,
+                    flagReason: sub.flagReason
+                });
+                return;
+            }
 
             // Run model inference against authoritative hidden test set
             let mseSum = 0;
@@ -174,7 +234,8 @@ class DuelRoom extends Room {
                 weightW: sub.weightW,
                 weightB: sub.weightB,
                 mseLoss: parseFloat(mse.toFixed(4)),
-                accuracy: parseFloat(accuracy.toFixed(1))
+                accuracy: parseFloat(accuracy.toFixed(1)),
+                flagged: false
             });
         });
 
