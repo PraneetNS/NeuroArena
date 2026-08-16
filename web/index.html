@@ -1,34 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>NeuroArena: Gradients of the Wild</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@400;600;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@400;600;800;900&family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="style.css">
-    <!-- Three.js for 3D WebGL Rendering & GLTF Model Loader -->
+    <!-- Three.js for 3D WebGL Rendering -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
     <!-- GSAP for High-Performance UI Motion Layer -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js').catch(() => {});
+                navigator.serviceWorker.register('./sw.js').catch(() => { });
             });
         }
     </script>
 </head>
+
 <body>
     <div id="game-container">
         <!-- 1. ANIMATED SPLASH SCREEN (2.5S SKIPPABLE) -->
         <div id="splash-screen" class="splash-overlay">
             <div class="splash-content">
                 <h1 class="splash-logo">⚡ NEURO-ARENA</h1>
-                <div class="splash-sublogo">GRADIENTS OF THE WILD  |  3D MACHINE LEARNING SIMULATION</div>
+                <div class="splash-sublogo">GRADIENTS OF THE WILD | 3D MACHINE LEARNING SIMULATION</div>
                 <div class="splash-sweep-bar"></div>
                 <div class="splash-prompt">Tap anywhere or press any key to skip</div>
             </div>
@@ -42,7 +45,8 @@
                 </div>
                 <div class="profile-creation-body">
                     <label>Choose Architect Codename:</label>
-                    <input type="text" id="input-architect-name" value="Ada-Architect" class="cyber-input" spellcheck="false">
+                    <input type="text" id="input-architect-name" value="Ada-Architect" class="cyber-input"
+                        spellcheck="false">
 
                     <label style="margin-top: 12px;">Select Avatar Matrix:</label>
                     <div class="avatar-grid">
@@ -54,7 +58,8 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button id="btn-save-first-profile" class="action-btn glow-cyan">🚀 Initialize Profile & Enter Arena</button>
+                    <button id="btn-save-first-profile" class="action-btn glow-cyan">🚀 Initialize Profile & Enter
+                        Arena</button>
                 </div>
             </div>
         </div>
@@ -67,9 +72,11 @@
                 </div>
                 <div class="error-recovery-body">
                     <p style="font-size: 13px; line-height: 1.5; color: #f1f5f9;">
-                        An unexpected simulation exception occurred, but <b>your progress, model weights, and profile data were safely preserved</b> in emergency backup storage.
+                        An unexpected simulation exception occurred, but <b>your progress, model weights, and profile
+                            data were safely preserved</b> in emergency backup storage.
                     </p>
-                    <div class="error-log-box" id="error-log-snippet">Error: WebGL context restore / syntax boundary</div>
+                    <div class="error-log-box" id="error-log-snippet">Error: WebGL context restore / syntax boundary
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button id="btn-error-reload" class="action-btn glow-cyan">🔄 Reload Simulation</button>
@@ -113,15 +120,18 @@
                     </div>
                     <div class="coach-advice-box">
                         <div class="advice-heading">🌟 How to Curate Data for this Concept:</div>
-                        <p id="coach-guidance-text">Harvest feature crystals across the entire biome from far left (X = -4) to far right (X = +4) to ensure your model learns the true global slope.</p>
+                        <p id="coach-guidance-text">Harvest feature crystals across the entire biome from far left (X =
+                            -4) to far right (X = +4) to ensure your model learns the true global slope.</p>
                     </div>
                     <div class="coach-warning-box">
                         <div class="warning-heading">⚠️ What to Avoid:</div>
-                        <p id="coach-avoid-text">Avoid clustering all your samples in one narrow corner; models cannot extrapolate accurately into empty space.</p>
+                        <p id="coach-avoid-text">Avoid clustering all your samples in one narrow corner; models cannot
+                            extrapolate accurately into empty space.</p>
                     </div>
                 </div>
                 <div class="modal-footer" style="display:flex; justify-content:flex-end;">
-                    <button id="btn-dismiss-coach-preflight" class="action-btn glow-cyan">🚀 Got It! Proceed to Terminal</button>
+                    <button id="btn-dismiss-coach-preflight" class="action-btn glow-cyan">🚀 Got It! Proceed to
+                        Terminal</button>
                 </div>
             </div>
         </div>
@@ -161,13 +171,14 @@
             <!-- 2. TOP-RIGHT CONTROLS (MINIMUM 44x44dp TOUCH TARGETS) -->
             <div id="top-right-hud" class="hud-controls-group">
                 <button id="btn-open-models-hud" class="hud-icon-btn glow-cyan" title="My Models Archive">💾</button>
-                <button id="btn-open-consult-hud" class="hud-icon-btn glow-amber" title="Consult / Model Interrogation">🔮</button>
-                <button id="btn-open-profile-hud" class="hud-icon-btn glow-cyan" title="Architect Profile"><span id="hud-avatar-icon">🤖</span></button>
+                <button id="btn-open-profile-hud" class="hud-icon-btn glow-cyan" title="Architect Profile"><span
+                        id="hud-avatar-icon">🤖</span></button>
                 <button id="btn-open-codex" class="hud-icon-btn glow-cyan" title="ML Codex / Journal">📖</button>
-                <button id="btn-daily-challenge" class="hud-icon-btn glow-amber" title="Daily Seeded Challenge">📅</button>
+                <button id="btn-daily-challenge" class="hud-icon-btn glow-amber"
+                    title="Daily Seeded Challenge">📅</button>
                 <button id="btn-toggle-drawer" class="hud-icon-btn glow-cyan" title="Inventory Drawer">🎒</button>
                 <button id="btn-data-inspector" class="hud-icon-btn glow-amber" title="Dataset Inspector">📊</button>
-                <button id="btn-leaderboard" class="hud-icon-btn glow-green" title="Leaderboards & Achievements">🏆</button>
+                <button id="btn-leaderboard" class="hud-icon-btn glow-green" title="Leaderboards">🏆</button>
                 <button id="btn-hud-recenter" class="hud-icon-btn" title="Recenter Camera">🎯</button>
                 <button id="btn-open-settings" class="hud-icon-btn" title="Settings">⚙️</button>
             </div>
@@ -175,9 +186,12 @@
             <!-- 3. EXPANDABLE INVENTORY DRAWER WITH LIVE DATASET STATS -->
             <div id="inventory-drawer" class="glass-drawer hidden">
                 <div class="drawer-header">🎒 COLLECTED RESOURCES</div>
-                <div class="drawer-row"><span class="icon cyan">◆</span> Feature Crystals (X): <b id="drawer-x-count">0</b></div>
-                <div class="drawer-row"><span class="icon amber">▲</span> Target Shards (Y): <b id="drawer-y-count">0</b></div>
-                <div class="drawer-row"><span class="icon green">●</span> Paired Datasets (N): <b id="drawer-n-count">0</b></div>
+                <div class="drawer-row"><span class="icon cyan">◆</span> Feature Crystals (X): <b
+                        id="drawer-x-count">0</b></div>
+                <div class="drawer-row"><span class="icon amber">▲</span> Target Shards (Y): <b
+                        id="drawer-y-count">0</b></div>
+                <div class="drawer-row"><span class="icon green">●</span> Paired Datasets (N): <b
+                        id="drawer-n-count">0</b></div>
 
                 <div class="drawer-divider"></div>
                 <div class="drawer-header cyan-text">📊 LIVE DATASET STATS</div>
@@ -227,7 +241,8 @@
                         <b id="drawer-health-score-val" class="green-text">100% [EXCELLENT]</b>
                     </div>
                     <div class="health-gauge-track">
-                        <div id="drawer-health-gauge-fill" class="health-gauge-fill" style="width: 100%; background: #4ade80;"></div>
+                        <div id="drawer-health-gauge-fill" class="health-gauge-fill"
+                            style="width: 100%; background: #4ade80;"></div>
                     </div>
                     <div class="health-submetrics-row">
                         <span>Bal: <b id="health-sub-balance" class="text-cyan">100%</b></span>
@@ -254,7 +269,11 @@
 
             <!-- Mobile Touch Controls -->
             <div id="touch-controls">
-                <div id="joystick-zone"><div id="joystick-base"><div id="joystick-stick"></div></div></div>
+                <div id="joystick-zone">
+                    <div id="joystick-base">
+                        <div id="joystick-stick"></div>
+                    </div>
+                </div>
                 <div id="look-zone"></div>
             </div>
         </div>
@@ -324,7 +343,8 @@
                     </div>
                     <div class="setting-row">
                         <label>🎯 Camera Alignment:</label>
-                        <button id="btn-settings-recenter" class="action-btn glow-cyan" style="min-height:36px;">🎯 RECENTER / CALIBRATE CAMERA</button>
+                        <button id="btn-settings-recenter" class="action-btn glow-cyan" style="min-height:36px;">🎯
+                            RECENTER / CALIBRATE CAMERA</button>
                     </div>
                 </div>
 
@@ -349,7 +369,8 @@
 
                 <div class="settings-tab-pane hidden" id="tab-diagnostics">
                     <p style="font-size:11px; color:#94a3b8; line-height:1.4; margin-bottom:10px;">
-                        <b>100% Offline & Local-First:</b> Logs session length, screen transitions, and frame spikes (>50ms) to a local file for manual bug reporting. Zero network calls or automatic uploads.
+                        <b>100% Offline & Local-First:</b> Logs session length, screen transitions, and frame spikes
+                        (>50ms) to a local file for manual bug reporting. Zero network calls or automatic uploads.
                     </p>
                     <div class="setting-row">
                         <label>📋 Local Diagnostics:</label>
@@ -357,21 +378,27 @@
                     </div>
                     <div id="diagnostics-active-panel" class="hidden" style="margin-top:10px;">
                         <div style="font-size:11px; color:#cbd5e1; margin-bottom:6px;">
-                            📊 <span id="diag-stats-spikes">0 Frame Spikes</span> | <span id="diag-stats-entries">0 Log Entries</span>
+                            📊 <span id="diag-stats-spikes">0 Frame Spikes</span> | <span id="diag-stats-entries">0 Log
+                                Entries</span>
                         </div>
                         <div style="display:flex; gap:8px; margin-bottom:8px;">
-                            <button id="btn-export-diagnostics" class="action-btn glow-cyan" style="flex:1;">📥 Download .TXT Log</button>
-                            <button id="btn-copy-diagnostics" class="pill-btn" style="flex:1;">📋 Copy to Clipboard</button>
-                            <button id="btn-clear-diagnostics" class="pill-btn" style="color:#f87171;">🗑️ Clear</button>
+                            <button id="btn-export-diagnostics" class="action-btn glow-cyan" style="flex:1;">📥 Download
+                                .TXT Log</button>
+                            <button id="btn-copy-diagnostics" class="pill-btn" style="flex:1;">📋 Copy to
+                                Clipboard</button>
+                            <button id="btn-clear-diagnostics" class="pill-btn" style="color:#f87171;">🗑️
+                                Clear</button>
                         </div>
                         <textarea id="diag-log-preview" class="diagnostics-textarea" readonly></textarea>
                     </div>
                 </div>
 
                 <div class="settings-tab-pane hidden" id="tab-reset">
-                    <p style="font-size:11px; color:#f87171; line-height:1.4;">Warning: Resetting will erase all save slots, profile records, and model vaults.</p>
+                    <p style="font-size:11px; color:#f87171; line-height:1.4;">Warning: Resetting will erase all save
+                        slots, profile records, and model vaults.</p>
                     <div style="margin-top:14px;">
-                        <button id="btn-settings-reset-progress" class="action-btn" style="background:#ef4444; border-color:#f87171;">🗑️ Reset All Progress & Profiles</button>
+                        <button id="btn-settings-reset-progress" class="action-btn"
+                            style="background:#ef4444; border-color:#f87171;">🗑️ Reset All Progress & Profiles</button>
                     </div>
                 </div>
 
@@ -390,7 +417,8 @@
                 </div>
                 <div class="models-modal-body">
                     <div class="models-gallery-header">
-                        <span>Select a successfully trained model to inspect its frozen training graph and parameters:</span>
+                        <span>Select a successfully trained model to inspect its frozen training graph and
+                            parameters:</span>
                     </div>
                     <div class="models-grid" id="models-cards-grid"></div>
                 </div>
@@ -407,18 +435,23 @@
                 <div class="inspector-modal-body">
                     <div class="inspector-header-box">
                         <h3 id="inspector-model-title">Adam MLP Classifier</h3>
-                        <div class="inspector-meta" id="inspector-meta-text">Biome 5: Deep Citadel | Seed #NEURO-8842</div>
+                        <div class="inspector-meta" id="inspector-meta-text">Biome 5: Deep Citadel | Seed #NEURO-8842
+                        </div>
                     </div>
                     <div class="inspector-stats-row">
-                        <div class="stat-pill"><span class="label">Test Accuracy:</span> <b id="inspector-acc-val" class="text-green">94.2%</b></div>
-                        <div class="stat-pill"><span class="label">Final Loss:</span> <b id="inspector-loss-val" class="text-amber">J = 0.0245</b></div>
-                        <div class="stat-pill"><span class="label">Boss Status:</span> <b class="text-green">🏆 Conquered</b></div>
+                        <div class="stat-pill"><span class="label">Test Accuracy:</span> <b id="inspector-acc-val"
+                                class="text-green">94.2%</b></div>
+                        <div class="stat-pill"><span class="label">Final Loss:</span> <b id="inspector-loss-val"
+                                class="text-amber">J = 0.0245</b></div>
+                        <div class="stat-pill"><span class="label">Boss Status:</span> <b class="text-green">🏆
+                                Conquered</b></div>
                     </div>
 
                     <!-- Stage 29 Inspector Tabs -->
                     <div class="settings-tabs-bar" style="margin-top: 8px;">
                         <button id="inspector-tab-loss" class="settings-tab-btn active">📉 Loss Curve Snapshot</button>
-                        <button id="inspector-tab-consult" class="settings-tab-btn glow-amber">💬 Consult / Interrogate (Chat)</button>
+                        <button id="inspector-tab-consult" class="settings-tab-btn glow-amber">💬 Consult / Interrogate
+                            (Chat)</button>
                     </div>
 
                     <!-- Tab 1: Frozen Loss Snapshot -->
@@ -443,19 +476,24 @@
                         <div class="consult-chip-row">
                             <button class="consult-chip-btn" data-val="1.8">🎯 In-Domain (X=1.8)</button>
                             <button class="consult-chip-btn" data-val="4.4">⚠️ Boundary (X=4.4)</button>
-                            <button class="consult-chip-btn chip-warn" data-val="14.5">⚡ Extrapolation Error (X=14.5)</button>
-                            <button class="consult-chip-btn chip-warn" data-val="-12.0">⚡ Far Extrapolation (X=-12.0)</button>
+                            <button class="consult-chip-btn chip-warn" data-val="14.5">⚡ Extrapolation Error
+                                (X=14.5)</button>
+                            <button class="consult-chip-btn chip-warn" data-val="-12.0">⚡ Far Extrapolation
+                                (X=-12.0)</button>
                         </div>
 
                         <!-- Query Input Bar -->
                         <div class="consult-query-bar">
-                            <input type="text" id="consult-query-input" placeholder="Enter query input X (e.g. 2.5, 16.0)..." class="cyber-input" value="1.8">
-                            <button id="btn-consult-send-query" class="pulse-glow-btn" style="min-width: 140px; padding: 6px 14px; font-size: 11px;">⚡ Send Query</button>
+                            <input type="text" id="consult-query-input"
+                                placeholder="Enter query input X (e.g. 2.5, 16.0)..." class="cyber-input" value="1.8">
+                            <button id="btn-consult-send-query" class="pulse-glow-btn"
+                                style="min-width: 140px; padding: 6px 14px; font-size: 11px;">⚡ Send Query</button>
                         </div>
 
                         <!-- Extended Decision Boundary Canvas -->
                         <div class="inspector-graph-card" style="margin-top: 8px;">
-                            <div class="graph-card-title">🗺️ EMPIRICAL DOMAIN VS UNCHARTED TERRITORY DECISION PROJECTION</div>
+                            <div class="graph-card-title">🗺️ EMPIRICAL DOMAIN VS UNCHARTED TERRITORY DECISION
+                                PROJECTION</div>
                             <canvas id="consult-decision-canvas" width="460" height="150"></canvas>
                         </div>
 
@@ -463,7 +501,9 @@
                         <div class="consult-chat-stream" id="consult-chat-stream-box">
                             <div class="chat-bubble chat-bubble-model">
                                 <div class="chat-bubble-sender">🤖 MODEL INFERENCE REPL:</div>
-                                <div class="chat-bubble-text">Ready for interrogation. Enter any numerical input to test genuine mathematical model evaluation and observe in-domain interpolation vs out-of-domain extrapolation error.</div>
+                                <div class="chat-bubble-text">Ready for interrogation. Enter any numerical input to test
+                                    genuine mathematical model evaluation and observe in-domain interpolation vs
+                                    out-of-domain extrapolation error.</div>
                             </div>
                         </div>
                     </div>
@@ -518,15 +558,9 @@
                         </div>
                     </div>
 
-                    <div class="biome-records-card" style="margin-bottom:14px;">
+                    <div class="biome-records-card">
                         <div class="records-title">📊 BEST RECORDED METRICS PER BIOME:</div>
                         <div class="records-list" id="profile-biome-records-list"></div>
-                    </div>
-
-                    <!-- 🎨 AVATAR OUTFIT CUSTOMIZATION (BIOME MASTERY REWARDS) -->
-                    <div class="biome-records-card">
-                        <div class="records-title">🎨 AVATAR OUTFIT CUSTOMIZATION (BIOME MASTERY REWARDS):</div>
-                        <div id="avatar-skins-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;"></div>
                     </div>
                 </div>
             </div>
@@ -578,69 +612,44 @@
             </div>
         </div>
 
-        <!-- Leaderboards & Achievements Modal -->
+        <!-- Leaderboard Modal -->
         <div id="leaderboard-modal" class="modal-overlay hidden">
-            <div class="glass-modal" style="max-width:680px;">
+            <div class="glass-modal">
                 <div class="modal-header">
-                    <h2>🏆 LEADERBOARDS & ACHIEVEMENTS</h2>
+                    <h2>🏆 ASYNC GHOST & DAILY LEADERBOARD (HELD-OUT TEST SET)</h2>
                     <button id="btn-close-leaderboard" class="close-btn">✕</button>
                 </div>
-                <!-- Tabs: Leaderboard vs Achievements -->
-                <div class="settings-tabs-bar" style="margin-top: 10px;">
-                    <button id="tab-btn-leaderboard" class="settings-tab-btn active">🏆 Ghost Leaderboard</button>
-                    <button id="tab-btn-achievements" class="settings-tab-btn glow-green">🏅 Architect Achievements</button>
-                </div>
-
-                <div id="pane-leaderboard-list">
-                    <div class="table-container" style="margin-top:12px;">
-                        <table class="tree-split-table">
-                            <thead><tr><th>Rank</th><th>Model / Architect</th><th>Held-Out Accuracy</th><th>Seed</th></tr></thead>
-                            <tbody id="leaderboard-rows">
-                                <tr><td>🥇 #1</td><td class="cyan-text">You (5-Tree Bagging Party)</td><td class="green-text"><b>93.3%</b></td><td>#NEURO-8842</td></tr>
-                                <tr><td>🥈 #2</td><td class="cyan-text">Grandmaster Ada (Adam MLP)</td><td class="green-text"><b>90.0%</b></td><td>#NEURO-8842</td></tr>
-                                <tr><td>🥉 #3</td><td class="cyan-text">Ghost Overfitter-X (Depth=8)</td><td class="fail-text"><b>66.7%</b></td><td>#NEURO-8842</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div id="pane-achievements-list" class="hidden" style="margin-top:12px;">
-                    <div id="achievements-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Objective Detail Modal -->
-        <div id="objective-modal" class="modal-overlay hidden">
-            <div class="glass-modal" style="max-width:540px;">
-                <div class="modal-header">
-                    <h2>🎯 CURRENT BIOME OBJECTIVE & CALIBRATION CRITERIA</h2>
-                    <button id="btn-close-objective" class="close-btn">✕</button>
-                </div>
-                <div style="padding:16px 0;">
-                    <div style="font-size:16px; font-weight:800; color:#38bdf8; margin-bottom:8px;" id="modal-objective-title">Biome 1: The Linear Steppes</div>
-                    <p style="font-size:13px; color:#cbd5e1; line-height:1.5; margin-bottom:14px;" id="modal-objective-desc">
-                        Harvest real numerical feature crystals ($X$) and target shards ($Y$) across the terrain. Approach the calibration lab station to train a linear model achieving the target mean squared error threshold.
-                    </p>
-                    <div class="profile-stats-grid" style="grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
-                        <div class="stat-card">
-                            <div class="stat-card-title">🎯 REQUIRED CRITERIA</div>
-                            <div class="stat-card-value text-amber" id="modal-objective-threshold">MSE ≤ 0.10</div>
-                            <div class="stat-card-sub">Validation Convergence</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-card-title">💎 CRYSTALS GATHERED</div>
-                            <div class="stat-card-value text-cyan" id="modal-objective-crystals">0 / 18</div>
-                            <div class="stat-card-sub" id="modal-objective-health">Dataset Health: 100%</div>
-                        </div>
-                    </div>
-                    <div class="stat-card" style="margin-bottom:14px;">
-                        <div class="stat-card-title">🎁 BIOME COMPLETION REWARD</div>
-                        <div style="font-size:14px; font-weight:700; color:#facc15; margin-top:4px;" id="modal-objective-reward">
-                            🔓 Unlock Biome 2 (Binary Marshlands) + Obsidian Gradient Skin
-                        </div>
-                    </div>
-                    <button id="btn-objective-go-to-lab" class="action-btn glow-cyan" style="width:100%;">⚡ Open Formula Terminal</button>
+                <div class="table-container">
+                    <table class="tree-split-table">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Model / Architect</th>
+                                <th>Held-Out Accuracy</th>
+                                <th>Seed</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboard-rows">
+                            <tr>
+                                <td>🥇 #1</td>
+                                <td class="cyan-text">You (5-Tree Bagging Party)</td>
+                                <td class="green-text"><b>93.3%</b></td>
+                                <td>#NEURO-8842</td>
+                            </tr>
+                            <tr>
+                                <td>🥈 #2</td>
+                                <td class="cyan-text">Grandmaster Ada (Adam MLP)</td>
+                                <td class="green-text"><b>90.0%</b></td>
+                                <td>#NEURO-8842</td>
+                            </tr>
+                            <tr>
+                                <td>🥉 #3</td>
+                                <td class="cyan-text">Ghost Overfitter-X (Depth=8)</td>
+                                <td class="fail-text"><b>66.7%</b></td>
+                                <td>#NEURO-8842</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -658,17 +667,45 @@
 
                 <div class="inspector-scroll-area">
                     <div class="inspector-section">
-                        <div class="inspector-section-title">1. PERMUTATION FEATURE IMPORTANCE (SHUFFLE ACCURACY DROP)</div>
+                        <div class="inspector-section-title">1. PERMUTATION FEATURE IMPORTANCE (SHUFFLE ACCURACY DROP)
+                        </div>
                         <div id="importance-bars-container" class="importance-bars-list"></div>
                     </div>
                     <div class="inspector-section">
-                        <div class="inspector-section-title">2. DECISION TREE PER-SPLIT READOUT (MEAN DECREASE IN IMPURITY - MDI)</div>
+                        <div class="inspector-section-title">2. DECISION TREE PER-SPLIT READOUT (MEAN DECREASE IN
+                            IMPURITY - MDI)</div>
                         <table class="tree-split-table">
-                            <thead><tr><th>Node</th><th>Split Condition</th><th>Impurity Δ</th><th>Contribution</th><th>Samples</th></tr></thead>
+                            <thead>
+                                <tr>
+                                    <th>Node</th>
+                                    <th>Split Condition</th>
+                                    <th>Impurity Δ</th>
+                                    <th>Contribution</th>
+                                    <th>Samples</th>
+                                </tr>
+                            </thead>
                             <tbody>
-                                <tr><td>#1 (Root)</td><td class="cyan-text">x₁ ≤ 1.25</td><td>0.48 ➔ 0.18</td><td class="green-text"><b>48.2%</b></td><td>N = 36</td></tr>
-                                <tr><td>#2 (Left)</td><td class="cyan-text">x₂ ≤ -0.80</td><td>0.32 ➔ 0.08</td><td class="green-text"><b>31.5%</b></td><td>N = 18</td></tr>
-                                <tr><td>#3 (Right)</td><td class="cyan-text">x₁ ≤ 3.10</td><td>0.24 ➔ 0.04</td><td class="green-text"><b>20.3%</b></td><td>N = 18</td></tr>
+                                <tr>
+                                    <td>#1 (Root)</td>
+                                    <td class="cyan-text">x₁ ≤ 1.25</td>
+                                    <td>0.48 ➔ 0.18</td>
+                                    <td class="green-text"><b>48.2%</b></td>
+                                    <td>N = 36</td>
+                                </tr>
+                                <tr>
+                                    <td>#2 (Left)</td>
+                                    <td class="cyan-text">x₂ ≤ -0.80</td>
+                                    <td>0.32 ➔ 0.08</td>
+                                    <td class="green-text"><b>31.5%</b></td>
+                                    <td>N = 18</td>
+                                </tr>
+                                <tr>
+                                    <td>#3 (Right)</td>
+                                    <td class="cyan-text">x₁ ≤ 3.10</td>
+                                    <td>0.24 ➔ 0.04</td>
+                                    <td class="green-text"><b>20.3%</b></td>
+                                    <td>N = 18</td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -680,15 +717,22 @@
         <div id="terminal-modal" class="modal-overlay hidden">
             <div class="terminal-container glass-terminal" id="terminal-window-container">
                 <div class="terminal-header">
-                    <div class="terminal-title">⚡ <span id="terminal-mode-title">OPTIMIZER, ENSEMBLE & VECTOR FORGE</span></div>
+                    <div class="terminal-title">⚡ <span id="terminal-mode-title">OPTIMIZER, ENSEMBLE & VECTOR
+                            FORGE</span></div>
                     <div class="skin-swatches-row">
                         <span class="skin-label">Skin:</span>
-                        <button class="skin-btn active" data-skin="obsidian" title="Obsidian Gradient" style="background:#f59e0b;"></button>
-                        <button class="skin-btn" data-skin="biolum" title="Bioluminescent Neon" style="background:#14b8a6;"></button>
-                        <button class="skin-btn" data-skin="glacial" title="Glacial Crystal" style="background:#38bdf8;"></button>
-                        <button class="skin-btn" data-skin="canopy" title="Living Canopy" style="background:#10b981;"></button>
-                        <button class="skin-btn" data-skin="citadel" title="Cyber Citadel" style="background:#a855f7;"></button>
-                        <button class="skin-btn" data-skin="astral" title="Astral Hologram" style="background:#e0e7ff;"></button>
+                        <button class="skin-btn active" data-skin="obsidian" title="Obsidian Gradient"
+                            style="background:#f59e0b;"></button>
+                        <button class="skin-btn" data-skin="biolum" title="Bioluminescent Neon"
+                            style="background:#14b8a6;"></button>
+                        <button class="skin-btn" data-skin="glacial" title="Glacial Crystal"
+                            style="background:#38bdf8;"></button>
+                        <button class="skin-btn" data-skin="canopy" title="Living Canopy"
+                            style="background:#10b981;"></button>
+                        <button class="skin-btn" data-skin="citadel" title="Cyber Citadel"
+                            style="background:#a855f7;"></button>
+                        <button class="skin-btn" data-skin="astral" title="Astral Hologram"
+                            style="background:#e0e7ff;"></button>
                     </div>
                     <button id="btn-close-terminal" class="close-btn">✕ Exit</button>
                 </div>
@@ -696,13 +740,15 @@
                     🧬 SEED: #NEURO-8842 | Noise σ=0.28 | Outliers=5% | Overlap ρ=0.15 | Scale=(1.4x, 1.2x)
                 </div>
                 <div class="terminal-status" id="terminal-status-bar">
-                    <span class="status-indicator live">● READY</span> | Train model, summon Bagging Party, or query Vector Retrieval!
+                    <span class="status-indicator live">● READY</span> | Train model, summon Bagging Party, or query
+                    Vector Retrieval!
                 </div>
 
                 <div class="terminal-scroll-area">
                     <div class="terminal-section">
                         <div class="section-title">1. MODEL EXPRESSION BUILDER</div>
-                        <input type="text" id="terminal-formula-input" value="y = 2.45x + 1.15" spellcheck="false" class="cyber-input">
+                        <input type="text" id="terminal-formula-input" value="y = 2.45x + 1.15" spellcheck="false"
+                            class="cyber-input">
                         <div class="preset-row">
                             <button id="preset-linear" class="preset-btn">⚡ Linear</button>
                             <button id="preset-logistic" class="preset-btn">⚡ Logistic</button>
@@ -716,21 +762,27 @@
                     <div class="terminal-section">
                         <div class="section-title">2. VECTOR SEARCH / RAG QUERY & COSINE SIMILARITY</div>
                         <div class="rag-query-row">
-                            <input type="text" id="rag-query-input" value="frost" class="cyber-rag-input" placeholder="Enter concept token (e.g. frost, fire, neural)...">
+                            <input type="text" id="rag-query-input" value="frost" class="cyber-rag-input"
+                                placeholder="Enter concept token (e.g. frost, fire, neural)...">
                             <button id="btn-rag-query" class="rag-btn glow-cyan">🔍 Retrieve Top-K Vectors</button>
-                            <button id="btn-vector-analogy" class="rag-btn glow-amber">🧮 Analogy: fire - heat + cold</button>
+                            <button id="btn-vector-analogy" class="rag-btn glow-amber">🧮 Analogy: fire - heat +
+                                cold</button>
                         </div>
                         <div id="rag-results-box" class="rag-results-container">
-                            <div class="rag-card"><span class="word">1. ice</span> <span class="sim">Cosine Sim = <b>0.942</b></span></div>
-                            <div class="rag-card"><span class="word">2. snow</span> <span class="sim">Cosine Sim = <b>0.915</b></span></div>
-                            <div class="rag-card"><span class="word">3. glacier</span> <span class="sim">Cosine Sim = <b>0.884</b></span></div>
+                            <div class="rag-card"><span class="word">1. ice</span> <span class="sim">Cosine Sim =
+                                    <b>0.942</b></span></div>
+                            <div class="rag-card"><span class="word">2. snow</span> <span class="sim">Cosine Sim =
+                                    <b>0.915</b></span></div>
+                            <div class="rag-card"><span class="word">3. glacier</span> <span class="sim">Cosine Sim =
+                                    <b>0.884</b></span></div>
                         </div>
                     </div>
 
                     <div class="terminal-section">
                         <div class="section-title">3. OPTIMIZERS, BAGGING PARTY & ASYNC GHOST DUEL</div>
                         <div class="party-duel-row">
-                            <button id="btn-summon-party" class="party-btn glow-green">🌲 SUMMON BAGGING PARTY (5 TREES)</button>
+                            <button id="btn-summon-party" class="party-btn glow-green">🌲 SUMMON BAGGING PARTY (5
+                                TREES)</button>
                             <button id="btn-ghost-duel" class="duel-btn glow-amber">⚔️ DUEL GHOST OVERFITTER-X</button>
                             <button id="btn-swap-ghost" class="swap-btn">🔄 Swap Rival</button>
                         </div>
@@ -744,8 +796,10 @@
                                 <canvas id="canvas-loss-graph" width="380" height="200"></canvas>
                                 <!-- Live Real-Time Mathematical Narration Layer -->
                                 <div id="terminal-narration-stream" class="terminal-narration-box">
-                                    <div class="narration-header"><span class="pulse-dot"></span> 🎙️ LIVE TRAINING NARRATION:</div>
-                                    <div id="narration-line-text" class="narration-text">Ready to optimize. Hit Train to stream real-time mathematical commentary.</div>
+                                    <div class="narration-header"><span class="pulse-dot"></span> 🎙️ LIVE TRAINING
+                                        NARRATION:</div>
+                                    <div id="narration-line-text" class="narration-text">Ready to optimize. Hit Train to
+                                        stream real-time mathematical commentary.</div>
                                 </div>
                             </div>
                             <div class="graph-card">
@@ -759,125 +813,151 @@
                         <div class="section-title">⚡ PRE-TRAINING DATASET HEALTH SCORE & FORECAST</div>
                         <div class="terminal-health-card" id="terminal-health-card">
                             <div class="health-main-row">
-                                <span class="health-score-badge" id="term-health-badge">🩺 HEALTH: 100% [EXCELLENT]</span>
-                                <span class="health-sub-breakdown" id="term-health-breakdown">⚖️ Bal: 100% | 🧹 Clean: 100% | 🌐 Cover: 100%</span>
+                                <span class="health-score-badge" id="term-health-badge">🩺 HEALTH: 100%
+                                    [EXCELLENT]</span>
+                                <span class="health-sub-breakdown" id="term-health-breakdown">⚖️ Bal: 100% | 🧹 Clean:
+                                    100% | 🌐 Cover: 100%</span>
                             </div>
                             <div class="health-gauge-track" style="margin: 6px 0;">
-                                <div id="term-health-gauge-fill" class="health-gauge-fill" style="width: 100%; background: #4ade80;"></div>
+                                <div id="term-health-gauge-fill" class="health-gauge-fill"
+                                    style="width: 100%; background: #4ade80;"></div>
                             </div>
                             <div class="health-forecast-row">
-                                <span>🔮 <b>Held-Out Test Forecast:</b> <span id="term-health-forecast" class="text-green">High Generalization (>90% test acc expected)</span></span>
+                                <span>🔮 <b>Held-Out Test Forecast:</b> <span id="term-health-forecast"
+                                        class="text-green">High Generalization (>90% test acc expected)</span></span>
                             </div>
-                    <div class="terminal-section" id="terminal-shift-sandbox-section">
-                        <div class="section-title" style="display:flex; justify-content:space-between; align-items:center;">
-                            <span>🧪 DATASET SHIFT SANDBOX (CONCEPT DRIFT)</span>
-                            <button id="btn-toggle-shift-sandbox" class="preset-btn" style="min-height:30px; font-size:10px;">⚡ Toggle Sandbox</button>
+                            <div class="terminal-section" id="terminal-shift-sandbox-section">
+                                <div class="section-title"
+                                    style="display:flex; justify-content:space-between; align-items:center;">
+                                    <span>🧪 DATASET SHIFT SANDBOX (CONCEPT DRIFT)</span>
+                                    <button id="btn-toggle-shift-sandbox" class="preset-btn"
+                                        style="min-height:30px; font-size:10px;">⚡ Toggle Sandbox</button>
+                                </div>
+                                <div id="shift-sandbox-controls" class="shift-sandbox-box hidden">
+                                    <div class="shift-row-flex">
+                                        <div class="shift-select-col">
+                                            <label style="font-size:10px; color:#38bdf8;">Distribution A:</label>
+                                            <select id="shift-select-a" class="cyber-select">
+                                                <option value="steppes">Biome 1: Linear Steppes (y = 2.45x + 1.15)
+                                                </option>
+                                                <option value="marshlands">Biome 2: Marshlands (Logistic)</option>
+                                            </select>
+                                        </div>
+                                        <div class="shift-select-col">
+                                            <label style="font-size:10px; color:#fb923c;">Distribution B:</label>
+                                            <select id="shift-select-b" class="cyber-select">
+                                                <option value="tundra_shifted">Biome 3: Shifted Tundra (y = -1.80x +
+                                                    6.20)</option>
+                                                <option value="tundra_poly">Biome 3: Oscillatory Polynomial</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="shift-slider-row" style="margin-top:6px;">
+                                        <div style="display:flex; justify-content:space-between; font-size:11px;">
+                                            <span>Blend Mixture:</span>
+                                            <b id="shift-ratio-label" class="text-cyan">50% A / 50% B</b>
+                                        </div>
+                                        <input type="range" id="shift-mix-slider" min="5" max="95" value="50"
+                                            style="width:100%; margin-top:4px;">
+                                    </div>
+                                    <div style="margin-top:8px;">
+                                        <button id="btn-run-shift-sim" class="action-btn glow-amber"
+                                            style="width:100%; min-height:44px;">💥 TRAIN ON CONFLICTING MIXTURE &
+                                            OBSERVE STRUGGLE</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="benchmark-banner" class="hidden"></div>
                         </div>
-                        <div id="shift-sandbox-controls" class="shift-sandbox-box hidden">
-                            <div class="shift-row-flex">
-                                <div class="shift-select-col">
-                                    <label style="font-size:10px; color:#38bdf8;">Distribution A:</label>
-                                    <select id="shift-select-a" class="cyber-select">
-                                        <option value="steppes">Biome 1: Linear Steppes (y = 2.45x + 1.15)</option>
-                                        <option value="marshlands">Biome 2: Marshlands (Logistic)</option>
-                                    </select>
-                                </div>
-                                <div class="shift-select-col">
-                                    <label style="font-size:10px; color:#fb923c;">Distribution B:</label>
-                                    <select id="shift-select-b" class="cyber-select">
-                                        <option value="tundra_shifted">Biome 3: Shifted Tundra (y = -1.80x + 6.20)</option>
-                                        <option value="tundra_poly">Biome 3: Oscillatory Polynomial</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="shift-slider-row" style="margin-top:6px;">
-                                <div style="display:flex; justify-content:space-between; font-size:11px;">
-                                    <span>Blend Mixture:</span>
-                                    <b id="shift-ratio-label" class="text-cyan">50% A / 50% B</b>
-                                </div>
-                                <input type="range" id="shift-mix-slider" min="5" max="95" value="50" style="width:100%; margin-top:4px;">
-                            </div>
-                            <div style="margin-top:8px;">
-                                <button id="btn-run-shift-sim" class="action-btn glow-amber" style="width:100%; min-height:44px;">💥 TRAIN ON CONFLICTING MIXTURE & OBSERVE STRUGGLE</button>
-                            </div>
+
+                        <div class="terminal-footer">
+                            <button id="btn-train-weapon" class="action-btn glow-cyan">🧠 TRAIN / RETRIEVE</button>
+                            <button id="btn-grand-prix" class="action-btn glow-amber">🏁 4-WAY OPTIMIZER GRAND
+                                PRIX</button>
+                            <button id="btn-view-replay-card" class="action-btn">🎴 Stat Card</button>
+                            <button id="btn-return-world" class="action-btn">✕ Return</button>
                         </div>
                     </div>
-
-                    <div id="benchmark-banner" class="hidden"></div>
                 </div>
 
-                <div class="terminal-footer">
-                    <button id="btn-train-weapon" class="action-btn glow-cyan">🧠 TRAIN / RETRIEVE</button>
-                    <button id="btn-grand-prix" class="action-btn glow-amber">🏁 4-WAY OPTIMIZER GRAND PRIX</button>
-                    <button id="btn-view-replay-card" class="action-btn">🎴 Stat Card</button>
-                    <button id="btn-return-world" class="action-btn">✕ Return</button>
-                </div>
-            </div>
-        </div>
+                <!-- Main Menu Overlay -->
+                <div id="main-menu" class="modal-overlay">
+                    <div class="menu-container glass-card">
+                        <h1 class="game-logo">⚡ NEURO-ARENA</h1>
+                        <div class="game-sublogo">GRADIENTS OF THE WILD | 3D ML SIMULATOR</div>
 
-        <!-- Main Menu Overlay -->
-        <div id="main-menu" class="modal-overlay">
-            <div class="menu-container glass-card">
-                <h1 class="game-logo">⚡ NEURO-ARENA</h1>
-                <div class="game-sublogo">GRADIENTS OF THE WILD  |  3D ML SIMULATOR</div>
+                        <div class="seed-input-container">
+                            <label>🎲 PLAYTHROUGH SEED:</label>
+                            <div class="seed-input-row">
+                                <input type="text" id="menu-seed-input" value="NEURO-8842" spellcheck="false"
+                                    class="cyber-seed-input">
+                                <button id="btn-random-seed" class="seed-btn glow-cyan">🎲 Random</button>
+                            </div>
+                        </div>
 
-                <div class="seed-input-container">
-                    <label>🎲 PLAYTHROUGH SEED:</label>
-                    <div class="seed-input-row">
-                        <input type="text" id="menu-seed-input" value="NEURO-8842" spellcheck="false" class="cyber-seed-input">
-                        <button id="btn-random-seed" class="seed-btn glow-cyan">🎲 Random</button>
+                        <div class="menu-actions">
+                            <button id="btn-continue-game" class="menu-btn primary glow-green disabled">⚔️ CONTINUE
+                                GAME</button>
+                            <div id="save-info-label" class="menu-sublabel">No local save found</div>
+                            <button id="btn-new-game" class="menu-btn glow-cyan">🌟 NEW GAME (APPLY SEED)</button>
+                            <button id="btn-menu-daily" class="menu-btn glow-amber">📅 PLAY DAILY CHALLENGE</button>
+                            <button id="btn-menu-models" class="menu-btn glow-cyan">💾 MY MODELS (VAULT)</button>
+                            <button id="btn-menu-profile" class="menu-btn">👤 ARCHITECT PROFILE</button>
+                            <button id="btn-menu-codex" class="menu-btn">📖 CODEX & ML JOURNAL</button>
+                            <button id="btn-menu-settings" class="menu-btn">⚙️ SETTINGS & AUDIO</button>
+                            <button id="btn-biome-map" class="menu-btn">🗺️ BIOME PROGRESSION MAP</button>
+                            <button id="btn-reset-save" class="menu-btn danger">🗑️ Reset Local Save</button>
+                            <button id="btn-quit-game" class="menu-btn">🚪 QUIT GAME</button>
+                        </div>
+
+                        <div id="biome-map-subpanel" class="hidden">
+                            <h3>🗺️ 6-BIOME PROGRESSION</h3>
+                            <ul class="biome-list" id="biome-list-element">
+                                <li><b>1. The Linear Steppes (Linear Regression)</b> <span
+                                        class="unlocked">UNLOCKED</span></li>
+                                <li><b>2. The Binary Marshlands (Logistic Classification)</b> <span
+                                        class="locked">LOCKED</span></li>
+                                <li><b>3. The Variance Tundra (Regularization)</b> <span class="locked">LOCKED</span>
+                                </li>
+                                <li><b>4. The Branching Canopy (Decision Trees)</b> <span class="locked">LOCKED</span>
+                                </li>
+                                <li><b>5. The Deep Synapse Citadel (Neural Networks)</b> <span
+                                        class="locked">LOCKED</span></li>
+                                <li><b>6. The Semantic Expanse (Embeddings & Cosine Sim)</b> <span
+                                        class="locked">LOCKED</span></li>
+                            </ul>
+                            <button id="btn-close-biome-map" class="menu-btn small">Back</button>
+                        </div>
                     </div>
                 </div>
-
-                <div class="menu-actions">
-                    <button id="btn-continue-game" class="menu-btn primary glow-green disabled">⚔️ CONTINUE GAME</button>
-                    <div id="save-info-label" class="menu-sublabel">No local save found</div>
-                    <button id="btn-new-game" class="menu-btn glow-cyan">🌟 NEW GAME (APPLY SEED)</button>
-                    <button id="btn-menu-daily" class="menu-btn glow-amber">📅 PLAY DAILY CHALLENGE</button>
-                    <button id="btn-menu-models" class="menu-btn glow-cyan">💾 MY MODELS (VAULT)</button>
-                    <button id="btn-menu-profile" class="menu-btn">👤 ARCHITECT PROFILE</button>
-                    <button id="btn-menu-codex" class="menu-btn">📖 CODEX & ML JOURNAL</button>
-                    <button id="btn-menu-settings" class="menu-btn">⚙️ SETTINGS & AUDIO</button>
-                    <button id="btn-biome-map" class="menu-btn">🗺️ BIOME PROGRESSION MAP</button>
-                    <button id="btn-reset-save" class="menu-btn danger">🗑️ Reset Local Save</button>
-                    <button id="btn-quit-game" class="menu-btn">🚪 QUIT GAME</button>
-                </div>
-
-                <div id="biome-map-subpanel" class="hidden">
-                    <h3>🗺️ 6-BIOME PROGRESSION</h3>
-                    <ul class="biome-list" id="biome-list-element">
-                        <li><b>1. The Linear Steppes (Linear Regression)</b> <span class="unlocked">UNLOCKED</span></li>
-                        <li><b>2. The Binary Marshlands (Logistic Classification)</b> <span class="locked">LOCKED</span></li>
-                        <li><b>3. The Variance Tundra (Regularization)</b> <span class="locked">LOCKED</span></li>
-                        <li><b>4. The Branching Canopy (Decision Trees)</b> <span class="locked">LOCKED</span></li>
-                        <li><b>5. The Deep Synapse Citadel (Neural Networks)</b> <span class="locked">LOCKED</span></li>
-                        <li><b>6. The Semantic Expanse (Embeddings & Cosine Sim)</b> <span class="locked">LOCKED</span></li>
-                    </ul>
-                    <button id="btn-close-biome-map" class="menu-btn small">Back</button>
-                </div>
-            </div>
-        </div>
-        <!-- Explicit Diagnostics Consent Modal -->
-        <div id="modal-diagnostics-consent" class="modal-overlay hidden">
-            <div class="glass-modal consent-modal-card">
-                <div class="modal-header">
-                    <h2>🔒 LOCAL DIAGNOSTICS & BUG REPORTING CONSENT</h2>
-                    <button id="btn-cancel-consent-x" class="close-btn">✕</button>
-                </div>
-                <div class="consent-body" style="padding: 14px 18px;">
-                    <p style="font-size:12px; color:#cbd5e1; line-height:1.5; margin-bottom:12px;">
-                        Enable opt-in local diagnostics to help diagnose crashes and frame-time spikes when reporting bugs.
-                    </p>
-                    <div class="coach-advice-box" style="margin-bottom:12px;">
-                        <div class="advice-heading">🛡️ 100% OFFLINE & PRIVACY-FIRST GUARANTEE</div>
-                        <p>All logs are written exclusively to your local device memory. <b>Zero network calls, zero automatic uploads, and zero third-party telemetry.</b></p>
-                    </div>
-                    <div class="coach-principle-badge" style="margin-bottom:14px;">
-                        📋 <b>What gets logged locally:</b> Session elapsed duration, active screen/biome context, frame-time spikes (>50ms), and error traces.
-                    </div>
-                    <div style="display:flex; gap:10px;">
-                        <button id="btn-confirm-consent" class="action-btn glow-green" style="flex:1;">✅ I Consent (Enable Local Logging)</button>
-                        <button id="btn-cancel-consent" class="pill-btn" style="min-width:90px;">Cancel</button>
+                <!-- Explicit Diagnostics Consent Modal -->
+                <div id="modal-diagnostics-consent" class="modal-overlay hidden">
+                    <div class="glass-modal consent-modal-card">
+                        <div class="modal-header">
+                            <h2>🔒 LOCAL DIAGNOSTICS & BUG REPORTING CONSENT</h2>
+                            <button id="btn-cancel-consent-x" class="close-btn">✕</button>
+                        </div>
+                        <div class="consent-body" style="padding: 14px 18px;">
+                            <p style="font-size:12px; color:#cbd5e1; line-height:1.5; margin-bottom:12px;">
+                                Enable opt-in local diagnostics to help diagnose crashes and frame-time spikes when
+                                reporting bugs.
+                            </p>
+                            <div class="coach-advice-box" style="margin-bottom:12px;">
+                                <div class="advice-heading">🛡️ 100% OFFLINE & PRIVACY-FIRST GUARANTEE</div>
+                                <p>All logs are written exclusively to your local device memory. <b>Zero network calls,
+                                        zero automatic uploads, and zero third-party telemetry.</b></p>
+                            </div>
+                            <div class="coach-principle-badge" style="margin-bottom:14px;">
+                                📋 <b>What gets logged locally:</b> Session elapsed duration, active screen/biome
+                                context, frame-time spikes (>50ms), and error traces.
+                            </div>
+                            <div style="display:flex; gap:10px;">
+                                <button id="btn-confirm-consent" class="action-btn glow-green" style="flex:1;">✅ I
+                                    Consent (Enable Local Logging)</button>
+                                <button id="btn-cancel-consent" class="pill-btn" style="min-width:90px;">Cancel</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -887,4 +967,5 @@
     <!-- Main Game Script -->
     <script src="app.js"></script>
 </body>
+
 </html>
