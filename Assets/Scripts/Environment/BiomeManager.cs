@@ -22,6 +22,11 @@ namespace NeuroArena.Environment
         [SerializeField] private int currentBiomeIndex = 0;
         [SerializeField] private bool[] unlockedBiomes = new bool[6] { true, false, false, false, false, false };
 
+        [Header("Environment Controllers")]
+        [SerializeField] private StylizedBiomeTerrain stylizedTerrain;
+        [SerializeField] private BiomeFoliageScatterer foliageScatterer;
+        [SerializeField] private BiomeSkyboxController skyboxController;
+
         public int CurrentBiomeIndex => currentBiomeIndex;
         public bool[] UnlockedBiomes => unlockedBiomes;
 
@@ -53,6 +58,43 @@ namespace NeuroArena.Environment
                 return;
             }
             Instance = this;
+
+            FindEnvironmentControllers();
+        }
+
+        private void Start()
+        {
+            LoadBiome(currentBiomeIndex);
+        }
+
+        private void FindEnvironmentControllers()
+        {
+            if (stylizedTerrain == null) stylizedTerrain = FindFirstObjectByType<StylizedBiomeTerrain>();
+            if (foliageScatterer == null) foliageScatterer = FindFirstObjectByType<BiomeFoliageScatterer>();
+            if (skyboxController == null) skyboxController = FindFirstObjectByType<BiomeSkyboxController>();
+        }
+
+        public void LoadBiome(int biomeIndex)
+        {
+            currentBiomeIndex = Mathf.Clamp(biomeIndex, 0, 5);
+            FindEnvironmentControllers();
+
+            if (stylizedTerrain != null)
+            {
+                stylizedTerrain.GenerateBiomeTerrain(currentBiomeIndex);
+            }
+
+            if (foliageScatterer != null)
+            {
+                foliageScatterer.PopulateBiomeEnvironment(currentBiomeIndex, stylizedTerrain);
+            }
+
+            if (skyboxController != null)
+            {
+                skyboxController.ApplyBiomeAtmosphere(currentBiomeIndex);
+            }
+
+            Debug.Log($"[BiomeManager] Loaded Biome {currentBiomeIndex + 1}: {BiomeNames[currentBiomeIndex]} with stylized low-poly terrain, foliage, and Stage 18 atmosphere!");
         }
 
         public void UnlockNextBiome()
@@ -61,7 +103,7 @@ namespace NeuroArena.Environment
             {
                 unlockedBiomes[currentBiomeIndex + 1] = true;
                 currentBiomeIndex++;
-                Debug.Log($"[BiomeManager] Unlocked Biome {currentBiomeIndex + 1}: {BiomeNames[currentBiomeIndex]}!");
+                LoadBiome(currentBiomeIndex);
                 SaveManager.Instance?.SaveGame();
             }
         }

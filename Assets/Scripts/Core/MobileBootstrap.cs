@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using NeuroArena.UI;
 using NeuroArena.Environment;
 using NeuroArena.Data;
+using NeuroArena.Character;
 
 namespace NeuroArena.Core
 {
@@ -51,21 +52,47 @@ namespace NeuroArena.Core
         private void SetupEnvironment()
         {
             // Directional Light
+            Light sunLight = null;
             if (FindFirstObjectByType<Light>() == null)
             {
                 GameObject lightGO = new GameObject("Directional Light");
-                Light light = lightGO.AddComponent<Light>();
-                light.type = LightType.Directional;
-                light.color = new Color(1f, 0.96f, 0.88f);
-                light.intensity = 1.25f;
+                sunLight = lightGO.AddComponent<Light>();
+                sunLight.type = LightType.Directional;
+                sunLight.color = new Color(1f, 0.96f, 0.88f);
+                sunLight.intensity = 1.25f;
                 lightGO.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
             }
 
-            // Procedural Terrain
-            if (FindFirstObjectByType<ProceduralTerrain>() == null)
+            // Stylized Low-Poly Terrain (Synty POLYGON Aesthetic)
+            StylizedBiomeTerrain terrain = FindFirstObjectByType<StylizedBiomeTerrain>();
+            if (terrain == null)
             {
-                GameObject terrainGO = new GameObject("ProceduralTerrain");
-                terrainGO.AddComponent<ProceduralTerrain>();
+                GameObject terrainGO = new GameObject("StylizedBiomeTerrain");
+                terrain = terrainGO.AddComponent<StylizedBiomeTerrain>();
+            }
+
+            // Biome Foliage & Nature Scatterer
+            BiomeFoliageScatterer scatterer = FindFirstObjectByType<BiomeFoliageScatterer>();
+            if (scatterer == null)
+            {
+                GameObject scattererGO = new GameObject("BiomeFoliageScatterer");
+                scatterer = scattererGO.AddComponent<BiomeFoliageScatterer>();
+            }
+
+            // Biome Post-Processing Volume (Bloom, Color Grading, ACES)
+            BiomePostProcessingManager postProc = FindFirstObjectByType<BiomePostProcessingManager>();
+            if (postProc == null)
+            {
+                GameObject postProcGO = new GameObject("BiomePostProcessingManager");
+                postProc = postProcGO.AddComponent<BiomePostProcessingManager>();
+            }
+
+            // Biome Skybox & Atmosphere Controller
+            BiomeSkyboxController skybox = FindFirstObjectByType<BiomeSkyboxController>();
+            if (skybox == null)
+            {
+                GameObject skyboxGO = new GameObject("BiomeSkyboxController");
+                skybox = skyboxGO.AddComponent<BiomeSkyboxController>();
             }
 
             // Biome Manager
@@ -105,8 +132,8 @@ namespace NeuroArena.Core
             PlayerController player = FindFirstObjectByType<PlayerController>();
             if (player == null)
             {
-                playerGO = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-                playerGO.name = "Player_Avatar";
+                // Instantiate Rigged Humanoid Base Character
+                playerGO = new GameObject("Player_Avatar");
                 playerGO.tag = "Player";
                 playerGO.transform.position = new Vector3(0f, 1.5f, 0f);
 
@@ -114,36 +141,14 @@ namespace NeuroArena.Core
                 CharacterController cc = playerGO.AddComponent<CharacterController>();
                 cc.center = new Vector3(0f, 1f, 0f);
                 cc.height = 2.0f;
-                cc.radius = 0.5f;
+                cc.radius = 0.45f;
+                cc.stepOffset = 0.4f;
 
-                // Remove primitive capsule collider (handled by CharacterController)
-                Collider primitiveCollider = playerGO.GetComponent<CapsuleCollider>();
-                if (primitiveCollider != null) Destroy(primitiveCollider);
+                // Add Animation Controller and Rig
+                CharacterAnimationController animController = playerGO.AddComponent<CharacterAnimationController>();
+                HumanoidCharacterRig rig = playerGO.AddComponent<HumanoidCharacterRig>();
 
-                // Stylize Player with a visor to indicate forward direction
-                GameObject visor = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                visor.name = "Player_Visor";
-                visor.transform.SetParent(playerGO.transform);
-                visor.transform.localPosition = new Vector3(0f, 1.4f, 0.35f);
-                visor.transform.localScale = new Vector3(0.55f, 0.22f, 0.35f);
-                Destroy(visor.GetComponent<Collider>());
-
-                Renderer visorRend = visor.GetComponent<Renderer>();
-                if (visorRend != null)
-                {
-                    Material visorMat = new Material(Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard"));
-                    visorMat.color = new Color(0.1f, 0.9f, 0.9f);
-                    visorRend.material = visorMat;
-                }
-
-                Renderer bodyRend = playerGO.GetComponent<Renderer>();
-                if (bodyRend != null)
-                {
-                    Material bodyMat = new Material(Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard"));
-                    bodyMat.color = new Color(0.18f, 0.22f, 0.32f);
-                    bodyRend.material = bodyMat;
-                }
-
+                // Add Player Controller wired to Animation Controller
                 player = playerGO.AddComponent<PlayerController>();
             }
             else
