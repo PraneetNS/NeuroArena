@@ -1,5 +1,6 @@
 using UnityEngine;
 using NeuroArena.UI;
+using NeuroArena.Character;
 
 namespace NeuroArena.Core
 {
@@ -7,6 +8,7 @@ namespace NeuroArena.Core
     /// Third-Person Mobile Player Controller.
     /// Handles directional movement via Virtual Touch Joystick (or Keyboard fallback),
     /// camera-relative movement vectors, smooth rotation, and slope/gravity physics.
+    /// Wire-driven to Mecanim blend tree and CharacterAnimationController.
     /// </summary>
     [RequireComponent(typeof(CharacterController))]
     public class PlayerController : MonoBehaviour
@@ -26,6 +28,7 @@ namespace NeuroArena.Core
 
         [Header("References")]
         [SerializeField] private Transform cameraTransform;
+        [SerializeField] private CharacterAnimationController animController;
 
         public static PlayerController Instance { get; private set; }
         public bool IsMovementLocked { get; set; } = false;
@@ -47,15 +50,40 @@ namespace NeuroArena.Core
             {
                 cameraTransform = Camera.main.transform;
             }
+
+            if (animController == null)
+            {
+                animController = GetComponent<CharacterAnimationController>() ?? GetComponentInChildren<CharacterAnimationController>();
+            }
         }
 
         private void Update()
         {
-            if (IsMovementLocked) return;
+            if (IsMovementLocked)
+            {
+                if (animController != null) animController.SetMovementState(0f, IsGrounded);
+                return;
+            }
 
             Vector2 inputVector = GetInputVector();
             HandleMovement(inputVector);
             HandleGravity();
+
+            // Synchronize animation state with real movement speed and grounding
+            if (animController != null)
+            {
+                float horizontalSpeed = new Vector3(characterController.velocity.x, 0f, characterController.velocity.z).magnitude;
+                if (horizontalSpeed < 0.05f) horizontalSpeed = currentMoveVelocity.magnitude;
+                animController.SetMovementState(horizontalSpeed, characterController.isGrounded);
+            }
+        }
+
+        public void TriggerPickupAnimation(float duration = 0.6f)
+        {
+            if (animController != null)
+            {
+                animController.TriggerPickupGesture(duration);
+            }
         }
 
         private Vector2 GetInputVector()
