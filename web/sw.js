@@ -1,4 +1,4 @@
-const CACHE_NAME = "neuroarena-cache-v1";
+const CACHE_NAME = "neuroarena-cache-v2";
 const ASSETS_TO_CACHE = [
   "./",
   "./index.html",
@@ -7,6 +7,7 @@ const ASSETS_TO_CACHE = [
   "./app.js",
   "./manifest.json",
   "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js",
+  "https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js",
   "https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js",
   "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Outfit:wght@400;600;800;900&display=swap"
 ];
