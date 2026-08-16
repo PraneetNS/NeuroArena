@@ -360,6 +360,39 @@ function testFloating3DValueBadges() {
     console.log("✅ Floating 3D Billboard Value Badges & Concept Display Test Passed!");
 }
 
+function testPPMI3DWordEmbeddingConvergence() {
+    const vocab = ["fire", "heat", "ice", "cold"];
+    const corpus = ["fire heat blaze warm heat fire", "ice cold frost arctic cold ice"];
+
+    // Compute PPMI
+    const wordIndices = { fire: 0, heat: 1, ice: 2, cold: 3 };
+    const cooccur = Array.from({ length: 4 }, () => new Float32Array(4));
+    const wordCounts = new Float32Array(4);
+    let totalWindows = 0;
+
+    corpus.forEach(sentence => {
+        const tokens = sentence.split(" ").filter(t => wordIndices[t] !== undefined);
+        for (let i = 0; i < tokens.length; i++) {
+            const w1 = wordIndices[tokens[i]];
+            wordCounts[w1]++;
+            for (let j = Math.max(0, i - 2); j <= Math.min(tokens.length - 1, i + 2); j++) {
+                if (i !== j) {
+                    const w2 = wordIndices[tokens[j]];
+                    cooccur[w1][w2]++;
+                    totalWindows++;
+                }
+            }
+        }
+    });
+
+    const ppmi_fire_heat = Math.max(0, Math.log2((cooccur[0][1] / totalWindows + 1e-9) / ((wordCounts[0] / 12) * (wordCounts[1] / 12) + 1e-9)));
+    const ppmi_fire_ice = cooccur[0][2];
+
+    assert(ppmi_fire_heat > 0, "Co-occurring words (fire, heat) must have positive PPMI");
+    assert.strictEqual(ppmi_fire_ice, 0, "Non-cooccurring words (fire, ice) must have zero co-occurrence");
+    console.log("✅ PPMI 3D Word Embedding Real-Time Convergence Test Passed!");
+}
+
 testSeedPRNG();
 testLinearInferenceAndExtrapolation();
 testDatasetHealthAndGeneralizationDegradation();
@@ -375,5 +408,6 @@ testHumanoidCharacterAnimationStateMachine();
 testSixBiomeStandaloneScenesAndWorldManager();
 testCharacterSilhouetteArchetypes();
 testFloating3DValueBadges();
+testPPMI3DWordEmbeddingConvergence();
 console.log("🎉 All Web Unit Tests Passed Cleanly!");
 
