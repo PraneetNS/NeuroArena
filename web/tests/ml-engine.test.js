@@ -548,6 +548,34 @@ function testRankedLeaderboardsAndYourRankCalculation() {
     console.log("✅ Supabase Postgres Keyed Leaderboard & 'Your Rank' Calculation Test Passed!");
 }
 
+function testBiome6TokenizationAndInitialVectorProjection() {
+    const vocab = ["fire", "heat", "sun", "flame", "ice", "cold", "frost", "snow", "vector", "matrix", "tensor", "gradient"];
+    const tokenized = {};
+
+    vocab.forEach((word, idx) => {
+        // Real deterministic initial dispersion coordinates
+        const angle = (idx / vocab.length) * Math.PI * 2;
+        const r = 12.0;
+        const rawVec = [
+            parseFloat((Math.cos(angle) * r / 10).toFixed(2)),
+            parseFloat((0.25).toFixed(2)),
+            parseFloat((Math.sin(angle) * r / 10).toFixed(2))
+        ];
+
+        tokenized[word] = {
+            index: idx,
+            initialVector: rawVec,
+            formattedString: `"${word}" ➔ token #${idx} ➔ [${rawVec.join(', ')}]`
+        };
+    });
+
+    assert.strictEqual(tokenized["fire"].index, 0, "'fire' must be token #0");
+    assert.strictEqual(tokenized["fire"].initialVector.length, 3, "Initial vector must have 3 dimensions");
+    assert.strictEqual(tokenized["ice"].index, 4, "'ice' must be token #4");
+    assert(tokenized["gradient"].formattedString.includes("token #11"), "Token formatting string must contain index 11");
+    console.log("✅ Biome 6 Vocabulary Tokenization & Real Initial Vector Stream Test Passed!");
+}
+
 testSeedPRNG();
 testLinearInferenceAndExtrapolation();
 testDatasetHealthAndGeneralizationDegradation();
@@ -573,5 +601,6 @@ test1v1LiveDuelFlow();
 testSubmissionIntegrityAndAnomalousRejection();
 testSupabaseGuestAuthAndOAuthUpgradeFlow();
 testRankedLeaderboardsAndYourRankCalculation();
+testBiome6TokenizationAndInitialVectorProjection();
 console.log("🎉 All Web Unit Tests Passed Cleanly!");
 

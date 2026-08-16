@@ -898,6 +898,17 @@
                                 <span style="color:#c084fc; font-weight:700; font-size:10px; display:block;">🔤 FINE-TUNING STEP (WORD PAIR RELAXATION):</span>
                                 <b id="token-word-step-text" style="color:#f8fafc;">Now adjusting: "fire" ↔ "heat" (PPMI: 1.84 | Pulling closer)</b>
                             </div>
+
+                            <!-- Visible Vocabulary Tokenization & Real Initial Vector Stream -->
+                            <div id="token-tokenization-stream" class="stat-card hidden" style="padding:10px 14px; font-family:'JetBrains Mono', monospace; font-size:11px; border:1.5px solid #818cf8; background:rgba(15,23,42,0.95); width:100%; text-align:left; margin-top:6px;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                                    <span style="color:#818cf8; font-weight:800; font-size:10.5px;">🔤 STEP 1: VOCABULARY TOKENIZATION & INITIAL RANDOM VECTOR PROJECTION</span>
+                                    <span id="tokenization-progress-tag" style="font-size:10px; color:#facc15; font-weight:bold;">Tokens: 0/12</span>
+                                </div>
+                                <div id="tokenization-lines-box" style="max-height:125px; overflow-y:auto; line-height:1.6; color:#cbd5e1; font-size:11px; border-left:2px solid #818cf8; padding-left:8px;">
+                                    <!-- Real Initial Random Vectors stream here before PPMI convergence -->
+                                </div>
+                            </div>
                         </div>
                     </div>
 

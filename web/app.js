@@ -2079,6 +2079,7 @@ let ppmMatrix = null;
 let constellationNodes = [];
 let constellationLineMesh = null;
 let isEmbeddingTraining = false;
+let SemanticTokenEmbeddings = {}; // word -> { index, word, initialVector, currentVector }
 
 function computePPMIMatrix(vocab, corpus, windowSize = 3) {
     const N = vocab.length;
@@ -2132,6 +2133,7 @@ function spawnBiome6Constellation(center = new THREE.Vector3(0, 1.8, 65)) {
         if (node.badge) scene.remove(node.badge);
     });
     constellationNodes = [];
+    SemanticTokenEmbeddings = {};
     if (constellationLineMesh) scene.remove(constellationLineMesh);
 
     ppmMatrix = computePPMIMatrix(SemanticVocabulary, ConceptSentences);
@@ -2150,6 +2152,20 @@ function spawnBiome6Constellation(center = new THREE.Vector3(0, 1.8, 65)) {
             center.z + Math.sin(initAngle) * initR
         );
 
+        // Real initial untrained random vector (normalized coordinates in continuous latent space)
+        const initialVector = [
+            parseFloat(((pos.x - center.x) / 10).toFixed(2)),
+            parseFloat(((pos.y - center.y) / 10).toFixed(2)),
+            parseFloat(((pos.z - center.z) / 10).toFixed(2))
+        ];
+
+        SemanticTokenEmbeddings[word] = {
+            index: i,
+            word: word,
+            initialVector: initialVector,
+            currentVector: [...initialVector]
+        };
+
         const mesh = new THREE.Mesh(
             new THREE.OctahedronGeometry(0.55),
             new THREE.MeshStandardMaterial({ color: colHex, emissive: colHex, emissiveIntensity: 1.2, roughness: 0.2 })
@@ -2164,6 +2180,8 @@ function spawnBiome6Constellation(center = new THREE.Vector3(0, 1.8, 65)) {
         constellationNodes.push({
             word,
             cluster,
+            index: i,
+            initialVector,
             mesh,
             badge,
             pos,
@@ -2201,21 +2219,81 @@ function updateConstellationLines() {
     }
 }
 
+/**
+ * Sequential Vocabulary Tokenization Step:
+ * Shows each concept word converted to its vocabulary index and real initial random vector.
+ */
+function runTokenizationSequence(onTokenStep, onComplete) {
+    const streamContainer = document.getElementById("token-tokenization-stream");
+    const linesBox = document.getElementById("tokenization-lines-box");
+    const progressTag = document.getElementById("tokenization-progress-tag");
+    const wordStepEl = document.getElementById("token-word-step-text");
+
+    if (streamContainer) streamContainer.classList.remove("hidden");
+    if (linesBox) linesBox.innerHTML = "";
+
+    const total = constellationNodes.length;
+    let idx = 0;
+
+    const tokenTimer = setInterval(() => {
+        if (idx >= total) {
+            clearInterval(tokenTimer);
+            if (wordStepEl) {
+                wordStepEl.innerHTML = `<span style="color:#4ade80;">✓ Tokenization complete! Computing PPMI co-occurrence matrix & drifting vectors...</span>`;
+            }
+            if (progressTag) progressTag.innerText = `Tokens: ${total}/${total} (Ready)`;
+            setTimeout(() => {
+                if (typeof onComplete === "function") onComplete();
+            }, 450);
+            return;
+        }
+
+        const node = constellationNodes[idx];
+        const v = node.initialVector;
+        const formattedVector = `[${v[0] >= 0 ? '+' : ''}${v[0].toFixed(2)}, ${v[1] >= 0 ? '+' : ''}${v[1].toFixed(2)}, ${v[2] >= 0 ? '+' : ''}${v[2].toFixed(2)}]`;
+
+        if (linesBox) {
+            const line = document.createElement("div");
+            line.style.padding = "2px 0";
+            line.innerHTML = `• <b style="color:#facc15;">"${node.word}"</b> ➔ <span style="color:#38bdf8; font-weight:bold;">token #${idx}</span> ➔ <span style="color:#a78bfa; font-weight:bold;">${formattedVector}</span>`;
+            linesBox.appendChild(line);
+            linesBox.scrollTop = linesBox.scrollHeight;
+        }
+
+        if (progressTag) progressTag.innerText = `Tokens: ${idx + 1}/${total}`;
+        if (wordStepEl) {
+            wordStepEl.innerHTML = `Tokenizing: <code>"${node.word}"</code> ➔ <b>token #${idx}</b> ➔ <b>${formattedVector}</b>`;
+        }
+
+        if (typeof onTokenStep === "function") {
+            onTokenStep(node.word, idx, v);
+        }
+
+        idx++;
+    }, 70);
+}
+
 function trainPPMIEmbeddings3D(epochs = 60, onEpochTick, onComplete) {
     if (isEmbeddingTraining || constellationNodes.length === 0) return;
     isEmbeddingTraining = true;
-    ppmMatrix = computePPMIMatrix(SemanticVocabulary, ConceptSentences);
 
-    const N = constellationNodes.length;
-    const center = new THREE.Vector3(0, 1.8, 65);
+    // STEP 1: Execute visible real tokenization before co-occurrence matrix training
+    runTokenizationSequence((word, tokenIdx, initVec) => {
+        // Tokenization step tick
+    }, () => {
+        // STEP 2: Build PPMI Co-occurrence Matrix and run 3D spring convergence
+        ppmMatrix = computePPMIMatrix(SemanticVocabulary, ConceptSentences);
 
-    // Dynamic 3D Spring-Embedding Simulation over epochs
-    let currentEpoch = 0;
-    const epochInterval = setInterval(() => {
-        currentEpoch++;
+        const N = constellationNodes.length;
+        const center = new THREE.Vector3(0, 1.8, 65);
 
-        // Compute forces for this epoch
-        const forces = Array.from({ length: N }, () => new THREE.Vector3(0, 0, 0));
+        // Dynamic 3D Spring-Embedding Simulation over epochs
+        let currentEpoch = 0;
+        const epochInterval = setInterval(() => {
+            currentEpoch++;
+
+            // Compute forces for this epoch
+            const forces = Array.from({ length: N }, () => new THREE.Vector3(0, 0, 0));
 
         for (let i = 0; i < N; i++) {
             for (let j = 0; j < N; j++) {
@@ -2274,6 +2352,7 @@ function trainPPMIEmbeddings3D(epochs = 60, onEpochTick, onComplete) {
             if (typeof onComplete === "function") onComplete();
         }
     }, 45);
+    });
 }
 
 function createFloatingValueBadge(label, sublabel = "", primaryColor = "#38bdf8", bgColor = "rgba(15, 23, 42, 0.88)") {
