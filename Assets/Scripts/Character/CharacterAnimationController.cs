@@ -48,11 +48,18 @@ namespace NeuroArena.Character
         private Vector3 initialHipsPos;
         private Quaternion initialSpineRot;
         private Quaternion initialHeadRot;
+        private Animator animator;
+
+        private static readonly int SpeedHash = Animator.StringToHash("Speed");
+        private static readonly int GroundedHash = Animator.StringToHash("IsGrounded");
+        private static readonly int PickupTriggerHash = Animator.StringToHash("PickupTrigger");
+        private static readonly int AnimStateHash = Animator.StringToHash("AnimState");
 
         public CharacterAnimState CurrentState => currentState;
 
         private void Start()
         {
+            animator = GetComponent<Animator>();
             if (hips != null) initialHipsPos = hips.localPosition;
             if (spine != null) initialSpineRot = spine.localRotation;
             if (head != null) initialHeadRot = head.localRotation;
@@ -83,6 +90,13 @@ namespace NeuroArena.Character
             {
                 currentState = CharacterAnimState.Idle;
             }
+
+            if (animator != null && animator.runtimeAnimatorController != null)
+            {
+                animator.SetFloat(SpeedHash, moveSpeed);
+                animator.SetBool(GroundedHash, isGrounded);
+                animator.SetInteger(AnimStateHash, (int)currentState);
+            }
         }
 
         public void TriggerPickupGesture(float duration = 0.6f)
@@ -90,6 +104,11 @@ namespace NeuroArena.Character
             isPickingUp = true;
             pickupTimer = duration;
             currentState = CharacterAnimState.PickupGesture;
+
+            if (animator != null && animator.runtimeAnimatorController != null)
+            {
+                animator.SetTrigger(PickupTriggerHash);
+            }
         }
 
         private void Update()
@@ -106,7 +125,10 @@ namespace NeuroArena.Character
                 }
             }
 
-            EvaluateProceduralSkeletalMotion(dt);
+            if (animator == null || animator.runtimeAnimatorController == null)
+            {
+                EvaluateProceduralSkeletalMotion(dt);
+            }
         }
 
         private void EvaluateProceduralSkeletalMotion(float dt)
