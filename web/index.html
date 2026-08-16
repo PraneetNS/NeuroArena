@@ -16,6 +16,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <!-- GSAP for High-Performance UI Motion Layer -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <!-- Supabase JS Client for Zero-Friction Guest & OAuth Account Linking -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
@@ -589,6 +591,20 @@
                         <div class="records-list" id="profile-biome-records-list"></div>
                     </div>
 
+                    <!-- Supabase Auth & Cloud Sync Card -->
+                    <div class="stat-card" style="margin-top:12px; background:rgba(15,23,42,0.85); border:1.5px solid #38bdf8;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                            <div style="font-size:0.85rem; font-weight:800; color:#38bdf8;">☁️ SUPABASE CLOUD SAVE & AUTH</div>
+                            <span id="profile-auth-badge" style="font-size:0.75rem; background:rgba(245,158,11,0.2); color:#facc15; border:1px solid #facc15; padding:2px 8px; border-radius:12px; font-family:var(--font-display-mono);">🏷️ Anonymous Guest</span>
+                        </div>
+                        <p id="profile-auth-subtext" style="font-size:0.78rem; color:#94a3b8; margin:0 0 10px 0; line-height:1.4;">
+                            You are currently playing in zero-friction guest mode. Link your account to sync save slots, models, and duel records across devices.
+                        </p>
+                        <button id="btn-trigger-auth-upgrade" class="primary-btn glow-cyan" style="width:100%; padding:8px 0; font-size:0.85rem; font-weight:bold;">
+                            🔗 Link Account (Google / GitHub / Discord)
+                        </button>
+                    </div>
+
                     <button id="btn-open-char-select-profile" class="action-btn glow-cyan" style="margin-top:12px; width:100%; min-height:42px;">
                         👤 CUSTOMIZE ARCHITECT SILHOUETTE BUILD
                     </button>
@@ -1110,6 +1126,41 @@
 
                             <button id="btn-close-duel-results" class="primary-btn glow-cyan" style="width: 100%; padding: 12px 0; font-size: 1rem; font-weight: 800;">
                                 ⚔️ RETURN TO BIOME HUB
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 🌟 SUPABASE AUTH: SAVE YOUR PROGRESS ACCOUNT UPGRADE MODAL -->
+                <div id="auth-upgrade-modal" class="modal-overlay hidden" style="z-index: 9700;">
+                    <div class="glass-modal" style="max-width: 480px; text-align: center; border: 2px solid #38bdf8; box-shadow: 0 0 50px rgba(56,189,248,0.35);">
+                        <div class="modal-header" style="justify-content: center; background: rgba(15,23,42,0.95);">
+                            <h2 style="color: #38bdf8; font-size: 1.35rem;">☁️ SAVE YOUR PROGRESS</h2>
+                        </div>
+                        <div style="padding: 22px 20px;">
+                            <div style="font-size: 2.8rem; margin-bottom: 8px;">🛡️</div>
+                            <div id="auth-upgrade-headline" style="font-family: var(--font-display-mono); font-size: 1.15rem; font-weight: 800; color: #f8fafc; margin-bottom: 8px;">
+                                SECURE YOUR ARENA PROGRESSION
+                            </div>
+                            <p id="auth-upgrade-bodytext" style="font-size: 0.85rem; color: #94a3b8; line-height: 1.45; margin-bottom: 20px;">
+                                You are currently playing as an <b>Anonymous Guest</b>. Link your session to a real account to enable cross-device cloud saves, preserve your trained models, and lock in your duel win streaks!
+                            </p>
+
+                            <!-- OAuth Login Buttons -->
+                            <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px;">
+                                <button id="btn-auth-oauth-google" class="action-btn" style="background: rgba(234,67,53,0.15); border: 1.5px solid #ea4335; color: #fff; padding: 11px; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                                    <span style="font-size: 1.2rem;">🔴</span> Continue with Google
+                                </button>
+                                <button id="btn-auth-oauth-github" class="action-btn" style="background: rgba(255,255,255,0.08); border: 1.5px solid #94a3b8; color: #fff; padding: 11px; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                                    <span style="font-size: 1.2rem;">🐙</span> Continue with GitHub
+                                </button>
+                                <button id="btn-auth-oauth-discord" class="action-btn" style="background: rgba(88,101,242,0.15); border: 1.5px solid #5865f2; color: #fff; padding: 11px; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                                    <span style="font-size: 1.2rem;">💬</span> Continue with Discord
+                                </button>
+                            </div>
+
+                            <button id="btn-dismiss-auth-upgrade" class="menu-sublabel" style="background: none; border: none; color: #64748b; font-size: 0.8rem; cursor: pointer; text-decoration: underline;">
+                                Maybe later (continue playing as guest)
                             </button>
                         </div>
                     </div>

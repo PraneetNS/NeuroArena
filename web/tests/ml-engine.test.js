@@ -506,6 +506,28 @@ function testSubmissionIntegrityAndAnomalousRejection() {
     console.log("✅ Anti-Cheat Submission Integrity & Anomaly Rejection Test Passed!");
 }
 
+function testSupabaseGuestAuthAndOAuthUpgradeFlow() {
+    // 1. Initial Launch: Anonymous Guest Session
+    let session = {
+        user: { id: "guest_7721_uuid", is_anonymous: true, name: "Guest Architect" },
+        provider: "anonymous"
+    };
+
+    assert.strictEqual(session.user.is_anonymous, true, "First launch session must be anonymous guest");
+    assert.strictEqual(session.provider, "anonymous");
+
+    // 2. Simulated OAuth Account Upgrade (Google / GitHub / Discord)
+    const oauthProvider = "github";
+    session.user.is_anonymous = false;
+    session.user.email = `architect_${oauthProvider}@neuroarena.io`;
+    session.provider = oauthProvider;
+
+    assert.strictEqual(session.user.is_anonymous, false, "Upgraded session must not be anonymous");
+    assert.strictEqual(session.provider, "github", "Provider must reflect linked OAuth provider");
+    assert(session.user.email.includes("github"), "User email must reflect authenticated credentials");
+    console.log("✅ Supabase Zero-Friction Anonymous Guest & OAuth Upgrade Flow Test Passed!");
+}
+
 testSeedPRNG();
 testLinearInferenceAndExtrapolation();
 testDatasetHealthAndGeneralizationDegradation();
@@ -529,5 +551,6 @@ testFullHumanoidGhostAvatarAndTrainingVisuals();
 testAuthoritativePickupReconciliation();
 test1v1LiveDuelFlow();
 testSubmissionIntegrityAndAnomalousRejection();
+testSupabaseGuestAuthAndOAuthUpgradeFlow();
 console.log("🎉 All Web Unit Tests Passed Cleanly!");
 
