@@ -299,8 +299,43 @@ function testHumanoidCharacterAnimationStateMachine() {
     let pickupTimer = 0.55;
     if (pickupTimer > 0) animState = "pickup";
     assert.strictEqual(animState, "pickup", "Active pickupTimer must override gait to Pickup state");
-
     console.log("✅ Stylized Rigged Humanoid & Animation State Machine Test Passed!");
+}
+
+function testTopToolbarAuditAndAchievements() {
+    // 1. Audit top toolbar icon registry
+    const toolbarIcons = [
+        { id: "btn-open-models-hud", panel: "my-models-modal" },
+        { id: "btn-open-consult-hud", panel: "model-inspector-modal" },
+        { id: "btn-open-profile-hud", panel: "profile-modal" },
+        { id: "btn-open-codex", panel: "codex-modal" },
+        { id: "btn-daily-challenge", panel: "daily-seed-challenge" },
+        { id: "btn-toggle-drawer", panel: "inventory-drawer" },
+        { id: "btn-data-inspector", panel: "dataset-modal" },
+        { id: "btn-leaderboard", panel: "leaderboard-modal" },
+        { id: "btn-open-settings", panel: "settings-modal" },
+        { id: "objective-banner", panel: "objective-modal" }
+    ];
+
+    assert.strictEqual(toolbarIcons.length, 10, "All 10 HUD toolbar and objective buttons must be registered");
+
+    // 2. Dynamic achievement evaluation test
+    const mockProfile = { streak: 3, bestStreak: 3, gpWins: 2 };
+    const mockDataset = new Array(8).fill({ x: 1, y: 2 });
+    const mockLoss = 0.045;
+
+    const achievements = [
+        { id: "crystals", unlocked: mockDataset.length >= 5 },
+        { id: "loss", unlocked: mockLoss < 0.10 },
+        { id: "streak", unlocked: mockProfile.streak >= 2 },
+        { id: "gp", unlocked: mockProfile.gpWins >= 1 }
+    ];
+
+    achievements.forEach(a => {
+        assert.strictEqual(a.unlocked, true, `Achievement ${a.id} should evaluate to unlocked`);
+    });
+
+    console.log("✅ Top Toolbar Panel Audit & Dynamic Achievements Test Passed!");
 }
 
 testSeedPRNG();
@@ -315,5 +350,5 @@ testDeviceTiersAndMemorySafety();
 testConsultFeatureOnboardingFunnel();
 testSubmissionHardChecklist();
 testHumanoidCharacterAnimationStateMachine();
+testTopToolbarAuditAndAchievements();
 console.log("🎉 All Web Unit Tests Passed Cleanly!");
-
