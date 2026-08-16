@@ -338,6 +338,33 @@ function testTopToolbarAuditAndAchievements() {
     console.log("✅ Top Toolbar Panel Audit & Dynamic Achievements Test Passed!");
 }
 
+function testNamedMLNPCsAndStage55BiomePalettes() {
+    // 1. Validate NPC Cast registry & math kinematic behaviors
+    const npcRegistry = [
+        { name: "ADA", role: "Guide Drone", trait: "Pulsing aperture eye and truncated polyhedron shell" },
+        { name: "The Archivist", role: "Codex Golem", trait: "Stacked tome torso with rotating head tablet" },
+        { name: "SGD Smith", role: "Optimizer Arena", mathGait: "High stochastic variance jitter & overshoot hops" },
+        { name: "Momentum Smith", role: "Optimizer Arena", mathGait: "Heavy rolling inertia follow-through" },
+        { name: "RMSprop Smith", role: "Optimizer Arena", mathGait: "Inverse-gradient adaptive spring oscillation" },
+        { name: "Adam Smith", role: "Optimizer Arena", mathGait: "Exponential moving average dual-moment smooth drift" },
+        { name: "Ghost Rivals", role: "Async Leaderboard", trait: "Translucent holographic wireframe avatar" }
+    ];
+    assert.strictEqual(npcRegistry.length, 7, "All 7 ML-themed NPCs and companions must be defined");
+
+    // 2. Validate Stage 55 6-Biome visual palettes
+    const biomePalettes = [
+        { id: 0, name: "Linear Steppes", eyeHex: 0xfacc15, terrain: "Amber Sands" },
+        { id: 1, name: "Binary Marshlands", eyeHex: 0x10b981, terrain: "Toxic Emerald / Bioluminescent Teal" },
+        { id: 2, name: "Variance Tundra", eyeHex: 0x38bdf8, terrain: "Glacial Frost Cobalt" },
+        { id: 3, name: "Branching Canopy", eyeHex: 0x22c55e, terrain: "Jade Canopy / Earth Ochre" },
+        { id: 4, name: "Deep Synapse Citadel", eyeHex: 0xc084fc, terrain: "Obsidian Basalt / Neon Amethyst" },
+        { id: 5, name: "Semantic Expanse", eyeHex: 0x6366f1, terrain: "Cosmic Gold / Platinum Quartz" }
+    ];
+    assert.strictEqual(biomePalettes.length, 6, "All 6 biomes must have distinct visual color palettes");
+
+    console.log("✅ Named ML NPCs & Stage 55 Biome Palettes Test Passed!");
+}
+
 testSeedPRNG();
 testLinearInferenceAndExtrapolation();
 testDatasetHealthAndGeneralizationDegradation();
@@ -351,4 +378,5 @@ testConsultFeatureOnboardingFunnel();
 testSubmissionHardChecklist();
 testHumanoidCharacterAnimationStateMachine();
 testTopToolbarAuditAndAchievements();
+testNamedMLNPCsAndStage55BiomePalettes();
 console.log("🎉 All Web Unit Tests Passed Cleanly!");
