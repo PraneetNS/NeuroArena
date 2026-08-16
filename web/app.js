@@ -2180,9 +2180,28 @@ function applyBiomeVisualTheme(biomeIndex) {
         adaEyeMesh.material.color.setHex(p.eye);
         adaEyeMesh.material.emissive.setHex(p.eye);
     }
+    if (labApexPrismMesh && labApexPrismMesh.material) {
+        labApexPrismMesh.material.color.setHex(p.eye);
+        labApexPrismMesh.material.emissive.setHex(p.eye);
+    }
+    if (labSkybeamMesh && labSkybeamMesh.material) {
+        labSkybeamMesh.material.color.setHex(p.eye);
+        labSkybeamMesh.material.emissive.setHex(p.eye);
+    }
+    if (labSpireBands) {
+        labSpireBands.forEach(b => {
+            if (b.material) {
+                b.material.color.setHex(p.eye);
+                b.material.emissive.setHex(p.eye);
+            }
+        });
+    }
 }
 
 let labHoloRingMesh = null;
+let labApexPrismMesh = null;
+let labSkybeamMesh = null;
+let labSpireBands = [];
 
 function createBiomePlatforms() {
     // 1. Modeled Octagonal Lab Station Platform
@@ -2242,6 +2261,60 @@ function createBiomePlatforms() {
     labHoloRingMesh.rotation.x = Math.PI / 2;
     labHoloRingMesh.position.set(0, 3.8, 0);
     labGroup.add(labHoloRingMesh);
+
+    // 5. Soaring 22m Beacon Sky-Spire (Visually dominant above treeline across entire Biome)
+    const spireGeo = new THREE.CylinderGeometry(0.7, 1.3, 20, 6);
+    const spireMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.3, metalness: 0.85, flatShading: true });
+    const spireMesh = new THREE.Mesh(spireGeo, spireMat);
+    spireMesh.position.set(0, 10.0, -1.8);
+    labGroup.add(spireMesh);
+
+    // Ascending Glowing Energy Bands along Spire (5m, 10m, 15m, 20m)
+    labSpireBands = [];
+    const bandHeights = [5, 10, 15, 20];
+    const bandScales = [2.2, 1.9, 1.6, 1.3];
+    bandHeights.forEach((bh, bIdx) => {
+        const bandMesh = new THREE.Mesh(
+            new THREE.CylinderGeometry(bandScales[bIdx] * 0.5, bandScales[bIdx] * 0.5, 0.18, 16),
+            new THREE.MeshStandardMaterial({ color: 0xfacc15, emissive: 0xf59e0b, emissiveIntensity: 2.8, roughness: 0.1 })
+        );
+        bandMesh.position.set(0, bh, -1.8);
+        labGroup.add(bandMesh);
+        labSpireBands.push(bandMesh);
+    });
+
+    // Floating Apex Hyper-Prism at 22.5m Altitude
+    const apexGeo = createFacetedCrystalGeometry(0.85, 2.4);
+    const apexMat = new THREE.MeshStandardMaterial({
+        color: 0xfacc15,
+        emissive: 0xf59e0b,
+        emissiveIntensity: 3.5,
+        roughness: 0.1,
+        metalness: 0.3,
+        flatShading: true
+    });
+    labApexPrismMesh = new THREE.Mesh(apexGeo, apexMat);
+    labApexPrismMesh.position.set(0, 22.5, -1.8);
+    labGroup.add(labApexPrismMesh);
+
+    // Infinite Skybeam Cylinder (Extends 60m vertically into the clouds)
+    const beamGeo = new THREE.CylinderGeometry(0.45, 0.55, 60, 16);
+    const beamMat = new THREE.MeshStandardMaterial({
+        color: 0xfacc15,
+        emissive: 0xfbbf24,
+        emissiveIntensity: 3.8,
+        transparent: true,
+        opacity: 0.65,
+        roughness: 0.1
+    });
+    labSkybeamMesh = new THREE.Mesh(beamGeo, beamMat);
+    labSkybeamMesh.position.set(0, 52.0, -1.8);
+    labGroup.add(labSkybeamMesh);
+
+    // Add Beacon Point Light illuminating the spire apex
+    const beaconLight = new THREE.PointLight(0xfacc15, 2.5, 65);
+    beaconLight.position.set(0, 23.0, -1.8);
+    labGroup.add(beaconLight);
 
     scene.add(labGroup);
 
@@ -2513,6 +2586,15 @@ function updateGame(deltaTime) {
     if (labHoloRingMesh) {
         labHoloRingMesh.rotation.z += deltaTime * 0.6;
         labHoloRingMesh.position.y = 3.8 + Math.sin(performance.now() * 0.002) * 0.08;
+    }
+
+    if (labApexPrismMesh) {
+        labApexPrismMesh.rotation.y += deltaTime * 1.5;
+        labApexPrismMesh.position.y = 22.5 + Math.sin(nowTime * 2.2) * 0.15;
+    }
+
+    if (labSkybeamMesh && labSkybeamMesh.material) {
+        labSkybeamMesh.material.opacity = 0.55 + Math.sin(nowTime * 3.5) * 0.18;
     }
 
     const time = performance.now() * 0.0025;

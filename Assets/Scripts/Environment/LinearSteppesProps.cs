@@ -134,6 +134,75 @@ namespace NeuroArena.Environment
                     "HoloRing", new Color(0.15f, 0.95f, 0.75f), metallic: 0.15f, smoothness: 0.95f,
                     emission: new Color(0.20f, 1.0f, 0.80f), emissionIntensity: 2.4f);
             }
+
+            // 5. Soaring 22m Beacon Sky-Spire (Visible from across entire Biome above treeline)
+            CreateBeaconSkySpire(platform.transform, new Color(0.98f, 0.80f, 0.10f));
+        }
+
+        private void CreateBeaconSkySpire(Transform platformParent, Color beaconColor)
+        {
+            GameObject spireRoot = new GameObject("Lab_SkyBeacon_Spire");
+            spireRoot.transform.SetParent(platformParent, false);
+            spireRoot.transform.localPosition = new Vector3(0f, 0f, -1.8f);
+
+            // Central Tapered Obelisk Spire (20m tall)
+            GameObject obelisk = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            obelisk.name = "SpireObelisk";
+            obelisk.transform.SetParent(spireRoot.transform, false);
+            obelisk.transform.localPosition = new Vector3(0f, 10.0f, 0f);
+            obelisk.transform.localScale = new Vector3(1.2f, 20.0f, 1.2f);
+            var obRend = obelisk.GetComponent<Renderer>();
+            if (obRend != null)
+            {
+                obRend.sharedMaterial = StylizedMaterialFactory.GetStylizedPropMaterial(
+                    "SpireChassis", new Color(0.10f, 0.14f, 0.22f), metallic: 0.85f, smoothness: 0.90f);
+            }
+
+            // Ascending Glowing Energy Bands along Spire (at 5m, 10m, 15m, 20m)
+            float[] bandHeights = new float[] { 5f, 10f, 15f, 20f };
+            float[] bandScales = new float[] { 2.2f, 1.9f, 1.6f, 1.3f };
+            for (int b = 0; b < bandHeights.Length; b++)
+            {
+                GameObject band = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                band.name = $"EnergyBand_{b + 1}";
+                band.transform.SetParent(spireRoot.transform, false);
+                band.transform.localPosition = new Vector3(0f, bandHeights[b], 0f);
+                band.transform.localScale = new Vector3(bandScales[b], 0.15f, bandScales[b]);
+                Destroy(band.GetComponent<Collider>());
+                var bandRend = band.GetComponent<Renderer>();
+                if (bandRend != null)
+                {
+                    bandRend.sharedMaterial = StylizedMaterialFactory.GetStylizedPropMaterial(
+                        $"SpireBand_{b}", beaconColor, metallic: 0.1f, smoothness: 0.95f,
+                        emission: beaconColor, emissionIntensity: 2.5f);
+                }
+            }
+
+            // Floating Apex Hyper-Prism at 22.5m Altitude
+            GameObject apexPrism = new GameObject("Apex_HyperPrism");
+            apexPrism.transform.SetParent(spireRoot.transform, false);
+            apexPrism.transform.localPosition = new Vector3(0f, 22.5f, 0f);
+            var mf = apexPrism.AddComponent<MeshFilter>();
+            mf.sharedMesh = StylizedLowPolyMeshes.CreateCrystalMesh(1.2f, 3.2f);
+            var mr = apexPrism.AddComponent<MeshRenderer>();
+            mr.sharedMaterial = StylizedMaterialFactory.GetStylizedPropMaterial(
+                "ApexPrismMat", beaconColor, metallic: 0.2f, smoothness: 0.98f,
+                emission: beaconColor * 1.5f, emissionIntensity: 3.5f);
+
+            // Infinite Skybeam Cylinder (Extends 60m vertically into the clouds)
+            GameObject skybeam = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            skybeam.name = "Vertical_Skybeam_Pillar";
+            skybeam.transform.SetParent(spireRoot.transform, false);
+            skybeam.transform.localPosition = new Vector3(0f, 52.0f, 0f);
+            skybeam.transform.localScale = new Vector3(0.65f, 60.0f, 0.65f);
+            Destroy(skybeam.GetComponent<Collider>());
+            var beamRend = skybeam.GetComponent<Renderer>();
+            if (beamRend != null)
+            {
+                beamRend.sharedMaterial = StylizedMaterialFactory.GetStylizedPropMaterial(
+                    "SkybeamLightMat", new Color(beaconColor.r, beaconColor.g, beaconColor.b, 0.65f),
+                    metallic: 0f, smoothness: 1.0f, emission: beaconColor * 2.0f, emissionIntensity: 4.0f);
+            }
         }
 
         private void CreateDataPillar(Transform parent, Vector3 localPos, string name)
