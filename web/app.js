@@ -2032,12 +2032,51 @@ function spawnBiome6Runes(center) {
     });
 }
 
+function createFloatingValueBadge(label, sublabel = "", primaryColor = "#38bdf8", bgColor = "rgba(15, 23, 42, 0.88)") {
+    const canvas = document.createElement("canvas");
+    canvas.width = 256;
+    canvas.height = 100;
+    const ctx = canvas.getContext("2d");
+
+    // Draw glowing pill badge container
+    ctx.fillStyle = bgColor;
+    ctx.strokeStyle = primaryColor;
+    ctx.lineWidth = 3.5;
+    ctx.beginPath();
+    ctx.roundRect(8, 8, 240, 84, 16);
+    ctx.fill();
+    ctx.stroke();
+
+    // Primary Text label
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = "bold 26px 'JetBrains Mono', monospace";
+    ctx.fillStyle = primaryColor;
+    ctx.fillText(label, 128, sublabel ? 36 : 50);
+
+    // Sublabel
+    if (sublabel) {
+        ctx.font = "14px sans-serif";
+        ctx.fillStyle = "#cbd5e1";
+        ctx.fillText(sublabel, 128, 68);
+    }
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.minFilter = THREE.LinearFilter;
+    const spriteMat = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false });
+    const sprite = new THREE.Sprite(spriteMat);
+    sprite.scale.set(2.4, 0.94, 1);
+    return sprite;
+}
+
 function spawnSeededCollectibles() {
-    collectibles.forEach(c => scene.remove(c.mesh));
+    collectibles.forEach(c => { if (c.mesh) scene.remove(c.mesh); if (c.badge) scene.remove(c.badge); });
     collectibles = [];
 
     const p = GameState.profile;
     const totalToSpawn = 24;
+    const biome = GameState.currentBiome || 0;
+    const semanticWords = ["fire", "heat", "ice", "cold", "vector", "matrix", "neural", "space", "cosine", "gradient", "token", "weight"];
 
     for (let i = 0; i < totalToSpawn; i++) {
         const rawX = SeedPRNG.range(-4.5, 4.5) * p.featureScaleX;
@@ -2047,37 +2086,92 @@ function spawnSeededCollectibles() {
         if (isOutlier) rawY += (SeedPRNG.next() > 0.5 ? 1 : -1) * SeedPRNG.range(6.5, 12.0);
 
         const roll = i % 4;
-        let type, colHex, emHex, classLabel;
+        let type, colHex, emHex, classLabel, badgeLabel, badgeSub, badgeColorHex = "#38bdf8";
 
-        if (roll === 0 || roll === 1) {
-            type = "FeatureCrystal_X";
-            colHex = (i === 0) ? 0xfacc15 : 0x38bdf8; // Amber first crystal or Cyan
-            emHex = (i === 0) ? 0xfacc15 : 0x0284c7;
-        } else if (roll === 2) {
-            type = "TargetShard_Y";
-            colHex = 0xf59e0b; // Amber
-            emHex = 0xb45309;
-        } else {
+        if (biome === 5) {
+            // Biome 6: Semantic Expanse Word Vector Concept Tokens
+            type = "SemanticRune_Token";
+            const word = semanticWords[i % semanticWords.length];
+            badgeLabel = `"${word}"`;
+            badgeSub = `PPMI Vector (d=128)`;
+            colHex = 0x818cf8;
+            emHex = 0x4338ca;
+            badgeColorHex = "#818cf8";
+        } else if (biome === 1) {
+            // Biome 2: Binary Marshlands Classification Spores
             const isClass1 = SeedPRNG.next() > (0.5 - p.classOverlap * 0.5);
             classLabel = isClass1 ? 1 : 0;
             type = isClass1 ? "Class1_AzureSpore" : "Class0_PurpleSpore";
-            colHex = isClass1 ? 0x22d3ee : 0xa855f7; // Azure or Neon Purple
+            badgeLabel = `Class: ${classLabel}`;
+            badgeSub = `x: ${rawX >= 0 ? '+' : ''}${rawX.toFixed(2)}`;
+            colHex = isClass1 ? 0x22d3ee : 0xa855f7;
             emHex = isClass1 ? 0x0891b2 : 0x7e22ce;
+            badgeColorHex = isClass1 ? "#22d3ee" : "#c084fc";
+        } else if (biome === 2) {
+            // Biome 3: Variance Tundra High-Dimensional Polynomial Features
+            type = "Polynomial_Sample";
+            badgeLabel = `x₁: ${rawX.toFixed(1)} | x₂²: ${Math.abs(rawX2).toFixed(1)}`;
+            badgeSub = `L2 Penalty Term`;
+            colHex = 0x38bdf8;
+            emHex = 0x0284c7;
+            badgeColorHex = "#38bdf8";
+        } else if (biome === 3) {
+            // Biome 4: Branching Canopy Decision Tree Split Points
+            type = "DecisionTree_Split";
+            badgeLabel = `Split: x < ${rawX.toFixed(1)}`;
+            badgeSub = `Gini Impurity`;
+            colHex = 0x22c55e;
+            emHex = 0x15803d;
+            badgeColorHex = "#22c55e";
+        } else if (biome === 4) {
+            // Biome 5: Deep Synapse Citadel Non-Linear XOR Gates
+            type = "Neural_XOR_Gate";
+            const b1 = rawX > 0 ? 1 : 0, b2 = rawX2 > 0 ? 1 : 0;
+            badgeLabel = `XOR: (${b1}, ${b2}) ➔ ${b1 ^ b2}`;
+            badgeSub = `Hidden Layer (2x4)`;
+            colHex = 0xc084fc;
+            emHex = 0x7e22ce;
+            badgeColorHex = "#c084fc";
+        } else {
+            // Biome 1: Linear Steppes Real Numerical Features (x) and Targets (y)
+            if (roll === 0 || roll === 1) {
+                type = "FeatureCrystal_X";
+                badgeLabel = `x: ${rawX >= 0 ? '+' : ''}${rawX.toFixed(2)}`;
+                badgeSub = (i === 0) ? "⭐ Starter Feature" : "Feature Scalar (X)";
+                colHex = (i === 0) ? 0xfacc15 : 0x38bdf8;
+                emHex = (i === 0) ? 0xfacc15 : 0x0284c7;
+                badgeColorHex = (i === 0) ? "#facc15" : "#38bdf8";
+            } else {
+                type = "TargetShard_Y";
+                badgeLabel = `y: ${rawY >= 0 ? '+' : ''}${rawY.toFixed(2)}`;
+                badgeSub = isOutlier ? "⚠️ Outlier Sample" : "Ground Truth (Y)";
+                colHex = isOutlier ? 0xef4444 : 0xf59e0b;
+                emHex = isOutlier ? 0x991b1b : 0xb45309;
+                badgeColorHex = isOutlier ? "#f87171" : "#f59e0b";
+            }
         }
 
         const angle = i === 0 ? 0.3 : SeedPRNG.range(0, Math.PI * 2);
         const r = i === 0 ? 6.5 : (6 + SeedPRNG.range(0, 26));
 
-        const geom = (type === "FeatureCrystal_X") ? new THREE.BoxGeometry(0.65, 0.65, 0.65) :
-            (type === "TargetShard_Y") ? new THREE.OctahedronGeometry(0.48) :
-                new THREE.SphereGeometry(0.42, 16, 16);
+        // Faceted crystal mesh with glowing core
+        const geom = (type.includes("X") || type.includes("Split")) ? new THREE.BoxGeometry(0.55, 0.55, 0.55) :
+            (type.includes("Y") || type.includes("Token")) ? new THREE.OctahedronGeometry(0.42) :
+                new THREE.SphereGeometry(0.38, 16, 16);
 
-        const mesh = new THREE.Mesh(geom, new THREE.MeshStandardMaterial({ color: colHex, emissive: emHex, roughness: 0.25 }));
-        mesh.position.set(Math.cos(angle) * r, 1.2, Math.sin(angle) * r);
+        const mesh = new THREE.Mesh(geom, new THREE.MeshStandardMaterial({ color: colHex, emissive: emHex, roughness: 0.25, metalness: 0.3 }));
+        const posX = Math.cos(angle) * r, posZ = Math.sin(angle) * r;
+        mesh.position.set(posX, 1.2, posZ);
         scene.add(mesh);
+
+        // Floating 3D Billboard Text Label Badge
+        const badge = createFloatingValueBadge(badgeLabel, badgeSub, badgeColorHex);
+        badge.position.set(posX, 2.05, posZ);
+        scene.add(badge);
 
         collectibles.push({
             mesh,
+            badge,
             type,
             x: rawX,
             y: rawY,
@@ -2223,10 +2317,15 @@ function updateGame(deltaTime) {
     const time = performance.now() * 0.003;
     collectibles.forEach(c => {
         if (c.collected) return;
-        c.mesh.rotation.y += deltaTime * 1.5;
-        c.mesh.position.y = c.baseY + Math.sin(time + c.mesh.position.x) * 0.15;
+        if (c.mesh) {
+            c.mesh.rotation.y += deltaTime * 1.5;
+            c.mesh.position.y = c.baseY + Math.sin(time + c.mesh.position.x) * 0.15;
+            if (c.badge) c.badge.position.y = c.mesh.position.y + 0.85;
+        }
         if (playerPos.distanceTo(c.mesh.position) < 1.4) {
-            c.collected = true; scene.remove(c.mesh);
+            c.collected = true;
+            if (c.mesh) scene.remove(c.mesh);
+            if (c.badge) scene.remove(c.badge);
             playerAnimState.pickupTimer = 0.55; // Trigger pickup gesture
 
             // Genuinely store picked-up coordinate payload into active dataset
@@ -2244,6 +2343,7 @@ function updateGame(deltaTime) {
             else if (c.type === "TargetShard_Y") GameState.resources.targetY++;
             else if (c.type === "Class0_PurpleSpore") GameState.resources.class0++;
             else if (c.type === "Class1_AzureSpore") GameState.resources.class1++;
+            else if (c.type.includes("Token")) GameState.resources.featureX++;
 
             playPickupSFX();
 

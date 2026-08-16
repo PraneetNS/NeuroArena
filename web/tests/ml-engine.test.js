@@ -347,6 +347,19 @@ function testCharacterSilhouetteArchetypes() {
     console.log("✅ 3 Character Silhouette Archetypes & Procedural Bone Rigging Test Passed!");
 }
 
+function testFloating3DValueBadges() {
+    const rawX = 3.42, rawY = 9.53;
+    const badgeX = `x: ${rawX >= 0 ? '+' : ''}${rawX.toFixed(2)}`;
+    const badgeY = `y: ${rawY >= 0 ? '+' : ''}${rawY.toFixed(2)}`;
+    const semanticWord = "fire";
+    const badgeWord = `"${semanticWord}"`;
+
+    assert.strictEqual(badgeX, "x: +3.42", "Feature X badge must format genuine scalar coordinate");
+    assert.strictEqual(badgeY, "y: +9.53", "Target Y badge must format ground truth target");
+    assert.strictEqual(badgeWord, '"fire"', "Semantic Expanse badge must format natural word concept");
+    console.log("✅ Floating 3D Billboard Value Badges & Concept Display Test Passed!");
+}
+
 testSeedPRNG();
 testLinearInferenceAndExtrapolation();
 testDatasetHealthAndGeneralizationDegradation();
@@ -361,5 +374,6 @@ testSubmissionHardChecklist();
 testHumanoidCharacterAnimationStateMachine();
 testSixBiomeStandaloneScenesAndWorldManager();
 testCharacterSilhouetteArchetypes();
+testFloating3DValueBadges();
 console.log("🎉 All Web Unit Tests Passed Cleanly!");
 

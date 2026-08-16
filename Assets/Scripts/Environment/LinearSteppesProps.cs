@@ -210,6 +210,37 @@ namespace NeuroArena.Environment
                 MLCollectible collectible = itemGO.AddComponent<MLCollectible>();
                 float paramVal = (type == MLResourceType.StepFluid_Alpha) ? 0.01f : Random.Range(0.5f, 2.5f);
                 collectible.Initialize(type, rawX, rawY, paramVal);
+
+                // Add Floating 3D Value Badge with Backing Glow Plate
+                GameObject badgeGO = new GameObject("FloatingValueBadge");
+                badgeGO.transform.SetParent(itemGO.transform, false);
+                badgeGO.transform.localPosition = new Vector3(0f, 1.25f, 0f);
+                badgeGO.transform.localScale = Vector3.one * 0.25f;
+
+                // Backing Glow Plate
+                GameObject plateGO = GameObject.CreatePrimitive(PrimitiveType.Quad);
+                plateGO.name = "BadgeBackingPlate";
+                plateGO.transform.SetParent(badgeGO.transform, false);
+                plateGO.transform.localScale = new Vector3(3.4f, 1.3f, 1f);
+                Collider cPlate = plateGO.GetComponent<Collider>();
+                if (cPlate != null) DestroyImmediate(cPlate);
+
+                Renderer plateRend = plateGO.GetComponent<Renderer>();
+                if (plateRend != null)
+                {
+                    Color glowCol = (type == MLResourceType.FeatureCrystal_X) ? new Color(0.2f, 0.75f, 0.95f) : new Color(0.95f, 0.65f, 0.1f);
+                    plateRend.sharedMaterial = StylizedMaterialFactory.GetStylizedPropMaterial(
+                        "BadgePlate", new Color(0.06f, 0.09f, 0.14f), emission: glowCol, emissionIntensity: 0.8f);
+                }
+
+                // 3D TextMesh displaying genuine mathematical scalar
+                TextMesh tm = badgeGO.AddComponent<TextMesh>();
+                tm.alignment = TextAlignment.Center;
+                tm.anchor = TextAnchor.MiddleCenter;
+                tm.fontSize = 32;
+                tm.characterSize = 0.075f;
+                tm.color = (type == MLResourceType.FeatureCrystal_X) ? new Color(0.22f, 0.85f, 0.98f) : new Color(0.98f, 0.80f, 0.15f);
+                tm.text = (type == MLResourceType.FeatureCrystal_X) ? $"x: {(rawX >= 0 ? "+" : "")}{rawX:F2}" : $"y: {rawY:F2}";
             }
         }
     }
