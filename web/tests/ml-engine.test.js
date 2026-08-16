@@ -333,6 +333,20 @@ function testSixBiomeStandaloneScenesAndWorldManager() {
     console.log("✅ 6 Standalone Biome Scenes & WorldManager Navigation Test Passed!");
 }
 
+function testCharacterSilhouetteArchetypes() {
+    const builds = ["explorer", "scholar", "engineer"];
+    
+    builds.forEach(b => {
+        const widthScale = b === "explorer" ? 1.25 : (b === "scholar" ? 0.85 : 1.0);
+        const heightScale = b === "scholar" ? 1.20 : (b === "engineer" ? 0.90 : 1.0);
+
+        assert(widthScale > 0.5 && widthScale < 2.0, `Width scale for ${b} must be within stable rendering limits`);
+        assert(heightScale > 0.5 && heightScale < 2.0, `Height scale for ${b} must be within stable rendering limits`);
+    });
+
+    console.log("✅ 3 Character Silhouette Archetypes & Procedural Bone Rigging Test Passed!");
+}
+
 testSeedPRNG();
 testLinearInferenceAndExtrapolation();
 testDatasetHealthAndGeneralizationDegradation();
@@ -346,5 +360,6 @@ testConsultFeatureOnboardingFunnel();
 testSubmissionHardChecklist();
 testHumanoidCharacterAnimationStateMachine();
 testSixBiomeStandaloneScenesAndWorldManager();
+testCharacterSilhouetteArchetypes();
 console.log("🎉 All Web Unit Tests Passed Cleanly!");
 

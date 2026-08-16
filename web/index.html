@@ -575,6 +575,10 @@
                         <div class="records-title">📊 BEST RECORDED METRICS PER BIOME:</div>
                         <div class="records-list" id="profile-biome-records-list"></div>
                     </div>
+
+                    <button id="btn-open-char-select-profile" class="action-btn glow-cyan" style="margin-top:12px; width:100%; min-height:42px;">
+                        👤 CUSTOMIZE ARCHITECT SILHOUETTE BUILD
+                    </button>
                 </div>
             </div>
         </div>
@@ -947,6 +951,65 @@
                                 PRIX</button>
                             <button id="btn-view-replay-card" class="action-btn">🎴 Stat Card</button>
                             <button id="btn-return-world" class="action-btn">✕ Return</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 👤 CHARACTER ARCHETYPE SELECT MODAL (NEW GAME / PROFILE) -->
+                <div id="character-select-modal" class="modal-overlay hidden" style="z-index:9999;">
+                    <div class="glass-modal character-select-container" style="max-width:780px; width:92%;">
+                        <div class="modal-header">
+                            <h2>👤 SELECT YOUR ARCHITECT SILHOUETTE</h2>
+                            <button id="btn-close-char-select" class="close-btn">✕</button>
+                        </div>
+                        <div style="padding:16px 20px;">
+                            <p style="font-size:0.85rem; color:#94a3b8; margin:0 0 14px 0;">
+                                Choose your character's procedural low-poly rig build. All archetypes share the same fluid Mixamo-compatible animation blend tree while possessing distinct silhouettes, proportions, and passive bonuses.
+                            </p>
+                            <div id="character-build-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px; margin-bottom:18px;">
+                                <!-- Option 1: Explorer -->
+                                <div class="stat-card char-card active" data-build="explorer" style="border:2px solid #38bdf8; background:rgba(14,165,233,0.12); cursor:pointer; padding:14px; text-align:center;">
+                                    <div style="font-size:2.4rem; margin-bottom:6px;">🧭</div>
+                                    <div style="font-weight:800; font-size:1.1rem; color:#38bdf8;">THE EXPLORER</div>
+                                    <div style="font-size:0.75rem; color:#facc15; margin-bottom:8px; font-weight:600;">Stout / Reinforced Field Plating</div>
+                                    <div style="font-size:0.78rem; color:#cbd5e1; line-height:1.35; margin-bottom:10px;">
+                                        Broad chest armor, rounded dome helm, heavy insulated boots built for rough biome terrain traversal.
+                                    </div>
+                                    <div style="font-size:0.72rem; color:#34d399; background:rgba(6,95,70,0.4); padding:4px 8px; border-radius:4px;">
+                                        ⚡ +10% Crystal Magnetism Radius
+                                    </div>
+                                </div>
+
+                                <!-- Option 2: Scholar -->
+                                <div class="stat-card char-card" data-build="scholar" style="border:1px solid rgba(255,255,255,0.1); background:rgba(15,23,42,0.75); cursor:pointer; padding:14px; text-align:center;">
+                                    <div style="font-size:2.4rem; margin-bottom:6px;">📜</div>
+                                    <div style="font-weight:800; font-size:1.1rem; color:#c084fc;">THE SCHOLAR</div>
+                                    <div style="font-size:0.75rem; color:#facc15; margin-bottom:8px; font-weight:600;">Tall / Slender Geometric Robes</div>
+                                    <div style="font-size:0.78rem; color:#cbd5e1; line-height:1.35; margin-bottom:10px;">
+                                        Elongated torso plates, crown visor, slender limbs designed for high-altitude theoretical analysis.
+                                    </div>
+                                    <div style="font-size:0.72rem; color:#c084fc; background:rgba(88,28,135,0.4); padding:4px 8px; border-radius:4px;">
+                                        🧠 +15% Extrapolation Insight Gauge
+                                    </div>
+                                </div>
+
+                                <!-- Option 3: Engineer -->
+                                <div class="stat-card char-card" data-build="engineer" style="border:1px solid rgba(255,255,255,0.1); background:rgba(15,23,42,0.75); cursor:pointer; padding:14px; text-align:center;">
+                                    <div style="font-size:2.4rem; margin-bottom:6px;">⚙️</div>
+                                    <div style="font-weight:800; font-size:1.1rem; color:#10b981;">THE ENGINEER</div>
+                                    <div style="font-size:0.75rem; color:#facc15; margin-bottom:8px; font-weight:600;">Compact / Agile Tech Mechanist</div>
+                                    <div style="font-size:0.78rem; color:#cbd5e1; line-height:1.35; margin-bottom:10px;">
+                                        Low center of gravity, dual power conduits, wide optic goggles built for rapid optimizer calibration.
+                                    </div>
+                                    <div style="font-size:0.72rem; color:#10b981; background:rgba(5,150,105,0.4); padding:4px 8px; border-radius:4px;">
+                                        🏃 +8% Locomotion Movement Speed
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button id="btn-confirm-character" class="primary-btn glow-cyan" style="width:100%; padding:12px 0; font-size:1rem; font-weight:800;">
+                                ⚔️ CONFIRM ARCHITECT & ENTER ARENA
+                            </button>
                         </div>
                     </div>
                 </div>

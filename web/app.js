@@ -1792,7 +1792,10 @@ let playerAnimState = {
     pickupTimer: 0
 };
 
-function createPlayerAvatar() {
+function createPlayerAvatar(characterBuild = "explorer") {
+    if (playerMesh) {
+        scene.remove(playerMesh);
+    }
     playerMesh = new THREE.Group();
 
     const matArmor = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.35, metalness: 0.2 });
@@ -1800,41 +1803,47 @@ function createPlayerAvatar() {
     const matVisor = new THREE.MeshStandardMaterial({ color: 0x22d3ee, emissive: 0x06b6d4, emissiveIntensity: 1.2 });
     const matCore = new THREE.MeshStandardMaterial({ color: 0xfacc15, emissive: 0xfacc15, emissiveIntensity: 1.5 });
 
+    const widthScale = characterBuild === "explorer" ? 1.25 : (characterBuild === "scholar" ? 0.85 : 1.0);
+    const heightScale = characterBuild === "scholar" ? 1.20 : (characterBuild === "engineer" ? 0.90 : 1.0);
+
     // 1. Torso / Chest
     const torso = new THREE.Group();
-    torso.position.y = 0.85;
-    const chestMesh = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.6, 0.32), matArmor);
+    torso.position.y = 0.85 * heightScale;
+    const chestMesh = new THREE.Mesh(new THREE.BoxGeometry(0.52 * widthScale, 0.6 * heightScale, 0.32 * widthScale), matArmor);
     torso.add(chestMesh);
 
-    const coreMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.04, 16), matCore);
+    const coreMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.08 * widthScale, 0.08 * widthScale, 0.04, 16), matCore);
     coreMesh.rotation.x = Math.PI / 2;
-    coreMesh.position.set(0, 0.1, 0.17);
+    coreMesh.position.set(0, 0.1 * heightScale, 0.17 * widthScale);
     torso.add(coreMesh);
     playerMesh.add(torso);
     playerLimbs.torso = torso;
 
     // 2. Head & Visor
     const head = new THREE.Group();
-    head.position.set(0, 0.48, 0);
-    const helmetMesh = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.36, 0.36), matArmor);
+    head.position.set(0, 0.48 * heightScale, 0);
+    const headW = characterBuild === "explorer" ? 0.42 : (characterBuild === "scholar" ? 0.32 : 0.36);
+    const headH = characterBuild === "scholar" ? 0.44 : (characterBuild === "engineer" ? 0.34 : 0.36);
+    const helmetMesh = new THREE.Mesh(new THREE.BoxGeometry(headW, headH, headW), matArmor);
     head.add(helmetMesh);
-    const visorMesh = new THREE.Mesh(new THREE.BoxGeometry(0.30, 0.12, 0.12), matVisor);
-    visorMesh.position.set(0, 0.02, 0.16);
+    const visorMesh = new THREE.Mesh(new THREE.BoxGeometry(headW * 0.85, 0.12 * heightScale, 0.12), matVisor);
+    visorMesh.position.set(0, 0.02, headW * 0.46);
     head.add(visorMesh);
     torso.add(head);
     playerLimbs.head = head;
 
     // 3. Left Arm
+    const armSpacing = 0.35 * widthScale;
     const leftArm = new THREE.Group();
-    leftArm.position.set(-0.35, 0.22, 0);
-    const lUpper = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.3, 0.16), matArmor);
-    lUpper.position.y = -0.15;
+    leftArm.position.set(-armSpacing, 0.22 * heightScale, 0);
+    const lUpper = new THREE.Mesh(new THREE.BoxGeometry(0.16 * widthScale, 0.3 * heightScale, 0.16 * widthScale), matArmor);
+    lUpper.position.y = -0.15 * heightScale;
     leftArm.add(lUpper);
 
     const leftForearm = new THREE.Group();
-    leftForearm.position.set(0, -0.3, 0);
-    const lLower = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.28, 0.14), matAccent);
-    lLower.position.y = -0.14;
+    leftForearm.position.set(0, -0.3 * heightScale, 0);
+    const lLower = new THREE.Mesh(new THREE.BoxGeometry(0.14 * widthScale, 0.28 * heightScale, 0.14 * widthScale), matAccent);
+    lLower.position.y = -0.14 * heightScale;
     leftForearm.add(lLower);
     leftArm.add(leftForearm);
     torso.add(leftArm);
@@ -1843,15 +1852,15 @@ function createPlayerAvatar() {
 
     // 4. Right Arm
     const rightArm = new THREE.Group();
-    rightArm.position.set(0.35, 0.22, 0);
-    const rUpper = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.3, 0.16), matArmor);
-    rUpper.position.y = -0.15;
+    rightArm.position.set(armSpacing, 0.22 * heightScale, 0);
+    const rUpper = new THREE.Mesh(new THREE.BoxGeometry(0.16 * widthScale, 0.3 * heightScale, 0.16 * widthScale), matArmor);
+    rUpper.position.y = -0.15 * heightScale;
     rightArm.add(rUpper);
 
     const rightForearm = new THREE.Group();
-    rightForearm.position.set(0, -0.3, 0);
-    const rLower = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.28, 0.14), matAccent);
-    rLower.position.y = -0.14;
+    rightForearm.position.set(0, -0.3 * heightScale, 0);
+    const rLower = new THREE.Mesh(new THREE.BoxGeometry(0.14 * widthScale, 0.28 * heightScale, 0.14 * widthScale), matAccent);
+    rLower.position.y = -0.14 * heightScale;
     rightForearm.add(rLower);
     rightArm.add(rightForearm);
     torso.add(rightArm);
@@ -1859,19 +1868,20 @@ function createPlayerAvatar() {
     playerLimbs.rightForearm = rightForearm;
 
     // 5. Left Leg
+    const legSpacing = 0.16 * widthScale;
     const leftLeg = new THREE.Group();
-    leftLeg.position.set(-0.16, 0.58, 0);
-    const lThigh = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.36, 0.18), matArmor);
-    lThigh.position.y = -0.18;
+    leftLeg.position.set(-legSpacing, 0.58 * heightScale, 0);
+    const lThigh = new THREE.Mesh(new THREE.BoxGeometry(0.18 * widthScale, 0.36 * heightScale, 0.18 * widthScale), matArmor);
+    lThigh.position.y = -0.18 * heightScale;
     leftLeg.add(lThigh);
 
     const leftCalf = new THREE.Group();
-    leftCalf.position.set(0, -0.36, 0);
-    const lCalfMesh = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.34, 0.16), matAccent);
-    lCalfMesh.position.y = -0.17;
+    leftCalf.position.set(0, -0.36 * heightScale, 0);
+    const lCalfMesh = new THREE.Mesh(new THREE.BoxGeometry(0.16 * widthScale, 0.34 * heightScale, 0.16 * widthScale), matAccent);
+    lCalfMesh.position.y = -0.17 * heightScale;
     leftCalf.add(lCalfMesh);
-    const lBoot = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.1, 0.26), matArmor);
-    lBoot.position.set(0, -0.32, 0.04);
+    const lBoot = new THREE.Mesh(new THREE.BoxGeometry(0.18 * widthScale, 0.1 * heightScale, 0.26 * widthScale), matArmor);
+    lBoot.position.set(0, -0.32 * heightScale, 0.04);
     leftCalf.add(lBoot);
     leftLeg.add(leftCalf);
     playerMesh.add(leftLeg);
@@ -1880,18 +1890,18 @@ function createPlayerAvatar() {
 
     // 6. Right Leg
     const rightLeg = new THREE.Group();
-    rightLeg.position.set(0.16, 0.58, 0);
-    const rThigh = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.36, 0.18), matArmor);
-    rThigh.position.y = -0.18;
+    rightLeg.position.set(legSpacing, 0.58 * heightScale, 0);
+    const rThigh = new THREE.Mesh(new THREE.BoxGeometry(0.18 * widthScale, 0.36 * heightScale, 0.18 * widthScale), matArmor);
+    rThigh.position.y = -0.18 * heightScale;
     rightLeg.add(rThigh);
 
     const rightCalf = new THREE.Group();
-    rightCalf.position.set(0, -0.36, 0);
-    const rCalfMesh = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.34, 0.16), matAccent);
-    rCalfMesh.position.y = -0.17;
+    rightCalf.position.set(0, -0.36 * heightScale, 0);
+    const rCalfMesh = new THREE.Mesh(new THREE.BoxGeometry(0.16 * widthScale, 0.34 * heightScale, 0.16 * widthScale), matAccent);
+    rCalfMesh.position.y = -0.17 * heightScale;
     rightCalf.add(rCalfMesh);
-    const rBoot = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.1, 0.26), matArmor);
-    rBoot.position.set(0, -0.32, 0.04);
+    const rBoot = new THREE.Mesh(new THREE.BoxGeometry(0.18 * widthScale, 0.1 * heightScale, 0.26 * widthScale), matArmor);
+    rBoot.position.set(0, -0.32 * heightScale, 0.04);
     rightCalf.add(rBoot);
     rightLeg.add(rightCalf);
     playerMesh.add(rightLeg);
@@ -3535,6 +3545,53 @@ function setupUIEvents() {
         }
     });
 
+    // Character Silhouette Archetype Selection
+    let selectedCharacterBuild = "explorer";
+    document.querySelectorAll(".char-card").forEach(card => {
+        card.addEventListener("click", () => {
+            document.querySelectorAll(".char-card").forEach(c => {
+                c.classList.remove("active");
+                c.style.border = "1px solid rgba(255,255,255,0.1)";
+                c.style.background = "rgba(15,23,42,0.75)";
+            });
+            card.classList.add("active");
+            card.style.border = "2px solid #38bdf8";
+            card.style.background = "rgba(14,165,233,0.15)";
+            selectedCharacterBuild = card.dataset.build || "explorer";
+        });
+    });
+
+    function openCharacterSelectModal() {
+        const modal = document.getElementById("character-select-modal");
+        if (modal) {
+            modal.classList.remove("hidden");
+            if (typeof gsap !== "undefined") {
+                gsap.fromTo(modal.querySelector(".glass-modal"), { scale: 0.88, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: "back.out(1.5)" });
+            }
+        }
+    }
+
+    document.getElementById("btn-close-char-select")?.addEventListener("click", () => {
+        document.getElementById("character-select-modal")?.classList.add("hidden");
+    });
+
+    document.getElementById("btn-open-char-select-profile")?.addEventListener("click", () => {
+        openCharacterSelectModal();
+    });
+
+    document.getElementById("btn-confirm-character")?.addEventListener("click", () => {
+        ProfileSlots[activeSaveSlot].characterBuild = selectedCharacterBuild;
+        saveActiveProfile();
+        document.getElementById("character-select-modal")?.classList.add("hidden");
+        document.getElementById("main-menu")?.classList.add("hidden");
+        createPlayerAvatar(selectedCharacterBuild);
+        startBiomeLoadingSequence(0, () => {
+            spawnSeededCollectibles();
+            updateHUD();
+            updateTutorialState();
+        });
+    });
+
     // Seed Randomizer
     document.getElementById("btn-random-seed").addEventListener("click", () => {
         const rnd = generateRandomSeed();
@@ -3547,6 +3604,8 @@ function setupUIEvents() {
 
     contBtn.addEventListener("click", () => {
         document.getElementById("main-menu").classList.add("hidden");
+        const currentBuild = ProfileSlots[activeSaveSlot].characterBuild || "explorer";
+        createPlayerAvatar(currentBuild);
         startBiomeLoadingSequence(GameState.currentBiome, () => {
             updateHUD();
             updateTutorialState();
@@ -3557,12 +3616,7 @@ function setupUIEvents() {
         const seedVal = document.getElementById("menu-seed-input").value.trim().toUpperCase() || generateRandomSeed();
         initializePlaythroughSeed(seedVal);
         resetGameSave();
-        document.getElementById("main-menu").classList.add("hidden");
-        startBiomeLoadingSequence(0, () => {
-            spawnSeededCollectibles();
-            updateHUD();
-            updateTutorialState();
-        });
+        openCharacterSelectModal();
     });
 
     document.getElementById("btn-quit-game").addEventListener("click", () => {
