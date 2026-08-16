@@ -9,8 +9,9 @@
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@400;600;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="style.css">
-    <!-- Three.js for 3D WebGL Rendering -->
+    <!-- Three.js for 3D WebGL Rendering & GLTF Model Loader -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
     <!-- GSAP for High-Performance UI Motion Layer -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script>
@@ -160,12 +161,13 @@
             <!-- 2. TOP-RIGHT CONTROLS (MINIMUM 44x44dp TOUCH TARGETS) -->
             <div id="top-right-hud" class="hud-controls-group">
                 <button id="btn-open-models-hud" class="hud-icon-btn glow-cyan" title="My Models Archive">💾</button>
+                <button id="btn-open-consult-hud" class="hud-icon-btn glow-amber" title="Consult / Model Interrogation">🔮</button>
                 <button id="btn-open-profile-hud" class="hud-icon-btn glow-cyan" title="Architect Profile"><span id="hud-avatar-icon">🤖</span></button>
                 <button id="btn-open-codex" class="hud-icon-btn glow-cyan" title="ML Codex / Journal">📖</button>
                 <button id="btn-daily-challenge" class="hud-icon-btn glow-amber" title="Daily Seeded Challenge">📅</button>
                 <button id="btn-toggle-drawer" class="hud-icon-btn glow-cyan" title="Inventory Drawer">🎒</button>
                 <button id="btn-data-inspector" class="hud-icon-btn glow-amber" title="Dataset Inspector">📊</button>
-                <button id="btn-leaderboard" class="hud-icon-btn glow-green" title="Leaderboards">🏆</button>
+                <button id="btn-leaderboard" class="hud-icon-btn glow-green" title="Leaderboards & Achievements">🏆</button>
                 <button id="btn-hud-recenter" class="hud-icon-btn" title="Recenter Camera">🎯</button>
                 <button id="btn-open-settings" class="hud-icon-btn" title="Settings">⚙️</button>
             </div>
@@ -570,22 +572,69 @@
             </div>
         </div>
 
-        <!-- Leaderboard Modal -->
+        <!-- Leaderboards & Achievements Modal -->
         <div id="leaderboard-modal" class="modal-overlay hidden">
-            <div class="glass-modal">
+            <div class="glass-modal" style="max-width:680px;">
                 <div class="modal-header">
-                    <h2>🏆 ASYNC GHOST & DAILY LEADERBOARD (HELD-OUT TEST SET)</h2>
+                    <h2>🏆 LEADERBOARDS & ACHIEVEMENTS</h2>
                     <button id="btn-close-leaderboard" class="close-btn">✕</button>
                 </div>
-                <div class="table-container">
-                    <table class="tree-split-table">
-                        <thead><tr><th>Rank</th><th>Model / Architect</th><th>Held-Out Accuracy</th><th>Seed</th></tr></thead>
-                        <tbody id="leaderboard-rows">
-                            <tr><td>🥇 #1</td><td class="cyan-text">You (5-Tree Bagging Party)</td><td class="green-text"><b>93.3%</b></td><td>#NEURO-8842</td></tr>
-                            <tr><td>🥈 #2</td><td class="cyan-text">Grandmaster Ada (Adam MLP)</td><td class="green-text"><b>90.0%</b></td><td>#NEURO-8842</td></tr>
-                            <tr><td>🥉 #3</td><td class="cyan-text">Ghost Overfitter-X (Depth=8)</td><td class="fail-text"><b>66.7%</b></td><td>#NEURO-8842</td></tr>
-                        </tbody>
-                    </table>
+                <!-- Tabs: Leaderboard vs Achievements -->
+                <div class="settings-tabs-bar" style="margin-top: 10px;">
+                    <button id="tab-btn-leaderboard" class="settings-tab-btn active">🏆 Ghost Leaderboard</button>
+                    <button id="tab-btn-achievements" class="settings-tab-btn glow-green">🏅 Architect Achievements</button>
+                </div>
+
+                <div id="pane-leaderboard-list">
+                    <div class="table-container" style="margin-top:12px;">
+                        <table class="tree-split-table">
+                            <thead><tr><th>Rank</th><th>Model / Architect</th><th>Held-Out Accuracy</th><th>Seed</th></tr></thead>
+                            <tbody id="leaderboard-rows">
+                                <tr><td>🥇 #1</td><td class="cyan-text">You (5-Tree Bagging Party)</td><td class="green-text"><b>93.3%</b></td><td>#NEURO-8842</td></tr>
+                                <tr><td>🥈 #2</td><td class="cyan-text">Grandmaster Ada (Adam MLP)</td><td class="green-text"><b>90.0%</b></td><td>#NEURO-8842</td></tr>
+                                <tr><td>🥉 #3</td><td class="cyan-text">Ghost Overfitter-X (Depth=8)</td><td class="fail-text"><b>66.7%</b></td><td>#NEURO-8842</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="pane-achievements-list" class="hidden" style="margin-top:12px;">
+                    <div id="achievements-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Objective Detail Modal -->
+        <div id="objective-modal" class="modal-overlay hidden">
+            <div class="glass-modal" style="max-width:540px;">
+                <div class="modal-header">
+                    <h2>🎯 CURRENT BIOME OBJECTIVE & CALIBRATION CRITERIA</h2>
+                    <button id="btn-close-objective" class="close-btn">✕</button>
+                </div>
+                <div style="padding:16px 0;">
+                    <div style="font-size:16px; font-weight:800; color:#38bdf8; margin-bottom:8px;" id="modal-objective-title">Biome 1: The Linear Steppes</div>
+                    <p style="font-size:13px; color:#cbd5e1; line-height:1.5; margin-bottom:14px;" id="modal-objective-desc">
+                        Harvest real numerical feature crystals ($X$) and target shards ($Y$) across the terrain. Approach the calibration lab station to train a linear model achieving the target mean squared error threshold.
+                    </p>
+                    <div class="profile-stats-grid" style="grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
+                        <div class="stat-card">
+                            <div class="stat-card-title">🎯 REQUIRED CRITERIA</div>
+                            <div class="stat-card-value text-amber" id="modal-objective-threshold">MSE ≤ 0.10</div>
+                            <div class="stat-card-sub">Validation Convergence</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-title">💎 CRYSTALS GATHERED</div>
+                            <div class="stat-card-value text-cyan" id="modal-objective-crystals">0 / 18</div>
+                            <div class="stat-card-sub" id="modal-objective-health">Dataset Health: 100%</div>
+                        </div>
+                    </div>
+                    <div class="stat-card" style="margin-bottom:14px;">
+                        <div class="stat-card-title">🎁 BIOME COMPLETION REWARD</div>
+                        <div style="font-size:14px; font-weight:700; color:#facc15; margin-top:4px;" id="modal-objective-reward">
+                            🔓 Unlock Biome 2 (Binary Marshlands) + Obsidian Gradient Skin
+                        </div>
+                    </div>
+                    <button id="btn-objective-go-to-lab" class="action-btn glow-cyan" style="width:100%;">⚡ Open Formula Terminal</button>
                 </div>
             </div>
         </div>
