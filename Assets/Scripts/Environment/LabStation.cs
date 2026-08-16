@@ -80,6 +80,15 @@ namespace NeuroArena.Environment
 
         private void Update()
         {
+            // Smoothly rotate floating hologram orbit ring
+            Transform ring = transform.Find("Lab_HoloRing");
+            if (ring != null)
+            {
+                ring.Rotate(Vector3.up, 30f * Time.deltaTime, Space.Self);
+                float ringBob = Mathf.Sin(Time.time * 1.8f) * 0.08f;
+                ring.localPosition = new Vector3(0f, 3.8f + ringBob, 0f);
+            }
+
             // Desktop hotkey fallback (E or Return) to enter terminal when in zone
             if (isPlayerInZone && (Input.GetKeyDown(KeyCode.E) || Input.GetKeyDown(KeyCode.Return)))
             {

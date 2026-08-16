@@ -33,68 +33,138 @@ namespace NeuroArena.Environment
             Transform propsRoot = new GameObject("LinearSteppes_Landmarks").transform;
             propsRoot.SetParent(transform);
 
+            StylizedBiomeTerrain terrain = FindFirstObjectByType<StylizedBiomeTerrain>();
+
             // 1. Lab Station Platform (Center-East)
-            CreateLabStationPlatform(propsRoot, new Vector3(14f, 0.2f, 14f));
+            Vector3 labPos = new Vector3(14f, 0f, 14f);
+            if (terrain != null) labPos.y = terrain.GetHeightAt(labPos.x, labPos.z);
+            CreateLabStationPlatform(propsRoot, labPos + Vector3.up * 0.2f);
 
             // 2. Ancient Monolith Obelisks
-            CreateMonolith(propsRoot, new Vector3(-18f, 0f, 12f), "Monolith_Alpha", new Color(0.2f, 0.8f, 1f));
-            CreateMonolith(propsRoot, new Vector3(20f, 0f, -16f), "Monolith_Beta", new Color(0.3f, 1f, 0.5f));
-            CreateMonolith(propsRoot, new Vector3(-12f, 0f, -20f), "Monolith_Gamma", new Color(1f, 0.6f, 0.2f));
+            Vector3 monoA = new Vector3(-18f, 0f, 12f);
+            if (terrain != null) monoA.y = terrain.GetHeightAt(monoA.x, monoA.z);
+            CreateMonolith(propsRoot, monoA, "Monolith_Alpha", new Color(0.2f, 0.8f, 1f));
+
+            Vector3 monoB = new Vector3(20f, 0f, -16f);
+            if (terrain != null) monoB.y = terrain.GetHeightAt(monoB.x, monoB.z);
+            CreateMonolith(propsRoot, monoB, "Monolith_Beta", new Color(0.3f, 1f, 0.5f));
+
+            Vector3 monoC = new Vector3(-12f, 0f, -20f);
+            if (terrain != null) monoC.y = terrain.GetHeightAt(monoC.x, monoC.z);
+            CreateMonolith(propsRoot, monoC, "Monolith_Gamma", new Color(1f, 0.6f, 0.2f));
 
             // 3. Energy Geysers
-            CreateEnergyGeyser(propsRoot, new Vector3(-6f, 0f, -14f), new Color(1f, 0.4f, 0.1f));
-            CreateEnergyGeyser(propsRoot, new Vector3(16f, 0f, -6f), new Color(0.2f, 0.9f, 0.9f));
+            Vector3 geyA = new Vector3(-6f, 0f, -14f);
+            if (terrain != null) geyA.y = terrain.GetHeightAt(geyA.x, geyA.z);
+            CreateEnergyGeyser(propsRoot, geyA, new Color(1f, 0.4f, 0.1f));
+
+            Vector3 geyB = new Vector3(16f, 0f, -6f);
+            if (terrain != null) geyB.y = terrain.GetHeightAt(geyB.x, geyB.z);
+            CreateEnergyGeyser(propsRoot, geyB, new Color(0.2f, 0.9f, 0.9f));
         }
 
         private void CreateLabStationPlatform(Transform parent, Vector3 position)
         {
-            GameObject platform = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            platform.name = "LabStation_Platform";
+            // 1. Octagonal Modeled Platform Base
+            GameObject platform = new GameObject("LabStation_Platform");
             platform.tag = "LabStation";
             platform.transform.SetParent(parent);
             platform.transform.position = position;
-            platform.transform.localScale = new Vector3(8f, 0.35f, 8f);
 
-            // Add LabStation trigger manager
+            MeshFilter mf = platform.AddComponent<MeshFilter>();
+            MeshRenderer mr = platform.AddComponent<MeshRenderer>();
+            MeshCollider mc = platform.AddComponent<MeshCollider>();
+
+            Mesh platMesh = StylizedLowPolyMeshes.CreateOctagonalPlatformMesh(radius: 5.0f, height: 0.45f);
+            mf.sharedMesh = platMesh;
+            mc.sharedMesh = platMesh;
+            mr.sharedMaterial = StylizedMaterialFactory.GetStylizedPropMaterial(
+                "LabPlatformOctagon", new Color(0.14f, 0.18f, 0.28f), metallic: 0.70f, smoothness: 0.85f);
+
+            // Add LabStation trigger zone manager
             LabStation labStation = platform.AddComponent<LabStation>();
 
-            Renderer rend = platform.GetComponent<Renderer>();
-            if (rend != null)
+            // 2. Central Interactive Terminal Monolith
+            GameObject console = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            console.name = "FormulaTerminal_Console";
+            console.transform.SetParent(platform.transform);
+            console.transform.localPosition = new Vector3(0f, 1.35f, 0f);
+            console.transform.localScale = new Vector3(1.4f, 2.5f, 0.9f);
+
+            Renderer consoleRend = console.GetComponent<Renderer>();
+            if (consoleRend != null)
             {
-                Material mat = new Material(Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard"));
-                mat.color = new Color(0.12f, 0.16f, 0.24f);
-                rend.material = mat;
+                consoleRend.sharedMaterial = StylizedMaterialFactory.GetStylizedPropMaterial(
+                    "ConsoleChassis", new Color(0.12f, 0.15f, 0.22f), metallic: 0.80f, smoothness: 0.88f);
             }
 
-            // Central Terminal Pillar
-            GameObject terminal = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            terminal.name = "FormulaTerminal_Pillar";
-            terminal.transform.SetParent(platform.transform);
-            terminal.transform.localPosition = new Vector3(0f, 2.5f, 0f);
-            terminal.transform.localScale = new Vector3(0.25f, 5f, 0.25f);
+            // Inclined Interactive Holographic Touchscreen Face
+            GameObject screen = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            screen.name = "Terminal_ScreenFace";
+            screen.transform.SetParent(console.transform);
+            screen.transform.localPosition = new Vector3(0f, 0.35f, 0.52f);
+            screen.transform.localRotation = Quaternion.Euler(-18f, 0f, 0f);
+            screen.transform.localScale = new Vector3(0.85f, 0.65f, 1f);
+            Destroy(screen.GetComponent<Collider>());
 
-            Renderer termRend = terminal.GetComponent<Renderer>();
-            if (termRend != null)
+            Renderer screenRend = screen.GetComponent<Renderer>();
+            if (screenRend != null)
             {
-                Material termMat = new Material(Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard"));
-                termMat.color = new Color(0.1f, 0.85f, 0.95f);
-                termRend.material = termMat;
+                screenRend.sharedMaterial = StylizedMaterialFactory.GetStylizedPropMaterial(
+                    "TerminalScreen", new Color(0.08f, 0.85f, 0.98f), metallic: 0.1f, smoothness: 0.98f,
+                    emission: new Color(0.12f, 0.90f, 1.0f), emissionIntensity: 2.0f);
             }
 
-            // Hologram Ring
+            // 3. Dual Flanking Data Resonator Pillars
+            CreateDataPillar(platform.transform, new Vector3(-2.8f, 1.8f, 0f), "DataPillar_Left");
+            CreateDataPillar(platform.transform, new Vector3(2.8f, 1.8f, 0f), "DataPillar_Right");
+
+            // 4. Floating Hologram Orbit Ring
             GameObject ring = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             ring.name = "Lab_HoloRing";
             ring.transform.SetParent(platform.transform);
-            ring.transform.localPosition = new Vector3(0f, 5.2f, 0f);
-            ring.transform.localScale = new Vector3(0.6f, 0.05f, 0.6f);
+            ring.transform.localPosition = new Vector3(0f, 3.8f, 0f);
+            ring.transform.localScale = new Vector3(2.6f, 0.06f, 2.6f);
             Destroy(ring.GetComponent<Collider>());
 
             Renderer ringRend = ring.GetComponent<Renderer>();
             if (ringRend != null)
             {
-                Material ringMat = new Material(Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard"));
-                ringMat.color = new Color(0.2f, 1f, 0.7f, 0.6f);
-                ringRend.material = ringMat;
+                ringRend.sharedMaterial = StylizedMaterialFactory.GetStylizedPropMaterial(
+                    "HoloRing", new Color(0.15f, 0.95f, 0.75f), metallic: 0.15f, smoothness: 0.95f,
+                    emission: new Color(0.20f, 1.0f, 0.80f), emissionIntensity: 2.4f);
+            }
+        }
+
+        private void CreateDataPillar(Transform parent, Vector3 localPos, string name)
+        {
+            GameObject pillar = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            pillar.name = name;
+            pillar.transform.SetParent(parent);
+            pillar.transform.localPosition = localPos;
+            pillar.transform.localScale = new Vector3(0.65f, 3.4f, 0.65f);
+
+            Renderer r = pillar.GetComponent<Renderer>();
+            if (r != null)
+            {
+                r.sharedMaterial = StylizedMaterialFactory.GetStylizedPropMaterial(
+                    "DataPillarPBR", new Color(0.16f, 0.20f, 0.30f), metallic: 0.60f, smoothness: 0.75f);
+            }
+
+            // Vertical glowing energy slit
+            GameObject slit = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            slit.name = "EnergySlit";
+            slit.transform.SetParent(pillar.transform);
+            slit.transform.localPosition = new Vector3(0f, 0f, 0.52f);
+            slit.transform.localScale = new Vector3(0.25f, 0.85f, 0.1f);
+            Destroy(slit.GetComponent<Collider>());
+
+            Renderer slitRend = slit.GetComponent<Renderer>();
+            if (slitRend != null)
+            {
+                slitRend.sharedMaterial = StylizedMaterialFactory.GetStylizedPropMaterial(
+                    "SlitGlow", new Color(0.1f, 0.9f, 1.0f), metallic: 0.1f, smoothness: 0.95f,
+                    emission: new Color(0.1f, 0.9f, 1.0f), emissionIntensity: 2.2f);
             }
         }
 
@@ -110,9 +180,8 @@ namespace NeuroArena.Environment
             Renderer rend = monolith.GetComponent<Renderer>();
             if (rend != null)
             {
-                Material mat = new Material(Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard"));
-                mat.color = new Color(0.18f, 0.20f, 0.28f);
-                rend.material = mat;
+                rend.sharedMaterial = StylizedMaterialFactory.GetStylizedPropMaterial(
+                    "MonolithBase", new Color(0.16f, 0.18f, 0.26f), metallic: 0.35f, smoothness: 0.55f);
             }
 
             // Glowing Rune core
@@ -126,9 +195,9 @@ namespace NeuroArena.Environment
             Renderer coreRend = core.GetComponent<Renderer>();
             if (coreRend != null)
             {
-                Material coreMat = new Material(Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard"));
-                coreMat.color = glow;
-                coreRend.material = coreMat;
+                coreRend.sharedMaterial = StylizedMaterialFactory.GetStylizedPropMaterial(
+                    $"MonolithRune_{name}", glow, metallic: 0.15f, smoothness: 0.92f,
+                    emission: glow, emissionIntensity: 2.0f);
             }
         }
 
@@ -143,9 +212,9 @@ namespace NeuroArena.Environment
             Renderer rend = geyser.GetComponent<Renderer>();
             if (rend != null)
             {
-                Material mat = new Material(Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard"));
-                mat.color = new Color(0.15f, 0.15f, 0.2f);
-                rend.material = mat;
+                rend.sharedMaterial = StylizedMaterialFactory.GetStylizedPropMaterial(
+                    "GeyserRing", new Color(0.18f, 0.18f, 0.24f), metallic: 0.45f, smoothness: 0.65f,
+                    emission: glow, emissionIntensity: 1.4f);
             }
         }
 
@@ -153,6 +222,8 @@ namespace NeuroArena.Environment
         {
             Transform collectiblesRoot = new GameObject("LinearSteppes_Collectibles").transform;
             collectiblesRoot.SetParent(transform);
+
+            StylizedBiomeTerrain terrain = FindFirstObjectByType<StylizedBiomeTerrain>();
 
             for (int i = 0; i < collectibleCount; i++)
             {
@@ -166,7 +237,10 @@ namespace NeuroArena.Environment
                 // Random world spawn position around the terrain
                 float angle = Random.Range(0f, Mathf.PI * 2f);
                 float radius = Random.Range(6f, 32f);
-                Vector3 worldPos = new Vector3(Mathf.Cos(angle) * radius, 1.2f, Mathf.Sin(angle) * radius);
+                float wx = Mathf.Cos(angle) * radius;
+                float wz = Mathf.Sin(angle) * radius;
+                float wy = (terrain != null) ? terrain.GetHeightAt(wx, wz) + 1.2f : 1.2f;
+                Vector3 worldPos = new Vector3(wx, wy, wz);
 
                 // Alternate between Feature Crystals, Target Shards, Paired Samples, and Hyperparameters
                 MLResourceType type;
