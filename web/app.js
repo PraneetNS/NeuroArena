@@ -2399,6 +2399,202 @@ function spawnSeededCollectibles() {
     }
 }
 
+// --- 9.9 REAL-TIME COLYSEUS MULTIPLAYER RELAY MANAGER ---
+const ColyseusNetwork = {
+    serverUrl: "ws://localhost:2567",
+    roomName: "arena_room",
+    ws: null,
+    isConnected: false,
+    sendTickRateHz: 15,
+    lastSendTime: 0,
+    remoteGhosts: new Map(), // sessionId -> { mesh, badge, targetPos, targetRotY, currentBiome, activityState, name, build }
+
+    connect() {
+        if (typeof WebSocket === "undefined") return;
+        if (this.ws && (this.ws.readyState === WebSocket.CONNECTING || this.ws.readyState === WebSocket.OPEN)) return;
+        try {
+            this.ws = new WebSocket(`${this.serverUrl}/arena_room`);
+            
+            this.ws.onopen = () => {
+                this.isConnected = true;
+                console.log(`[ColyseusNetwork] Connected to multiplayer relay room: ${this.roomName} at ${this.serverUrl}`);
+                
+                // Join Handshake
+                const profile = (typeof ProfileSlots !== "undefined" && ProfileSlots[activeSaveSlot]) ? ProfileSlots[activeSaveSlot] : {};
+                this.send("join", {
+                    name: profile.name || "Ada-Architect",
+                    characterBuild: profile.characterBuild || "explorer",
+                    biome: GameState.currentBiome || 0,
+                    x: playerPos.x,
+                    y: playerPos.y,
+                    z: playerPos.z
+                });
+            };
+
+            this.ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    this.handleMessage(data);
+                } catch (e) { }
+            };
+
+            this.ws.onerror = () => {
+                // Graceful fallback for offline single-player
+                this.isConnected = false;
+            };
+
+            this.ws.onclose = () => {
+                this.isConnected = false;
+                this.clearGhosts();
+            };
+        } catch (e) {
+            this.isConnected = false;
+        }
+    },
+
+    send(type, payload) {
+        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+            this.ws.send(JSON.stringify({ type, ...payload }));
+        }
+    },
+
+    update(now, deltaTime) {
+        if (!this.isConnected) return;
+
+        // 1. Send local player transform at fixed 15Hz tickrate (every ~66ms, NOT every frame)
+        if (now - this.lastSendTime >= (1000 / this.sendTickRateHz)) {
+            this.lastSendTime = now;
+            this.send("transform", {
+                x: playerPos.x,
+                y: playerPos.y,
+                z: playerPos.z,
+                rotationY: playerMesh ? playerMesh.rotation.y : 0,
+                biome: GameState.currentBiome || 0,
+                activityState: (typeof playerAnimState !== "undefined") ? playerAnimState.state : "idle"
+            });
+        }
+
+        // 2. Client-Side Entity Interpolation for all Remote Player Ghosts
+        this.remoteGhosts.forEach((ghost) => {
+            if (ghost.mesh) {
+                // Smooth position lerp
+                ghost.mesh.position.lerp(ghost.targetPos, Math.min(1.0, deltaTime * 12.0));
+                
+                // Smooth rotation slerp / lerp
+                const diff = ghost.targetRotY - ghost.mesh.rotation.y;
+                ghost.mesh.rotation.y += diff * Math.min(1.0, deltaTime * 12.0);
+
+                // Badge billboard update
+                if (ghost.badge) {
+                    ghost.badge.position.set(ghost.mesh.position.x, ghost.mesh.position.y + 1.25, ghost.mesh.position.z);
+                    if (camera) ghost.badge.quaternion.copy(camera.quaternion);
+                }
+
+                // Visibility by biome realm filter
+                const isSameBiome = ghost.currentBiome === (GameState.currentBiome || 0);
+                ghost.mesh.visible = isSameBiome;
+                if (ghost.badge) ghost.badge.visible = isSameBiome;
+            }
+        });
+    },
+
+    handleMessage(msg) {
+        if (msg.type === "state_update" && Array.isArray(msg.players)) {
+            msg.players.forEach(p => {
+                if (p.id === this.ws?.sessionId) return;
+                this.updateOrSpawnGhost(p);
+            });
+        } else if (msg.type === "player_joined") {
+            this.updateOrSpawnGhost(msg.player);
+        } else if (msg.type === "player_left") {
+            this.removeGhost(msg.id);
+        } else if (msg.type === "player_transform") {
+            this.updateGhostTransform(msg.id, msg);
+        }
+    },
+
+    updateOrSpawnGhost(data) {
+        if (!data || !data.id || typeof scene === "undefined" || !scene) return;
+        if (this.remoteGhosts.has(data.id)) {
+            this.updateGhostTransform(data.id, data);
+            return;
+        }
+
+        // Spawn Lightweight Translucent Holographic Ghost Avatar
+        const build = data.characterBuild || "explorer";
+        const ghostColor = build === "scholar" ? "#c084fc" : (build === "engineer" ? "#34d399" : "#38bdf8");
+        const ghostHex = build === "scholar" ? 0xc084fc : (build === "engineer" ? 0x34d399 : 0x38bdf8);
+
+        const wScale = build === "scholar" ? 0.7 : (build === "engineer" ? 0.9 : 1.0);
+        const hScale = build === "scholar" ? 1.2 : (build === "engineer" ? 0.85 : 1.0);
+
+        const ghostMesh = new THREE.Mesh(
+            new THREE.CapsuleGeometry(0.35 * wScale, 0.9 * hScale, 8, 16),
+            new THREE.MeshStandardMaterial({
+                color: ghostHex,
+                emissive: ghostHex,
+                emissiveIntensity: 0.8,
+                transparent: true,
+                opacity: 0.65,
+                roughness: 0.3
+            })
+        );
+        const initPos = new THREE.Vector3(data.x || 0, data.y || 1.2, data.z || 0);
+        ghostMesh.position.copy(initPos);
+        scene.add(ghostMesh);
+
+        // Nameplate billboard badge
+        const icon = build === "scholar" ? "📜" : (build === "engineer" ? "⚙️" : "🧭");
+        const badge = createFloatingValueBadge(`${icon} ${data.name || "Architect"}`, `[${build.toUpperCase()}]`, ghostColor, "rgba(15,23,42,0.8)");
+        badge.position.set(initPos.x, initPos.y + 1.25, initPos.z);
+        scene.add(badge);
+
+        this.remoteGhosts.set(data.id, {
+            id: data.id,
+            name: data.name || "Architect",
+            characterBuild: build,
+            currentBiome: data.biome || 0,
+            activityState: data.activityState || "idle",
+            mesh: ghostMesh,
+            badge: badge,
+            targetPos: initPos.clone(),
+            targetRotY: data.rotationY || 0
+        });
+    },
+
+    updateGhostTransform(id, data) {
+        const ghost = this.remoteGhosts.get(id);
+        if (!ghost) return;
+        if (typeof data.x === "number" && typeof data.z === "number") {
+            ghost.targetPos.set(data.x, data.y || 1.2, data.z);
+            if (ghost.mesh && ghost.mesh.position.distanceTo(ghost.targetPos) > 8.0) {
+                // Snap / teleport if distance is too far (e.g. fast-travel warp)
+                ghost.mesh.position.copy(ghost.targetPos);
+            }
+        }
+        if (typeof data.rotationY === "number") ghost.targetRotY = data.rotationY;
+        if (typeof data.biome === "number") ghost.currentBiome = data.biome;
+        if (data.activityState) ghost.activityState = data.activityState;
+    },
+
+    removeGhost(id) {
+        const ghost = this.remoteGhosts.get(id);
+        if (ghost) {
+            if (ghost.mesh && scene) scene.remove(ghost.mesh);
+            if (ghost.badge && scene) scene.remove(ghost.badge);
+            this.remoteGhosts.delete(id);
+        }
+    },
+
+    clearGhosts() {
+        this.remoteGhosts.forEach(g => {
+            if (g.mesh && scene) scene.remove(g.mesh);
+            if (g.badge && scene) scene.remove(g.badge);
+        });
+        this.remoteGhosts.clear();
+    }
+};
+
 // --- 10. INPUT & CONTROLS ---
 function setupInputListeners() {
     window.addEventListener("keydown", (e) => {
@@ -2785,6 +2981,8 @@ function startBiomeLoadingSequence(biomeIndex, onComplete) {
             requestAnimationFrame(step);
         } else {
             if (loader) loader.classList.add("hidden");
+            ColyseusNetwork.connect();
+            ColyseusNetwork.send("biome", { biome: biomeIndex });
             if (typeof onComplete === "function") onComplete();
         }
     }
@@ -4093,6 +4291,7 @@ function animate(now) {
     }
 
     updateGame(deltaTime);
+    ColyseusNetwork.update(now, deltaTime);
     renderer.render(scene, camera);
 }
 
