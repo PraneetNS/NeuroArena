@@ -1660,8 +1660,12 @@ function init3DWorld() {
     createBiomePlatforms();
     spawnSeededCollectibles();
     createPlayerAvatar();
-    createMascotCompanion();
+    createAdaCompanion();
+    createArchivistGolem();
+    createOptimizerSmiths();
+    createGhostRivals();
     initParticleShockwave();
+    applyBiomeVisualTheme(GameState.currentBiome || 0);
 
     window.addEventListener("resize", onWindowResize);
     setupInputListeners();
@@ -1996,17 +2000,186 @@ function updateCharacterAnimation(dt, speed) {
     }
 }
 
-function createMascotCompanion() {
-    mascotMesh = new THREE.Group();
-    const sphere = new THREE.Mesh(new THREE.SphereGeometry(0.28, 16, 16), new THREE.MeshStandardMaterial({ color: 0x0284c7, emissive: 0x38bdf8 }));
-    mascotMesh.add(sphere);
+// --- ML-THEMED NAMED NPCS & COMPANIONS (SYNTHESIZED ART LANGUAGE) ---
+let adaDroneGroup = null;
+let adaEyeMesh = null;
+let archivistGolemGroup = null;
+let archivistHeadRune = null;
+let optimizerSmithObjects = [];
+let ghostRivalObjects = [];
 
-    const halo = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.04, 8, 24), new THREE.MeshStandardMaterial({ color: 0xfacc15, emissive: 0xfacc15 }));
+function createAdaCompanion() {
+    adaDroneGroup = new THREE.Group();
+    mascotMesh = adaDroneGroup; // Link to mascot system
+
+    // 1. Outer Truncated Polyhedron Shell
+    const shellGeo = new THREE.DodecahedronGeometry(0.32, 0);
+    const shellMat = new THREE.MeshStandardMaterial({
+        color: 0x0f172a,
+        roughness: 0.35,
+        metalness: 0.75,
+        flatShading: true
+    });
+    const shell = new THREE.Mesh(shellGeo, shellMat);
+    adaDroneGroup.add(shell);
+
+    // 2. Central Cycloptic Aperture Eye
+    const eyeGeo = new THREE.OctahedronGeometry(0.14, 0);
+    const eyeMat = new THREE.MeshStandardMaterial({
+        color: 0x22d3ee,
+        emissive: 0x06b6d4,
+        emissiveIntensity: 2.5,
+        roughness: 0.1
+    });
+    adaEyeMesh = new THREE.Mesh(eyeGeo, eyeMat);
+    adaEyeMesh.position.set(0, 0, 0.22);
+    adaDroneGroup.add(adaEyeMesh);
+
+    // 3. Orbiting Gyro Halo Ring
+    const haloGeo = new THREE.TorusGeometry(0.48, 0.035, 8, 24);
+    const haloMat = new THREE.MeshStandardMaterial({
+        color: 0xfacc15,
+        emissive: 0xf59e0b,
+        emissiveIntensity: 1.8,
+        roughness: 0.2
+    });
+    const halo = new THREE.Mesh(haloGeo, haloMat);
     halo.rotateX(Math.PI / 2);
-    mascotMesh.add(halo);
+    adaDroneGroup.add(halo);
 
-    mascotMesh.position.set(playerPos.x + 1.2, playerPos.y + 1.2, playerPos.z - 0.8);
-    scene.add(mascotMesh);
+    adaDroneGroup.position.set(playerPos.x + 1.2, playerPos.y + 1.35, playerPos.z - 0.9);
+    scene.add(adaDroneGroup);
+}
+
+function createArchivistGolem() {
+    archivistGolemGroup = new THREE.Group();
+    archivistGolemGroup.position.set(18, 0.2, 18); // Stationed at Codex Library
+
+    // Stacked Stone Manuscript Body (3 offset layers)
+    const tomeMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.85, metalness: 0.2, flatShading: true });
+    const spineMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, emissive: 0x0369a1, emissiveIntensity: 1.2 });
+
+    [
+        { w: 1.4, h: 0.45, d: 1.1, y: 0.25, rot: 0 },
+        { w: 1.2, h: 0.40, d: 0.95, y: 0.70, rot: 0.25 },
+        { w: 1.0, h: 0.35, d: 0.80, y: 1.10, rot: -0.18 }
+    ].forEach(layer => {
+        const block = new THREE.Mesh(new THREE.BoxGeometry(layer.w, layer.h, layer.d), tomeMat);
+        block.position.y = layer.y;
+        block.rotation.y = layer.rot;
+        archivistGolemGroup.add(block);
+
+        const spine = new THREE.Mesh(new THREE.BoxGeometry(layer.w * 0.15, layer.h * 0.9, layer.d * 1.02), spineMat);
+        spine.position.set(-layer.w * 0.45, layer.y, 0);
+        spine.rotation.y = layer.rot;
+        archivistGolemGroup.add(spine);
+    });
+
+    // Floating Rotating Head Tablet
+    const headGeo = createFacetedRuneGeometry();
+    const headMat = new THREE.MeshStandardMaterial({
+        color: 0x38bdf8,
+        emissive: 0x0284c7,
+        emissiveIntensity: 2.2,
+        roughness: 0.25
+    });
+    archivistHeadRune = new THREE.Mesh(headGeo, headMat);
+    archivistHeadRune.position.set(0, 1.75, 0);
+    archivistHeadRune.scale.set(0.65, 0.65, 0.65);
+    archivistGolemGroup.add(archivistHeadRune);
+
+    scene.add(archivistGolemGroup);
+}
+
+function createOptimizerSmiths() {
+    optimizerSmithObjects = [];
+    const smithConfigs = [
+        { name: "SGD", col: 0xf97316, pos: new THREE.Vector3(8, 0.4, 22), math: "w_{t+1} = w_t - η g̃_t" },
+        { name: "Momentum", col: 0x38bdf8, pos: new THREE.Vector3(12, 0.4, 25), math: "v_{t+1} = γ v_t + η g_t" },
+        { name: "RMSprop", col: 0xc084fc, pos: new THREE.Vector3(16, 0.4, 25), math: "E[g²]_t = 0.9 E[g²]_{t-1} + 0.1 g_t²" },
+        { name: "Adam", col: 0x10b981, pos: new THREE.Vector3(20, 0.4, 22), math: "m̂_t / (√v̂_t + ε)" }
+    ];
+
+    smithConfigs.forEach((cfg, idx) => {
+        const root = new THREE.Group();
+        root.position.copy(cfg.pos);
+
+        let geom;
+        if (cfg.name === "SGD") geom = createFacetedShardGeometry(0.42);
+        else if (cfg.name === "Momentum") geom = new THREE.DodecahedronGeometry(0.48, 0);
+        else if (cfg.name === "RMSprop") geom = createFacetedCrystalGeometry(0.38, 1.2);
+        else geom = new THREE.CylinderGeometry(0.45, 0.45, 0.35, 8);
+
+        const mat = new THREE.MeshStandardMaterial({
+            color: cfg.col,
+            emissive: cfg.col,
+            emissiveIntensity: 1.8,
+            roughness: 0.25,
+            flatShading: true
+        });
+        const mesh = new THREE.Mesh(geom, mat);
+        root.add(mesh);
+
+        // Pedestal
+        const ped = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.75, 0.25, 8), new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.5 }));
+        ped.position.y = -0.3;
+        root.add(ped);
+
+        scene.add(root);
+
+        optimizerSmithObjects.push({
+            name: cfg.name,
+            root: root,
+            mesh: mesh,
+            homePos: cfg.pos.clone(),
+            momentumVal: 0,
+            phase: idx * 1.5
+        });
+    });
+}
+
+function createGhostRivals() {
+    ghostRivalObjects = [];
+    const positions = [
+        new THREE.Vector3(25, 0.3, 8),
+        new THREE.Vector3(-18, 0.3, 24)
+    ];
+
+    positions.forEach((pos, idx) => {
+        const ghost = new THREE.Mesh(createFacetedRuneGeometry(), new THREE.MeshStandardMaterial({
+            color: 0x22d3ee,
+            emissive: 0x0891b2,
+            emissiveIntensity: 1.5,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.65
+        }));
+        ghost.position.copy(pos);
+        scene.add(ghost);
+        ghostRivalObjects.push(ghost);
+    });
+}
+
+// --- STAGE 55: COHESIVE 6-BIOME VISUAL PALETTE PASS ---
+function applyBiomeVisualTheme(biomeIndex) {
+    const biomePalettes = [
+        { name: "Linear Steppes", bg: 0x0f141c, fog: 0x0f141c, light: 0xffedd5, hemi: 0xd97706, eye: 0xfacc15 },
+        { name: "Binary Marshlands", bg: 0x041a16, fog: 0x041a16, light: 0xa7f3d0, hemi: 0x059669, eye: 0x10b981 },
+        { name: "Variance Tundra", bg: 0x081726, fog: 0x081726, light: 0xe0f2fe, hemi: 0x0284c7, eye: 0x38bdf8 },
+        { name: "Branching Canopy", bg: 0x0a1c10, fog: 0x0a1c10, light: 0xfef08a, hemi: 0x15803d, eye: 0x22c55e },
+        { name: "Deep Synapse Citadel", bg: 0x13091f, fog: 0x13091f, light: 0xf5d0fe, hemi: 0x7e22ce, eye: 0xc084fc },
+        { name: "Semantic Expanse", bg: 0x0a0e1a, fog: 0x0a0e1a, light: 0xffffff, hemi: 0x4338ca, eye: 0x6366f1 }
+    ];
+
+    const p = biomePalettes[biomeIndex] || biomePalettes[0];
+    if (scene) {
+        scene.background.setHex(p.bg);
+        if (scene.fog) scene.fog.color.setHex(p.fog);
+    }
+    if (adaEyeMesh && adaEyeMesh.material) {
+        adaEyeMesh.material.color.setHex(p.eye);
+        adaEyeMesh.material.emissive.setHex(p.eye);
+    }
 }
 
 let labHoloRingMesh = null;
@@ -2281,14 +2454,61 @@ function updateGame(deltaTime) {
     playerMesh.position.copy(playerPos);
     updateCharacterAnimation(deltaTime, speed);
 
-    if (mascotMesh) {
-        const mascotTarget = new THREE.Vector3(playerPos.x + 1.2, playerPos.y + 1.2 + Math.sin(performance.now() * 0.003) * 0.15, playerPos.z - 0.8);
-        mascotMesh.position.lerp(mascotTarget, deltaTime * 5.0);
-        mascotMesh.rotation.y += deltaTime * 1.2;
+    const nowTime = performance.now() * 0.001;
+
+    // 1. ADA Floating & Eye Pulse
+    if (adaDroneGroup) {
+        const adaTarget = new THREE.Vector3(playerPos.x + 1.2, playerPos.y + 1.35 + Math.sin(nowTime * 2.5) * 0.12, playerPos.z - 0.9);
+        adaDroneGroup.position.lerp(adaTarget, deltaTime * 5.0);
+        adaDroneGroup.rotation.y += deltaTime * 0.8;
+        if (adaEyeMesh) {
+            const eyePulse = 1.0 + Math.sin(nowTime * 4.0) * 0.15;
+            adaEyeMesh.scale.set(eyePulse, eyePulse, eyePulse);
+        }
     }
 
-    camera.position.set(playerPos.x + Math.sin(cameraOrbit.yaw) * Math.cos(cameraOrbit.pitch) * cameraOrbit.distance, playerPos.y + Math.sin(cameraOrbit.pitch) * cameraOrbit.distance + 1.2, playerPos.z + Math.cos(cameraOrbit.yaw) * Math.cos(cameraOrbit.pitch) * cameraOrbit.distance);
-    camera.lookAt(playerPos.x, playerPos.y + 1.2, playerPos.z);
+    // 2. The Archivist Floating Head Rune
+    if (archivistHeadRune) {
+        archivistHeadRune.position.y = 1.75 + Math.sin(nowTime * 1.8) * 0.06;
+        archivistHeadRune.rotation.y += deltaTime * 0.4;
+    }
+
+    // 3. Optimizer Smiths Math-Based Kinematics
+    optimizerSmithObjects.forEach(s => {
+        if (!s.root) return;
+        if (s.name === "SGD") {
+            // High stochastic variance: sudden zig-zag jumps & overshoot hops
+            const jX = (Math.sin(nowTime * 14.0 + s.phase) * 0.35) + (Math.sin(nowTime * 23.0) * 0.15);
+            const jZ = (Math.cos(nowTime * 16.0 + s.phase) * 0.35);
+            const hop = Math.abs(Math.sin(nowTime * 11.0)) * 0.25;
+            s.root.position.set(s.homePos.x + jX, s.homePos.y + hop, s.homePos.z + jZ);
+            s.mesh.rotation.y += deltaTime * 4.5;
+        } else if (s.name === "Momentum") {
+            // Heavy rolling momentum with inertia follow-through
+            s.momentumVal += (Math.sin(nowTime * 2.2) * 1.2 - s.momentumVal) * deltaTime * 1.8;
+            s.root.position.set(s.homePos.x + s.momentumVal, s.homePos.y + Math.abs(Math.sin(nowTime * 2.2)) * 0.08, s.homePos.z);
+            s.mesh.rotation.z = -s.momentumVal * 1.5;
+        } else if (s.name === "RMSprop") {
+            // Adaptive oscillation scaling stride inversely with gradient
+            const stepY = Math.sin(nowTime * 4.5) * 0.35;
+            const scaleInv = 1.0 / (1.0 + Math.abs(stepY) * 2.5);
+            s.root.position.set(s.homePos.x + Math.cos(nowTime * 2.5) * scaleInv * 0.85, s.homePos.y + Math.abs(stepY), s.homePos.z);
+            s.mesh.rotation.y += deltaTime * 1.2;
+        } else { // Adam
+            // Dual-moment exponential moving average: hyper-smooth adaptive drift
+            const smX = Math.sin(nowTime * 1.8) * 0.85;
+            const smZ = Math.cos(nowTime * 1.8) * 0.55;
+            const flY = Math.sin(nowTime * 2.8) * 0.08;
+            s.root.position.set(s.homePos.x + smX, s.homePos.y + flY, s.homePos.z + smZ);
+            s.mesh.rotation.y += deltaTime * 0.75;
+        }
+    });
+
+    // 4. Ghost Rivals Wireframe Rotation
+    ghostRivalObjects.forEach((g, idx) => {
+        g.rotation.y += deltaTime * 0.8;
+        g.position.y = 0.3 + Math.sin(nowTime * 2.0 + idx) * 0.05;
+    });
 
     if (labHoloRingMesh) {
         labHoloRingMesh.rotation.z += deltaTime * 0.6;
