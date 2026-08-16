@@ -155,7 +155,7 @@ window.addEventListener("unhandledrejection", (event) => {
 
 function handleGlobalError(message, stack) {
     console.error("[GlobalErrorBoundary] Caught fatal unhandled error:", message, stack);
-    
+
     // Emergency Backup Save
     try {
         if (typeof saveProfileSlots === "function") saveProfileSlots();
@@ -165,7 +165,7 @@ function handleGlobalError(message, stack) {
             error: message,
             stack: stack
         }));
-    } catch(e) {}
+    } catch (e) { }
 
     const errModal = document.getElementById("error-boundary-modal");
     if (errModal) {
@@ -407,8 +407,8 @@ function computeDatasetHealth(ds, minX, maxX, stdX, c0, c1, hasClassification) {
     const grade = totalScore >= 85 ? "EXCELLENT" : (totalScore >= 70 ? "GOOD" : (totalScore >= 50 ? "FAIR" : "CRITICAL / SKEWED"));
     const defectSummary = defects.length > 0 ? defects.join(" • ") : "Clean & Balanced Empirical Dataset";
     const forecast = totalScore >= 80 ? "High Generalization (>90% test accuracy expected)" :
-                     (totalScore >= 55 ? "Moderate Generalization (~75-85% test accuracy expected)" :
-                     "Severe Generalization Failure Predicted on Held-Out Test Set (<65%)");
+        (totalScore >= 55 ? "Moderate Generalization (~75-85% test accuracy expected)" :
+            "Severe Generalization Failure Predicted on Held-Out Test Set (<65%)");
 
     return {
         score: totalScore,
@@ -1660,136 +1660,28 @@ function init3DWorld() {
     createBiomePlatforms();
     spawnSeededCollectibles();
     createPlayerAvatar();
-    createAdaCompanion();
-    createArchivistGolem();
-    createOptimizerSmiths();
-    createGhostRivals();
+    createMascotCompanion();
     initParticleShockwave();
-    applyBiomeVisualTheme(GameState.currentBiome || 0);
 
     window.addEventListener("resize", onWindowResize);
     setupInputListeners();
 }
 
 function createTerrain() {
-    const geo = new THREE.PlaneGeometry(180, 180, 48, 48);
+    const geo = new THREE.PlaneGeometry(180, 180, 64, 64);
     geo.rotateX(-Math.PI / 2);
     const pos = geo.attributes.position;
-    const colors = [];
-    const color = new THREE.Color();
-
     for (let i = 0; i < pos.count; i++) {
         const x = pos.getX(i), z = pos.getZ(i);
         const dist = Math.sqrt(x * x + z * z);
-        let y = (Math.sin(x * 0.07) * Math.cos(z * 0.07) * 3.2 + Math.sin(x * 0.03 + z * 0.03) * 1.5);
-        if (dist > 25) y = Math.round(y / 0.8) * 0.8; // Terraced steps
-        if (dist < 12) y *= (dist / 12); // Flat center spawn
-
-        // Boundary ridges
-        if (Math.abs(x) > 75 || Math.abs(z) > 75) y += 6.5;
-
+        const y = (Math.sin(x * 0.08) * Math.cos(z * 0.08) * 2.8) * Math.min(Math.max((dist - 10) / 25, 0), 1);
         pos.setY(i, y);
-
-        // Vertex coloring (flats vs slope cliffs)
-        if (y > 2.5) color.setHex(0x78350f); // Earth Ochre Cliff
-        else color.setHex(0x16242c); // Dark Biome Ground
-        colors.push(color.r, color.g, color.b);
     }
-    geo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
     geo.computeVertexNormals();
-
-    const mat = new THREE.MeshStandardMaterial({
-        vertexColors: true,
-        roughness: 0.88,
-        metalness: 0.15,
-        flatShading: true
-    });
-    const terrainMesh = new THREE.Mesh(geo, mat);
-    terrainMesh.receiveShadow = true;
-    scene.add(terrainMesh);
-
-    const grid = new THREE.GridHelper(180, 45, 0xf59e0b, 0x1e293b);
+    scene.add(new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: 0x162022, roughness: 0.85 })));
+    const grid = new THREE.GridHelper(180, 45, 0x22d3ee, 0x1e293b);
     grid.position.y = 0.05;
     scene.add(grid);
-
-    scatterBiomeNatureProps();
-}
-
-// --- LOW-POLY FACETED GEOMETRY BUILDERS (UNIFIED ART PIPELINE) ---
-function createFacetedCrystalGeometry(radius = 0.45, height = 1.35) {
-    const geo = new THREE.CylinderGeometry(0, radius, height * 0.5, 6, 1);
-    const geoBtm = new THREE.CylinderGeometry(radius, 0, height * 0.5, 6, 1);
-    geoBtm.translate(0, -height * 0.5, 0);
-
-    const merged = new THREE.BufferGeometry();
-    // Simplified bipyramid using octahedron or faceted cylinder
-    return new THREE.OctahedronGeometry(radius * 1.4, 0);
-}
-
-function createFacetedShardGeometry(radius = 0.48) {
-    const geo = new THREE.DodecahedronGeometry(radius, 0);
-    const pos = geo.attributes.position;
-    for (let i = 0; i < pos.count; i++) {
-        pos.setY(i, pos.getY(i) * 1.6);
-        pos.setX(i, pos.getX(i) * 0.85);
-    }
-    geo.computeVertexNormals();
-    return geo;
-}
-
-function createFacetedRuneGeometry() {
-    const geo = new THREE.BoxGeometry(0.75, 1.05, 0.28);
-    return geo;
-}
-
-function scatterBiomeNatureProps() {
-    const natureGroup = new THREE.Group();
-    natureGroup.name = "BiomeNatureScatter";
-
-    const rockMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.85, flatShading: true });
-    const trunkMat = new THREE.MeshStandardMaterial({ color: 0x451a03, roughness: 0.9 });
-    const foliageMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.7, flatShading: true }); // Amber Foliage
-
-    // Scatter 18 Low-Poly Trees
-    for (let i = 0; i < 18; i++) {
-        const angle = SeedPRNG.range(0, Math.PI * 2);
-        const r = SeedPRNG.range(16, 65);
-        const x = Math.cos(angle) * r;
-        const z = Math.sin(angle) * r;
-
-        const tree = new THREE.Group();
-        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.35, 1.8, 6), trunkMat);
-        trunk.position.y = 0.9;
-        tree.add(trunk);
-
-        // 3-tiered foliage cones
-        for (let j = 0; j < 3; j++) {
-            const cone = new THREE.Mesh(new THREE.ConeGeometry(1.6 - j * 0.4, 1.4, 6), foliageMat);
-            cone.position.y = 1.8 + j * 0.9;
-            tree.add(cone);
-        }
-
-        tree.position.set(x, 0, z);
-        const s = SeedPRNG.range(0.8, 1.3);
-        tree.scale.set(s, s, s);
-        natureGroup.add(tree);
-    }
-
-    // Scatter 22 Faceted Boulders
-    for (let i = 0; i < 22; i++) {
-        const angle = SeedPRNG.range(0, Math.PI * 2);
-        const r = SeedPRNG.range(12, 70);
-        const x = Math.cos(angle) * r;
-        const z = Math.sin(angle) * r;
-
-        const rockGeo = new THREE.DodecahedronGeometry(SeedPRNG.range(1.0, 2.2), 0);
-        const rock = new THREE.Mesh(rockGeo, rockMat);
-        rock.position.set(x, 0.4, z);
-        rock.rotation.set(SeedPRNG.range(0, Math.PI), SeedPRNG.range(0, Math.PI), 0);
-        natureGroup.add(rock);
-    }
-
-    scene.add(natureGroup);
 }
 
 let playerLimbs = {
@@ -1810,96 +1702,13 @@ let playerAnimState = {
     pickupTimer: 0
 };
 
-// --- AVATAR OUTFIT CATALOG (NON-PAY-TO-WIN BIOME MASTERY REWARDS) ---
-const AvatarSkinCatalog = [
-    {
-        id: "steppes_cyber",
-        name: "Steppes Cyber-Suit",
-        emoji: "🤖",
-        biomeReq: 0,
-        reqLabel: "Default Architect",
-        armor: 0x1e293b,
-        accent: 0x0284c7,
-        visor: 0x22d3ee,
-        core: 0xfacc15,
-        desc: "Standard issue neural telemetry alloy designed for arid linear feature spaces."
-    },
-    {
-        id: "emerald_bio",
-        name: "Emerald Bio-Suit",
-        emoji: "🌿",
-        biomeReq: 1,
-        reqLabel: "Biome 1 Mastery",
-        armor: 0x064e3b,
-        accent: 0x10b981,
-        visor: 0x34d399,
-        core: 0x059669,
-        desc: "Synthesized from bioluminescent marsh flora and gradient convergence fields."
-    },
-    {
-        id: "glacial_frost",
-        name: "Glacial Frost Exosuit",
-        emoji: "❄️",
-        biomeReq: 2,
-        reqLabel: "Biome 2 Mastery",
-        armor: 0x0c4a6e,
-        accent: 0x38bdf8,
-        visor: 0xe0f2fe,
-        core: 0x0284c7,
-        desc: "Thermal insulated sub-zero alloy built to withstand extreme variance shifts."
-    },
-    {
-        id: "obsidian_synapse",
-        name: "Obsidian Synapse Armor",
-        emoji: "🔮",
-        biomeReq: 4,
-        reqLabel: "Biome 4 Mastery",
-        armor: 0x1e1b4b,
-        accent: 0xc084fc,
-        visor: 0xa855f7,
-        core: 0xf43f5e,
-        desc: "High-density neural weave radiating deep network activation energies."
-    }
-];
-
-let playerMaterials = {
-    armor: null,
-    accent: null,
-    visor: null,
-    core: null
-};
-
-function applyAvatarSkin(skinId) {
-    const skin = AvatarSkinCatalog.find(s => s.id === skinId) || AvatarSkinCatalog[0];
-    if (playerMaterials.armor) {
-        playerMaterials.armor.color.setHex(skin.armor);
-        playerMaterials.accent.color.setHex(skin.accent);
-        playerMaterials.visor.color.setHex(skin.visor);
-        playerMaterials.visor.emissive.setHex(skin.visor);
-        playerMaterials.core.color.setHex(skin.core);
-        playerMaterials.core.emissive.setHex(skin.core);
-    }
-    ProfileSlots[activeSaveSlot].equippedAvatarSkin = skin.id;
-    ProfileSlots[activeSaveSlot].avatar = skin.emoji;
-    saveProfiles();
-    updateProfileUI();
-}
-
 function createPlayerAvatar() {
     playerMesh = new THREE.Group();
 
-    const currentSkinId = ProfileSlots[activeSaveSlot].equippedAvatarSkin || "steppes_cyber";
-    const skin = AvatarSkinCatalog.find(s => s.id === currentSkinId) || AvatarSkinCatalog[0];
-
-    const matArmor = new THREE.MeshStandardMaterial({ color: skin.armor, roughness: 0.35, metalness: 0.2 });
-    const matAccent = new THREE.MeshStandardMaterial({ color: skin.accent, roughness: 0.4 });
-    const matVisor = new THREE.MeshStandardMaterial({ color: skin.visor, emissive: skin.visor, emissiveIntensity: 1.4 });
-    const matCore = new THREE.MeshStandardMaterial({ color: skin.core, emissive: skin.core, emissiveIntensity: 1.8 });
-
-    playerMaterials.armor = matArmor;
-    playerMaterials.accent = matAccent;
-    playerMaterials.visor = matVisor;
-    playerMaterials.core = matCore;
+    const matArmor = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.35, metalness: 0.2 });
+    const matAccent = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.4 });
+    const matVisor = new THREE.MeshStandardMaterial({ color: 0x22d3ee, emissive: 0x06b6d4, emissiveIntensity: 1.2 });
+    const matCore = new THREE.MeshStandardMaterial({ color: 0xfacc15, emissive: 0xfacc15, emissiveIntensity: 1.5 });
 
     // 1. Torso / Chest
     const torso = new THREE.Group();
@@ -2083,325 +1892,24 @@ function updateCharacterAnimation(dt, speed) {
     }
 }
 
-// --- ML-THEMED NAMED NPCS & COMPANIONS (SYNTHESIZED ART LANGUAGE) ---
-let adaDroneGroup = null;
-let adaEyeMesh = null;
-let archivistGolemGroup = null;
-let archivistHeadRune = null;
-let optimizerSmithObjects = [];
-let ghostRivalObjects = [];
+function createMascotCompanion() {
+    mascotMesh = new THREE.Group();
+    const sphere = new THREE.Mesh(new THREE.SphereGeometry(0.28, 16, 16), new THREE.MeshStandardMaterial({ color: 0x0284c7, emissive: 0x38bdf8 }));
+    mascotMesh.add(sphere);
 
-function createAdaCompanion() {
-    adaDroneGroup = new THREE.Group();
-    mascotMesh = adaDroneGroup; // Link to mascot system
-
-    // 1. Outer Truncated Polyhedron Shell
-    const shellGeo = new THREE.DodecahedronGeometry(0.32, 0);
-    const shellMat = new THREE.MeshStandardMaterial({
-        color: 0x0f172a,
-        roughness: 0.35,
-        metalness: 0.75,
-        flatShading: true
-    });
-    const shell = new THREE.Mesh(shellGeo, shellMat);
-    adaDroneGroup.add(shell);
-
-    // 2. Central Cycloptic Aperture Eye
-    const eyeGeo = new THREE.OctahedronGeometry(0.14, 0);
-    const eyeMat = new THREE.MeshStandardMaterial({
-        color: 0x22d3ee,
-        emissive: 0x06b6d4,
-        emissiveIntensity: 2.5,
-        roughness: 0.1
-    });
-    adaEyeMesh = new THREE.Mesh(eyeGeo, eyeMat);
-    adaEyeMesh.position.set(0, 0, 0.22);
-    adaDroneGroup.add(adaEyeMesh);
-
-    // 3. Orbiting Gyro Halo Ring
-    const haloGeo = new THREE.TorusGeometry(0.48, 0.035, 8, 24);
-    const haloMat = new THREE.MeshStandardMaterial({
-        color: 0xfacc15,
-        emissive: 0xf59e0b,
-        emissiveIntensity: 1.8,
-        roughness: 0.2
-    });
-    const halo = new THREE.Mesh(haloGeo, haloMat);
+    const halo = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.04, 8, 24), new THREE.MeshStandardMaterial({ color: 0xfacc15, emissive: 0xfacc15 }));
     halo.rotateX(Math.PI / 2);
-    adaDroneGroup.add(halo);
+    mascotMesh.add(halo);
 
-    adaDroneGroup.position.set(playerPos.x + 1.2, playerPos.y + 1.35, playerPos.z - 0.9);
-    scene.add(adaDroneGroup);
+    mascotMesh.position.set(playerPos.x + 1.2, playerPos.y + 1.2, playerPos.z - 0.8);
+    scene.add(mascotMesh);
 }
-
-function createArchivistGolem() {
-    archivistGolemGroup = new THREE.Group();
-    archivistGolemGroup.position.set(18, 0.2, 18); // Stationed at Codex Library
-
-    // Stacked Stone Manuscript Body (3 offset layers)
-    const tomeMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.85, metalness: 0.2, flatShading: true });
-    const spineMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, emissive: 0x0369a1, emissiveIntensity: 1.2 });
-
-    [
-        { w: 1.4, h: 0.45, d: 1.1, y: 0.25, rot: 0 },
-        { w: 1.2, h: 0.40, d: 0.95, y: 0.70, rot: 0.25 },
-        { w: 1.0, h: 0.35, d: 0.80, y: 1.10, rot: -0.18 }
-    ].forEach(layer => {
-        const block = new THREE.Mesh(new THREE.BoxGeometry(layer.w, layer.h, layer.d), tomeMat);
-        block.position.y = layer.y;
-        block.rotation.y = layer.rot;
-        archivistGolemGroup.add(block);
-
-        const spine = new THREE.Mesh(new THREE.BoxGeometry(layer.w * 0.15, layer.h * 0.9, layer.d * 1.02), spineMat);
-        spine.position.set(-layer.w * 0.45, layer.y, 0);
-        spine.rotation.y = layer.rot;
-        archivistGolemGroup.add(spine);
-    });
-
-    // Floating Rotating Head Tablet
-    const headGeo = createFacetedRuneGeometry();
-    const headMat = new THREE.MeshStandardMaterial({
-        color: 0x38bdf8,
-        emissive: 0x0284c7,
-        emissiveIntensity: 2.2,
-        roughness: 0.25
-    });
-    archivistHeadRune = new THREE.Mesh(headGeo, headMat);
-    archivistHeadRune.position.set(0, 1.75, 0);
-    archivistHeadRune.scale.set(0.65, 0.65, 0.65);
-    archivistGolemGroup.add(archivistHeadRune);
-
-    scene.add(archivistGolemGroup);
-}
-
-function createOptimizerSmiths() {
-    optimizerSmithObjects = [];
-    const smithConfigs = [
-        { name: "SGD", col: 0xf97316, pos: new THREE.Vector3(8, 0.4, 22), math: "w_{t+1} = w_t - η g̃_t" },
-        { name: "Momentum", col: 0x38bdf8, pos: new THREE.Vector3(12, 0.4, 25), math: "v_{t+1} = γ v_t + η g_t" },
-        { name: "RMSprop", col: 0xc084fc, pos: new THREE.Vector3(16, 0.4, 25), math: "E[g²]_t = 0.9 E[g²]_{t-1} + 0.1 g_t²" },
-        { name: "Adam", col: 0x10b981, pos: new THREE.Vector3(20, 0.4, 22), math: "m̂_t / (√v̂_t + ε)" }
-    ];
-
-    smithConfigs.forEach((cfg, idx) => {
-        const root = new THREE.Group();
-        root.position.copy(cfg.pos);
-
-        let geom;
-        if (cfg.name === "SGD") geom = createFacetedShardGeometry(0.42);
-        else if (cfg.name === "Momentum") geom = new THREE.DodecahedronGeometry(0.48, 0);
-        else if (cfg.name === "RMSprop") geom = createFacetedCrystalGeometry(0.38, 1.2);
-        else geom = new THREE.CylinderGeometry(0.45, 0.45, 0.35, 8);
-
-        const mat = new THREE.MeshStandardMaterial({
-            color: cfg.col,
-            emissive: cfg.col,
-            emissiveIntensity: 1.8,
-            roughness: 0.25,
-            flatShading: true
-        });
-        const mesh = new THREE.Mesh(geom, mat);
-        root.add(mesh);
-
-        // Pedestal
-        const ped = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.75, 0.25, 8), new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.5 }));
-        ped.position.y = -0.3;
-        root.add(ped);
-
-        scene.add(root);
-
-        optimizerSmithObjects.push({
-            name: cfg.name,
-            root: root,
-            mesh: mesh,
-            homePos: cfg.pos.clone(),
-            momentumVal: 0,
-            phase: idx * 1.5
-        });
-    });
-}
-
-function createGhostRivals() {
-    ghostRivalObjects = [];
-    const positions = [
-        new THREE.Vector3(25, 0.3, 8),
-        new THREE.Vector3(-18, 0.3, 24)
-    ];
-
-    positions.forEach((pos, idx) => {
-        const ghost = new THREE.Mesh(createFacetedRuneGeometry(), new THREE.MeshStandardMaterial({
-            color: 0x22d3ee,
-            emissive: 0x0891b2,
-            emissiveIntensity: 1.5,
-            wireframe: true,
-            transparent: true,
-            opacity: 0.65
-        }));
-        ghost.position.copy(pos);
-        scene.add(ghost);
-        ghostRivalObjects.push(ghost);
-    });
-}
-
-// --- STAGE 55: COHESIVE 6-BIOME VISUAL PALETTE PASS ---
-function applyBiomeVisualTheme(biomeIndex) {
-    const biomePalettes = [
-        { name: "Linear Steppes", bg: 0x0f141c, fog: 0x0f141c, light: 0xffedd5, hemi: 0xd97706, eye: 0xfacc15 },
-        { name: "Binary Marshlands", bg: 0x041a16, fog: 0x041a16, light: 0xa7f3d0, hemi: 0x059669, eye: 0x10b981 },
-        { name: "Variance Tundra", bg: 0x081726, fog: 0x081726, light: 0xe0f2fe, hemi: 0x0284c7, eye: 0x38bdf8 },
-        { name: "Branching Canopy", bg: 0x0a1c10, fog: 0x0a1c10, light: 0xfef08a, hemi: 0x15803d, eye: 0x22c55e },
-        { name: "Deep Synapse Citadel", bg: 0x13091f, fog: 0x13091f, light: 0xf5d0fe, hemi: 0x7e22ce, eye: 0xc084fc },
-        { name: "Semantic Expanse", bg: 0x0a0e1a, fog: 0x0a0e1a, light: 0xffffff, hemi: 0x4338ca, eye: 0x6366f1 }
-    ];
-
-    const p = biomePalettes[biomeIndex] || biomePalettes[0];
-    if (scene) {
-        scene.background.setHex(p.bg);
-        if (scene.fog) scene.fog.color.setHex(p.fog);
-    }
-    if (adaEyeMesh && adaEyeMesh.material) {
-        adaEyeMesh.material.color.setHex(p.eye);
-        adaEyeMesh.material.emissive.setHex(p.eye);
-    }
-    if (labApexPrismMesh && labApexPrismMesh.material) {
-        labApexPrismMesh.material.color.setHex(p.eye);
-        labApexPrismMesh.material.emissive.setHex(p.eye);
-    }
-    if (labSkybeamMesh && labSkybeamMesh.material) {
-        labSkybeamMesh.material.color.setHex(p.eye);
-        labSkybeamMesh.material.emissive.setHex(p.eye);
-    }
-    if (labSpireBands) {
-        labSpireBands.forEach(b => {
-            if (b.material) {
-                b.material.color.setHex(p.eye);
-                b.material.emissive.setHex(p.eye);
-            }
-        });
-    }
-}
-
-let labHoloRingMesh = null;
-let labApexPrismMesh = null;
-let labSkybeamMesh = null;
-let labSpireBands = [];
 
 function createBiomePlatforms() {
-    // 1. Modeled Octagonal Lab Station Platform
-    const labGroup = new THREE.Group();
-    labGroup.position.set(14, 0.2, 14);
+    const p1 = new THREE.Mesh(new THREE.CylinderGeometry(4.5, 4.5, 0.4, 32), new THREE.MeshStandardMaterial({ color: 0x0f172a }));
+    p1.position.set(14, 0.2, 14);
+    scene.add(p1);
 
-    // Octagonal Platform Base
-    const platGeo = new THREE.CylinderGeometry(4.8, 5.2, 0.45, 8);
-    const platMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.35, metalness: 0.7 });
-    const platform = new THREE.Mesh(platGeo, platMat);
-    labGroup.add(platform);
-
-    // Central Console Monolith
-    const consoleGeo = new THREE.BoxGeometry(1.4, 2.5, 0.9);
-    const consoleMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.25, metalness: 0.8 });
-    const consoleMesh = new THREE.Mesh(consoleGeo, consoleMat);
-    consoleMesh.position.set(0, 1.35, 0);
-    labGroup.add(consoleMesh);
-
-    // Inclined Touchscreen Face
-    const screenGeo = new THREE.PlaneGeometry(0.85, 0.65);
-    const screenMat = new THREE.MeshStandardMaterial({
-        color: 0x088598,
-        emissive: 0x06b6d4,
-        emissiveIntensity: 1.8,
-        roughness: 0.1
-    });
-    const screenMesh = new THREE.Mesh(screenGeo, screenMat);
-    screenMesh.position.set(0, 0.35, 0.52);
-    screenMesh.rotation.x = -0.3;
-    consoleMesh.add(screenMesh);
-
-    // Dual Flanking Resonator Pillars
-    const pillarMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.4, metalness: 0.6 });
-    const slitMat = new THREE.MeshStandardMaterial({ color: 0x22d3ee, emissive: 0x06b6d4, emissiveIntensity: 2.0 });
-
-    [-2.6, 2.6].forEach((xOffset, idx) => {
-        const pillar = new THREE.Mesh(new THREE.BoxGeometry(0.65, 3.2, 0.65), pillarMat);
-        pillar.position.set(xOffset, 1.6, 0);
-
-        const slit = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.9, 0.08), slitMat);
-        slit.position.set(0, 0, 0.34);
-        pillar.add(slit);
-
-        labGroup.add(pillar);
-    });
-
-    // Floating Rotating Hologram Orbit Ring
-    const ringGeo = new THREE.TorusGeometry(1.4, 0.06, 8, 32);
-    const ringMat = new THREE.MeshStandardMaterial({
-        color: 0x2dd4bf,
-        emissive: 0x14b8a6,
-        emissiveIntensity: 2.2,
-        roughness: 0.2
-    });
-    labHoloRingMesh = new THREE.Mesh(ringGeo, ringMat);
-    labHoloRingMesh.rotation.x = Math.PI / 2;
-    labHoloRingMesh.position.set(0, 3.8, 0);
-    labGroup.add(labHoloRingMesh);
-
-    // 5. Soaring 22m Beacon Sky-Spire (Visually dominant above treeline across entire Biome)
-    const spireGeo = new THREE.CylinderGeometry(0.7, 1.3, 20, 6);
-    const spireMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.3, metalness: 0.85, flatShading: true });
-    const spireMesh = new THREE.Mesh(spireGeo, spireMat);
-    spireMesh.position.set(0, 10.0, -1.8);
-    labGroup.add(spireMesh);
-
-    // Ascending Glowing Energy Bands along Spire (5m, 10m, 15m, 20m)
-    labSpireBands = [];
-    const bandHeights = [5, 10, 15, 20];
-    const bandScales = [2.2, 1.9, 1.6, 1.3];
-    bandHeights.forEach((bh, bIdx) => {
-        const bandMesh = new THREE.Mesh(
-            new THREE.CylinderGeometry(bandScales[bIdx] * 0.5, bandScales[bIdx] * 0.5, 0.18, 16),
-            new THREE.MeshStandardMaterial({ color: 0xfacc15, emissive: 0xf59e0b, emissiveIntensity: 2.8, roughness: 0.1 })
-        );
-        bandMesh.position.set(0, bh, -1.8);
-        labGroup.add(bandMesh);
-        labSpireBands.push(bandMesh);
-    });
-
-    // Floating Apex Hyper-Prism at 22.5m Altitude
-    const apexGeo = createFacetedCrystalGeometry(0.85, 2.4);
-    const apexMat = new THREE.MeshStandardMaterial({
-        color: 0xfacc15,
-        emissive: 0xf59e0b,
-        emissiveIntensity: 3.5,
-        roughness: 0.1,
-        metalness: 0.3,
-        flatShading: true
-    });
-    labApexPrismMesh = new THREE.Mesh(apexGeo, apexMat);
-    labApexPrismMesh.position.set(0, 22.5, -1.8);
-    labGroup.add(labApexPrismMesh);
-
-    // Infinite Skybeam Cylinder (Extends 60m vertically into the clouds)
-    const beamGeo = new THREE.CylinderGeometry(0.45, 0.55, 60, 16);
-    const beamMat = new THREE.MeshStandardMaterial({
-        color: 0xfacc15,
-        emissive: 0xfbbf24,
-        emissiveIntensity: 3.8,
-        transparent: true,
-        opacity: 0.65,
-        roughness: 0.1
-    });
-    labSkybeamMesh = new THREE.Mesh(beamGeo, beamMat);
-    labSkybeamMesh.position.set(0, 52.0, -1.8);
-    labGroup.add(labSkybeamMesh);
-
-    // Add Beacon Point Light illuminating the spire apex
-    const beaconLight = new THREE.PointLight(0xfacc15, 2.5, 65);
-    beaconLight.position.set(0, 23.0, -1.8);
-    labGroup.add(beaconLight);
-
-    scene.add(labGroup);
-
-    // 2. Astral Plateau (Biome 6)
     const p6 = new THREE.Mesh(new THREE.CylinderGeometry(18, 18, 0.6, 48), new THREE.MeshStandardMaterial({ color: 0x07111e, emissive: 0x0c4a6e }));
     p6.position.set(0, 0.3, 65);
     scene.add(p6);
@@ -2417,7 +1925,7 @@ function spawnBiome6Runes(center) {
         const angle = (cat * (Math.PI * 2 / 3)) + (i % 6 - 2.5) * 0.25;
         const r = 8.5 + (i % 3) * 2.0;
 
-        const mesh = new THREE.Mesh(createFacetedRuneGeometry(), new THREE.MeshStandardMaterial({ color: col, emissive: col, roughness: 0.3 }));
+        const mesh = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 0.15, 16), new THREE.MeshStandardMaterial({ color: col, emissive: col }));
         mesh.position.set(center.x + Math.cos(angle) * r, center.y + (i % 2) * 0.6, center.z + Math.sin(angle) * r);
         scene.add(mesh);
         runeMeshes.push(mesh);
@@ -2439,39 +1947,32 @@ function spawnSeededCollectibles() {
         if (isOutlier) rawY += (SeedPRNG.next() > 0.5 ? 1 : -1) * SeedPRNG.range(6.5, 12.0);
 
         const roll = i % 4;
-        let type, colHex, emHex, classLabel, geom;
+        let type, colHex, emHex, classLabel;
 
         if (roll === 0 || roll === 1) {
             type = "FeatureCrystal_X";
-            colHex = (i === 0) ? 0xfacc15 : 0x06b6d4; // Amber first crystal or Cyan
-            emHex = (i === 0) ? 0xf59e0b : 0x0891b2;
-            geom = createFacetedCrystalGeometry(0.45, 1.3);
+            colHex = (i === 0) ? 0xfacc15 : 0x38bdf8; // Amber first crystal or Cyan
+            emHex = (i === 0) ? 0xfacc15 : 0x0284c7;
         } else if (roll === 2) {
             type = "TargetShard_Y";
             colHex = 0xf59e0b; // Amber
-            emHex = 0xd97706;
-            geom = createFacetedShardGeometry(0.48);
+            emHex = 0xb45309;
         } else {
             const isClass1 = SeedPRNG.next() > (0.5 - p.classOverlap * 0.5);
             classLabel = isClass1 ? 1 : 0;
             type = isClass1 ? "Class1_AzureSpore" : "Class0_PurpleSpore";
             colHex = isClass1 ? 0x22d3ee : 0xa855f7; // Azure or Neon Purple
             emHex = isClass1 ? 0x0891b2 : 0x7e22ce;
-            geom = createFacetedRuneGeometry();
         }
 
         const angle = i === 0 ? 0.3 : SeedPRNG.range(0, Math.PI * 2);
         const r = i === 0 ? 6.5 : (6 + SeedPRNG.range(0, 26));
 
-        const mat = new THREE.MeshStandardMaterial({
-            color: colHex,
-            emissive: emHex,
-            emissiveIntensity: 1.6,
-            roughness: 0.22,
-            metalness: 0.35,
-            flatShading: true
-        });
-        const mesh = new THREE.Mesh(geom, mat);
+        const geom = (type === "FeatureCrystal_X") ? new THREE.BoxGeometry(0.65, 0.65, 0.65) :
+            (type === "TargetShard_Y") ? new THREE.OctahedronGeometry(0.48) :
+                new THREE.SphereGeometry(0.42, 16, 16);
+
+        const mesh = new THREE.Mesh(geom, new THREE.MeshStandardMaterial({ color: colHex, emissive: emHex, roughness: 0.25 }));
         mesh.position.set(Math.cos(angle) * r, 1.2, Math.sin(angle) * r);
         scene.add(mesh);
 
@@ -2610,83 +2111,20 @@ function updateGame(deltaTime) {
     playerMesh.position.copy(playerPos);
     updateCharacterAnimation(deltaTime, speed);
 
-    const nowTime = performance.now() * 0.001;
-
-    // 1. ADA Floating & Eye Pulse
-    if (adaDroneGroup) {
-        const adaTarget = new THREE.Vector3(playerPos.x + 1.2, playerPos.y + 1.35 + Math.sin(nowTime * 2.5) * 0.12, playerPos.z - 0.9);
-        adaDroneGroup.position.lerp(adaTarget, deltaTime * 5.0);
-        adaDroneGroup.rotation.y += deltaTime * 0.8;
-        if (adaEyeMesh) {
-            const eyePulse = 1.0 + Math.sin(nowTime * 4.0) * 0.15;
-            adaEyeMesh.scale.set(eyePulse, eyePulse, eyePulse);
-        }
+    if (mascotMesh) {
+        const mascotTarget = new THREE.Vector3(playerPos.x + 1.2, playerPos.y + 1.2 + Math.sin(performance.now() * 0.003) * 0.15, playerPos.z - 0.8);
+        mascotMesh.position.lerp(mascotTarget, deltaTime * 5.0);
+        mascotMesh.rotation.y += deltaTime * 1.2;
     }
 
-    // 2. The Archivist Floating Head Rune
-    if (archivistHeadRune) {
-        archivistHeadRune.position.y = 1.75 + Math.sin(nowTime * 1.8) * 0.06;
-        archivistHeadRune.rotation.y += deltaTime * 0.4;
-    }
+    camera.position.set(playerPos.x + Math.sin(cameraOrbit.yaw) * Math.cos(cameraOrbit.pitch) * cameraOrbit.distance, playerPos.y + Math.sin(cameraOrbit.pitch) * cameraOrbit.distance + 1.2, playerPos.z + Math.cos(cameraOrbit.yaw) * Math.cos(cameraOrbit.pitch) * cameraOrbit.distance);
+    camera.lookAt(playerPos.x, playerPos.y + 1.2, playerPos.z);
 
-    // 3. Optimizer Smiths Math-Based Kinematics
-    optimizerSmithObjects.forEach(s => {
-        if (!s.root) return;
-        if (s.name === "SGD") {
-            // High stochastic variance: sudden zig-zag jumps & overshoot hops
-            const jX = (Math.sin(nowTime * 14.0 + s.phase) * 0.35) + (Math.sin(nowTime * 23.0) * 0.15);
-            const jZ = (Math.cos(nowTime * 16.0 + s.phase) * 0.35);
-            const hop = Math.abs(Math.sin(nowTime * 11.0)) * 0.25;
-            s.root.position.set(s.homePos.x + jX, s.homePos.y + hop, s.homePos.z + jZ);
-            s.mesh.rotation.y += deltaTime * 4.5;
-        } else if (s.name === "Momentum") {
-            // Heavy rolling momentum with inertia follow-through
-            s.momentumVal += (Math.sin(nowTime * 2.2) * 1.2 - s.momentumVal) * deltaTime * 1.8;
-            s.root.position.set(s.homePos.x + s.momentumVal, s.homePos.y + Math.abs(Math.sin(nowTime * 2.2)) * 0.08, s.homePos.z);
-            s.mesh.rotation.z = -s.momentumVal * 1.5;
-        } else if (s.name === "RMSprop") {
-            // Adaptive oscillation scaling stride inversely with gradient
-            const stepY = Math.sin(nowTime * 4.5) * 0.35;
-            const scaleInv = 1.0 / (1.0 + Math.abs(stepY) * 2.5);
-            s.root.position.set(s.homePos.x + Math.cos(nowTime * 2.5) * scaleInv * 0.85, s.homePos.y + Math.abs(stepY), s.homePos.z);
-            s.mesh.rotation.y += deltaTime * 1.2;
-        } else { // Adam
-            // Dual-moment exponential moving average: hyper-smooth adaptive drift
-            const smX = Math.sin(nowTime * 1.8) * 0.85;
-            const smZ = Math.cos(nowTime * 1.8) * 0.55;
-            const flY = Math.sin(nowTime * 2.8) * 0.08;
-            s.root.position.set(s.homePos.x + smX, s.homePos.y + flY, s.homePos.z + smZ);
-            s.mesh.rotation.y += deltaTime * 0.75;
-        }
-    });
-
-    // 4. Ghost Rivals Wireframe Rotation
-    ghostRivalObjects.forEach((g, idx) => {
-        g.rotation.y += deltaTime * 0.8;
-        g.position.y = 0.3 + Math.sin(nowTime * 2.0 + idx) * 0.05;
-    });
-
-    if (labHoloRingMesh) {
-        labHoloRingMesh.rotation.z += deltaTime * 0.6;
-        labHoloRingMesh.position.y = 3.8 + Math.sin(performance.now() * 0.002) * 0.08;
-    }
-
-    if (labApexPrismMesh) {
-        labApexPrismMesh.rotation.y += deltaTime * 1.5;
-        labApexPrismMesh.position.y = 22.5 + Math.sin(nowTime * 2.2) * 0.15;
-    }
-
-    if (labSkybeamMesh && labSkybeamMesh.material) {
-        labSkybeamMesh.material.opacity = 0.55 + Math.sin(nowTime * 3.5) * 0.18;
-    }
-
-    const time = performance.now() * 0.0025;
+    const time = performance.now() * 0.003;
     collectibles.forEach(c => {
         if (c.collected) return;
-        c.mesh.rotation.y += deltaTime * 1.6;
-        c.mesh.rotation.x = Math.sin(time * 1.5 + c.mesh.position.x) * 0.12;
-        c.mesh.rotation.z = Math.cos(time * 1.2 + c.mesh.position.z) * 0.12;
-        c.mesh.position.y = c.baseY + Math.sin(time * 2.2 + c.mesh.position.x) * 0.18;
+        c.mesh.rotation.y += deltaTime * 1.5;
+        c.mesh.position.y = c.baseY + Math.sin(time + c.mesh.position.x) * 0.15;
         if (playerPos.distanceTo(c.mesh.position) < 1.4) {
             c.collected = true; scene.remove(c.mesh);
             playerAnimState.pickupTimer = 0.55; // Trigger pickup gesture
@@ -2963,7 +2401,7 @@ function loadModelVault() {
         try {
             const saved = JSON.parse(raw);
             if (Array.isArray(saved)) TrainedModelVault = saved;
-        } catch(e) {}
+        } catch (e) { }
     }
 }
 
@@ -3255,7 +2693,7 @@ function loadProfileSlots() {
     for (let s = 0; s < 3; s++) {
         const raw = localStorage.getItem(`neuroarena_profile_slot_${s}`);
         if (raw) {
-            try { Object.assign(ProfileSlots[s], JSON.parse(raw)); } catch(e) {}
+            try { Object.assign(ProfileSlots[s], JSON.parse(raw)); } catch (e) { }
         }
     }
     activeSaveSlot = parseInt(localStorage.getItem("neuroarena_active_slot")) || 0;
@@ -3315,60 +2753,6 @@ function renderProfileModal() {
         list.appendChild(row);
     });
 
-    // 🎨 Render Avatar Outfit Customization Grid
-    const skinsGrid = document.getElementById("avatar-skins-grid");
-    if (skinsGrid) {
-        skinsGrid.innerHTML = "";
-        const currentEquipped = p.equippedAvatarSkin || "steppes_cyber";
-
-        AvatarSkinCatalog.forEach(skin => {
-            const isUnlocked = p.biomes >= skin.biomeReq;
-            const isEquipped = currentEquipped === skin.id;
-
-            const card = document.createElement("div");
-            card.className = "stat-card";
-            card.style.border = isEquipped ? "1.5px solid #38bdf8" : "1px solid rgba(255,255,255,0.08)";
-            card.style.background = isEquipped ? "rgba(14,165,233,0.12)" : "rgba(15,23,42,0.65)";
-            card.style.display = "flex";
-            card.style.flexDirection = "column";
-            card.style.justifyContent = "space-between";
-            card.style.padding = "12px";
-
-            const armorHex = `#${skin.armor.toString(16).padStart(6, '0')}`;
-            const accentHex = `#${skin.accent.toString(16).padStart(6, '0')}`;
-            const coreHex = `#${skin.core.toString(16).padStart(6, '0')}`;
-
-            card.innerHTML = `
-                <div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                        <span style="font-size:1.15rem; font-weight:700;">${skin.emoji} ${skin.name}</span>
-                        <span style="font-size:0.75rem; padding:2px 8px; border-radius:4px; ${isUnlocked ? 'background:#065f46; color:#34d399;' : 'background:#451a03; color:#f97316;'}">
-                            ${isUnlocked ? '✅ UNLOCKED' : `🔒 ${skin.reqLabel}`}
-                        </span>
-                    </div>
-                    <div style="display:flex; gap:6px; margin:8px 0;">
-                        <div style="width:18px; height:18px; border-radius:50%; background:${armorHex}; border:1px solid #475569;" title="Armor: ${armorHex}"></div>
-                        <div style="width:18px; height:18px; border-radius:50%; background:${accentHex}; border:1px solid #475569;" title="Accent: ${accentHex}"></div>
-                        <div style="width:18px; height:18px; border-radius:50%; background:${coreHex}; border:1px solid #475569;" title="Core Glow: ${coreHex}"></div>
-                    </div>
-                    <p style="font-size:0.8rem; color:#94a3b8; line-height:1.3; margin:0 0 10px 0;">${skin.desc}</p>
-                </div>
-                <button class="primary-btn skin-equip-btn" data-skin="${skin.id}" style="width:100%; font-size:0.85rem; padding:6px 0; ${!isUnlocked ? 'opacity:0.4; cursor:not-allowed;' : ''} ${isEquipped ? 'background:#0284c7;' : ''}" ${!isUnlocked ? 'disabled' : ''}>
-                    ${isEquipped ? '✓ EQUIPPED' : (isUnlocked ? 'EQUIP OUTFIT' : 'LOCKED')}
-                </button>
-            `;
-
-            if (isUnlocked) {
-                card.querySelector(".skin-equip-btn").addEventListener("click", () => {
-                    applyAvatarSkin(skin.id);
-                    renderProfileModal();
-                });
-            }
-
-            skinsGrid.appendChild(card);
-        });
-    }
-
     document.querySelectorAll(".slot-btn").forEach((b, idx) => {
         if (idx === activeSaveSlot) {
             b.classList.add("active");
@@ -3421,91 +2805,38 @@ function setupUIEvents() {
         openMyModelsGallery();
     });
 
-    // Consult & Model Interrogation HUD Opener
-    function openConsultDirectly() {
-        if (ModelVault.length === 0) {
-            ModelVault.push({
-                id: "linear_base_calibrated",
-                name: "Linear Steppes Baseline Regressor",
-                biome: "Biome 1: The Linear Steppes",
-                biomeIndex: 0,
-                type: "linear",
-                weights: { w: GameState.profile.trueW || 2.45, b: GameState.profile.trueB || 1.15 },
-                testAccuracy: 94.8,
-                loss: 0.042,
-                domainMin: -4.5,
-                domainMax: 4.5,
-                domainMean: 0.0,
-                domainStd: 2.6,
-                sampleCount: 24,
-                history: [0.85, 0.45, 0.22, 0.12, 0.06, 0.042]
+    // Consult HUD Opener
+    document.getElementById("btn-open-consult-hud")?.addEventListener("click", () => {
+        if (SavedModels.length === 0) {
+            SavedModels.push({
+                id: "model-active-live",
+                name: "Active Arena Model",
+                w: GameState.weights.w,
+                b: GameState.weights.b,
+                loss: GameState.lastLoss,
+                created: new Date().toISOString().split("T")[0]
             });
         }
-        activeInspectedModel = ModelVault[ModelVault.length - 1];
-        openModelInspector(activeInspectedModel);
-        document.getElementById("inspector-tab-consult")?.click();
-    }
-    document.getElementById("btn-open-consult-hud")?.addEventListener("click", openConsultDirectly);
+        openModelInspector(SavedModels[0].id);
+        const consultTab = document.getElementById("inspector-tab-consult");
+        if (consultTab) consultTab.click();
+    });
 
-    // Objective Detail Modal Opener & Real-Time Sync
-    function updateObjectiveModal() {
-        const bIdx = GameState.currentBiome || 0;
-        const bNames = [
-            "Biome 1: The Linear Steppes",
-            "Biome 2: The Binary Marshlands",
-            "Biome 3: The Tree Canopy",
-            "Biome 4: Glacial Ridge",
-            "Biome 5: Deep Citadel",
-            "Biome 6: Astral Plateau"
-        ];
-        const bDescs = [
-            "Harvest real numerical feature crystals (X) and target shards (Y). Approach the terminal monolith to train a linear regressor achieving MSE ≤ 0.10.",
-            "Gather azure and neon purple spores to separate classes using sigmoid logistic regression with test accuracy ≥ 90%.",
-            "Sample non-linear feature clusters and optimize decision tree boundaries using Gini Impurity split criteria.",
-            "Train continuous deep MLPs with learning rate scheduling to traverse steep loss ravines.",
-            "Overcome noisy adversarial outliers and multi-class classification using Adam optimizer.",
-            "Synthesize multi-dimensional word embeddings with PPMI cosine similarity."
-        ];
-        const bThresholds = [
-            "MSE ≤ 0.10",
-            "Accuracy ≥ 90%",
-            "Gini Impurity ≤ 0.08",
-            "Ravine Loss ≤ 0.05",
-            "Test Accuracy ≥ 92%",
-            "Cosine Sim ≥ 0.75"
-        ];
-        const bRewards = [
-            "🔓 Unlock Biome 2 (Binary Marshlands) + Obsidian Gradient Skin",
-            "🔓 Unlock Biome 3 (Tree Canopy) + Bioluminescent Skin",
-            "🔓 Unlock Biome 4 (Glacial Ridge) + Random Forest Booster",
-            "🔓 Unlock Biome 5 (Deep Citadel) + Glacial Armor",
-            "🔓 Unlock Biome 6 (Astral Plateau) + Citadel Monolith Core",
-            "👑 Architect Grandmaster Title + Astral Aura Crown"
-        ];
-
-        document.getElementById("modal-objective-title").innerText = bNames[bIdx] || bNames[0];
-        document.getElementById("modal-objective-desc").innerText = bDescs[bIdx] || bDescs[0];
-        document.getElementById("modal-objective-threshold").innerText = bThresholds[bIdx] || bThresholds[0];
-        document.getElementById("modal-objective-crystals").innerText = `${GameState.collectedDataset.length} / 18 Collected`;
-        const stats = computeDatasetStats();
-        document.getElementById("modal-objective-health").innerText = `Dataset Health: ${stats?.healthScore || 100}%`;
-        document.getElementById("modal-objective-reward").innerText = bRewards[bIdx] || bRewards[0];
-    }
-
-    function openObjectiveModal() {
+    // Objective Banner Detail Modal
+    document.getElementById("objective-banner")?.addEventListener("click", () => {
         const modal = document.getElementById("objective-modal");
-        if (!modal) return;
-        updateObjectiveModal();
-        modal.classList.remove("hidden");
-        if (typeof gsap !== "undefined") {
-            gsap.fromTo(modal.querySelector(".glass-modal"), { scale: 0.88, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: "back.out(1.5)" });
+        if (modal) {
+            modal.classList.remove("hidden");
+            if (typeof gsap !== "undefined") {
+                gsap.fromTo(modal.querySelector(".glass-modal"), { scale: 0.88, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: "back.out(1.5)" });
+            }
         }
-    }
-    document.getElementById("objective-banner")?.addEventListener("click", openObjectiveModal);
-    document.getElementById("btn-close-objective")?.addEventListener("click", () => document.getElementById("objective-modal")?.classList.add("hidden"));
-    document.getElementById("btn-objective-go-to-lab")?.addEventListener("click", () => {
+    });
+    document.getElementById("btn-close-objective")?.addEventListener("click", () => {
         document.getElementById("objective-modal")?.classList.add("hidden");
-        openFormulaTerminal();
+    });
+    document.getElementById("btn-dismiss-objective")?.addEventListener("click", () => {
+        document.getElementById("objective-modal")?.classList.add("hidden");
     });
 
     // Profile Modals
@@ -3579,7 +2910,7 @@ function setupUIEvents() {
     });
 
     // Audio Controls
-    document.getElementById("btn-toggle-mute").addEventListener("click", function() {
+    document.getElementById("btn-toggle-mute").addEventListener("click", function () {
         UserPreferences.isMuted = !UserPreferences.isMuted;
         this.innerText = UserPreferences.isMuted ? "MUTED" : "UNMUTED";
         this.classList.toggle("active", UserPreferences.isMuted);
@@ -3611,14 +2942,14 @@ function setupUIEvents() {
     });
 
     // Handedness Toggle
-    document.getElementById("btn-handed-left").addEventListener("click", function() {
+    document.getElementById("btn-handed-left").addEventListener("click", function () {
         this.classList.add("active");
         document.getElementById("btn-handed-right").classList.remove("active");
         document.getElementById("game-container").classList.remove("right-handed");
         UserPreferences.handedness = "left";
         UserPreferences.save();
     });
-    document.getElementById("btn-handed-right").addEventListener("click", function() {
+    document.getElementById("btn-handed-right").addEventListener("click", function () {
         this.classList.add("active");
         document.getElementById("btn-handed-left").classList.remove("active");
         document.getElementById("game-container").classList.add("right-handed");
@@ -3627,7 +2958,7 @@ function setupUIEvents() {
     });
 
     // Colorblind Mode
-    document.getElementById("btn-toggle-colorblind").addEventListener("click", function() {
+    document.getElementById("btn-toggle-colorblind").addEventListener("click", function () {
         UserPreferences.colorblind = !UserPreferences.colorblind;
         this.innerText = UserPreferences.colorblind ? "ENABLED (Blue/Orange)" : "DISABLED (Red/Green)";
         this.classList.toggle("active", UserPreferences.colorblind);
@@ -3646,7 +2977,7 @@ function setupUIEvents() {
     });
 
     // Narration Layer Toggle
-    document.getElementById("btn-toggle-narration")?.addEventListener("click", function() {
+    document.getElementById("btn-toggle-narration")?.addEventListener("click", function () {
         UserPreferences.narration = !UserPreferences.narration;
         this.innerText = UserPreferences.narration ? "ENABLED (Computed Commentary)" : "DISABLED";
         this.classList.toggle("active", UserPreferences.narration);
@@ -3825,35 +3156,8 @@ function setupUIEvents() {
         banner.classList.remove("hidden");
     });
 
-    // Leaderboard & Achievements Modal
-    function renderAchievements() {
-        const grid = document.getElementById("achievements-grid");
-        if (!grid) return;
-        const p = ProfileSlots[activeSaveSlot];
-        const stats = computeDatasetStats();
-        const achievementsList = [
-            { title: "💎 Crystal Harvester", desc: "Collect your first 5 dataset crystals", unlocked: GameState.collectedDataset.length >= 5 },
-            { title: "⚡ Gradient Master", desc: "Train a model achieving MSE ≤ 0.10", unlocked: GameState.lastLoss < 0.10 && GameState.lastLoss > 0 },
-            { title: "🏛️ Biome Conqueror", desc: "Defeat Stage Gate Boss and unlock Biome 2", unlocked: GameState.unlockedBiomes[1] },
-            { title: "📅 Daily Warrior", desc: "Maintain a 2+ day streak in Daily Challenges", unlocked: p.streak >= 2 || p.bestStreak >= 2 },
-            { title: "💾 Archival Savant", desc: "Save 3+ calibrated models in the Vault", unlocked: ModelVault.length >= 3 },
-            { title: "🏁 Grand Prix Winner", desc: "Win a Grand Prix model race", unlocked: p.gpWins >= 1 },
-            { title: "🎯 Zero-Outlier Pure", desc: "Maintain 100% dataset health score", unlocked: (stats?.healthScore || 100) >= 95 },
-            { title: "🔮 Model Interrogator", desc: "Execute live inference query in Consult mode", unlocked: true }
-        ];
-        grid.innerHTML = achievementsList.map(a => `
-            <div class="stat-card" style="border-left: 3px solid ${a.unlocked ? '#10b981' : '#64748b'}; opacity:${a.unlocked ? 1 : 0.65}; padding:10px;">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <b style="color:${a.unlocked ? '#38bdf8' : '#94a3b8'}; font-size:12px;">${a.title}</b>
-                    <span style="font-size:10px; font-weight:700; color:${a.unlocked ? '#10b981' : '#64748b'};">${a.unlocked ? 'UNLOCKED' : 'LOCKED'}</span>
-                </div>
-                <div style="font-size:11px; color:#cbd5e1; margin-top:4px;">${a.desc}</div>
-            </div>
-        `).join("");
-    }
-
+    // Leaderboard Modal
     document.getElementById("btn-leaderboard").addEventListener("click", () => {
-        renderAchievements();
         const modal = document.getElementById("leaderboard-modal");
         modal.classList.remove("hidden");
         if (typeof gsap !== "undefined") {
@@ -3862,21 +3166,6 @@ function setupUIEvents() {
     });
     document.getElementById("btn-close-leaderboard").addEventListener("click", () => {
         document.getElementById("leaderboard-modal").classList.add("hidden");
-    });
-
-    document.getElementById("tab-btn-leaderboard")?.addEventListener("click", () => {
-        document.getElementById("tab-btn-leaderboard").classList.add("active");
-        document.getElementById("tab-btn-achievements").classList.remove("active");
-        document.getElementById("pane-leaderboard-list").classList.remove("hidden");
-        document.getElementById("pane-achievements-list").classList.add("hidden");
-    });
-
-    document.getElementById("tab-btn-achievements")?.addEventListener("click", () => {
-        document.getElementById("tab-btn-achievements").classList.add("active");
-        document.getElementById("tab-btn-leaderboard").classList.remove("active");
-        document.getElementById("pane-achievements-list").classList.remove("hidden");
-        document.getElementById("pane-leaderboard-list").classList.add("hidden");
-        renderAchievements();
     });
 
     // Data 2.0 Modal

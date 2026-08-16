@@ -171,6 +171,7 @@
             <!-- 2. TOP-RIGHT CONTROLS (MINIMUM 44x44dp TOUCH TARGETS) -->
             <div id="top-right-hud" class="hud-controls-group">
                 <button id="btn-open-models-hud" class="hud-icon-btn glow-cyan" title="My Models Archive">💾</button>
+                <button id="btn-open-consult-hud" class="hud-icon-btn glow-purple" title="Live Inference Consult">🔮</button>
                 <button id="btn-open-profile-hud" class="hud-icon-btn glow-cyan" title="Architect Profile"><span
                         id="hud-avatar-icon">🤖</span></button>
                 <button id="btn-open-codex" class="hud-icon-btn glow-cyan" title="ML Codex / Journal">📖</button>
@@ -608,6 +609,47 @@
                 <div class="card-actions-row">
                     <button id="btn-download-card" class="action-btn glow-cyan">💾 Download Image Card</button>
                     <button id="btn-copy-card" class="action-btn glow-amber">📋 Copy Card Data</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🎯 PRIMARY OBJECTIVE DETAIL MODAL -->
+        <div id="objective-modal" class="modal-overlay hidden">
+            <div class="glass-modal objective-detail-container" style="max-width:560px;">
+                <div class="modal-header">
+                    <h2>🎯 BIOME OBJECTIVE & CONVERGENCE CRITERIA</h2>
+                    <button id="btn-close-objective" class="close-btn">✕</button>
+                </div>
+                <div class="objective-modal-body" style="padding:16px 20px;">
+                    <div class="stat-card" style="margin-bottom:12px; border-left:4px solid #f59e0b;">
+                        <h3 style="font-size:1.1rem; color:#facc15; margin:0 0 6px 0;">🗺️ BIOME 1: THE LINEAR STEPPES</h3>
+                        <p style="font-size:0.85rem; color:#cbd5e1; line-height:1.4; margin:0;">
+                            Harvest numerical feature crystals $(x)$ and target shards $(y)$ scattered across the terrain.
+                            Calibrate linear regression weights $(w, b)$ at the Lab Station Terminal until test loss drops below threshold.
+                        </p>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
+                        <div class="stat-card">
+                            <div class="stat-card-title">🎯 CONVERGENCE TARGET</div>
+                            <div class="stat-card-value text-green">MSE ≤ 0.10</div>
+                            <div class="stat-card-sub">Mean Squared Error Criterion</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-title">💎 MINIMUM HARVEST</div>
+                            <div class="stat-card-value text-cyan">18 Samples</div>
+                            <div class="stat-card-sub">For Reliable Generalization</div>
+                        </div>
+                    </div>
+
+                    <div class="coach-advice-box" style="margin-bottom:14px;">
+                        <div class="advice-heading">💡 ADA'S NAVIGATION TIP</div>
+                        <p style="font-size:0.85rem; color:#e2e8f0; margin:0;">
+                            Look up to spot the <b>22-meter Glowing Beacon Spire</b> piercing the sky — its vertical light beam marks the Lab Station!
+                        </p>
+                    </div>
+
+                    <button id="btn-dismiss-objective" class="primary-btn" style="width:100%;">Got It (Return to Arena)</button>
                 </div>
             </div>
         </div>
