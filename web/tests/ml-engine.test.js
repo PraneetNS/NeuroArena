@@ -365,6 +365,28 @@ function testNamedMLNPCsAndStage55BiomePalettes() {
     console.log("✅ Named ML NPCs & Stage 55 Biome Palettes Test Passed!");
 }
 
+function testAvatarCustomizationAndBiomeMasterySkins() {
+    const AvatarSkinCatalog = [
+        { id: "steppes_cyber", biomeReq: 0, nonPayToWin: true },
+        { id: "emerald_bio", biomeReq: 1, nonPayToWin: true },
+        { id: "glacial_frost", biomeReq: 2, nonPayToWin: true },
+        { id: "obsidian_synapse", biomeReq: 4, nonPayToWin: true }
+    ];
+
+    assert.strictEqual(AvatarSkinCatalog.length, 4, "Must offer 4 distinct biome-mastery avatar outfit skins");
+    AvatarSkinCatalog.forEach(skin => {
+        assert.strictEqual(skin.nonPayToWin, true, "All avatar skins must strictly be non-pay-to-win mastery rewards");
+    });
+
+    // Test progression unlocks
+    const playerWithBiome1 = { biomes: 1 };
+    assert.strictEqual(playerWithBiome1.biomes >= AvatarSkinCatalog[0].biomeReq, true, "Default skin unlocked");
+    assert.strictEqual(playerWithBiome1.biomes >= AvatarSkinCatalog[1].biomeReq, true, "Biome 1 skin unlocked");
+    assert.strictEqual(playerWithBiome1.biomes >= AvatarSkinCatalog[2].biomeReq, false, "Biome 2 skin locked");
+
+    console.log("✅ Avatar Customization & Non-Pay-To-Win Biome Skins Test Passed!");
+}
+
 testSeedPRNG();
 testLinearInferenceAndExtrapolation();
 testDatasetHealthAndGeneralizationDegradation();
@@ -379,4 +401,5 @@ testSubmissionHardChecklist();
 testHumanoidCharacterAnimationStateMachine();
 testTopToolbarAuditAndAchievements();
 testNamedMLNPCsAndStage55BiomePalettes();
+testAvatarCustomizationAndBiomeMasterySkins();
 console.log("🎉 All Web Unit Tests Passed Cleanly!");

@@ -1810,13 +1810,96 @@ let playerAnimState = {
     pickupTimer: 0
 };
 
+// --- AVATAR OUTFIT CATALOG (NON-PAY-TO-WIN BIOME MASTERY REWARDS) ---
+const AvatarSkinCatalog = [
+    {
+        id: "steppes_cyber",
+        name: "Steppes Cyber-Suit",
+        emoji: "🤖",
+        biomeReq: 0,
+        reqLabel: "Default Architect",
+        armor: 0x1e293b,
+        accent: 0x0284c7,
+        visor: 0x22d3ee,
+        core: 0xfacc15,
+        desc: "Standard issue neural telemetry alloy designed for arid linear feature spaces."
+    },
+    {
+        id: "emerald_bio",
+        name: "Emerald Bio-Suit",
+        emoji: "🌿",
+        biomeReq: 1,
+        reqLabel: "Biome 1 Mastery",
+        armor: 0x064e3b,
+        accent: 0x10b981,
+        visor: 0x34d399,
+        core: 0x059669,
+        desc: "Synthesized from bioluminescent marsh flora and gradient convergence fields."
+    },
+    {
+        id: "glacial_frost",
+        name: "Glacial Frost Exosuit",
+        emoji: "❄️",
+        biomeReq: 2,
+        reqLabel: "Biome 2 Mastery",
+        armor: 0x0c4a6e,
+        accent: 0x38bdf8,
+        visor: 0xe0f2fe,
+        core: 0x0284c7,
+        desc: "Thermal insulated sub-zero alloy built to withstand extreme variance shifts."
+    },
+    {
+        id: "obsidian_synapse",
+        name: "Obsidian Synapse Armor",
+        emoji: "🔮",
+        biomeReq: 4,
+        reqLabel: "Biome 4 Mastery",
+        armor: 0x1e1b4b,
+        accent: 0xc084fc,
+        visor: 0xa855f7,
+        core: 0xf43f5e,
+        desc: "High-density neural weave radiating deep network activation energies."
+    }
+];
+
+let playerMaterials = {
+    armor: null,
+    accent: null,
+    visor: null,
+    core: null
+};
+
+function applyAvatarSkin(skinId) {
+    const skin = AvatarSkinCatalog.find(s => s.id === skinId) || AvatarSkinCatalog[0];
+    if (playerMaterials.armor) {
+        playerMaterials.armor.color.setHex(skin.armor);
+        playerMaterials.accent.color.setHex(skin.accent);
+        playerMaterials.visor.color.setHex(skin.visor);
+        playerMaterials.visor.emissive.setHex(skin.visor);
+        playerMaterials.core.color.setHex(skin.core);
+        playerMaterials.core.emissive.setHex(skin.core);
+    }
+    ProfileSlots[activeSaveSlot].equippedAvatarSkin = skin.id;
+    ProfileSlots[activeSaveSlot].avatar = skin.emoji;
+    saveProfiles();
+    updateProfileUI();
+}
+
 function createPlayerAvatar() {
     playerMesh = new THREE.Group();
 
-    const matArmor = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.35, metalness: 0.2 });
-    const matAccent = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.4 });
-    const matVisor = new THREE.MeshStandardMaterial({ color: 0x22d3ee, emissive: 0x06b6d4, emissiveIntensity: 1.2 });
-    const matCore = new THREE.MeshStandardMaterial({ color: 0xfacc15, emissive: 0xfacc15, emissiveIntensity: 1.5 });
+    const currentSkinId = ProfileSlots[activeSaveSlot].equippedAvatarSkin || "steppes_cyber";
+    const skin = AvatarSkinCatalog.find(s => s.id === currentSkinId) || AvatarSkinCatalog[0];
+
+    const matArmor = new THREE.MeshStandardMaterial({ color: skin.armor, roughness: 0.35, metalness: 0.2 });
+    const matAccent = new THREE.MeshStandardMaterial({ color: skin.accent, roughness: 0.4 });
+    const matVisor = new THREE.MeshStandardMaterial({ color: skin.visor, emissive: skin.visor, emissiveIntensity: 1.4 });
+    const matCore = new THREE.MeshStandardMaterial({ color: skin.core, emissive: skin.core, emissiveIntensity: 1.8 });
+
+    playerMaterials.armor = matArmor;
+    playerMaterials.accent = matAccent;
+    playerMaterials.visor = matVisor;
+    playerMaterials.core = matCore;
 
     // 1. Torso / Chest
     const torso = new THREE.Group();
@@ -3231,6 +3314,60 @@ function renderProfileModal() {
         row.innerHTML = `<span class="record-name">• ${bName}</span> <span class="record-val">${isMastered ? `🏆 ${metric}` : "<span style='color:#64748b;'>🔒 In Progress</span>"}</span>`;
         list.appendChild(row);
     });
+
+    // 🎨 Render Avatar Outfit Customization Grid
+    const skinsGrid = document.getElementById("avatar-skins-grid");
+    if (skinsGrid) {
+        skinsGrid.innerHTML = "";
+        const currentEquipped = p.equippedAvatarSkin || "steppes_cyber";
+
+        AvatarSkinCatalog.forEach(skin => {
+            const isUnlocked = p.biomes >= skin.biomeReq;
+            const isEquipped = currentEquipped === skin.id;
+
+            const card = document.createElement("div");
+            card.className = "stat-card";
+            card.style.border = isEquipped ? "1.5px solid #38bdf8" : "1px solid rgba(255,255,255,0.08)";
+            card.style.background = isEquipped ? "rgba(14,165,233,0.12)" : "rgba(15,23,42,0.65)";
+            card.style.display = "flex";
+            card.style.flexDirection = "column";
+            card.style.justifyContent = "space-between";
+            card.style.padding = "12px";
+
+            const armorHex = `#${skin.armor.toString(16).padStart(6, '0')}`;
+            const accentHex = `#${skin.accent.toString(16).padStart(6, '0')}`;
+            const coreHex = `#${skin.core.toString(16).padStart(6, '0')}`;
+
+            card.innerHTML = `
+                <div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                        <span style="font-size:1.15rem; font-weight:700;">${skin.emoji} ${skin.name}</span>
+                        <span style="font-size:0.75rem; padding:2px 8px; border-radius:4px; ${isUnlocked ? 'background:#065f46; color:#34d399;' : 'background:#451a03; color:#f97316;'}">
+                            ${isUnlocked ? '✅ UNLOCKED' : `🔒 ${skin.reqLabel}`}
+                        </span>
+                    </div>
+                    <div style="display:flex; gap:6px; margin:8px 0;">
+                        <div style="width:18px; height:18px; border-radius:50%; background:${armorHex}; border:1px solid #475569;" title="Armor: ${armorHex}"></div>
+                        <div style="width:18px; height:18px; border-radius:50%; background:${accentHex}; border:1px solid #475569;" title="Accent: ${accentHex}"></div>
+                        <div style="width:18px; height:18px; border-radius:50%; background:${coreHex}; border:1px solid #475569;" title="Core Glow: ${coreHex}"></div>
+                    </div>
+                    <p style="font-size:0.8rem; color:#94a3b8; line-height:1.3; margin:0 0 10px 0;">${skin.desc}</p>
+                </div>
+                <button class="primary-btn skin-equip-btn" data-skin="${skin.id}" style="width:100%; font-size:0.85rem; padding:6px 0; ${!isUnlocked ? 'opacity:0.4; cursor:not-allowed;' : ''} ${isEquipped ? 'background:#0284c7;' : ''}" ${!isUnlocked ? 'disabled' : ''}>
+                    ${isEquipped ? '✓ EQUIPPED' : (isUnlocked ? 'EQUIP OUTFIT' : 'LOCKED')}
+                </button>
+            `;
+
+            if (isUnlocked) {
+                card.querySelector(".skin-equip-btn").addEventListener("click", () => {
+                    applyAvatarSkin(skin.id);
+                    renderProfileModal();
+                });
+            }
+
+            skinsGrid.appendChild(card);
+        });
+    }
 
     document.querySelectorAll(".slot-btn").forEach((b, idx) => {
         if (idx === activeSaveSlot) {
