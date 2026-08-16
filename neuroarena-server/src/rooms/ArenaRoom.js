@@ -1,10 +1,11 @@
-﻿const colyseus = require("colyseus");
+const colyseus = require("colyseus");
 const { Room } = colyseus;
-const { ArenaRoomState, PlayerSchema, ActivityState } = require("../schema/ArenaRoomState");
+const { ArenaRoomState, PlayerSchema, CollectibleSchema, ActivityState } = require("../schema/ArenaRoomState");
 
 /**
  * Real-Time Multiplayer Relay Room for NeuroArena biomes.
- * Synchronizes player positions, rotations, current biome, and activity states.
+ * Synchronizes player positions, rotations, current biome, activity states,
+ * and validates authoritative crystal/resource pickup attempts.
  */
 class ArenaRoom extends Room {
     onCreate(options) {
@@ -13,6 +14,9 @@ class ArenaRoom extends Room {
 
         // High responsiveness tickrate (20 updates/sec = 50ms interval)
         this.setPatchRate(50);
+
+        // Seed Authoritative Room Collectibles
+        this.seedAuthoritativeCollectibles();
 
         // 1. Transform Synchronization (Position & Rotation)
         this.onMessage("transform", (client, message) => {
@@ -30,7 +34,62 @@ class ArenaRoom extends Room {
             player.lastUpdate = Date.now();
         });
 
-        // 2. Explicit Activity State Notification (e.g. training / harvesting trigger)
+        // 2. Authoritative Crystal/Resource Pickup Attempt Validation
+        this.onMessage("pickup_attempt", (client, message) => {
+            const player = this.state.players.get(client.sessionId);
+            const itemId = message.id;
+
+            if (!player) return;
+
+            // Check item exists
+            let item = this.state.collectibles.get(itemId);
+            if (!item) {
+                // If not pre-seeded, register dynamic entry based on initial client seed
+                item = new CollectibleSchema(itemId, message.type || "FeatureCrystal_X", message.x || 0, message.y || 1.2, message.z || 0, message.valX || 0, message.valY || 0, player.biome);
+                this.state.collectibles.set(itemId, item);
+            }
+
+            // Check duplicate claim
+            if (item.collected) {
+                console.log(`[ArenaRoom] Pickup REJECTED for ${client.sessionId} on item ${itemId}: Already claimed by ${item.collectedBy}.`);
+                client.send("pickup_rejected", { id: itemId, reason: "ALREADY_CLAIMED", claimedBy: item.collectedBy });
+                return;
+            }
+
+            // Check distance plausibility (Threshold: 4.5m for network latency tolerance)
+            const dx = player.x - (message.x !== undefined ? message.x : item.x);
+            const dz = player.z - (message.z !== undefined ? message.z : item.z);
+            const dist = Math.sqrt(dx * dx + dz * dz);
+
+            if (dist > 4.5) {
+                console.log(`[ArenaRoom] Pickup REJECTED for ${client.sessionId} on item ${itemId}: Distance too far (${dist.toFixed(2)}m > 4.5m).`);
+                client.send("pickup_rejected", { id: itemId, reason: "DISTANCE_TOO_FAR", distance: dist });
+                return;
+            }
+
+            // Approved: Mark collected authoritatively
+            item.collected = true;
+            item.collectedBy = client.sessionId;
+
+            console.log(`[ArenaRoom] Pickup APPROVED for ${player.name} (${client.sessionId}) on item ${itemId} (dist: ${dist.toFixed(2)}m).`);
+
+            // Confirm approval to claiming client
+            client.send("pickup_approved", {
+                id: itemId,
+                type: item.type,
+                valX: item.valX,
+                valY: item.valY
+            });
+
+            // Broadcast removal to all other clients in the biome instance
+            this.broadcast("collectible_claimed", {
+                id: itemId,
+                collectedBy: client.sessionId,
+                claimedByName: player.name
+            }, { except: client });
+        });
+
+        // 3. Explicit Activity State Notification (e.g. training / harvesting trigger)
         this.onMessage("activity", (client, message) => {
             const player = this.state.players.get(client.sessionId);
             if (player && typeof message.state === "string" && Object.values(ActivityState).includes(message.state)) {
@@ -40,7 +99,7 @@ class ArenaRoom extends Room {
             }
         });
 
-        // 3. Biome Fast-Travel Notification
+        // 4. Biome Fast-Travel Notification
         this.onMessage("biome", (client, message) => {
             const player = this.state.players.get(client.sessionId);
             if (player && typeof message.biome === "number") {
@@ -50,12 +109,28 @@ class ArenaRoom extends Room {
             }
         });
 
-        // 4. Latency / Ping-Pong
+        // 5. Latency / Ping-Pong
         this.onMessage("ping", (client, message) => {
             client.send("pong", { clientTime: message.clientTime, serverTime: Date.now() });
         });
 
         console.log(`[ArenaRoom] Created room ${this.roomId} with max ${this.maxClients} clients.`);
+    }
+
+    seedAuthoritativeCollectibles() {
+        for (let i = 0; i < 24; i++) {
+            const id = `col_${i}`;
+            const angle = (i / 24) * Math.PI * 2;
+            const r = 6.5 + (i % 5) * 4.0;
+            const x = Math.cos(angle) * r;
+            const z = Math.sin(angle) * r;
+            const type = (i % 2 === 0) ? "FeatureCrystal_X" : "TargetShard_Y";
+            const valX = -4.5 + (i / 23) * 9.0;
+            const valY = 2.45 * valX + 1.15;
+
+            const item = new CollectibleSchema(id, type, x, 1.2, z, valX, valY, 0);
+            this.state.collectibles.set(id, item);
+        }
     }
 
     onJoin(client, options) {

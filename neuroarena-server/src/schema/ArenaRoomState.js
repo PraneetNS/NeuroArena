@@ -1,4 +1,4 @@
-﻿const schema = require("@colyseus/schema");
+const schema = require("@colyseus/schema");
 const { Schema, MapSchema, type } = schema;
 
 /**
@@ -44,21 +44,54 @@ type("string")(PlayerSchema.prototype, "activityState");
 type("number")(PlayerSchema.prototype, "lastUpdate");
 
 /**
- * Arena Room State schema containing the synchronized players map.
+ * Collectible Item state schema synchronized across the room.
+ */
+class CollectibleSchema extends Schema {
+    constructor(id = "", type = "FeatureCrystal_X", x = 0, y = 1.2, z = 0, valX = 0, valY = 0, biome = 0) {
+        super();
+        this.id = id;
+        this.type = type;
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.valX = valX;
+        this.valY = valY;
+        this.biome = biome;
+        this.collected = false;
+        this.collectedBy = "";
+    }
+}
+
+type("string")(CollectibleSchema.prototype, "id");
+type("string")(CollectibleSchema.prototype, "type");
+type("number")(CollectibleSchema.prototype, "x");
+type("number")(CollectibleSchema.prototype, "y");
+type("number")(CollectibleSchema.prototype, "z");
+type("number")(CollectibleSchema.prototype, "valX");
+type("number")(CollectibleSchema.prototype, "valY");
+type("uint8")(CollectibleSchema.prototype, "biome");
+type("boolean")(CollectibleSchema.prototype, "collected");
+type("string")(CollectibleSchema.prototype, "collectedBy");
+
+/**
+ * Arena Room State schema containing the synchronized players and collectibles maps.
  */
 class ArenaRoomState extends Schema {
     constructor() {
         super();
         this.players = new MapSchema();
+        this.collectibles = new MapSchema();
         this.serverTime = Date.now();
     }
 }
 
 type({ map: PlayerSchema })(ArenaRoomState.prototype, "players");
+type({ map: CollectibleSchema })(ArenaRoomState.prototype, "collectibles");
 type("number")(ArenaRoomState.prototype, "serverTime");
 
 module.exports = {
     ActivityState,
     PlayerSchema,
+    CollectibleSchema,
     ArenaRoomState
 };

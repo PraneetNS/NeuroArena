@@ -2414,6 +2414,7 @@ function spawnSeededCollectibles() {
         scene.add(badge);
 
         collectibles.push({
+            id: `col_${i}`,
             mesh,
             badge,
             type,
@@ -2544,6 +2545,8 @@ const ColyseusNetwork = {
         });
     },
 
+    pendingPickups: new Map(), // id -> { item, datasetEntry }
+
     handleMessage(msg) {
         if (msg.type === "state_update" && Array.isArray(msg.players)) {
             msg.players.forEach(p => {
@@ -2558,6 +2561,42 @@ const ColyseusNetwork = {
             this.updateGhostTransform(msg.id, msg);
         } else if (msg.type === "player_activity") {
             this.updateGhostActivity(msg.id, msg.state);
+        } else if (msg.type === "pickup_approved") {
+            this.pendingPickups.delete(msg.id);
+            console.log(`[ColyseusNetwork] Server approved pickup: ${msg.id}`);
+        } else if (msg.type === "pickup_rejected") {
+            console.warn(`[ColyseusNetwork] Server REJECTED pickup for ${msg.id}: ${msg.reason}. Rolling back local prediction.`);
+            const pending = this.pendingPickups.get(msg.id);
+            if (pending) {
+                // Revert local state (Reconciliation Rollback)
+                pending.item.collected = false;
+                if (pending.item.mesh && scene) scene.add(pending.item.mesh);
+                if (pending.item.badge && scene) scene.add(pending.item.badge);
+
+                const dIdx = GameState.collectedDataset.indexOf(pending.datasetEntry);
+                if (dIdx >= 0) GameState.collectedDataset.splice(dIdx, 1);
+
+                computeDatasetStats();
+                updateHUD();
+                playFailureSFX();
+
+                const toast = document.createElement("div");
+                toast.className = "network-rejection-toast";
+                toast.innerHTML = `⚠️ <b>PICKUP REJECTED:</b> Resource was already claimed by another architect!`;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3500);
+
+                this.pendingPickups.delete(msg.id);
+            }
+        } else if (msg.type === "collectible_claimed") {
+            const col = collectibles.find(c => c.id === msg.id);
+            if (col && !col.collected) {
+                col.collected = true;
+                if (col.mesh && scene) scene.remove(col.mesh);
+                if (col.badge && scene) scene.remove(col.badge);
+                if (col.mesh) trigger3DParticleBurst(col.mesh.position);
+                console.log(`[ColyseusNetwork] Collectible ${msg.id} was claimed by remote player ${msg.claimedByName || msg.collectedBy}.`);
+            }
         }
     },
 
@@ -2784,8 +2823,8 @@ function updateGame(deltaTime) {
             if (c.badge) scene.remove(c.badge);
             playerAnimState.pickupTimer = 0.55; // Trigger pickup gesture
 
-            // Genuinely store picked-up coordinate payload into active dataset
-            GameState.collectedDataset.push({
+            // Optimistic Client-Side Prediction: Store picked-up coordinate payload into active dataset
+            const datasetEntry = {
                 type: c.type,
                 x: c.x,
                 y: c.y,
@@ -2793,7 +2832,8 @@ function updateGame(deltaTime) {
                 x2: c.x2,
                 classLabel: c.classLabel,
                 isOutlier: c.isOutlier
-            });
+            };
+            GameState.collectedDataset.push(datasetEntry);
 
             if (c.type === "FeatureCrystal_X") GameState.resources.featureX++;
             else if (c.type === "TargetShard_Y") GameState.resources.targetY++;
@@ -2802,6 +2842,19 @@ function updateGame(deltaTime) {
             else if (c.type.includes("Token")) GameState.resources.featureX++;
 
             playPickupSFX();
+
+            // Register pending prediction transaction for server authoritative validation
+            if (typeof ColyseusNetwork !== "undefined") {
+                ColyseusNetwork.pendingPickups.set(c.id, { item: c, datasetEntry });
+                ColyseusNetwork.send("pickup_attempt", {
+                    id: c.id,
+                    type: c.type,
+                    x: c.x,
+                    y: c.y,
+                    valX: c.x,
+                    valY: c.y
+                });
+            }
 
             if (GameState.tutorialStep === 0 && c.isFirst) {
                 GameState.tutorialStep = 1;

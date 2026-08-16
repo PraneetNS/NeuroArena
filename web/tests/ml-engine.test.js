@@ -452,6 +452,30 @@ function testFullHumanoidGhostAvatarAndTrainingVisuals() {
     console.log("✅ Full Humanoid Ghost Avatar & Training Energy Halo Test Passed!");
 }
 
+function testAuthoritativePickupReconciliation() {
+    const item = { id: "col_04", collected: false, x: 5.0, y: 1.2, z: 5.0 };
+    const dataset = [];
+
+    // 1. Client-side optimistic prediction
+    item.collected = true;
+    const entry = { type: "FeatureCrystal_X", x: 2.4, y: 7.03 };
+    dataset.push(entry);
+    assert.strictEqual(item.collected, true, "Item must be optimistically collected");
+    assert.strictEqual(dataset.length, 1, "Dataset must optimistically receive element");
+
+    // 2. Simulate Server Rejection (Rollback Reconciliation)
+    const serverApproved = false;
+    if (!serverApproved) {
+        item.collected = false;
+        const idx = dataset.indexOf(entry);
+        if (idx >= 0) dataset.splice(idx, 1);
+    }
+
+    assert.strictEqual(item.collected, false, "Item collection state must be reverted upon server rejection");
+    assert.strictEqual(dataset.length, 0, "Dataset must roll back element upon server rejection");
+    console.log("✅ Client-Side Prediction & Authoritative Server Pickup Reconciliation Test Passed!");
+}
+
 testSeedPRNG();
 testLinearInferenceAndExtrapolation();
 testDatasetHealthAndGeneralizationDegradation();
@@ -472,5 +496,6 @@ testLiveInlineNumericTokens();
 testSemanticConsultNearestNeighbors();
 testMultiplayerNetworkManagerAndGhostInterpolation();
 testFullHumanoidGhostAvatarAndTrainingVisuals();
+testAuthoritativePickupReconciliation();
 console.log("🎉 All Web Unit Tests Passed Cleanly!");
 

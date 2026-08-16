@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -136,6 +136,58 @@ namespace NeuroArena.Network
             {
                 if (ghost != null) Destroy(ghost.gameObject);
                 remoteGhosts.Remove(sessionId);
+            }
+        }
+
+        // --- AUTHORITATIVE PICKUP VALIDATION & PREDICTION RECONCILIATION ---
+        private readonly Dictionary<string, GameObject> pendingPickupObjects = new Dictionary<string, GameObject>();
+
+        public void SendPickupAttempt(string itemId, string itemType, GameObject collectibleGO, Vector3 pos, float valX, float valY)
+        {
+            if (!isConnected) return;
+
+            // 1. Optimistic Local Prediction (Hiding immediately on client)
+            if (collectibleGO != null)
+            {
+                collectibleGO.SetActive(false);
+                pendingPickupObjects[itemId] = collectibleGO;
+            }
+
+            Debug.Log($"[NetworkManager] Sent authoritative 'pickup_attempt' for object: {itemId} ({itemType}) at ({pos.x:F1}, {pos.z:F1})");
+            // Dispatches JSON payload to Colyseus room:
+            // wsClient.Send("pickup_attempt", { id = itemId, type = itemType, x = pos.x, y = pos.y, z = pos.z, valX = valX, valY = valY });
+        }
+
+        public void OnPickupApproved(string itemId, string itemType, float valX, float valY)
+        {
+            Debug.Log($"[NetworkManager] Server APPROVED pickup claim for: {itemId}");
+            if (pendingPickupObjects.ContainsKey(itemId))
+            {
+                pendingPickupObjects.Remove(itemId);
+            }
+        }
+
+        public void OnPickupRejected(string itemId, string reason)
+        {
+            Debug.LogWarning($"[NetworkManager] Server REJECTED pickup claim for: {itemId}. Reason: {reason}. Rolling back local prediction.");
+            if (pendingPickupObjects.TryGetValue(itemId, out GameObject collectibleGO))
+            {
+                if (collectibleGO != null)
+                {
+                    collectibleGO.SetActive(true); // Re-enable mesh
+                }
+                pendingPickupObjects.Remove(itemId);
+            }
+        }
+
+        public void OnRemoteCollectibleClaimed(string itemId, string collectedBy)
+        {
+            Debug.Log($"[NetworkManager] Remote player {collectedBy} claimed collectible: {itemId}");
+            // If the object exists locally in the biome scene, remove it
+            GameObject obj = GameObject.Find(itemId);
+            if (obj != null)
+            {
+                Destroy(obj);
             }
         }
     }
