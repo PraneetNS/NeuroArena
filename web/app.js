@@ -3057,6 +3057,47 @@ function setupUIEvents() {
         });
     }
 
+    function showBiomeTransitionToast(biomeIndex) {
+        const toast = document.getElementById("biome-transition-toast");
+        const b = BiomeWorldCatalog[biomeIndex];
+        if (!toast || !b) return;
+
+        const iconEl = document.getElementById("toast-biome-icon");
+        const titleEl = document.getElementById("toast-biome-title");
+        const subEl = document.getElementById("toast-biome-subtitle");
+
+        const icons = ["🏜️", "🌿", "❄️", "🌲", "🔮", "🌌"];
+        if (iconEl) iconEl.innerText = icons[biomeIndex] || "🚀";
+        if (titleEl) {
+            titleEl.innerText = `BIOME #${biomeIndex + 1}: ${b.name.toUpperCase()}`;
+            titleEl.style.color = b.color;
+        }
+        if (subEl) subEl.innerText = `${b.subtitle} • ${b.paradigm}`;
+
+        toast.classList.remove("hidden");
+        triggerParticleShockwave(playerPos, biomeIndex === 0 ? 0xf59e0b : (biomeIndex === 1 ? 0x10b981 : 0x38bdf8));
+        playVictoryPassSFX();
+
+        if (typeof gsap !== "undefined") {
+            gsap.killTweensOf(toast);
+            gsap.fromTo(toast,
+                { y: -30, opacity: 0, scale: 0.9 },
+                { y: 0, opacity: 1, scale: 1.0, duration: 0.45, ease: "back.out(1.7)" }
+            );
+            gsap.to(toast, {
+                y: -25,
+                opacity: 0,
+                scale: 0.95,
+                duration: 0.35,
+                ease: "power2.in",
+                delay: 3.2,
+                onComplete: () => toast.classList.add("hidden")
+            });
+        } else {
+            setTimeout(() => toast.classList.add("hidden"), 3500);
+        }
+    }
+
     function startBiomeLoadingSequence(biomeIndex, onComplete) {
         GameState.currentBiome = biomeIndex;
         createTerrain(biomeIndex);
@@ -3066,6 +3107,7 @@ function setupUIEvents() {
         recenterCameraOrbit();
         spawnSeededCollectibles();
         updateHUD();
+        showBiomeTransitionToast(biomeIndex);
         if (typeof onComplete === "function") onComplete();
     }
 

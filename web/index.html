@@ -139,6 +139,17 @@
         <!-- Screen Flash Overlay -->
         <div id="screen-flash-overlay"></div>
 
+        <!-- Biome Warp Transition Toast -->
+        <div id="biome-transition-toast" class="hidden" style="position:fixed; top:24px; left:50%; transform:translateX(-50%); z-index:9000; pointer-events:none;">
+            <div class="glass-card" style="background:rgba(15,23,42,0.92); border:1.5px solid #38bdf8; border-radius:12px; padding:12px 24px; display:flex; align-items:center; gap:16px; box-shadow:0 12px 36px rgba(0,0,0,0.6), 0 0 20px rgba(56,189,248,0.3);">
+                <div id="toast-biome-icon" style="font-size:2rem;">🚀</div>
+                <div>
+                    <div id="toast-biome-title" style="font-size:1.15rem; font-weight:800; color:#38bdf8; letter-spacing:0.5px;">ARRIVING IN BIOME</div>
+                    <div id="toast-biome-subtitle" style="font-size:0.82rem; color:#cbd5e1; margin-top:2px;">Topological Synthesis Complete</div>
+                </div>
+            </div>
+        </div>
+
         <!-- 3D Canvas Container -->
         <canvas id="three-canvas"></canvas>
 
