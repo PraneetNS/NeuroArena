@@ -5,6 +5,7 @@
         "Unity.TextMeshPro",
         "Unity.InputSystem",
         "Unity.RenderPipelines.Universal.Runtime",
+        "Unity.RenderPipelines.Core.Runtime",
         "Unity.Mathematics",
         "Unity.Burst",
         "Unity.Collections"
