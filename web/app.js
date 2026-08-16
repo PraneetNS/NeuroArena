@@ -1668,20 +1668,124 @@ function init3DWorld() {
 }
 
 function createTerrain() {
-    const geo = new THREE.PlaneGeometry(180, 180, 64, 64);
+    const geo = new THREE.PlaneGeometry(180, 180, 48, 48);
     geo.rotateX(-Math.PI / 2);
     const pos = geo.attributes.position;
+    const colors = [];
+    const color = new THREE.Color();
+
     for (let i = 0; i < pos.count; i++) {
         const x = pos.getX(i), z = pos.getZ(i);
         const dist = Math.sqrt(x * x + z * z);
-        const y = (Math.sin(x * 0.08) * Math.cos(z * 0.08) * 2.8) * Math.min(Math.max((dist - 10) / 25, 0), 1);
+        let y = (Math.sin(x * 0.07) * Math.cos(z * 0.07) * 3.2 + Math.sin(x * 0.03 + z * 0.03) * 1.5);
+        if (dist > 25) y = Math.round(y / 0.8) * 0.8; // Terraced steps
+        if (dist < 12) y *= (dist / 12); // Flat center spawn
+
+        // Boundary ridges
+        if (Math.abs(x) > 75 || Math.abs(z) > 75) y += 6.5;
+
         pos.setY(i, y);
+
+        // Vertex coloring (flats vs slope cliffs)
+        if (y > 2.5) color.setHex(0x78350f); // Earth Ochre Cliff
+        else color.setHex(0x16242c); // Dark Biome Ground
+        colors.push(color.r, color.g, color.b);
     }
+    geo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
     geo.computeVertexNormals();
-    scene.add(new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: 0x162022, roughness: 0.85 })));
-    const grid = new THREE.GridHelper(180, 45, 0x22d3ee, 0x1e293b);
+
+    const mat = new THREE.MeshStandardMaterial({
+        vertexColors: true,
+        roughness: 0.88,
+        metalness: 0.15,
+        flatShading: true
+    });
+    const terrainMesh = new THREE.Mesh(geo, mat);
+    terrainMesh.receiveShadow = true;
+    scene.add(terrainMesh);
+
+    const grid = new THREE.GridHelper(180, 45, 0xf59e0b, 0x1e293b);
     grid.position.y = 0.05;
     scene.add(grid);
+
+    scatterBiomeNatureProps();
+}
+
+// --- LOW-POLY FACETED GEOMETRY BUILDERS (UNIFIED ART PIPELINE) ---
+function createFacetedCrystalGeometry(radius = 0.45, height = 1.35) {
+    const geo = new THREE.CylinderGeometry(0, radius, height * 0.5, 6, 1);
+    const geoBtm = new THREE.CylinderGeometry(radius, 0, height * 0.5, 6, 1);
+    geoBtm.translate(0, -height * 0.5, 0);
+
+    const merged = new THREE.BufferGeometry();
+    // Simplified bipyramid using octahedron or faceted cylinder
+    return new THREE.OctahedronGeometry(radius * 1.4, 0);
+}
+
+function createFacetedShardGeometry(radius = 0.48) {
+    const geo = new THREE.DodecahedronGeometry(radius, 0);
+    const pos = geo.attributes.position;
+    for (let i = 0; i < pos.count; i++) {
+        pos.setY(i, pos.getY(i) * 1.6);
+        pos.setX(i, pos.getX(i) * 0.85);
+    }
+    geo.computeVertexNormals();
+    return geo;
+}
+
+function createFacetedRuneGeometry() {
+    const geo = new THREE.BoxGeometry(0.75, 1.05, 0.28);
+    return geo;
+}
+
+function scatterBiomeNatureProps() {
+    const natureGroup = new THREE.Group();
+    natureGroup.name = "BiomeNatureScatter";
+
+    const rockMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.85, flatShading: true });
+    const trunkMat = new THREE.MeshStandardMaterial({ color: 0x451a03, roughness: 0.9 });
+    const foliageMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.7, flatShading: true }); // Amber Foliage
+
+    // Scatter 18 Low-Poly Trees
+    for (let i = 0; i < 18; i++) {
+        const angle = SeedPRNG.range(0, Math.PI * 2);
+        const r = SeedPRNG.range(16, 65);
+        const x = Math.cos(angle) * r;
+        const z = Math.sin(angle) * r;
+
+        const tree = new THREE.Group();
+        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.35, 1.8, 6), trunkMat);
+        trunk.position.y = 0.9;
+        tree.add(trunk);
+
+        // 3-tiered foliage cones
+        for (let j = 0; j < 3; j++) {
+            const cone = new THREE.Mesh(new THREE.ConeGeometry(1.6 - j * 0.4, 1.4, 6), foliageMat);
+            cone.position.y = 1.8 + j * 0.9;
+            tree.add(cone);
+        }
+
+        tree.position.set(x, 0, z);
+        const s = SeedPRNG.range(0.8, 1.3);
+        tree.scale.set(s, s, s);
+        natureGroup.add(tree);
+    }
+
+    // Scatter 22 Faceted Boulders
+    for (let i = 0; i < 22; i++) {
+        const angle = SeedPRNG.range(0, Math.PI * 2);
+        const r = SeedPRNG.range(12, 70);
+        const x = Math.cos(angle) * r;
+        const z = Math.sin(angle) * r;
+
+        const rockGeo = new THREE.DodecahedronGeometry(SeedPRNG.range(1.0, 2.2), 0);
+        const rock = new THREE.Mesh(rockGeo, rockMat);
+        rock.position.set(x, 0.4, z);
+        rock.rotation.set(SeedPRNG.range(0, Math.PI), SeedPRNG.range(0, Math.PI), 0);
+        natureGroup.add(rock);
+    }
+
+    scene.add(natureGroup);
 }
 
 let playerLimbs = {
@@ -1905,11 +2009,70 @@ function createMascotCompanion() {
     scene.add(mascotMesh);
 }
 
-function createBiomePlatforms() {
-    const p1 = new THREE.Mesh(new THREE.CylinderGeometry(4.5, 4.5, 0.4, 32), new THREE.MeshStandardMaterial({ color: 0x0f172a }));
-    p1.position.set(14, 0.2, 14);
-    scene.add(p1);
+let labHoloRingMesh = null;
 
+function createBiomePlatforms() {
+    // 1. Modeled Octagonal Lab Station Platform
+    const labGroup = new THREE.Group();
+    labGroup.position.set(14, 0.2, 14);
+
+    // Octagonal Platform Base
+    const platGeo = new THREE.CylinderGeometry(4.8, 5.2, 0.45, 8);
+    const platMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.35, metalness: 0.7 });
+    const platform = new THREE.Mesh(platGeo, platMat);
+    labGroup.add(platform);
+
+    // Central Console Monolith
+    const consoleGeo = new THREE.BoxGeometry(1.4, 2.5, 0.9);
+    const consoleMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.25, metalness: 0.8 });
+    const consoleMesh = new THREE.Mesh(consoleGeo, consoleMat);
+    consoleMesh.position.set(0, 1.35, 0);
+    labGroup.add(consoleMesh);
+
+    // Inclined Touchscreen Face
+    const screenGeo = new THREE.PlaneGeometry(0.85, 0.65);
+    const screenMat = new THREE.MeshStandardMaterial({
+        color: 0x088598,
+        emissive: 0x06b6d4,
+        emissiveIntensity: 1.8,
+        roughness: 0.1
+    });
+    const screenMesh = new THREE.Mesh(screenGeo, screenMat);
+    screenMesh.position.set(0, 0.35, 0.52);
+    screenMesh.rotation.x = -0.3;
+    consoleMesh.add(screenMesh);
+
+    // Dual Flanking Resonator Pillars
+    const pillarMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.4, metalness: 0.6 });
+    const slitMat = new THREE.MeshStandardMaterial({ color: 0x22d3ee, emissive: 0x06b6d4, emissiveIntensity: 2.0 });
+
+    [-2.6, 2.6].forEach((xOffset, idx) => {
+        const pillar = new THREE.Mesh(new THREE.BoxGeometry(0.65, 3.2, 0.65), pillarMat);
+        pillar.position.set(xOffset, 1.6, 0);
+
+        const slit = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.9, 0.08), slitMat);
+        slit.position.set(0, 0, 0.34);
+        pillar.add(slit);
+
+        labGroup.add(pillar);
+    });
+
+    // Floating Rotating Hologram Orbit Ring
+    const ringGeo = new THREE.TorusGeometry(1.4, 0.06, 8, 32);
+    const ringMat = new THREE.MeshStandardMaterial({
+        color: 0x2dd4bf,
+        emissive: 0x14b8a6,
+        emissiveIntensity: 2.2,
+        roughness: 0.2
+    });
+    labHoloRingMesh = new THREE.Mesh(ringGeo, ringMat);
+    labHoloRingMesh.rotation.x = Math.PI / 2;
+    labHoloRingMesh.position.set(0, 3.8, 0);
+    labGroup.add(labHoloRingMesh);
+
+    scene.add(labGroup);
+
+    // 2. Astral Plateau (Biome 6)
     const p6 = new THREE.Mesh(new THREE.CylinderGeometry(18, 18, 0.6, 48), new THREE.MeshStandardMaterial({ color: 0x07111e, emissive: 0x0c4a6e }));
     p6.position.set(0, 0.3, 65);
     scene.add(p6);
@@ -1925,7 +2088,7 @@ function spawnBiome6Runes(center) {
         const angle = (cat * (Math.PI * 2 / 3)) + (i % 6 - 2.5) * 0.25;
         const r = 8.5 + (i % 3) * 2.0;
 
-        const mesh = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 0.15, 16), new THREE.MeshStandardMaterial({ color: col, emissive: col }));
+        const mesh = new THREE.Mesh(createFacetedRuneGeometry(), new THREE.MeshStandardMaterial({ color: col, emissive: col, roughness: 0.3 }));
         mesh.position.set(center.x + Math.cos(angle) * r, center.y + (i % 2) * 0.6, center.z + Math.sin(angle) * r);
         scene.add(mesh);
         runeMeshes.push(mesh);
@@ -1947,32 +2110,39 @@ function spawnSeededCollectibles() {
         if (isOutlier) rawY += (SeedPRNG.next() > 0.5 ? 1 : -1) * SeedPRNG.range(6.5, 12.0);
 
         const roll = i % 4;
-        let type, colHex, emHex, classLabel;
+        let type, colHex, emHex, classLabel, geom;
 
         if (roll === 0 || roll === 1) {
             type = "FeatureCrystal_X";
-            colHex = (i === 0) ? 0xfacc15 : 0x38bdf8; // Amber first crystal or Cyan
-            emHex = (i === 0) ? 0xfacc15 : 0x0284c7;
+            colHex = (i === 0) ? 0xfacc15 : 0x06b6d4; // Amber first crystal or Cyan
+            emHex = (i === 0) ? 0xf59e0b : 0x0891b2;
+            geom = createFacetedCrystalGeometry(0.45, 1.3);
         } else if (roll === 2) {
             type = "TargetShard_Y";
             colHex = 0xf59e0b; // Amber
-            emHex = 0xb45309;
+            emHex = 0xd97706;
+            geom = createFacetedShardGeometry(0.48);
         } else {
             const isClass1 = SeedPRNG.next() > (0.5 - p.classOverlap * 0.5);
             classLabel = isClass1 ? 1 : 0;
             type = isClass1 ? "Class1_AzureSpore" : "Class0_PurpleSpore";
             colHex = isClass1 ? 0x22d3ee : 0xa855f7; // Azure or Neon Purple
             emHex = isClass1 ? 0x0891b2 : 0x7e22ce;
+            geom = createFacetedRuneGeometry();
         }
 
         const angle = i === 0 ? 0.3 : SeedPRNG.range(0, Math.PI * 2);
         const r = i === 0 ? 6.5 : (6 + SeedPRNG.range(0, 26));
 
-        const geom = (type === "FeatureCrystal_X") ? new THREE.BoxGeometry(0.65, 0.65, 0.65) :
-                     (type === "TargetShard_Y") ? new THREE.OctahedronGeometry(0.48) :
-                     new THREE.SphereGeometry(0.42, 16, 16);
-
-        const mesh = new THREE.Mesh(geom, new THREE.MeshStandardMaterial({ color: colHex, emissive: emHex, roughness: 0.25 }));
+        const mat = new THREE.MeshStandardMaterial({
+            color: colHex,
+            emissive: emHex,
+            emissiveIntensity: 1.6,
+            roughness: 0.22,
+            metalness: 0.35,
+            flatShading: true
+        });
+        const mesh = new THREE.Mesh(geom, mat);
         mesh.position.set(Math.cos(angle) * r, 1.2, Math.sin(angle) * r);
         scene.add(mesh);
 
@@ -2120,11 +2290,18 @@ function updateGame(deltaTime) {
     camera.position.set(playerPos.x + Math.sin(cameraOrbit.yaw) * Math.cos(cameraOrbit.pitch) * cameraOrbit.distance, playerPos.y + Math.sin(cameraOrbit.pitch) * cameraOrbit.distance + 1.2, playerPos.z + Math.cos(cameraOrbit.yaw) * Math.cos(cameraOrbit.pitch) * cameraOrbit.distance);
     camera.lookAt(playerPos.x, playerPos.y + 1.2, playerPos.z);
 
-    const time = performance.now() * 0.003;
+    if (labHoloRingMesh) {
+        labHoloRingMesh.rotation.z += deltaTime * 0.6;
+        labHoloRingMesh.position.y = 3.8 + Math.sin(performance.now() * 0.002) * 0.08;
+    }
+
+    const time = performance.now() * 0.0025;
     collectibles.forEach(c => {
         if (c.collected) return;
-        c.mesh.rotation.y += deltaTime * 1.5;
-        c.mesh.position.y = c.baseY + Math.sin(time + c.mesh.position.x) * 0.15;
+        c.mesh.rotation.y += deltaTime * 1.6;
+        c.mesh.rotation.x = Math.sin(time * 1.5 + c.mesh.position.x) * 0.12;
+        c.mesh.rotation.z = Math.cos(time * 1.2 + c.mesh.position.z) * 0.12;
+        c.mesh.position.y = c.baseY + Math.sin(time * 2.2 + c.mesh.position.x) * 0.18;
         if (playerPos.distanceTo(c.mesh.position) < 1.4) {
             c.collected = true; scene.remove(c.mesh);
             playerAnimState.pickupTimer = 0.55; // Trigger pickup gesture
@@ -2805,6 +2982,93 @@ function setupUIEvents() {
         openMyModelsGallery();
     });
 
+    // Consult & Model Interrogation HUD Opener
+    function openConsultDirectly() {
+        if (ModelVault.length === 0) {
+            ModelVault.push({
+                id: "linear_base_calibrated",
+                name: "Linear Steppes Baseline Regressor",
+                biome: "Biome 1: The Linear Steppes",
+                biomeIndex: 0,
+                type: "linear",
+                weights: { w: GameState.profile.trueW || 2.45, b: GameState.profile.trueB || 1.15 },
+                testAccuracy: 94.8,
+                loss: 0.042,
+                domainMin: -4.5,
+                domainMax: 4.5,
+                domainMean: 0.0,
+                domainStd: 2.6,
+                sampleCount: 24,
+                history: [0.85, 0.45, 0.22, 0.12, 0.06, 0.042]
+            });
+        }
+        activeInspectedModel = ModelVault[ModelVault.length - 1];
+        openModelInspector(activeInspectedModel);
+        document.getElementById("inspector-tab-consult")?.click();
+    }
+    document.getElementById("btn-open-consult-hud")?.addEventListener("click", openConsultDirectly);
+
+    // Objective Detail Modal Opener & Real-Time Sync
+    function updateObjectiveModal() {
+        const bIdx = GameState.currentBiome || 0;
+        const bNames = [
+            "Biome 1: The Linear Steppes",
+            "Biome 2: The Binary Marshlands",
+            "Biome 3: The Tree Canopy",
+            "Biome 4: Glacial Ridge",
+            "Biome 5: Deep Citadel",
+            "Biome 6: Astral Plateau"
+        ];
+        const bDescs = [
+            "Harvest real numerical feature crystals (X) and target shards (Y). Approach the terminal monolith to train a linear regressor achieving MSE ≤ 0.10.",
+            "Gather azure and neon purple spores to separate classes using sigmoid logistic regression with test accuracy ≥ 90%.",
+            "Sample non-linear feature clusters and optimize decision tree boundaries using Gini Impurity split criteria.",
+            "Train continuous deep MLPs with learning rate scheduling to traverse steep loss ravines.",
+            "Overcome noisy adversarial outliers and multi-class classification using Adam optimizer.",
+            "Synthesize multi-dimensional word embeddings with PPMI cosine similarity."
+        ];
+        const bThresholds = [
+            "MSE ≤ 0.10",
+            "Accuracy ≥ 90%",
+            "Gini Impurity ≤ 0.08",
+            "Ravine Loss ≤ 0.05",
+            "Test Accuracy ≥ 92%",
+            "Cosine Sim ≥ 0.75"
+        ];
+        const bRewards = [
+            "🔓 Unlock Biome 2 (Binary Marshlands) + Obsidian Gradient Skin",
+            "🔓 Unlock Biome 3 (Tree Canopy) + Bioluminescent Skin",
+            "🔓 Unlock Biome 4 (Glacial Ridge) + Random Forest Booster",
+            "🔓 Unlock Biome 5 (Deep Citadel) + Glacial Armor",
+            "🔓 Unlock Biome 6 (Astral Plateau) + Citadel Monolith Core",
+            "👑 Architect Grandmaster Title + Astral Aura Crown"
+        ];
+
+        document.getElementById("modal-objective-title").innerText = bNames[bIdx] || bNames[0];
+        document.getElementById("modal-objective-desc").innerText = bDescs[bIdx] || bDescs[0];
+        document.getElementById("modal-objective-threshold").innerText = bThresholds[bIdx] || bThresholds[0];
+        document.getElementById("modal-objective-crystals").innerText = `${GameState.collectedDataset.length} / 18 Collected`;
+        const stats = computeDatasetStats();
+        document.getElementById("modal-objective-health").innerText = `Dataset Health: ${stats?.healthScore || 100}%`;
+        document.getElementById("modal-objective-reward").innerText = bRewards[bIdx] || bRewards[0];
+    }
+
+    function openObjectiveModal() {
+        const modal = document.getElementById("objective-modal");
+        if (!modal) return;
+        updateObjectiveModal();
+        modal.classList.remove("hidden");
+        if (typeof gsap !== "undefined") {
+            gsap.fromTo(modal.querySelector(".glass-modal"), { scale: 0.88, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: "back.out(1.5)" });
+        }
+    }
+    document.getElementById("objective-banner")?.addEventListener("click", openObjectiveModal);
+    document.getElementById("btn-close-objective")?.addEventListener("click", () => document.getElementById("objective-modal")?.classList.add("hidden"));
+    document.getElementById("btn-objective-go-to-lab")?.addEventListener("click", () => {
+        document.getElementById("objective-modal")?.classList.add("hidden");
+        openFormulaTerminal();
+    });
+
     // Profile Modals
     function openProfileScreen() {
         renderProfileModal();
@@ -3122,8 +3386,35 @@ function setupUIEvents() {
         banner.classList.remove("hidden");
     });
 
-    // Leaderboard Modal
+    // Leaderboard & Achievements Modal
+    function renderAchievements() {
+        const grid = document.getElementById("achievements-grid");
+        if (!grid) return;
+        const p = ProfileSlots[activeSaveSlot];
+        const stats = computeDatasetStats();
+        const achievementsList = [
+            { title: "💎 Crystal Harvester", desc: "Collect your first 5 dataset crystals", unlocked: GameState.collectedDataset.length >= 5 },
+            { title: "⚡ Gradient Master", desc: "Train a model achieving MSE ≤ 0.10", unlocked: GameState.lastLoss < 0.10 && GameState.lastLoss > 0 },
+            { title: "🏛️ Biome Conqueror", desc: "Defeat Stage Gate Boss and unlock Biome 2", unlocked: GameState.unlockedBiomes[1] },
+            { title: "📅 Daily Warrior", desc: "Maintain a 2+ day streak in Daily Challenges", unlocked: p.streak >= 2 || p.bestStreak >= 2 },
+            { title: "💾 Archival Savant", desc: "Save 3+ calibrated models in the Vault", unlocked: ModelVault.length >= 3 },
+            { title: "🏁 Grand Prix Winner", desc: "Win a Grand Prix model race", unlocked: p.gpWins >= 1 },
+            { title: "🎯 Zero-Outlier Pure", desc: "Maintain 100% dataset health score", unlocked: (stats?.healthScore || 100) >= 95 },
+            { title: "🔮 Model Interrogator", desc: "Execute live inference query in Consult mode", unlocked: true }
+        ];
+        grid.innerHTML = achievementsList.map(a => `
+            <div class="stat-card" style="border-left: 3px solid ${a.unlocked ? '#10b981' : '#64748b'}; opacity:${a.unlocked ? 1 : 0.65}; padding:10px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <b style="color:${a.unlocked ? '#38bdf8' : '#94a3b8'}; font-size:12px;">${a.title}</b>
+                    <span style="font-size:10px; font-weight:700; color:${a.unlocked ? '#10b981' : '#64748b'};">${a.unlocked ? 'UNLOCKED' : 'LOCKED'}</span>
+                </div>
+                <div style="font-size:11px; color:#cbd5e1; margin-top:4px;">${a.desc}</div>
+            </div>
+        `).join("");
+    }
+
     document.getElementById("btn-leaderboard").addEventListener("click", () => {
+        renderAchievements();
         const modal = document.getElementById("leaderboard-modal");
         modal.classList.remove("hidden");
         if (typeof gsap !== "undefined") {
@@ -3132,6 +3423,21 @@ function setupUIEvents() {
     });
     document.getElementById("btn-close-leaderboard").addEventListener("click", () => {
         document.getElementById("leaderboard-modal").classList.add("hidden");
+    });
+
+    document.getElementById("tab-btn-leaderboard")?.addEventListener("click", () => {
+        document.getElementById("tab-btn-leaderboard").classList.add("active");
+        document.getElementById("tab-btn-achievements").classList.remove("active");
+        document.getElementById("pane-leaderboard-list").classList.remove("hidden");
+        document.getElementById("pane-achievements-list").classList.add("hidden");
+    });
+
+    document.getElementById("tab-btn-achievements")?.addEventListener("click", () => {
+        document.getElementById("tab-btn-achievements").classList.add("active");
+        document.getElementById("tab-btn-leaderboard").classList.remove("active");
+        document.getElementById("pane-achievements-list").classList.remove("hidden");
+        document.getElementById("pane-leaderboard-list").classList.add("hidden");
+        renderAchievements();
     });
 
     // Data 2.0 Modal
