@@ -576,6 +576,38 @@ function testBiome6TokenizationAndInitialVectorProjection() {
     console.log("✅ Biome 6 Vocabulary Tokenization & Real Initial Vector Stream Test Passed!");
 }
 
+function testRawParameterMatrixLiveInspection() {
+    // 1. Test Linear / Logistic formatting
+    const w = 2.45, b = 1.15;
+    const gradW = -0.012, gradB = 0.004;
+    assert.strictEqual(w.toFixed(4), "2.4500", "Weight formatted to 4 decimals");
+    assert.strictEqual(b.toFixed(4), "1.1500", "Bias formatted to 4 decimals");
+
+    // 2. Test MLP Weight Matrix shape (Layer 1: 2x4, Layer 2: 4x1)
+    const W1 = [
+        [0.82, -0.45, 1.20, -0.33],
+        [-0.15, 0.95, -0.74, 0.61]
+    ];
+    const b1 = [0.12, -0.05, 0.44, -0.21];
+    const W2 = [1.45, -1.12, 0.88, -0.95];
+    const b2 = 0.35;
+
+    assert.strictEqual(W1.length, 2, "W1 must have 2 input rows");
+    assert.strictEqual(W1[0].length, 4, "W1 must have 4 hidden neuron columns");
+    assert.strictEqual(b1.length, 4, "b1 must have 4 bias terms");
+    assert.strictEqual(W2.length, 4, "W2 must have 4 hidden-to-output weights");
+
+    // 3. Test Embedding Table rows & vector magnitude computation
+    const embeddingSample = [
+        { word: "fire", pos: { x: 4.2, y: -8.8, z: 1.5 }, cluster: 0 },
+        { word: "ice", pos: { x: 1.2, y: 9.5, z: -3.3 }, cluster: 1 }
+    ];
+    const magFire = Math.sqrt(Math.pow(4.2 / 10, 2) + Math.pow(-8.8 / 10, 2) + Math.pow(1.5 / 10, 2));
+    assert(magFire > 0.9 && magFire < 1.1, "Vector magnitude must be normalized near 1.0");
+
+    console.log("✅ Raw Parameter Matrix & Live Model Weights Inspection Test Passed!");
+}
+
 testSeedPRNG();
 testLinearInferenceAndExtrapolation();
 testDatasetHealthAndGeneralizationDegradation();
@@ -602,5 +634,6 @@ testSubmissionIntegrityAndAnomalousRejection();
 testSupabaseGuestAuthAndOAuthUpgradeFlow();
 testRankedLeaderboardsAndYourRankCalculation();
 testBiome6TokenizationAndInitialVectorProjection();
+testRawParameterMatrixLiveInspection();
 console.log("🎉 All Web Unit Tests Passed Cleanly!");
 

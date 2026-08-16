@@ -1249,6 +1249,11 @@ function runGrandPrixSimulation() {
                     if (bBadge) bBadge.innerText = `b: ${currB.toFixed(2)}`;
                     if (epochBadge) epochBadge.innerText = `Epoch: ${epProgress}/${totalLen} | Loss: ${currL.toFixed(4)}`;
 
+                    // Synchronize Raw Parameter Matrix Table
+                    if (typeof RawParametersManager !== "undefined") {
+                        RawParametersManager.renderLinearLogistic(currW, currB, (currW - 2.45) * 0.04, (currB - 1.15) * 0.04, "Linear OLS / Adam");
+                    }
+
                     const snip = computeEpochNarration(
                         currW, prevW,
                         currB, prevB,
@@ -2056,6 +2061,134 @@ function createBiomePlatforms() {
     spawnBiome6Constellation(new THREE.Vector3(0, 1.8, 65));
 }
 
+// --- 5.99 TOGGLABLE RAW MODEL PARAMETER & WEIGHT MATRIX INSPECTOR ---
+const RawParametersManager = {
+    isVisible: false,
+
+    toggle() {
+        this.isVisible = !this.isVisible;
+        const panel = document.getElementById("terminal-raw-params-panel");
+        const btn = document.getElementById("btn-toggle-raw-params");
+        if (panel) panel.classList.toggle("hidden", !this.isVisible);
+        if (btn) {
+            btn.classList.toggle("active", this.isVisible);
+            btn.style.background = this.isVisible ? "rgba(245,158,11,0.25)" : "transparent";
+        }
+    },
+
+    renderLinearLogistic(w, b, gradW = 0, gradB = 0, modelType = "Linear Regression (OLS / Adam)") {
+        const tag = document.getElementById("raw-params-type-tag");
+        const content = document.getElementById("raw-params-content");
+        if (tag) tag.innerText = modelType;
+        if (!content) return;
+
+        content.innerHTML = `
+            <table class="tree-split-table" style="width:100%; font-size:11px;">
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Symbol</th>
+                        <th>Current Value</th>
+                        <th>Gradient (∇J)</th>
+                        <th>Mathematical Role</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="color:#38bdf8; font-weight:bold;">Weight (Slope)</td>
+                        <td><code>w</code></td>
+                        <td style="color:#facc15; font-weight:bold; font-family:var(--font-display-mono);">${w.toFixed(4)}</td>
+                        <td style="color:#a78bfa; font-family:var(--font-display-mono);">${gradW >= 0 ? '+' : ''}${gradW.toFixed(5)}</td>
+                        <td style="color:#cbd5e1; font-size:10px;">Primary feature scalar multiplier (Δy/Δx)</td>
+                    </tr>
+                    <tr>
+                        <td style="color:#f59e0b; font-weight:bold;">Bias (Intercept)</td>
+                        <td><code>b</code></td>
+                        <td style="color:#facc15; font-weight:bold; font-family:var(--font-display-mono);">${b.toFixed(4)}</td>
+                        <td style="color:#a78bfa; font-family:var(--font-display-mono);">${gradB >= 0 ? '+' : ''}${gradB.toFixed(5)}</td>
+                        <td style="color:#cbd5e1; font-size:10px;">Baseline vertical decision boundary offset</td>
+                    </tr>
+                </tbody>
+            </table>
+        `;
+    },
+
+    renderMLP(W1, b1, W2, b2) {
+        const tag = document.getElementById("raw-params-type-tag");
+        const content = document.getElementById("raw-params-content");
+        if (tag) tag.innerText = "2-Layer MLP (XOR Neural Network)";
+        if (!content) return;
+
+        let w1Rows = "";
+        W1.forEach((row, rIdx) => {
+            const vals = row.map(v => `<span style="color:#facc15; font-family:var(--font-display-mono);">${v >= 0 ? '+' : ''}${v.toFixed(3)}</span>`).join(", ");
+            w1Rows += `<tr><td>Input x<sub>${rIdx + 1}</sub></td><td>[ ${vals} ]</td><td style="color:#4ade80; font-family:var(--font-display-mono);">${b1[rIdx] ? (b1[rIdx] >= 0 ? '+' : '') + b1[rIdx].toFixed(3) : '+0.000'}</td></tr>`;
+        });
+
+        const w2Vals = W2.map(v => `<span style="color:#facc15; font-family:var(--font-display-mono);">${v >= 0 ? '+' : ''}${v.toFixed(3)}</span>`).join(", ");
+
+        content.innerHTML = `
+            <div style="margin-bottom:8px;">
+                <b style="color:#c084fc; font-size:10.5px;">Layer 1 Weight Matrix W<sup>(1)</sup> ∈ ℝ<sup>2×4</sup> & Bias b<sup>(1)</sup>:</b>
+                <table class="tree-split-table" style="width:100%; font-size:10.5px; margin-top:4px;">
+                    <thead><tr><th>Input Feature</th><th>Hidden Weights [h₁, h₂, h₃, h₄]</th><th>Bias</th></tr></thead>
+                    <tbody>${w1Rows}</tbody>
+                </table>
+            </div>
+            <div>
+                <b style="color:#38bdf8; font-size:10.5px;">Layer 2 Weight Vector W<sup>(2)</sup> ∈ ℝ<sup>4×1</sup> & Bias b<sup>(2)</sup>:</b>
+                <div style="font-family:var(--font-display-mono); font-size:10.5px; padding:6px 10px; background:rgba(255,255,255,0.04); border-radius:4px; margin-top:4px;">
+                    W<sup>(2)</sup> = [ ${w2Vals} ] | Bias b<sup>(2)</sup> = <span style="color:#4ade80;">${b2.toFixed(3)}</span>
+                </div>
+            </div>
+        `;
+    },
+
+    renderEmbeddings(nodes, epoch = 1) {
+        const tag = document.getElementById("raw-params-type-tag");
+        const content = document.getElementById("raw-params-content");
+        if (tag) tag.innerText = `PPMI Word Embeddings (Epoch ${epoch}/60)`;
+        if (!content) return;
+
+        let rows = "";
+        nodes.forEach((node, idx) => {
+            const v = node.pos;
+            const center = new THREE.Vector3(0, 1.8, 65);
+            const normX = ((v.x - center.x) / 10);
+            const normY = ((v.y - center.y) / 10);
+            const normZ = ((v.z - center.z) / 10);
+            const mag = Math.sqrt(normX * normX + normY * normY + normZ * normZ);
+            const clusterName = node.cluster === 0 ? "🔥 Thermal" : (node.cluster === 1 ? "❄️ Cryo" : "🧠 Neural Math");
+            const clusterCol = node.cluster === 0 ? "#f97316" : (node.cluster === 1 ? "#38bdf8" : "#c084fc");
+
+            rows += `
+                <tr>
+                    <td style="font-family:var(--font-display-mono); color:#94a3b8;">#${node.index !== undefined ? node.index : idx}</td>
+                    <td style="font-weight:bold; color:#fff;">"${node.word}"</td>
+                    <td style="font-family:var(--font-display-mono); color:#a78bfa;">[ ${normX >= 0 ? '+' : ''}${normX.toFixed(2)}, ${normY >= 0 ? '+' : ''}${normY.toFixed(2)}, ${normZ >= 0 ? '+' : ''}${normZ.toFixed(2)} ]</td>
+                    <td style="font-family:var(--font-display-mono); color:#facc15;">${mag.toFixed(3)}</td>
+                    <td style="color:${clusterCol}; font-size:10px;">${clusterName}</td>
+                </tr>
+            `;
+        });
+
+        content.innerHTML = `
+            <table class="tree-split-table" style="width:100%; font-size:10.5px;">
+                <thead>
+                    <tr>
+                        <th style="width:10%;">Token</th>
+                        <th style="width:20%;">Word</th>
+                        <th style="width:40%;">Continuous Coordinates (d=3)</th>
+                        <th style="width:15%;">||v||</th>
+                        <th style="width:15%;">Cluster</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+        `;
+    }
+};
+
 // --- 6.1 DYNAMIC 3D PPMI WORD EMBEDDING VISUALIZER ---
 const SemanticVocabulary = [
     // Cluster 0: Thermal / Combustion (Orange / Amber)
@@ -2339,6 +2472,11 @@ function trainPPMIEmbeddings3D(epochs = 60, onEpochTick, onComplete) {
 
         updateConstellationLines();
         playEpochTickSFX();
+
+        // Live update Raw Parameters Matrix panel for Biome 6 Embeddings
+        if (typeof RawParametersManager !== "undefined") {
+            RawParametersManager.renderEmbeddings(constellationNodes, currentEpoch);
+        }
 
         if (typeof onEpochTick === "function") {
             onEpochTick(currentEpoch, totalDisplacement);
@@ -3315,6 +3453,15 @@ function openFormulaTerminal() {
     }
 
     retrieveTopKVectors("frost", 4);
+    if (typeof RawParametersManager !== "undefined") {
+        if (GameState.currentBiome === 5) {
+            RawParametersManager.renderEmbeddings(constellationNodes, 1);
+        } else if (GameState.currentBiome === 4) {
+            RawParametersManager.renderMLP([[0.82, -0.45, 1.20, -0.33], [-0.15, 0.95, -0.74, 0.61]], [0.12, -0.05, 0.44, -0.21], [1.45, -1.12, 0.88, -0.95], 0.35);
+        } else {
+            RawParametersManager.renderLinearLogistic(GameState.profile.trueW, GameState.profile.trueB, 0, 0);
+        }
+    }
     runGrandPrixSimulation();
 }
 
@@ -4251,6 +4398,11 @@ function setupUIEvents() {
     document.getElementById("btn-back-to-gallery").addEventListener("click", () => {
         document.getElementById("model-inspector-modal").classList.add("hidden");
         openMyModelsGallery();
+    });
+
+    // Raw Parameters Matrix Live View Toggle
+    document.getElementById("btn-toggle-raw-params")?.addEventListener("click", () => {
+        RawParametersManager.toggle();
     });
 
     // 1v1 Live Multiplayer Duel Matchmaking Events

@@ -879,6 +879,7 @@
                             <button id="preset-tree" class="preset-btn">🌿 Decision Tree</button>
                             <button id="preset-mlp" class="preset-btn">🧠 2-Layer MLP</button>
                             <button id="preset-embeddings" class="preset-btn glow-cyan">🌌 Biome 6 Embeddings</button>
+                            <button id="btn-toggle-raw-params" class="preset-btn glow-amber" style="margin-left:auto; border-color:#f59e0b; color:#facc15; font-weight:bold;">🔬 Raw Parameters (Live View)</button>
                         </div>
                         <!-- Live Numeric Parameter Token Strip (Turn-by-Turn Numerical Update) -->
                         <div class="live-token-strip" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;">
@@ -907,6 +908,17 @@
                                 </div>
                                 <div id="tokenization-lines-box" style="max-height:125px; overflow-y:auto; line-height:1.6; color:#cbd5e1; font-size:11px; border-left:2px solid #818cf8; padding-left:8px;">
                                     <!-- Real Initial Random Vectors stream here before PPMI convergence -->
+                                </div>
+                            </div>
+
+                            <!-- Togglable Live Raw Parameter & Weight Matrix Inspection Table -->
+                            <div id="terminal-raw-params-panel" class="stat-card hidden" style="padding:10px 14px; font-family:'JetBrains Mono', monospace; font-size:11px; border:1.5px solid #f59e0b; background:rgba(15,23,42,0.95); width:100%; text-align:left; margin-top:6px;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                                    <span style="color:#facc15; font-weight:800; font-size:11px;">🔬 LIVE MODEL PARAMETERS & WEIGHT MATRICES (RAW EPOCH VIEW)</span>
+                                    <span id="raw-params-type-tag" style="font-size:10px; color:#38bdf8; background:rgba(14,165,233,0.2); padding:2px 8px; border-radius:4px;">OLS Linear</span>
+                                </div>
+                                <div id="raw-params-content" style="max-height:160px; overflow-y:auto; overflow-x:auto;">
+                                    <!-- Populated in real-time during training -->
                                 </div>
                             </div>
                         </div>
