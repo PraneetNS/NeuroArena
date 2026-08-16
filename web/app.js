@@ -2839,6 +2839,151 @@ function setupUIEvents() {
         document.getElementById("objective-modal")?.classList.add("hidden");
     });
 
+    // Biome World Travel Map System
+    const BiomeWorldCatalog = [
+        {
+            id: 0,
+            name: "The Linear Steppes",
+            subtitle: "Arid Alluvial Plateaus",
+            paradigm: "Linear Regression (OLS / MSE)",
+            metric: "MSE ≤ 0.10",
+            beacon: "Amber-Gold Skybeam (22m)",
+            color: "#f59e0b",
+            desc: "Wide terraced sandstone alluvial plains bathed in warm amber atmospheric dust."
+        },
+        {
+            id: 1,
+            name: "The Binary Marshlands",
+            subtitle: "Sunken Crater Swamplands",
+            paradigm: "Logistic Classification (BCE)",
+            metric: "Accuracy ≥ 90%",
+            beacon: "Bioluminescent Emerald Skybeam",
+            color: "#10b981",
+            desc: "Deep marsh basins with glowing teal spore trees and organic gradient pools."
+        },
+        {
+            id: 2,
+            name: "The Variance Tundra",
+            subtitle: "Jagged Glacial Ridges",
+            paradigm: "L2 Ridge / Lasso Regularization",
+            metric: "Loss Complexity Penalty",
+            beacon: "Glacial Frost Cyan Skybeam",
+            color: "#38bdf8",
+            desc: "Extreme sub-zero frost crags and frozen ice ridges subject to high variance."
+        },
+        {
+            id: 3,
+            name: "The Branching Canopy",
+            subtitle: "Rolling Ancient Forests",
+            paradigm: "Decision Trees & Bagging Ensembles",
+            metric: "Information Gain / Gini",
+            beacon: "Radiant Jade Skybeam",
+            color: "#22c55e",
+            desc: "Undulating emerald forest hills sheltered under towering multi-tiered tree trunks."
+        },
+        {
+            id: 4,
+            name: "The Deep Synapse Citadel",
+            subtitle: "Obsidian Basalt Monolith Rings",
+            paradigm: "Multi-Layer Perceptrons & Backprop",
+            metric: "Non-Linear XOR Convergence",
+            beacon: "Neon Amethyst Skybeam",
+            color: "#c084fc",
+            desc: "Multi-ringed volcanic basalt citadels pulsing with high-voltage neural activation lines."
+        },
+        {
+            id: 5,
+            name: "The Semantic Expanse",
+            subtitle: "Cosmic Star Plateaus",
+            paradigm: "PPMI Word Embeddings & Vector Space",
+            metric: "Cosine Similarity ≥ 0.75",
+            beacon: "Celestial Starlight Skybeam",
+            color: "#818cf8",
+            desc: "Floating celestial quartz platforms hovering in a boundless cosmic vector void."
+        }
+    ];
+
+    function openBiomeTravelMap() {
+        renderBiomeTravelMap();
+        const modal = document.getElementById("biome-travel-modal");
+        if (modal) {
+            modal.classList.remove("hidden");
+            if (typeof gsap !== "undefined") {
+                gsap.fromTo(modal.querySelector(".glass-modal"), { scale: 0.88, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: "back.out(1.5)" });
+            }
+        }
+    }
+
+    function renderBiomeTravelMap() {
+        const grid = document.getElementById("travel-biome-grid");
+        if (!grid) return;
+        grid.innerHTML = "";
+
+        const p = ProfileSlots[activeSaveSlot];
+        const unlockedCount = p ? p.biomes : 1;
+
+        BiomeWorldCatalog.forEach(b => {
+            const isUnlocked = b.id <= unlockedCount;
+            const isCurrent = GameState.currentBiome === b.id;
+
+            const card = document.createElement("div");
+            card.className = "stat-card";
+            card.style.border = isCurrent ? "2px solid #38bdf8" : "1px solid rgba(255,255,255,0.1)";
+            card.style.background = isCurrent ? "rgba(14,165,233,0.15)" : "rgba(15,23,42,0.75)";
+            card.style.display = "flex";
+            card.style.flexDirection = "column";
+            card.style.justifyContent = "space-between";
+            card.style.padding = "14px";
+
+            card.innerHTML = `
+                <div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                        <span style="font-weight:800; font-size:1.05rem; color:${b.color};">#${b.id + 1} ${b.name}</span>
+                        <span style="font-size:0.75rem; padding:2px 8px; border-radius:4px; ${isUnlocked ? 'background:#065f46; color:#34d399;' : 'background:#451a03; color:#f97316;'}">
+                            ${isUnlocked ? '✅ UNLOCKED' : '🔒 LOCKED'}
+                        </span>
+                    </div>
+                    <div style="font-size:0.8rem; color:#38bdf8; margin-bottom:4px; font-weight:600;">${b.subtitle}</div>
+                    <div style="font-size:0.78rem; color:#94a3b8; line-height:1.35; margin-bottom:8px;">${b.desc}</div>
+                    <div style="font-size:0.75rem; color:#cbd5e1; background:rgba(0,0,0,0.3); padding:4px 8px; border-radius:4px; margin-bottom:10px;">
+                        📊 <b>Target:</b> ${b.metric} | 🗼 <b>Beacon:</b> ${b.beacon}
+                    </div>
+                </div>
+                <button class="primary-btn travel-btn" data-biome="${b.id}" style="width:100%; padding:8px 0; ${!isUnlocked ? 'opacity:0.4; cursor:not-allowed;' : ''} ${isCurrent ? 'background:#0284c7;' : ''}" ${!isUnlocked ? 'disabled' : ''}>
+                    ${isCurrent ? '📍 CURRENT LOCATION' : (isUnlocked ? '🚀 TRAVEL TO BIOME' : '🔒 CONQUER PREVIOUS BIOME')}
+                </button>
+            `;
+
+            if (isUnlocked && !isCurrent) {
+                card.querySelector(".travel-btn").addEventListener("click", () => {
+                    document.getElementById("biome-travel-modal")?.classList.add("hidden");
+                    startBiomeLoadingSequence(b.id, () => {
+                        alert(`🚀 FAST-TRAVELED TO BIOME #${b.id + 1}: ${b.name}!\nTerrain topology, ambient lighting, and skybeam updated.`);
+                    });
+                });
+            }
+
+            grid.appendChild(card);
+        });
+    }
+
+    function startBiomeLoadingSequence(biomeIndex, onComplete) {
+        GameState.currentBiome = biomeIndex;
+        applyBiomeVisualTheme(biomeIndex);
+        playerPos.set(0, 1.5, 0);
+        if (playerMesh) playerMesh.position.set(0, 1.5, 0);
+        recenterCameraOrbit();
+        spawnSeededCollectibles();
+        updateHUD();
+        if (typeof onComplete === "function") onComplete();
+    }
+
+    document.getElementById("btn-open-biome-map-hud")?.addEventListener("click", openBiomeTravelMap);
+    document.getElementById("btn-biome-map")?.addEventListener("click", openBiomeTravelMap);
+    document.getElementById("btn-close-travel-map")?.addEventListener("click", () => {
+        document.getElementById("biome-travel-modal")?.classList.add("hidden");
+    });
+
     // Profile Modals
     function openProfileScreen() {
         renderProfileModal();

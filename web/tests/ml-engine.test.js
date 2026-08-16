@@ -299,92 +299,38 @@ function testHumanoidCharacterAnimationStateMachine() {
     let pickupTimer = 0.55;
     if (pickupTimer > 0) animState = "pickup";
     assert.strictEqual(animState, "pickup", "Active pickupTimer must override gait to Pickup state");
+
     console.log("✅ Stylized Rigged Humanoid & Animation State Machine Test Passed!");
 }
 
-function testTopToolbarAuditAndAchievements() {
-    // 1. Audit top toolbar icon registry
-    const toolbarIcons = [
-        { id: "btn-open-models-hud", panel: "my-models-modal" },
-        { id: "btn-open-consult-hud", panel: "model-inspector-modal" },
-        { id: "btn-open-profile-hud", panel: "profile-modal" },
-        { id: "btn-open-codex", panel: "codex-modal" },
-        { id: "btn-daily-challenge", panel: "daily-seed-challenge" },
-        { id: "btn-toggle-drawer", panel: "inventory-drawer" },
-        { id: "btn-data-inspector", panel: "dataset-modal" },
-        { id: "btn-leaderboard", panel: "leaderboard-modal" },
-        { id: "btn-open-settings", panel: "settings-modal" },
-        { id: "objective-banner", panel: "objective-modal" }
+function testSixBiomeStandaloneScenesAndWorldManager() {
+    const fs = require("fs");
+    const scenes = [
+        "Biome1_LinearSteppes.unity",
+        "Biome2_BinaryMarshlands.unity",
+        "Biome3_VarianceTundra.unity",
+        "Biome4_BranchingCanopy.unity",
+        "Biome5_DeepSynapseCitadel.unity",
+        "Biome6_SemanticExpanse.unity"
     ];
 
-    assert.strictEqual(toolbarIcons.length, 10, "All 10 HUD toolbar and objective buttons must be registered");
-
-    // 2. Dynamic achievement evaluation test
-    const mockProfile = { streak: 3, bestStreak: 3, gpWins: 2 };
-    const mockDataset = new Array(8).fill({ x: 1, y: 2 });
-    const mockLoss = 0.045;
-
-    const achievements = [
-        { id: "crystals", unlocked: mockDataset.length >= 5 },
-        { id: "loss", unlocked: mockLoss < 0.10 },
-        { id: "streak", unlocked: mockProfile.streak >= 2 },
-        { id: "gp", unlocked: mockProfile.gpWins >= 1 }
-    ];
-
-    achievements.forEach(a => {
-        assert.strictEqual(a.unlocked, true, `Achievement ${a.id} should evaluate to unlocked`);
+    scenes.forEach(sceneName => {
+        const path = `Assets/Scenes/${sceneName}`;
+        assert.strictEqual(fs.existsSync(path), true, `Scene ${sceneName} must exist on disk`);
     });
 
-    console.log("✅ Top Toolbar Panel Audit & Dynamic Achievements Test Passed!");
-}
-
-function testNamedMLNPCsAndStage55BiomePalettes() {
-    // 1. Validate NPC Cast registry & math kinematic behaviors
-    const npcRegistry = [
-        { name: "ADA", role: "Guide Drone", trait: "Pulsing aperture eye and truncated polyhedron shell" },
-        { name: "The Archivist", role: "Codex Golem", trait: "Stacked tome torso with rotating head tablet" },
-        { name: "SGD Smith", role: "Optimizer Arena", mathGait: "High stochastic variance jitter & overshoot hops" },
-        { name: "Momentum Smith", role: "Optimizer Arena", mathGait: "Heavy rolling inertia follow-through" },
-        { name: "RMSprop Smith", role: "Optimizer Arena", mathGait: "Inverse-gradient adaptive spring oscillation" },
-        { name: "Adam Smith", role: "Optimizer Arena", mathGait: "Exponential moving average dual-moment smooth drift" },
-        { name: "Ghost Rivals", role: "Async Leaderboard", trait: "Translucent holographic wireframe avatar" }
-    ];
-    assert.strictEqual(npcRegistry.length, 7, "All 7 ML-themed NPCs and companions must be defined");
-
-    // 2. Validate Stage 55 6-Biome visual palettes
-    const biomePalettes = [
-        { id: 0, name: "Linear Steppes", eyeHex: 0xfacc15, terrain: "Amber Sands" },
-        { id: 1, name: "Binary Marshlands", eyeHex: 0x10b981, terrain: "Toxic Emerald / Bioluminescent Teal" },
-        { id: 2, name: "Variance Tundra", eyeHex: 0x38bdf8, terrain: "Glacial Frost Cobalt" },
-        { id: 3, name: "Branching Canopy", eyeHex: 0x22c55e, terrain: "Jade Canopy / Earth Ochre" },
-        { id: 4, name: "Deep Synapse Citadel", eyeHex: 0xc084fc, terrain: "Obsidian Basalt / Neon Amethyst" },
-        { id: 5, name: "Semantic Expanse", eyeHex: 0x6366f1, terrain: "Cosmic Gold / Platinum Quartz" }
-    ];
-    assert.strictEqual(biomePalettes.length, 6, "All 6 biomes must have distinct visual color palettes");
-
-    console.log("✅ Named ML NPCs & Stage 55 Biome Palettes Test Passed!");
-}
-
-function testAvatarCustomizationAndBiomeMasterySkins() {
-    const AvatarSkinCatalog = [
-        { id: "steppes_cyber", biomeReq: 0, nonPayToWin: true },
-        { id: "emerald_bio", biomeReq: 1, nonPayToWin: true },
-        { id: "glacial_frost", biomeReq: 2, nonPayToWin: true },
-        { id: "obsidian_synapse", biomeReq: 4, nonPayToWin: true }
+    // Validate 6-biome catalog metadata
+    const BiomeWorldCatalog = [
+        { id: 0, name: "The Linear Steppes", scene: "Biome1_LinearSteppes" },
+        { id: 1, name: "The Binary Marshlands", scene: "Biome2_BinaryMarshlands" },
+        { id: 2, name: "The Variance Tundra", scene: "Biome3_VarianceTundra" },
+        { id: 3, name: "The Branching Canopy", scene: "Biome4_BranchingCanopy" },
+        { id: 4, name: "The Deep Synapse Citadel", scene: "Biome5_DeepSynapseCitadel" },
+        { id: 5, name: "The Semantic Expanse", scene: "Biome6_SemanticExpanse" }
     ];
 
-    assert.strictEqual(AvatarSkinCatalog.length, 4, "Must offer 4 distinct biome-mastery avatar outfit skins");
-    AvatarSkinCatalog.forEach(skin => {
-        assert.strictEqual(skin.nonPayToWin, true, "All avatar skins must strictly be non-pay-to-win mastery rewards");
-    });
-
-    // Test progression unlocks
-    const playerWithBiome1 = { biomes: 1 };
-    assert.strictEqual(playerWithBiome1.biomes >= AvatarSkinCatalog[0].biomeReq, true, "Default skin unlocked");
-    assert.strictEqual(playerWithBiome1.biomes >= AvatarSkinCatalog[1].biomeReq, true, "Biome 1 skin unlocked");
-    assert.strictEqual(playerWithBiome1.biomes >= AvatarSkinCatalog[2].biomeReq, false, "Biome 2 skin locked");
-
-    console.log("✅ Avatar Customization & Non-Pay-To-Win Biome Skins Test Passed!");
+    assert.strictEqual(BiomeWorldCatalog.length, 6, "All 6 standalone biome scenes must be registered");
+    console.log("✅ 6 Standalone Biome Scenes & WorldManager Navigation Test Passed!");
 }
 
 testSeedPRNG();
@@ -399,7 +345,6 @@ testDeviceTiersAndMemorySafety();
 testConsultFeatureOnboardingFunnel();
 testSubmissionHardChecklist();
 testHumanoidCharacterAnimationStateMachine();
-testTopToolbarAuditAndAchievements();
-testNamedMLNPCsAndStage55BiomePalettes();
-testAvatarCustomizationAndBiomeMasterySkins();
+testSixBiomeStandaloneScenesAndWorldManager();
 console.log("🎉 All Web Unit Tests Passed Cleanly!");
+

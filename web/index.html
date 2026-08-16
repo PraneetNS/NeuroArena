@@ -172,6 +172,7 @@
             <div id="top-right-hud" class="hud-controls-group">
                 <button id="btn-open-models-hud" class="hud-icon-btn glow-cyan" title="My Models Archive">💾</button>
                 <button id="btn-open-consult-hud" class="hud-icon-btn glow-purple" title="Live Inference Consult">🔮</button>
+                <button id="btn-open-biome-map-hud" class="hud-icon-btn glow-amber" title="Biome World Travel Map">🗺️</button>
                 <button id="btn-open-profile-hud" class="hud-icon-btn glow-cyan" title="Architect Profile"><span
                         id="hud-avatar-icon">🤖</span></button>
                 <button id="btn-open-codex" class="hud-icon-btn glow-cyan" title="ML Codex / Journal">📖</button>
@@ -650,6 +651,22 @@
                     </div>
 
                     <button id="btn-dismiss-objective" class="primary-btn" style="width:100%;">Got It (Return to Arena)</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🗺️ BIOME WORLD FAST-TRAVEL MAP MODAL -->
+        <div id="biome-travel-modal" class="modal-overlay hidden">
+            <div class="glass-modal biome-travel-container" style="max-width:820px; width:92%;">
+                <div class="modal-header">
+                    <h2>🗺️ 6-BIOME WORLD TRAVEL MAP & PROGRESSION</h2>
+                    <button id="btn-close-travel-map" class="close-btn">✕</button>
+                </div>
+                <div class="travel-map-body" style="padding:16px 20px;">
+                    <p style="font-size:0.85rem; color:#94a3b8; margin:0 0 14px 0;">
+                        Select an unlocked biome destination to fast-travel. Each realm features distinct terrain topology, flora ecosystems, mathematical paradigms, and towering beacon skybeams.
+                    </p>
+                    <div id="travel-biome-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:12px; margin-bottom:14px;"></div>
                 </div>
             </div>
         </div>

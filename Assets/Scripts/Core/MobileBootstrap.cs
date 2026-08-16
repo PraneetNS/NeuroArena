@@ -37,18 +37,7 @@ namespace NeuroArena.Core
             SetupEnvironment();
             SetupPlayerAndCamera(out GameObject playerGO, out Camera mainCam);
             SetupInventory(playerGO);
-            SetupMLThemedNPCs(playerGO);
             SetupMobileUI();
-        }
-
-        private void SetupMLThemedNPCs(GameObject playerGO)
-        {
-            if (FindFirstObjectByType<Character.MLThemedNPCs>() == null)
-            {
-                GameObject npcMgr = new GameObject("MLThemedNPCs_Manager");
-                var npcs = npcMgr.AddComponent<Character.MLThemedNPCs>();
-                if (playerGO != null) npcs.playerTransform = playerGO.transform;
-            }
         }
 
         private void SetupSaveSystem()

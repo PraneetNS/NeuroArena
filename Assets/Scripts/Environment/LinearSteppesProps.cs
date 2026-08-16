@@ -65,175 +65,52 @@ namespace NeuroArena.Environment
 
         private void CreateLabStationPlatform(Transform parent, Vector3 position)
         {
-            // 1. Octagonal Modeled Platform Base
-            GameObject platform = new GameObject("LabStation_Platform");
+            GameObject platform = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            platform.name = "LabStation_Platform";
             platform.tag = "LabStation";
             platform.transform.SetParent(parent);
             platform.transform.position = position;
+            platform.transform.localScale = new Vector3(8f, 0.35f, 8f);
 
-            MeshFilter mf = platform.AddComponent<MeshFilter>();
-            MeshRenderer mr = platform.AddComponent<MeshRenderer>();
-            MeshCollider mc = platform.AddComponent<MeshCollider>();
-
-            Mesh platMesh = StylizedLowPolyMeshes.CreateOctagonalPlatformMesh(radius: 5.0f, height: 0.45f);
-            mf.sharedMesh = platMesh;
-            mc.sharedMesh = platMesh;
-            mr.sharedMaterial = StylizedMaterialFactory.GetStylizedPropMaterial(
-                "LabPlatformOctagon", new Color(0.14f, 0.18f, 0.28f), metallic: 0.70f, smoothness: 0.85f);
-
-            // Add LabStation trigger zone manager
+            // Add LabStation trigger manager
             LabStation labStation = platform.AddComponent<LabStation>();
 
-            // 2. Central Interactive Terminal Monolith
-            GameObject console = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            console.name = "FormulaTerminal_Console";
-            console.transform.SetParent(platform.transform);
-            console.transform.localPosition = new Vector3(0f, 1.35f, 0f);
-            console.transform.localScale = new Vector3(1.4f, 2.5f, 0.9f);
-
-            Renderer consoleRend = console.GetComponent<Renderer>();
-            if (consoleRend != null)
+            Renderer rend = platform.GetComponent<Renderer>();
+            if (rend != null)
             {
-                consoleRend.sharedMaterial = StylizedMaterialFactory.GetStylizedPropMaterial(
-                    "ConsoleChassis", new Color(0.12f, 0.15f, 0.22f), metallic: 0.80f, smoothness: 0.88f);
+                rend.sharedMaterial = StylizedMaterialFactory.GetStylizedPropMaterial(
+                    "LabPlatform", new Color(0.12f, 0.16f, 0.24f), metallic: 0.65f, smoothness: 0.82f);
             }
 
-            // Inclined Interactive Holographic Touchscreen Face
-            GameObject screen = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            screen.name = "Terminal_ScreenFace";
-            screen.transform.SetParent(console.transform);
-            screen.transform.localPosition = new Vector3(0f, 0.35f, 0.52f);
-            screen.transform.localRotation = Quaternion.Euler(-18f, 0f, 0f);
-            screen.transform.localScale = new Vector3(0.85f, 0.65f, 1f);
-            Destroy(screen.GetComponent<Collider>());
+            // Central Terminal Pillar
+            GameObject terminal = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            terminal.name = "FormulaTerminal_Pillar";
+            terminal.transform.SetParent(platform.transform);
+            terminal.transform.localPosition = new Vector3(0f, 2.5f, 0f);
+            terminal.transform.localScale = new Vector3(0.25f, 5f, 0.25f);
 
-            Renderer screenRend = screen.GetComponent<Renderer>();
-            if (screenRend != null)
+            Renderer termRend = terminal.GetComponent<Renderer>();
+            if (termRend != null)
             {
-                screenRend.sharedMaterial = StylizedMaterialFactory.GetStylizedPropMaterial(
-                    "TerminalScreen", new Color(0.08f, 0.85f, 0.98f), metallic: 0.1f, smoothness: 0.98f,
-                    emission: new Color(0.12f, 0.90f, 1.0f), emissionIntensity: 2.0f);
+                termRend.sharedMaterial = StylizedMaterialFactory.GetStylizedPropMaterial(
+                    "TerminalPillar", new Color(0.1f, 0.85f, 0.95f), metallic: 0.75f, smoothness: 0.90f,
+                    emission: new Color(0.1f, 0.85f, 0.95f), emissionIntensity: 1.6f);
             }
 
-            // 3. Dual Flanking Data Resonator Pillars
-            CreateDataPillar(platform.transform, new Vector3(-2.8f, 1.8f, 0f), "DataPillar_Left");
-            CreateDataPillar(platform.transform, new Vector3(2.8f, 1.8f, 0f), "DataPillar_Right");
-
-            // 4. Floating Hologram Orbit Ring
+            // Hologram Ring
             GameObject ring = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             ring.name = "Lab_HoloRing";
             ring.transform.SetParent(platform.transform);
-            ring.transform.localPosition = new Vector3(0f, 3.8f, 0f);
-            ring.transform.localScale = new Vector3(2.6f, 0.06f, 2.6f);
+            ring.transform.localPosition = new Vector3(0f, 5.2f, 0f);
+            ring.transform.localScale = new Vector3(0.6f, 0.05f, 0.6f);
             Destroy(ring.GetComponent<Collider>());
 
             Renderer ringRend = ring.GetComponent<Renderer>();
             if (ringRend != null)
             {
                 ringRend.sharedMaterial = StylizedMaterialFactory.GetStylizedPropMaterial(
-                    "HoloRing", new Color(0.15f, 0.95f, 0.75f), metallic: 0.15f, smoothness: 0.95f,
-                    emission: new Color(0.20f, 1.0f, 0.80f), emissionIntensity: 2.4f);
-            }
-
-            // 5. Soaring 22m Beacon Sky-Spire (Visible from across entire Biome above treeline)
-            CreateBeaconSkySpire(platform.transform, new Color(0.98f, 0.80f, 0.10f));
-        }
-
-        private void CreateBeaconSkySpire(Transform platformParent, Color beaconColor)
-        {
-            GameObject spireRoot = new GameObject("Lab_SkyBeacon_Spire");
-            spireRoot.transform.SetParent(platformParent, false);
-            spireRoot.transform.localPosition = new Vector3(0f, 0f, -1.8f);
-
-            // Central Tapered Obelisk Spire (20m tall)
-            GameObject obelisk = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            obelisk.name = "SpireObelisk";
-            obelisk.transform.SetParent(spireRoot.transform, false);
-            obelisk.transform.localPosition = new Vector3(0f, 10.0f, 0f);
-            obelisk.transform.localScale = new Vector3(1.2f, 20.0f, 1.2f);
-            var obRend = obelisk.GetComponent<Renderer>();
-            if (obRend != null)
-            {
-                obRend.sharedMaterial = StylizedMaterialFactory.GetStylizedPropMaterial(
-                    "SpireChassis", new Color(0.10f, 0.14f, 0.22f), metallic: 0.85f, smoothness: 0.90f);
-            }
-
-            // Ascending Glowing Energy Bands along Spire (at 5m, 10m, 15m, 20m)
-            float[] bandHeights = new float[] { 5f, 10f, 15f, 20f };
-            float[] bandScales = new float[] { 2.2f, 1.9f, 1.6f, 1.3f };
-            for (int b = 0; b < bandHeights.Length; b++)
-            {
-                GameObject band = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-                band.name = $"EnergyBand_{b + 1}";
-                band.transform.SetParent(spireRoot.transform, false);
-                band.transform.localPosition = new Vector3(0f, bandHeights[b], 0f);
-                band.transform.localScale = new Vector3(bandScales[b], 0.15f, bandScales[b]);
-                Destroy(band.GetComponent<Collider>());
-                var bandRend = band.GetComponent<Renderer>();
-                if (bandRend != null)
-                {
-                    bandRend.sharedMaterial = StylizedMaterialFactory.GetStylizedPropMaterial(
-                        $"SpireBand_{b}", beaconColor, metallic: 0.1f, smoothness: 0.95f,
-                        emission: beaconColor, emissionIntensity: 2.5f);
-                }
-            }
-
-            // Floating Apex Hyper-Prism at 22.5m Altitude
-            GameObject apexPrism = new GameObject("Apex_HyperPrism");
-            apexPrism.transform.SetParent(spireRoot.transform, false);
-            apexPrism.transform.localPosition = new Vector3(0f, 22.5f, 0f);
-            var mf = apexPrism.AddComponent<MeshFilter>();
-            mf.sharedMesh = StylizedLowPolyMeshes.CreateCrystalMesh(1.2f, 3.2f);
-            var mr = apexPrism.AddComponent<MeshRenderer>();
-            mr.sharedMaterial = StylizedMaterialFactory.GetStylizedPropMaterial(
-                "ApexPrismMat", beaconColor, metallic: 0.2f, smoothness: 0.98f,
-                emission: beaconColor * 1.5f, emissionIntensity: 3.5f);
-
-            // Infinite Skybeam Cylinder (Extends 60m vertically into the clouds)
-            GameObject skybeam = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            skybeam.name = "Vertical_Skybeam_Pillar";
-            skybeam.transform.SetParent(spireRoot.transform, false);
-            skybeam.transform.localPosition = new Vector3(0f, 52.0f, 0f);
-            skybeam.transform.localScale = new Vector3(0.65f, 60.0f, 0.65f);
-            Destroy(skybeam.GetComponent<Collider>());
-            var beamRend = skybeam.GetComponent<Renderer>();
-            if (beamRend != null)
-            {
-                beamRend.sharedMaterial = StylizedMaterialFactory.GetStylizedPropMaterial(
-                    "SkybeamLightMat", new Color(beaconColor.r, beaconColor.g, beaconColor.b, 0.65f),
-                    metallic: 0f, smoothness: 1.0f, emission: beaconColor * 2.0f, emissionIntensity: 4.0f);
-            }
-        }
-
-        private void CreateDataPillar(Transform parent, Vector3 localPos, string name)
-        {
-            GameObject pillar = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            pillar.name = name;
-            pillar.transform.SetParent(parent);
-            pillar.transform.localPosition = localPos;
-            pillar.transform.localScale = new Vector3(0.65f, 3.4f, 0.65f);
-
-            Renderer r = pillar.GetComponent<Renderer>();
-            if (r != null)
-            {
-                r.sharedMaterial = StylizedMaterialFactory.GetStylizedPropMaterial(
-                    "DataPillarPBR", new Color(0.16f, 0.20f, 0.30f), metallic: 0.60f, smoothness: 0.75f);
-            }
-
-            // Vertical glowing energy slit
-            GameObject slit = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            slit.name = "EnergySlit";
-            slit.transform.SetParent(pillar.transform);
-            slit.transform.localPosition = new Vector3(0f, 0f, 0.52f);
-            slit.transform.localScale = new Vector3(0.25f, 0.85f, 0.1f);
-            Destroy(slit.GetComponent<Collider>());
-
-            Renderer slitRend = slit.GetComponent<Renderer>();
-            if (slitRend != null)
-            {
-                slitRend.sharedMaterial = StylizedMaterialFactory.GetStylizedPropMaterial(
-                    "SlitGlow", new Color(0.1f, 0.9f, 1.0f), metallic: 0.1f, smoothness: 0.95f,
-                    emission: new Color(0.1f, 0.9f, 1.0f), emissionIntensity: 2.2f);
+                    "HoloRing", new Color(0.2f, 1f, 0.7f, 0.8f), metallic: 0.2f, smoothness: 0.95f,
+                    emission: new Color(0.2f, 1f, 0.7f), emissionIntensity: 2.2f);
             }
         }
 
