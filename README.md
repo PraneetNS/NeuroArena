@@ -211,3 +211,36 @@ npx serve web
    - Go to `File -> Build Settings...`
    - Select **Android** and click **Switch Platform**.
    - Click **Build and Run** to deploy directly to your Android device via USB debugging.
+
+---
+
+## 🎨 Unified Low-Poly 3D Art Pipeline & Visual Parity
+
+NeuroArena features a cross-platform 3D art pipeline synchronized across Unity (Universal Render Pipeline 14.0+) and the Three.js Web client:
+
+| Asset Layer | Unity URP Implementation | Three.js Web Client Parity |
+| :--- | :--- | :--- |
+| **Rigged Character** | Mecanim 1D Blend Tree (`Speed`, `IsGrounded`, `PickupTrigger`) on Humanoid Rig | Dual-mode glTF loader + procedural rigged joint kinematics |
+| **Terrain & Flora** | `StylizedBiomeTerrain.cs` (faceted flat-shading, terraced steps, slope colors) | Procedural faceted low-poly plane with per-vertex color cliffs |
+| **Collectibles** | Low-poly faceted bipyramid quartz, diamond shards, and cyber rune tablets | Custom faceted geometries with PBR materials and multi-axis wobble |
+| **Particle FX** | Mobile-optimized particle embers rising from crystal cores | Ambient emissive particle glow rings and real-time lighting |
+| **Lab Station** | Modeled octagonal platform with touchscreen monolith & rotating hologram ring | Octagonal alloy base with inclined HUD quad and yaw orbit ring |
+| **Post-Processing** | `BiomePostProcessingManager.cs` (Bloom, ACES tonemapping, color adjustments) | Dynamic ambient trilight, soft directional shadows, and per-biome fog |
+
+---
+
+## 🧭 Audited Top-Right HUD Toolbar & Data Panels
+
+All 10 top-right toolbar buttons connect directly to active game systems:
+- 💾 **My Models Archive (`#my-models-modal`)**: Inspect saved model weights, test accuracy, and frozen loss curves.
+- 🔮 **Stage 29 Consult & Interrogate (`#model-inspector-modal`)**: Execute live numerical queries ($x$), receive instant predictions ($\hat{y}$), and observe decision boundary extrapolation warnings.
+- 🤖 **Architect Profile (`#profile-modal`)**: View playtime, 3 profile slots, Grand Prix win-rate, and biome mastery.
+- 📖 **ML Codex & Journal (`#codex-modal`)**: 6-Biome mathematical curriculum with plain-English breakdowns.
+- 📅 **Daily Seeded Challenge**: Global date-based deterministic seed evaluation with streak tracking.
+- 🎒 **Inventory Drawer (`#inventory-drawer`)**: Live sample counts, feature ranges, Pearson $r$, and dataset health scores.
+- 📊 **Dataset Inspector 2.0 (`#dataset-modal`)**: 2D scatter plots, permutation feature importance, and decision tree MDI splits.
+- 🏆 **Leaderboards & Achievements (`#leaderboard-modal`)**: Ghost test set rankings and 8 dynamic unlockable achievement badges.
+- 🎯 **Camera Recenter**: Instantly snap orbital camera angle directly behind the player avatar.
+- ⚙️ **Settings & Diagnostics (`#settings-modal`)**: Volume sliders, graphics tiers, colorblind mode, narration, and local diagnostics.
+- 🎯 **Objective Banner (`#objective-modal`)**: Real-time biome criteria ($\text{MSE} \le 0.10$), crystal counts, and rewards.
+
