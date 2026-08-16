@@ -231,16 +231,45 @@ NeuroArena features a cross-platform 3D art pipeline synchronized across Unity (
 
 ## 🧭 Audited Top-Right HUD Toolbar & Data Panels
 
-All 10 top-right toolbar buttons connect directly to active game systems:
+- ⚔️ **1v1 Live Multiplayer Duel (`#duel-matchmaking-modal`)**: Queue into private synchronized 90s matches with server-side hidden test set evaluation.
 - 💾 **My Models Archive (`#my-models-modal`)**: Inspect saved model weights, test accuracy, and frozen loss curves.
 - 🔮 **Stage 29 Consult & Interrogate (`#model-inspector-modal`)**: Execute live numerical queries ($x$), receive instant predictions ($\hat{y}$), and observe decision boundary extrapolation warnings.
-- 🤖 **Architect Profile (`#profile-modal`)**: View playtime, 3 profile slots, Grand Prix win-rate, and biome mastery.
+- 🤖 **Architect Profile (`#profile-modal`)**: View playtime, 3 profile slots, Grand Prix win-rate, and Supabase Cloud Auth status.
 - 📖 **ML Codex & Journal (`#codex-modal`)**: 6-Biome mathematical curriculum with plain-English breakdowns.
 - 📅 **Daily Seeded Challenge**: Global date-based deterministic seed evaluation with streak tracking.
 - 🎒 **Inventory Drawer (`#inventory-drawer`)**: Live sample counts, feature ranges, Pearson $r$, and dataset health scores.
 - 📊 **Dataset Inspector 2.0 (`#dataset-modal`)**: 2D scatter plots, permutation feature importance, and decision tree MDI splits.
-- 🏆 **Leaderboards & Achievements (`#leaderboard-modal`)**: Ghost test set rankings and 8 dynamic unlockable achievement badges.
+- 🏆 **Global Ranked Leaderboards (`#leaderboard-modal`)**: Top 100 global rankings for 1v1 Duels & Daily Seed Challenges with sticky "Your Rank" standing.
 - 🎯 **Camera Recenter**: Instantly snap orbital camera angle directly behind the player avatar.
 - ⚙️ **Settings & Diagnostics (`#settings-modal`)**: Volume sliders, graphics tiers, colorblind mode, narration, and local diagnostics.
 - 🎯 **Objective Banner (`#objective-modal`)**: Real-time biome criteria ($\text{MSE} \le 0.10$), crystal counts, and rewards.
+
+---
+
+## ⚔️ 1v1 Live Multiplayer Duels & Authoritative Evaluation
+
+* **Decoupled Colyseus WebSocket Server (`neuroarena-server/`):**
+  * `arena_room`: Multi-player world exploration and authoritative crystal pickup validation with optimistic client prediction and rollback reconciliation.
+  * `duel_room`: FIFO 2-player matchmaking into private synchronized room instances with a 90-second synchronized timer.
+* **Independent Local Training & Server-Side Evaluation:**
+  * Players harvest and fit models locally without server-side ML overhead.
+  * Final weights $(w, b)$ are evaluated simultaneously against a server-held hidden test set of 50 samples unrevealed to either client.
+* **Submission Integrity & Lightweight Anti-Cheat:**
+  * Minimum plausible training speed checks ($\Delta t \ge 2.5\text{s}$) and finite weight boundary enforcement.
+  * Anomalous submissions are logged to an in-memory security audit log (`GET /api/security/anomalies`) and assigned penalty scores.
+
+---
+
+## ☁️ Supabase Auth & PostgreSQL Ranked Leaderboards
+
+* **Zero-Friction Anonymous Guest Session on First Launch:**
+  * Players instantly jump into gameplay without login friction.
+  * Event-driven "Save Your Progress" upgrade prompt modal offering 1-click **Google / GitHub / Discord** OAuth account linking after duel victories or biome clearances with zero progress loss.
+* **Supabase PostgreSQL Schema (`supabase/migrations/20260817_create_leaderboards.sql`):**
+  * `duel_results`: Keyed to `account_id` tracking ELO rating, wins, losses, accuracy, and test MSE.
+  * `daily_challenge_scores`: Keyed to `account_id` and `challenge_date` tracking daily seed challenge scores and speed.
+* **Global Top 100 & "Your Rank" Leaderboard Screen:**
+  * Dual tabs for Ranked Duels and Daily Challenges.
+  * Sticky highlight banner computing the player's exact global rank standing, rating, and win rate.
+
 
