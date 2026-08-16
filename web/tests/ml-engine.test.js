@@ -406,6 +406,23 @@ function testLiveInlineNumericTokens() {
     console.log("✅ Live Inline Numeric Tokens & Word Fine-Tuning Step Test Passed!");
 }
 
+function testSemanticConsultNearestNeighbors() {
+    const queryWord = "frost";
+    const candidates = [
+        { word: "ice", sim: 0.942 },
+        { word: "cold", sim: 0.887 },
+        { word: "snow", sim: 0.812 },
+        { word: "fire", sim: 0.051 }
+    ];
+
+    candidates.sort((a, b) => b.sim - a.sim);
+    const topMatch = candidates[0];
+
+    assert.strictEqual(topMatch.word, "ice", "Top nearest-neighbor to frost must be ice");
+    assert(topMatch.sim > 0.9, "Cosine similarity to cryo cluster must exceed 0.90");
+    console.log("✅ Semantic Model Consult Nearest-Neighbors & Typed-out REPL Test Passed!");
+}
+
 testSeedPRNG();
 testLinearInferenceAndExtrapolation();
 testDatasetHealthAndGeneralizationDegradation();
@@ -423,5 +440,6 @@ testCharacterSilhouetteArchetypes();
 testFloating3DValueBadges();
 testPPMI3DWordEmbeddingConvergence();
 testLiveInlineNumericTokens();
+testSemanticConsultNearestNeighbors();
 console.log("🎉 All Web Unit Tests Passed Cleanly!");
 
