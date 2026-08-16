@@ -566,3 +566,147 @@ namespace NeuroArena.Environment
             return mesh;
         }
         #endregion
+
+        #region NPC & Companion Meshes
+        /// <summary>
+        /// Creates a faceted truncated polyhedron mesh for the ADA companion drone with recessed eye chamber.
+        /// </summary>
+        public static Mesh CreateAdaDroneMesh(float radius = 0.35f)
+        {
+            Mesh mesh = new Mesh { name = "AdaDronePolyhedron" };
+            List<Vector3> verts = new List<Vector3>();
+            List<int> tris = new List<int>();
+
+            // Faceted Octahedral Core with bevelled facets
+            Vector3[] basePoints = new Vector3[]
+            {
+                new Vector3(0, radius, 0),
+                new Vector3(0, -radius, 0),
+                new Vector3(radius, 0, 0),
+                new Vector3(-radius, 0, 0),
+                new Vector3(0, 0, radius),
+                new Vector3(0, 0, -radius)
+            };
+
+            int[][] faces = new int[][]
+            {
+                new int[] { 0, 2, 4 }, new int[] { 0, 4, 3 }, new int[] { 0, 3, 5 }, new int[] { 0, 5, 2 },
+                new int[] { 1, 4, 2 }, new int[] { 1, 3, 4 }, new int[] { 1, 5, 3 }, new int[] { 1, 2, 5 }
+            };
+
+            foreach (var f in faces)
+            {
+                int idx = verts.Count;
+                verts.Add(basePoints[f[0]]);
+                verts.Add(basePoints[f[1]]);
+                verts.Add(basePoints[f[2]]);
+                tris.Add(idx); tris.Add(idx + 1); tris.Add(idx + 2);
+            }
+
+            mesh.vertices = verts.ToArray();
+            mesh.triangles = tris.ToArray();
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+            return mesh;
+        }
+
+        /// <summary>
+        /// Creates a stacked-book/scroll tome golem torso mesh for The Archivist.
+        /// </summary>
+        public static Mesh CreateArchivistGolemMesh(float scale = 1.0f)
+        {
+            Mesh mesh = new Mesh { name = "ArchivistTomeGolem" };
+            List<Vector3> verts = new List<Vector3>();
+            List<int> tris = new List<int>();
+
+            // Stack of 3 chamfered stone books with offset rotation
+            float[] layerHeights = new float[] { 0.4f, 0.35f, 0.3f };
+            float[] layerWidths = new float[] { 1.2f, 1.0f, 0.85f };
+            float[] layerAngles = new float[] { 0f, 18f, -12f };
+            float currentY = 0f;
+
+            for (int l = 0; l < 3; l++)
+            {
+                float w = layerWidths[l] * scale * 0.5f;
+                float h = layerHeights[l] * scale;
+                float d = (layerWidths[l] * 0.75f) * scale * 0.5f;
+                float rot = layerAngles[l] * Mathf.Deg2Rad;
+
+                Vector3[] corners = new Vector3[]
+                {
+                    new Vector3(-w, 0, -d), new Vector3(w, 0, -d),
+                    new Vector3(w, 0, d), new Vector3(-w, 0, d),
+                    new Vector3(-w, h, -d), new Vector3(w, h, -d),
+                    new Vector3(w, h, d), new Vector3(-w, h, d)
+                };
+
+                // Rotate layer corners
+                for (int c = 0; c < 8; c++)
+                {
+                    float rx = corners[c].x * Mathf.Cos(rot) - corners[c].z * Mathf.Sin(rot);
+                    float rz = corners[c].x * Mathf.Sin(rot) + corners[c].z * Mathf.Cos(rot);
+                    corners[c] = new Vector3(rx, corners[c].y + currentY, rz);
+                }
+
+                int[][] cubeFaces = new int[][]
+                {
+                    new int[] { 0, 2, 1 }, new int[] { 0, 3, 2 }, // bottom
+                    new int[] { 4, 5, 6 }, new int[] { 4, 6, 7 }, // top
+                    new int[] { 0, 1, 5 }, new int[] { 0, 5, 4 }, // front
+                    new int[] { 2, 3, 7 }, new int[] { 2, 7, 6 }, // back
+                    new int[] { 3, 0, 4 }, new int[] { 3, 4, 7 }, // left
+                    new int[] { 1, 2, 6 }, new int[] { 1, 6, 5 }  // right
+                };
+
+                foreach (var cf in cubeFaces)
+                {
+                    int idx = verts.Count;
+                    verts.Add(corners[cf[0]]);
+                    verts.Add(corners[cf[1]]);
+                    verts.Add(corners[cf[2]]);
+                    tris.Add(idx); tris.Add(idx + 1); tris.Add(idx + 2);
+                }
+
+                currentY += h;
+            }
+
+            mesh.vertices = verts.ToArray();
+            mesh.triangles = tris.ToArray();
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+            return mesh;
+        }
+
+        /// <summary>
+        /// Creates a distinct creature body mesh for one of the 4 Optimizer Smiths.
+        /// </summary>
+        public static Mesh CreateOptimizerSmithMesh(string smithType, float scale = 0.7f)
+        {
+            Mesh mesh = new Mesh { name = $"Smith_{smithType}" };
+            List<Vector3> verts = new List<Vector3>();
+            List<int> tris = new List<int>();
+
+            if (smithType == "SGD")
+            {
+                // Sharp jagged diamond sprite with erratic faceted spikes
+                return CreateShardMesh(0.42f * scale);
+            }
+            else if (smithType == "Momentum")
+            {
+                // Heavy rolling faceted boulder sphere with forward mass
+                return CreateRockMesh(0.55f * scale, 42);
+            }
+            else if (smithType == "RMSprop")
+            {
+                // Stepped vertical spring prism
+                return CreateCrystalMesh(0.38f * scale, 1.2f * scale);
+            }
+            else // Adam
+            {
+                // Dual-ring hybrid diamond hyper-core
+                return CreateOctagonalPlatformMesh(0.45f * scale, 0.5f * scale);
+            }
+        }
+        #endregion
+    }
+}
