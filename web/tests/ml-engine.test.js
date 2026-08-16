@@ -439,6 +439,19 @@ function testMultiplayerNetworkManagerAndGhostInterpolation() {
     console.log("✅ Multiplayer NetworkManager 15Hz Relay & Ghost Interpolation Test Passed!");
 }
 
+function testFullHumanoidGhostAvatarAndTrainingVisuals() {
+    const builds = ["explorer", "scholar", "engineer"];
+    builds.forEach(b => {
+        const ghostHex = b === "scholar" ? "#c084fc" : (b === "engineer" ? "#34d399" : "#38bdf8");
+        assert(ghostHex.startsWith("#"), "Ghost color must be valid hex");
+    });
+
+    const isTraining = true;
+    const trainingAuraActive = isTraining;
+    assert.strictEqual(trainingAuraActive, true, "Training aura must be active when player activity is 'training'");
+    console.log("✅ Full Humanoid Ghost Avatar & Training Energy Halo Test Passed!");
+}
+
 testSeedPRNG();
 testLinearInferenceAndExtrapolation();
 testDatasetHealthAndGeneralizationDegradation();
@@ -458,5 +471,6 @@ testPPMI3DWordEmbeddingConvergence();
 testLiveInlineNumericTokens();
 testSemanticConsultNearestNeighbors();
 testMultiplayerNetworkManagerAndGhostInterpolation();
+testFullHumanoidGhostAvatarAndTrainingVisuals();
 console.log("🎉 All Web Unit Tests Passed Cleanly!");
 

@@ -1800,16 +1800,22 @@ let playerAnimState = {
     pickupTimer: 0
 };
 
-function createPlayerAvatar(characterBuild = "explorer") {
-    if (playerMesh) {
-        scene.remove(playerMesh);
-    }
-    playerMesh = new THREE.Group();
+function buildHumanoidAvatarModel(characterBuild = "explorer", isGhost = false) {
+    const group = new THREE.Group();
+    const limbs = {};
 
-    const matArmor = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.35, metalness: 0.2 });
-    const matAccent = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.4 });
-    const matVisor = new THREE.MeshStandardMaterial({ color: 0x22d3ee, emissive: 0x06b6d4, emissiveIntensity: 1.2 });
-    const matCore = new THREE.MeshStandardMaterial({ color: 0xfacc15, emissive: 0xfacc15, emissiveIntensity: 1.5 });
+    const ghostHex = characterBuild === "scholar" ? 0xc084fc : (characterBuild === "engineer" ? 0x34d399 : 0x38bdf8);
+
+    const matArmor = isGhost ?
+        new THREE.MeshStandardMaterial({ color: ghostHex, emissive: ghostHex, emissiveIntensity: 0.6, transparent: true, opacity: 0.75, roughness: 0.35 }) :
+        new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.35, metalness: 0.2 });
+
+    const matAccent = isGhost ?
+        new THREE.MeshStandardMaterial({ color: ghostHex, emissive: ghostHex, emissiveIntensity: 0.8, transparent: true, opacity: 0.8 }) :
+        new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.4 });
+
+    const matVisor = new THREE.MeshStandardMaterial({ color: 0x22d3ee, emissive: 0x06b6d4, emissiveIntensity: 1.5 });
+    const matCore = new THREE.MeshStandardMaterial({ color: 0xfacc15, emissive: 0xfacc15, emissiveIntensity: 1.8 });
 
     const widthScale = characterBuild === "explorer" ? 1.25 : (characterBuild === "scholar" ? 0.85 : 1.0);
     const heightScale = characterBuild === "scholar" ? 1.20 : (characterBuild === "engineer" ? 0.90 : 1.0);
@@ -1824,8 +1830,8 @@ function createPlayerAvatar(characterBuild = "explorer") {
     coreMesh.rotation.x = Math.PI / 2;
     coreMesh.position.set(0, 0.1 * heightScale, 0.17 * widthScale);
     torso.add(coreMesh);
-    playerMesh.add(torso);
-    playerLimbs.torso = torso;
+    group.add(torso);
+    limbs.torso = torso;
 
     // 2. Head & Visor
     const head = new THREE.Group();
@@ -1838,7 +1844,7 @@ function createPlayerAvatar(characterBuild = "explorer") {
     visorMesh.position.set(0, 0.02, headW * 0.46);
     head.add(visorMesh);
     torso.add(head);
-    playerLimbs.head = head;
+    limbs.head = head;
 
     // 3. Left Arm
     const armSpacing = 0.35 * widthScale;
@@ -1855,8 +1861,8 @@ function createPlayerAvatar(characterBuild = "explorer") {
     leftForearm.add(lLower);
     leftArm.add(leftForearm);
     torso.add(leftArm);
-    playerLimbs.leftArm = leftArm;
-    playerLimbs.leftForearm = leftForearm;
+    limbs.leftArm = leftArm;
+    limbs.leftForearm = leftForearm;
 
     // 4. Right Arm
     const rightArm = new THREE.Group();
@@ -1872,8 +1878,8 @@ function createPlayerAvatar(characterBuild = "explorer") {
     rightForearm.add(rLower);
     rightArm.add(rightForearm);
     torso.add(rightArm);
-    playerLimbs.rightArm = rightArm;
-    playerLimbs.rightForearm = rightForearm;
+    limbs.rightArm = rightArm;
+    limbs.rightForearm = rightForearm;
 
     // 5. Left Leg
     const legSpacing = 0.16 * widthScale;
@@ -1892,9 +1898,9 @@ function createPlayerAvatar(characterBuild = "explorer") {
     lBoot.position.set(0, -0.32 * heightScale, 0.04);
     leftCalf.add(lBoot);
     leftLeg.add(leftCalf);
-    playerMesh.add(leftLeg);
-    playerLimbs.leftLeg = leftLeg;
-    playerLimbs.leftCalf = leftCalf;
+    group.add(leftLeg);
+    limbs.leftLeg = leftLeg;
+    limbs.leftCalf = leftCalf;
 
     // 6. Right Leg
     const rightLeg = new THREE.Group();
@@ -1912,10 +1918,35 @@ function createPlayerAvatar(characterBuild = "explorer") {
     rBoot.position.set(0, -0.32 * heightScale, 0.04);
     rightCalf.add(rBoot);
     rightLeg.add(rightCalf);
-    playerMesh.add(rightLeg);
-    playerLimbs.rightLeg = rightLeg;
-    playerLimbs.rightCalf = rightCalf;
+    group.add(rightLeg);
+    limbs.rightLeg = rightLeg;
+    limbs.rightCalf = rightCalf;
 
+    // 7. Training Energy Aura Halo Ring (Ground level, rotating)
+    const auraMat = new THREE.MeshStandardMaterial({
+        color: 0xfacc15,
+        emissive: 0xfacc15,
+        emissiveIntensity: 2.2,
+        transparent: true,
+        opacity: 0.85,
+        roughness: 0.2
+    });
+    const trainingAura = new THREE.Mesh(new THREE.TorusGeometry(0.85 * widthScale, 0.045, 12, 32), auraMat);
+    trainingAura.rotation.x = Math.PI / 2;
+    trainingAura.position.y = 0.04;
+    trainingAura.visible = false;
+    group.add(trainingAura);
+
+    return { group, limbs, trainingAura };
+}
+
+function createPlayerAvatar(characterBuild = "explorer") {
+    if (playerMesh) {
+        scene.remove(playerMesh);
+    }
+    const avatar = buildHumanoidAvatarModel(characterBuild, false);
+    playerMesh = avatar.group;
+    playerLimbs = avatar.limbs;
     playerMesh.position.copy(playerPos);
     scene.add(playerMesh);
 }
@@ -2484,9 +2515,24 @@ const ColyseusNetwork = {
                 const diff = ghost.targetRotY - ghost.mesh.rotation.y;
                 ghost.mesh.rotation.y += diff * Math.min(1.0, deltaTime * 12.0);
 
+                // Reflect activity state visually (Training Energy Aura & Pose)
+                const isTraining = ghost.activityState === "training";
+                if (ghost.trainingAura) {
+                    ghost.trainingAura.visible = isTraining;
+                    if (isTraining) {
+                        ghost.trainingAura.rotation.z += deltaTime * 3.5;
+                        const pulse = 1.0 + Math.sin(performance.now() * 0.009) * 0.18;
+                        ghost.trainingAura.scale.set(pulse, pulse, pulse);
+                        if (ghost.limbs?.leftArm && ghost.limbs?.rightArm) {
+                            ghost.limbs.leftArm.rotation.x = -0.55;
+                            ghost.limbs.rightArm.rotation.x = -0.55;
+                        }
+                    }
+                }
+
                 // Badge billboard update
                 if (ghost.badge) {
-                    ghost.badge.position.set(ghost.mesh.position.x, ghost.mesh.position.y + 1.25, ghost.mesh.position.z);
+                    ghost.badge.position.set(ghost.mesh.position.x, ghost.mesh.position.y + 2.35, ghost.mesh.position.z);
                     if (camera) ghost.badge.quaternion.copy(camera.quaternion);
                 }
 
@@ -2510,6 +2556,8 @@ const ColyseusNetwork = {
             this.removeGhost(msg.id);
         } else if (msg.type === "player_transform") {
             this.updateGhostTransform(msg.id, msg);
+        } else if (msg.type === "player_activity") {
+            this.updateGhostActivity(msg.id, msg.state);
         }
     },
 
@@ -2520,33 +2568,20 @@ const ColyseusNetwork = {
             return;
         }
 
-        // Spawn Lightweight Translucent Holographic Ghost Avatar
+        // Spawn Full Rigged Humanoid Avatar Model (Reusing low-poly character asset pipeline)
         const build = data.characterBuild || "explorer";
         const ghostColor = build === "scholar" ? "#c084fc" : (build === "engineer" ? "#34d399" : "#38bdf8");
-        const ghostHex = build === "scholar" ? 0xc084fc : (build === "engineer" ? 0x34d399 : 0x38bdf8);
 
-        const wScale = build === "scholar" ? 0.7 : (build === "engineer" ? 0.9 : 1.0);
-        const hScale = build === "scholar" ? 1.2 : (build === "engineer" ? 0.85 : 1.0);
-
-        const ghostMesh = new THREE.Mesh(
-            new THREE.CapsuleGeometry(0.35 * wScale, 0.9 * hScale, 8, 16),
-            new THREE.MeshStandardMaterial({
-                color: ghostHex,
-                emissive: ghostHex,
-                emissiveIntensity: 0.8,
-                transparent: true,
-                opacity: 0.65,
-                roughness: 0.3
-            })
-        );
+        const avatar = buildHumanoidAvatarModel(build, true);
+        const ghostMesh = avatar.group;
         const initPos = new THREE.Vector3(data.x || 0, data.y || 1.2, data.z || 0);
         ghostMesh.position.copy(initPos);
         scene.add(ghostMesh);
 
         // Nameplate billboard badge
         const icon = build === "scholar" ? "📜" : (build === "engineer" ? "⚙️" : "🧭");
-        const badge = createFloatingValueBadge(`${icon} ${data.name || "Architect"}`, `[${build.toUpperCase()}]`, ghostColor, "rgba(15,23,42,0.8)");
-        badge.position.set(initPos.x, initPos.y + 1.25, initPos.z);
+        const badge = createFloatingValueBadge(`${icon} ${data.name || "Architect"}`, `[${build.toUpperCase()}]`, ghostColor, "rgba(15,23,42,0.85)");
+        badge.position.set(initPos.x, initPos.y + 2.35, initPos.z);
         scene.add(badge);
 
         this.remoteGhosts.set(data.id, {
@@ -2556,10 +2591,22 @@ const ColyseusNetwork = {
             currentBiome: data.biome || 0,
             activityState: data.activityState || "idle",
             mesh: ghostMesh,
+            limbs: avatar.limbs,
+            trainingAura: avatar.trainingAura,
             badge: badge,
             targetPos: initPos.clone(),
             targetRotY: data.rotationY || 0
         });
+    },
+
+    updateGhostActivity(id, state) {
+        const ghost = this.remoteGhosts.get(id);
+        if (ghost) {
+            ghost.activityState = state;
+            if (state === "training") {
+                trigger3DParticleBurst(ghost.mesh.position);
+            }
+        }
     },
 
     updateGhostTransform(id, data) {
