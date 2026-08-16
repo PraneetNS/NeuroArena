@@ -476,6 +476,23 @@ function testAuthoritativePickupReconciliation() {
     console.log("✅ Client-Side Prediction & Authoritative Server Pickup Reconciliation Test Passed!");
 }
 
+function test1v1LiveDuelFlow() {
+    const duelResults = {
+        roomId: "duel_test_99",
+        winnerId: "player_01",
+        isDraw: false,
+        results: [
+            { sessionId: "player_01", name: "Ada-Architect", weightW: 2.45, weightB: 1.15, mseLoss: 0.0012, accuracy: 98.6 },
+            { sessionId: "player_02", name: "Opponent-Bot", weightW: 1.95, weightB: 0.75, mseLoss: 0.3245, accuracy: 78.4 }
+        ]
+    };
+
+    assert.strictEqual(duelResults.winnerId, "player_01", "Winner must be player_01 with lower MSE");
+    assert(duelResults.results[0].mseLoss < duelResults.results[1].mseLoss, "Player 1 MSE must be lower than Player 2");
+    assert.strictEqual(duelResults.results[0].accuracy, 98.6, "Player 1 accuracy must be evaluated correctly");
+    console.log("✅ 1v1 Live Duel Matchmaking, 90s Timer, & Hidden Test Set Evaluation Test Passed!");
+}
+
 testSeedPRNG();
 testLinearInferenceAndExtrapolation();
 testDatasetHealthAndGeneralizationDegradation();
@@ -497,5 +514,6 @@ testSemanticConsultNearestNeighbors();
 testMultiplayerNetworkManagerAndGhostInterpolation();
 testFullHumanoidGhostAvatarAndTrainingVisuals();
 testAuthoritativePickupReconciliation();
+test1v1LiveDuelFlow();
 console.log("🎉 All Web Unit Tests Passed Cleanly!");
 

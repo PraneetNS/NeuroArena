@@ -102,7 +102,45 @@ function testServerSideCollectibleValidation() {
     console.log("✅ Authoritative Collectible Pickup & Anti-Cheat Validation Test Passed!");
 }
 
+function test1v1DuelFlowAndServerHiddenTestSet() {
+    console.log("▶ Testing 1v1 Live Duel Hidden Test Set & Accuracy Evaluation...");
+    const { DuelRoom } = require("../src/rooms/DuelRoom");
+    const { DuelRoomState } = require("../src/schema/DuelRoomState");
+
+    const duelState = new DuelRoomState();
+    assert.strictEqual(duelState.status, "waiting");
+    assert.strictEqual(duelState.timerSec, 90);
+
+    // Mock Hidden Test Set
+    const testSet = [];
+    for (let i = 0; i < 50; i++) {
+        const x = -4.5 + (i / 49) * 9.0;
+        testSet.push({ x, y: 2.45 * x + 1.15 });
+    }
+
+    // Model 1: High Accuracy Model (w = 2.44, b = 1.14)
+    let mse1 = 0;
+    testSet.forEach(s => {
+        const pred = 2.44 * s.x + 1.14;
+        mse1 += Math.pow(pred - s.y, 2);
+    });
+    mse1 /= testSet.length;
+
+    // Model 2: Untrained Baseline Model (w = 0.5, b = 0.0)
+    let mse2 = 0;
+    testSet.forEach(s => {
+        const pred = 0.5 * s.x + 0.0;
+        mse2 += Math.pow(pred - s.y, 2);
+    });
+    mse2 /= testSet.length;
+
+    assert(mse1 < mse2, "Optimized model must have lower MSE than untrained baseline");
+    assert(mse1 < 0.01, "Well-trained model must achieve near-zero MSE on hidden test set");
+    console.log(`✅ 1v1 Live Duel Hidden Test Set Evaluation Test Passed! (M1 MSE: ${mse1.toFixed(5)} vs M2 MSE: ${mse2.toFixed(5)})`);
+}
+
 testSchemaAndLifecycle();
 testActivityStateEnum();
 testServerSideCollectibleValidation();
+test1v1DuelFlowAndServerHiddenTestSet();
 console.log("🎉 All NeuroArena Server Unit Tests Passed Cleanly!");

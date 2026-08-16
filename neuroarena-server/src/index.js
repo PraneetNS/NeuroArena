@@ -1,9 +1,10 @@
-﻿const http = require("http");
+const http = require("http");
 const express = require("express");
 const cors = require("cors");
 const { Server } = require("colyseus");
 const { WebSocketTransport } = require("@colyseus/ws-transport");
 const { ArenaRoom } = require("./rooms/ArenaRoom");
+const { DuelRoom } = require("./rooms/DuelRoom");
 
 const PORT = parseInt(process.env.PORT || "2567", 10);
 
@@ -26,7 +27,7 @@ app.get("/api/status", (req, res) => {
         service: "NeuroArena Real-Time Multiplayer State Relay",
         version: "1.0.0",
         port: PORT,
-        rooms: ["arena_room"],
+        rooms: ["arena_room", "duel_room"],
         documentation: "https://github.com/PraneetNS/NeuroArena"
     });
 });
@@ -39,8 +40,9 @@ const gameServer = new Server({
     })
 });
 
-// 3. Register Arena Multiplayer Room
+// 3. Register Arena Multiplayer & 1v1 Live Duel Rooms
 gameServer.define("arena_room", ArenaRoom);
+gameServer.define("duel_room", DuelRoom).enableRealtimeListing();
 
 // 4. Start Server
 server.listen(PORT, () => {
@@ -48,7 +50,7 @@ server.listen(PORT, () => {
     console.log(`⚡ NEURO-ARENA MULTIPLAYER RELAY SERVER ACTIVE`);
     console.log(`🌐 Listening on ws://localhost:${PORT}`);
     console.log(`🩺 Healthcheck: http://localhost:${PORT}/health`);
-    console.log(`🚪 Defined Room: "arena_room" (State Synchronization)`);
+    console.log(`🚪 Defined Rooms: "arena_room", "duel_room" (1v1 Duels)`);
     console.log("==================================================");
 });
 

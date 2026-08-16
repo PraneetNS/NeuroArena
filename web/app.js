@@ -2681,6 +2681,255 @@ const ColyseusNetwork = {
     }
 };
 
+// --- 9.95 1v1 LIVE MULTIPLAYER DUEL MANAGER ---
+const LiveDuelManager = {
+    serverUrl: "ws://localhost:2567",
+    ws: null,
+    status: "idle", // "idle" | "queueing" | "countdown" | "active" | "evaluating" | "completed"
+    roomId: null,
+    timerSec: 90,
+    opponent: null,
+    duelSeed: null,
+    submitted: false,
+
+    startMatchmaking() {
+        if (this.status !== "idle") return;
+        this.status = "queueing";
+        this.submitted = false;
+
+        const modal = document.getElementById("duel-matchmaking-modal");
+        const statusTxt = document.getElementById("duel-queue-status-text");
+        const subTxt = document.getElementById("duel-queue-subtext");
+        const countdownBox = document.getElementById("duel-countdown-box");
+
+        if (modal) modal.classList.remove("hidden");
+        if (countdownBox) countdownBox.classList.add("hidden");
+        if (statusTxt) statusTxt.innerText = "SEARCHING FOR OPPONENT...";
+        if (subTxt) subTxt.innerText = "Pairing via FIFO matchmaking queue into a private synchronized room instance. Both architects will have 90s to harvest and train locally before submitting weights to the server's hidden test set.";
+
+        try {
+            this.ws = new WebSocket(`${this.serverUrl}/duel_room`);
+
+            this.ws.onopen = () => {
+                const profile = (typeof ProfileSlots !== "undefined" && ProfileSlots[activeSaveSlot]) ? ProfileSlots[activeSaveSlot] : {};
+                this.send("join", {
+                    name: profile.name || "Ada-Architect",
+                    characterBuild: profile.characterBuild || "explorer",
+                    biome: GameState.currentBiome || 0
+                });
+            };
+
+            this.ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    this.handleMessage(data);
+                } catch (e) { }
+            };
+
+            this.ws.onerror = () => {
+                this.fallbackSinglePlayerDuel();
+            };
+
+            this.ws.onclose = () => {
+                if (this.status === "queueing" || this.status === "active") {
+                    this.cleanupMatch();
+                }
+            };
+        } catch (e) {
+            this.fallbackSinglePlayerDuel();
+        }
+    },
+
+    send(type, payload) {
+        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+            this.ws.send(JSON.stringify({ type, ...payload }));
+        }
+    },
+
+    handleMessage(msg) {
+        if (msg.type === "match_paired") {
+            this.status = "countdown";
+            this.roomId = msg.roomId;
+            this.duelSeed = msg.seed;
+
+            const countdownBox = document.getElementById("duel-countdown-box");
+            const statusTxt = document.getElementById("duel-queue-status-text");
+            const countNum = document.getElementById("duel-countdown-num");
+
+            if (statusTxt) statusTxt.innerText = "⚔️ OPPONENT PAIRED!";
+            if (countdownBox) countdownBox.classList.remove("hidden");
+
+            let c = msg.countdownSec || 3;
+            if (countNum) countNum.innerText = c;
+            playVictoryPassSFX();
+
+            const interval = setInterval(() => {
+                c--;
+                if (countNum) countNum.innerText = c;
+                if (c <= 0) clearInterval(interval);
+            }, 1000);
+        } else if (msg.type === "match_started") {
+            this.status = "active";
+            this.timerSec = msg.durationSec || 90;
+
+            const modal = document.getElementById("duel-matchmaking-modal");
+            if (modal) modal.classList.add("hidden");
+
+            const hudBanner = document.getElementById("duel-hud-banner");
+            if (hudBanner) hudBanner.classList.remove("hidden");
+            this.updateTimerDisplay(this.timerSec);
+
+            if (msg.seed) {
+                initializePlaythroughSeed(msg.seed);
+                generateDynamicDataset();
+                generateBiomeTerrain(GameState.currentBiome);
+                spawnCollectibles();
+            }
+
+            playVictoryPassSFX();
+        } else if (msg.type === "timer_tick") {
+            this.timerSec = msg.timerSec;
+            this.updateTimerDisplay(this.timerSec);
+            if (this.timerSec === 0 && !this.submitted) {
+                this.autoSubmitModel();
+            }
+        } else if (msg.type === "player_submitted") {
+            const oppBadge = document.getElementById("duel-opponent-status-badge");
+            if (oppBadge) {
+                oppBadge.innerHTML = `<span style="color:#4ade80;">✓ OPPONENT SUBMITTED WEIGHTS</span>`;
+            }
+        } else if (msg.type === "duel_results") {
+            this.renderDuelResults(msg);
+        }
+    },
+
+    updateTimerDisplay(sec) {
+        const timerVal = document.getElementById("duel-timer-val");
+        if (timerVal) {
+            const mins = Math.floor(sec / 60);
+            const s = sec % 60;
+            timerVal.innerText = `${mins.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            if (sec <= 10) {
+                timerVal.style.color = "#f43f5e";
+            } else {
+                timerVal.style.color = "#facc15";
+            }
+        }
+    },
+
+    submitModelWeights(weightW, weightB) {
+        this.submitted = true;
+        this.send("submit_weights", { weightW, weightB });
+        const toast = document.createElement("div");
+        toast.className = "network-rejection-toast";
+        toast.style.background = "rgba(16,185,129,0.95)";
+        toast.style.borderColor = "#34d399";
+        toast.innerHTML = `🚀 <b>WEIGHTS SUBMITTED:</b> Waiting for hidden test set evaluation...`;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 4000);
+    },
+
+    autoSubmitModel() {
+        const w = (typeof liveRegressionModel !== "undefined" && liveRegressionModel.w !== undefined) ? liveRegressionModel.w : 2.45;
+        const b = (typeof liveRegressionModel !== "undefined" && liveRegressionModel.b !== undefined) ? liveRegressionModel.b : 1.15;
+        this.submitModelWeights(w, b);
+    },
+
+    renderDuelResults(data) {
+        this.status = "completed";
+        const hudBanner = document.getElementById("duel-hud-banner");
+        if (hudBanner) hudBanner.classList.add("hidden");
+
+        const modal = document.getElementById("duel-results-modal");
+        const banner = document.getElementById("duel-outcome-banner");
+        const mySessionId = this.ws ? this.ws.sessionId : null;
+
+        const p1 = (Array.isArray(data.results) ? data.results.find(r => r.sessionId === mySessionId) : null) || (data.results ? data.results[0] : null) || {};
+        const p2 = (Array.isArray(data.results) ? data.results.find(r => r.sessionId !== mySessionId) : null) || (data.results ? data.results[1] : null) || { name: "AI Challenger", characterBuild: "scholar", weightW: 1.85, weightB: 0.62, mseLoss: 0.384, accuracy: 76.5 };
+
+        // Populate Player 1
+        const pName = document.getElementById("duel-res-player-name");
+        const pWeights = document.getElementById("duel-res-player-weights");
+        const pMse = document.getElementById("duel-res-player-mse");
+        const pAcc = document.getElementById("duel-res-player-acc");
+
+        if (pName) pName.innerText = p1.name || "You";
+        if (pWeights) pWeights.innerText = `w=${(p1.weightW || 0).toFixed(2)}, b=${(p1.weightB || 0).toFixed(2)}`;
+        if (pMse) pMse.innerText = (p1.mseLoss || 0).toFixed(4);
+        if (pAcc) pAcc.innerText = `${(p1.accuracy || 0).toFixed(1)}%`;
+
+        // Populate Opponent
+        const oppName = document.getElementById("duel-res-opp-name");
+        const oppWeights = document.getElementById("duel-res-opp-weights");
+        const oppMse = document.getElementById("duel-res-opp-mse");
+        const oppAcc = document.getElementById("duel-res-opp-acc");
+
+        if (oppName) oppName.innerText = p2.name || "Opponent";
+        if (oppWeights) oppWeights.innerText = `w=${(p2.weightW || 0).toFixed(2)}, b=${(p2.weightB || 0).toFixed(2)}`;
+        if (oppMse) oppMse.innerText = (p2.mseLoss || 0).toFixed(4);
+        if (oppAcc) oppAcc.innerText = `${(p2.accuracy || 0).toFixed(1)}%`;
+
+        // Outcome Banner
+        const isWin = (data.winnerId === mySessionId) || (!data.isDraw && (p1.mseLoss < (p2.mseLoss || 99)));
+        const isDraw = data.isDraw || (p1.mseLoss === p2.mseLoss);
+
+        if (banner) {
+            if (isDraw) {
+                banner.innerText = "🤝 MATCH DRAW / TIE";
+                banner.style.color = "#facc15";
+                playVictoryPassSFX();
+            } else if (isWin) {
+                banner.innerText = "🏆 VICTORY!";
+                banner.style.color = "#4ade80";
+                playVictoryPassSFX();
+                trigger3DParticleBurst(playerPos);
+            } else {
+                banner.innerText = "💀 DEFEAT";
+                banner.style.color = "#f43f5e";
+                playFailureSFX();
+            }
+        }
+
+        if (modal) modal.classList.remove("hidden");
+    },
+
+    cancelMatchmaking() {
+        if (this.ws) {
+            this.ws.close();
+            this.ws = null;
+        }
+        this.status = "idle";
+        const modal = document.getElementById("duel-matchmaking-modal");
+        if (modal) modal.classList.add("hidden");
+    },
+
+    cleanupMatch() {
+        this.status = "idle";
+        const hudBanner = document.getElementById("duel-hud-banner");
+        if (hudBanner) hudBanner.classList.add("hidden");
+    },
+
+    fallbackSinglePlayerDuel() {
+        const statusTxt = document.getElementById("duel-queue-status-text");
+        if (statusTxt) statusTxt.innerText = "SIMULATING CHOPPED OPPONENT...";
+        setTimeout(() => {
+            this.handleMessage({
+                type: "match_paired",
+                roomId: "offline_sim_duel",
+                seed: "DUEL-SIM-7721",
+                countdownSec: 3
+            });
+            setTimeout(() => {
+                this.handleMessage({
+                    type: "match_started",
+                    durationSec: 90,
+                    seed: "DUEL-SIM-7721"
+                });
+            }, 3000);
+        }, 1200);
+    }
+};
+
 // --- 10. INPUT & CONTROLS ---
 function setupInputListeners() {
     window.addEventListener("keydown", (e) => {
@@ -3157,6 +3406,11 @@ function archiveCurrentModelToVault(bossTitle = "Linear Steppes Boss") {
 
     TrainedModelVault.unshift(newRecord);
     saveModelVault();
+
+    // If a 1v1 Live Duel is active, submit final model weights immediately!
+    if (typeof LiveDuelManager !== "undefined" && LiveDuelManager.status === "active" && !LiveDuelManager.submitted) {
+        LiveDuelManager.submitModelWeights(finalW, finalB);
+    }
 }
 
 function renderModelGallery() {
@@ -3590,6 +3844,11 @@ function setupUIEvents() {
         document.getElementById("model-inspector-modal").classList.add("hidden");
         openMyModelsGallery();
     });
+
+    // 1v1 Live Multiplayer Duel Matchmaking Events
+    document.getElementById("btn-open-duel-hud")?.addEventListener("click", () => LiveDuelManager.startMatchmaking());
+    document.getElementById("btn-cancel-duel-queue")?.addEventListener("click", () => LiveDuelManager.cancelMatchmaking());
+    document.getElementById("btn-close-duel-results")?.addEventListener("click", () => document.getElementById("duel-results-modal")?.classList.add("hidden"));
 
     // Consult HUD Opener
     document.getElementById("btn-open-consult-hud")?.addEventListener("click", () => {

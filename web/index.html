@@ -179,8 +179,21 @@
                 </div>
             </div>
 
+            <!-- 1.1 SYNCHRONIZED 1v1 LIVE DUEL MATCH BANNER -->
+            <div id="duel-hud-banner" class="glass-objective-card hidden" style="border:1.5px solid #f43f5e; box-shadow:0 0 20px rgba(244,63,94,0.4); margin-top:6px;">
+                <div class="objective-header">
+                    <span class="objective-icon">⚔️</span>
+                    <span id="duel-banner-title" class="objective-text" style="color:#f43f5e;">1v1 LIVE DUEL IN PROGRESS</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px; font-family:var(--font-display-mono); font-size:12px;">
+                    <div>⏱️ TIME REMAINING: <b id="duel-timer-val" style="color:#facc15; font-size:14px;">01:30</b></div>
+                    <div id="duel-opponent-status-badge" style="color:#38bdf8; font-size:11px;">👤 OPPONENT: HARVESTING</div>
+                </div>
+            </div>
+
             <!-- 2. TOP-RIGHT CONTROLS (MINIMUM 44x44dp TOUCH TARGETS) -->
             <div id="top-right-hud" class="hud-controls-group">
+                <button id="btn-open-duel-hud" class="hud-icon-btn glow-purple" title="1v1 Live Duel Matchmaking" style="border-color:#f43f5e; color:#f43f5e; font-weight:bold;">⚔️</button>
                 <button id="btn-open-models-hud" class="hud-icon-btn glow-cyan" title="My Models Archive">💾</button>
                 <button id="btn-open-consult-hud" class="hud-icon-btn glow-purple" title="Live Inference Consult">🔮</button>
                 <button id="btn-open-biome-map-hud" class="hud-icon-btn glow-amber" title="Biome World Travel Map">🗺️</button>
@@ -1028,6 +1041,75 @@
 
                             <button id="btn-confirm-character" class="primary-btn glow-cyan" style="width:100%; padding:12px 0; font-size:1rem; font-weight:800;">
                                 ⚔️ CONFIRM ARCHITECT & ENTER ARENA
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 1v1 LIVE DUEL MATCHMAKING MODAL -->
+                <div id="duel-matchmaking-modal" class="modal-overlay hidden" style="z-index: 9500;">
+                    <div class="glass-modal" style="max-width: 480px; text-align: center; border: 1.5px solid #f43f5e; box-shadow: 0 0 40px rgba(244,63,94,0.4);">
+                        <div class="modal-header" style="justify-content: center;">
+                            <h2 style="color: #f43f5e;">⚔️ 1v1 LIVE MULTIPLAYER DUEL</h2>
+                        </div>
+                        <div style="padding: 24px 20px;">
+                            <div id="duel-queue-spinner" style="font-size: 3.5rem; margin-bottom: 12px; animation: spin 2s linear infinite;">⏳</div>
+                            <div id="duel-queue-status-text" style="font-family: var(--font-display-mono); font-size: 1.15rem; font-weight: bold; color: #f8fafc; margin-bottom: 8px;">
+                                SEARCHING FOR OPPONENT...
+                            </div>
+                            <p id="duel-queue-subtext" style="font-size: 0.85rem; color: #94a3b8; line-height: 1.4; margin-bottom: 20px;">
+                                Pairing via FIFO matchmaking queue into a private synchronized room instance. Both architects will have 90s to harvest and train locally before submitting weights to the server's hidden test set.
+                            </p>
+                            <div id="duel-countdown-box" class="hidden" style="margin-bottom: 18px; font-size: 2.2rem; font-weight: 900; color: #facc15; font-family: var(--font-display-mono);">
+                                MATCH STARTING IN <span id="duel-countdown-num">3</span>...
+                            </div>
+                            <button id="btn-cancel-duel-queue" class="action-btn" style="background: rgba(225,29,72,0.2); border-color: #f43f5e; color: #f43f5e;">
+                                ✕ Cancel Matchmaking
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 1v1 LIVE DUEL RESULTS MODAL (HIDDEN TEST SET EVALUATION) -->
+                <div id="duel-results-modal" class="modal-overlay hidden" style="z-index: 9600;">
+                    <div class="glass-modal" style="max-width: 580px; border: 2px solid #38bdf8; box-shadow: 0 0 50px rgba(56,189,248,0.4);">
+                        <div class="modal-header" style="justify-content: center; background: rgba(15,23,42,0.95);">
+                            <h2 id="duel-results-title" style="font-size: 1.4rem; color: #facc15;">🏆 1v1 DUEL COMPLETE</h2>
+                        </div>
+                        <div style="padding: 20px;">
+                            <div id="duel-outcome-banner" style="text-align: center; font-size: 1.8rem; font-weight: 900; letter-spacing: 1px; margin-bottom: 16px; color: #4ade80;">
+                                VICTORY!
+                            </div>
+                            <div style="font-size: 0.82rem; color: #94a3b8; text-align: center; margin-bottom: 18px; font-family: var(--font-display-mono);">
+                                Authoritative Server Evaluation against 50 Hidden Test Samples
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px;">
+                                <!-- Player 1 Card (You) -->
+                                <div id="duel-card-player" class="stat-card" style="border: 1.5px solid #38bdf8; background: rgba(14,165,233,0.1); padding: 14px;">
+                                    <div style="font-size: 0.75rem; color: #38bdf8; font-weight: bold;">👤 YOU (ARCHITECT)</div>
+                                    <div id="duel-res-player-name" style="font-weight: 800; font-size: 1.1rem; color: #fff; margin-bottom: 8px;">Ada-Architect</div>
+                                    <div style="font-family: var(--font-display-mono); font-size: 0.82rem; color: #cbd5e1; line-height: 1.5;">
+                                        Weights: <b id="duel-res-player-weights" style="color: #facc15;">w=2.45, b=1.15</b><br>
+                                        Test MSE: <b id="duel-res-player-mse" style="color: #4ade80;">0.0021</b><br>
+                                        Accuracy: <b id="duel-res-player-acc" style="color: #38bdf8; font-size: 1.15rem;">98.4%</b>
+                                    </div>
+                                </div>
+
+                                <!-- Player 2 Card (Opponent) -->
+                                <div id="duel-card-opponent" class="stat-card" style="border: 1.5px solid #f43f5e; background: rgba(244,63,94,0.1); padding: 14px;">
+                                    <div style="font-size: 0.75rem; color: #f43f5e; font-weight: bold;">👤 OPPONENT</div>
+                                    <div id="duel-res-opp-name" style="font-weight: 800; font-size: 1.1rem; color: #fff; margin-bottom: 8px;">Challenger</div>
+                                    <div style="font-family: var(--font-display-mono); font-size: 0.82rem; color: #cbd5e1; line-height: 1.5;">
+                                        Weights: <b id="duel-res-opp-weights" style="color: #facc15;">w=1.80, b=0.60</b><br>
+                                        Test MSE: <b id="duel-res-opp-mse" style="color: #f87171;">0.4215</b><br>
+                                        Accuracy: <b id="duel-res-opp-acc" style="color: #f43f5e; font-size: 1.15rem;">74.2%</b>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button id="btn-close-duel-results" class="primary-btn glow-cyan" style="width: 100%; padding: 12px 0; font-size: 1rem; font-weight: 800;">
+                                ⚔️ RETURN TO BIOME HUB
                             </button>
                         </div>
                     </div>
