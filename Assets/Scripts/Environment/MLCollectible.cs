@@ -26,11 +26,19 @@ namespace NeuroArena.Environment
         [SerializeField] private float rotationSpeed = 55f;
         [SerializeField] private Color glowColor = Color.cyan;
 
+        [Header("3D Spatial Audio")]
+        [SerializeField] private float spatialMinDistance = 1.5f;
+        [SerializeField] private float spatialMaxDistance = 12.0f;
+        [SerializeField] private float humVolume = 0.08f;
+
         private Vector3 startPosition;
         private bool isCollected = false;
         private float collectAnimationTimer = 0f;
         private float randomTimeOffset = 0f;
         private ParticleSystem glowParticles;
+        private AudioSource spatialAudioSource;
+        private double audioPhase1 = 0;
+        private double audioPhase2 = 0;
 
         private void Awake()
         {
@@ -46,6 +54,43 @@ namespace NeuroArena.Environment
 
             ApplyVisualStylingAndMesh();
             CreateGlowParticleSystem();
+            SetupSpatialAudio();
+        }
+
+        private void SetupSpatialAudio()
+        {
+            spatialAudioSource = gameObject.AddComponent<AudioSource>();
+            spatialAudioSource.spatialBlend = 1.0f; // Full 3D spatial
+            spatialAudioSource.rolloffMode = AudioRolloffMode.Logarithmic;
+            spatialAudioSource.minDistance = spatialMinDistance;
+            spatialAudioSource.maxDistance = spatialMaxDistance;
+            spatialAudioSource.volume = humVolume;
+            spatialAudioSource.loop = true;
+            spatialAudioSource.playOnAwake = true;
+            spatialAudioSource.dopplerLevel = 0.2f;
+            spatialAudioSource.Play();
+        }
+
+        private void OnAudioFilterRead(float[] data, int channels)
+        {
+            if (isCollected) return;
+            double dt = 1.0 / AudioSettings.outputSampleRate;
+
+            for (int i = 0; i < data.Length; i += channels)
+            {
+                audioPhase1 += dt * 440.0;
+                audioPhase2 += dt * 880.0;
+                if (audioPhase1 > 1.0) audioPhase1 -= 1.0;
+                if (audioPhase2 > 1.0) audioPhase2 -= 1.0;
+
+                float sample = (Mathf.Sin((float)(audioPhase1 * Mathf.PI * 2)) * 0.7f +
+                               Mathf.Sin((float)(audioPhase2 * Mathf.PI * 2)) * 0.3f) * humVolume;
+
+                for (int c = 0; c < channels; c++)
+                {
+                    data[i + c] = sample;
+                }
+            }
         }
 
         private void Update()
