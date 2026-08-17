@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine;
 using NeuroArena.Data;
@@ -46,6 +47,36 @@ namespace NeuroArena.Tests
             Assert.IsTrue(res.isExtrapolation, "Query X=16.0 far outside [-5, 5] must trigger Extrapolation Error");
             Assert.AreEqual(33.0f, res.predictedValue, 0.01f, "Genuine inference: y = 2*(16) + 1 = 33.0");
             StringAssert.Contains("EXTRAPOLATION ERROR", res.confidenceLevel);
+        }
+
+        [Test]
+        public void TestOutOfVocabularyHonestRefusal()
+        {
+            // Player's Data Satchel only contains "fire", "flame", "heat"
+            HashSet<string> playerSatchelVocabulary = new HashSet<string> { "fire", "flame", "heat" };
+
+            // Querying an uncollected token "quantum_circuit"
+            var unkResult = ModelConsultEngine.ConsultSemanticToken("quantum_circuit", playerSatchelVocabulary);
+
+            Assert.IsTrue(unkResult.isOutOfVocabulary, "Uncollected token must be flagged as Out-of-Vocabulary");
+            Assert.AreEqual(0.0f, unkResult.predictedValue, "Model must not predict values for unknown tokens");
+            StringAssert.Contains("OUT-OF-VOCABULARY", unkResult.confidenceLevel);
+            StringAssert.Contains("UNKNOWN TOKEN (<UNK>)", unkResult.explanationText);
+            StringAssert.Contains("refuses to hallucinate", unkResult.explanationText);
+        }
+
+        [Test]
+        public void TestInVocabularyValidConsult()
+        {
+            HashSet<string> playerSatchelVocabulary = new HashSet<string> { "fire", "flame", "heat" };
+
+            // Querying a gathered token "flame"
+            var validResult = ModelConsultEngine.ConsultSemanticToken("flame", playerSatchelVocabulary);
+
+            Assert.IsFalse(validResult.isOutOfVocabulary, "Collected token must be recognized as in-vocabulary");
+            Assert.Greater(validResult.predictedValue, 0.5f, "In-vocabulary token must produce a valid prediction");
+            StringAssert.Contains("IN-VOCABULARY", validResult.confidenceLevel);
+            StringAssert.Contains("IN-VOCABULARY TOKEN", validResult.explanationText);
         }
     }
 }

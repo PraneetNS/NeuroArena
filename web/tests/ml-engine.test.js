@@ -1114,6 +1114,56 @@ function testSpatialCullingAndExpansiveTerrain() {
     console.log("✅ Expansive 2.56 km² Terrain, Spatial Culling & Stage 45 Profiler Test Passed!");
 }
 
+function testDataSatchelVocabularyAndHonestUNKConsult() {
+    // 1. Data Satchel Vocabulary Size = len(unique collected words)
+    const satchelVocabulary = new Set(["feature_x", "target_y", "slope", "bias", "gradient"]);
+    assert.strictEqual(satchelVocabulary.size, 5, "Initial vocabulary size must match unique token count");
+
+    // Add unique words
+    satchelVocabulary.add("fire");
+    satchelVocabulary.add("flame");
+    satchelVocabulary.add("heat");
+    assert.strictEqual(satchelVocabulary.size, 8, "Vocabulary size must dynamically equal len(unique collected words)");
+
+    // Deduplicate duplicate concept pickups
+    satchelVocabulary.add("fire");
+    assert.strictEqual(satchelVocabulary.size, 8, "Duplicate tokens must not inflate vocabulary size");
+
+    // 2. Model Consult with Unknown Token (<UNK>) Honest Refusal
+    function consultConcept(word, satchelSet) {
+        const token = word.trim().toLowerCase();
+        if (!satchelSet.has(token)) {
+            return {
+                isOutOfVocabulary: true,
+                predictedValue: 0,
+                confidence: "0% [HONEST REFUSAL :: OUT-OF-VOCABULARY TOKEN]",
+                math: `<UNK>('${token}') ➔ Undefined Token Embedding`,
+                explanation: `Unknown token: '${token}' was never gathered in Data Satchel. Model refuses to hallucinate.`
+            };
+        }
+        return {
+            isOutOfVocabulary: false,
+            predictedValue: 1.0,
+            confidence: "HIGH CONFIDENCE :: IN-VOCABULARY TOKEN",
+            math: `E('${token}') ∈ ℝ^${satchelSet.size} ➔ Valid Embedding Vector`,
+            explanation: `Token '${token}' is grounded in empirical satchel dataset.`
+        };
+    }
+
+    // Consult uncollected word
+    const unkQuery = consultConcept("quantum_teleportation", satchelVocabulary);
+    assert.strictEqual(unkQuery.isOutOfVocabulary, true, "Uncollected token must be flagged as out-of-vocabulary");
+    assert.strictEqual(unkQuery.predictedValue, 0, "Model must not predict values for unknown tokens");
+    assert(unkQuery.confidence.includes("OUT-OF-VOCABULARY"), "Must show honest refusal status");
+
+    // Consult gathered word
+    const validQuery = consultConcept("fire", satchelVocabulary);
+    assert.strictEqual(validQuery.isOutOfVocabulary, false, "Collected token must be accepted");
+    assert.strictEqual(validQuery.predictedValue, 1.0, "Valid token must produce grounded vector output");
+
+    console.log("✅ Data Satchel Vocabulary Size & Honest <UNK> Consult Rejection Test Passed!");
+}
+
 testSeedPRNG();
 testLinearInferenceAndExtrapolation();
 testDatasetHealthAndGeneralizationDegradation();
@@ -1150,6 +1200,8 @@ testAudioMixerBusesAndSpatialVoicePoolBudget();
 testPoissonDiscScatterAndBiomeLandmarks();
 testAmbientWildlifeStateAndArchetypes();
 testSpatialCullingAndExpansiveTerrain();
+testDataSatchelVocabularyAndHonestUNKConsult();
 console.log("🎉 All Web Unit Tests Passed Cleanly!");
+
 
 
