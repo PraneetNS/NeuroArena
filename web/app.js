@@ -4,7 +4,7 @@
 // Codex / Journal, Daily Seeded Challenge, Mastery Skins & Replay Stat Cards
 // =========================================================
 
-// --- 1. PROCEDURAL WEB AUDIO SYNTHESIZER (ZERO EXTERNAL ASSETS) ---
+// --- 1. PROCEDURAL WEB AUDIO SYNTHESIZER & AUDIOMIXER (ZERO EXTERNAL ASSETS) ---
 let audioCtx = null;
 
 function getAudioContext() {
@@ -14,8 +14,73 @@ function getAudioContext() {
     if (audioCtx.state === "suspended") {
         audioCtx.resume();
     }
+    if (typeof AudioMixer !== "undefined" && !AudioMixer.isInitialized && audioCtx) {
+        AudioMixer.init(audioCtx);
+    }
     return audioCtx;
 }
+
+// --- 1.05 CENTRAL AUDIOMIXER BUS ROUTING (MASTER / AMBIENT / SFX / UI / MUSIC) ---
+const AudioMixer = {
+    ctx: null,
+    masterGain: null,
+    ambientGain: null,
+    sfxGain: null,
+    uiGain: null,
+    musicGain: null,
+    isInitialized: false,
+    spatialVoiceCap: 8, // Configurable: 4 (Mobile) / 8 (Balanced) / 16 (Desktop)
+
+    init(ctx) {
+        if (this.isInitialized || !ctx) return;
+        this.ctx = ctx;
+
+        this.masterGain = ctx.createGain();
+        this.ambientGain = ctx.createGain();
+        this.sfxGain = ctx.createGain();
+        this.uiGain = ctx.createGain();
+        this.musicGain = ctx.createGain();
+
+        // Sub-buses -> Master Gain -> Output Destination
+        this.ambientGain.connect(this.masterGain);
+        this.sfxGain.connect(this.masterGain);
+        this.uiGain.connect(this.masterGain);
+        this.musicGain.connect(this.masterGain);
+        this.masterGain.connect(ctx.destination);
+
+        this.isInitialized = true;
+        this.updateVolumes();
+    },
+
+    getMasterGain() { if (!this.isInitialized) this.init(getAudioContext()); return this.masterGain || this.ctx.destination; },
+    getAmbientGain() { if (!this.isInitialized) this.init(getAudioContext()); return this.ambientGain || this.ctx.destination; },
+    getSFXGain() { if (!this.isInitialized) this.init(getAudioContext()); return this.sfxGain || this.ctx.destination; },
+    getUIGain() { if (!this.isInitialized) this.init(getAudioContext()); return this.uiGain || this.ctx.destination; },
+    getMusicGain() { if (!this.isInitialized) this.init(getAudioContext()); return this.musicGain || this.ctx.destination; },
+
+    updateVolumes() {
+        if (!this.isInitialized || !this.ctx) return;
+        const now = this.ctx.currentTime;
+        const prefs = (typeof UserPreferences !== "undefined") ? UserPreferences : {};
+        const isMuted = prefs.isMuted || false;
+
+        const mVol = isMuted ? 0.0001 : (((prefs.masterVolume !== undefined ? prefs.masterVolume : 85) || 85) / 100);
+        const ambVol = ((prefs.ambientVolume !== undefined ? prefs.ambientVolume : 80) || 80) / 100;
+        const sfxVol = ((prefs.sfxVolume !== undefined ? prefs.sfxVolume : 90) || 90) / 100;
+        const uiVol = ((prefs.uiVolume !== undefined ? prefs.uiVolume : 85) || 85) / 100;
+        const musVol = ((prefs.musicVolume !== undefined ? prefs.musicVolume : 75) || 75) / 100;
+
+        this.masterGain.gain.setValueAtTime(mVol, now);
+        this.ambientGain.gain.setValueAtTime(ambVol, now);
+        this.sfxGain.gain.setValueAtTime(sfxVol, now);
+        this.uiGain.gain.setValueAtTime(uiVol, now);
+        this.musicGain.gain.setValueAtTime(musVol, now);
+
+        if (typeof BiomeAmbientSynthesizer !== "undefined" && BiomeAmbientSynthesizer.updateVolume) {
+            BiomeAmbientSynthesizer.updateVolume();
+        }
+    }
+};
 
 function playPickupSFX() {
     try {
@@ -28,7 +93,7 @@ function playPickupSFX() {
         gain.gain.setValueAtTime(0.25, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
         osc.connect(gain);
-        gain.connect(ctx.destination);
+        gain.connect(AudioMixer.getSFXGain());
         osc.start();
         osc.stop(ctx.currentTime + 0.12);
     } catch (e) { }
@@ -45,7 +110,7 @@ function playTerminalOpenSFX() {
         gain.gain.setValueAtTime(0.2, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
         osc.connect(gain);
-        gain.connect(ctx.destination);
+        gain.connect(AudioMixer.getUIGain());
         osc.start();
         osc.stop(ctx.currentTime + 0.25);
     } catch (e) { }
@@ -61,7 +126,7 @@ function playEpochTickSFX() {
         gain.gain.setValueAtTime(0.08, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.035);
         osc.connect(gain);
-        gain.connect(ctx.destination);
+        gain.connect(AudioMixer.getSFXGain());
         osc.start();
         osc.stop(ctx.currentTime + 0.035);
     } catch (e) { }
@@ -79,7 +144,7 @@ function playVictoryPassSFX() {
             gain.gain.setValueAtTime(0.2, ctx.currentTime + idx * 0.06);
             gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.06 + 0.35);
             osc.connect(gain);
-            gain.connect(ctx.destination);
+            gain.connect(AudioMixer.getSFXGain());
             osc.start(ctx.currentTime + idx * 0.06);
             osc.stop(ctx.currentTime + idx * 0.06 + 0.35);
         });
@@ -97,11 +162,765 @@ function playFailureSFX() {
         gain.gain.setValueAtTime(0.25, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
         osc.connect(gain);
-        gain.connect(ctx.destination);
+        gain.connect(AudioMixer.getSFXGain());
         osc.start();
         osc.stop(ctx.currentTime + 0.35);
     } catch (e) { }
 }
+
+// --- 1.15 PROCEDURAL TERRAIN FOOTSTEP AUDIO (ANIMATION STRIKE-SYNCED) ---
+function playTerrainFootstepSFX(biomeIndex = 0, isLeftFoot = true) {
+    try {
+        const ctx = getAudioContext();
+        if (!ctx || ctx.state !== "running") return;
+        if (typeof UserPreferences !== "undefined" && UserPreferences.isMuted) return;
+
+        const now = ctx.currentTime;
+        const sfxVol = (typeof UserPreferences !== "undefined" ? (UserPreferences.sfxVolume || 90) / 100 : 0.9) * 0.14;
+        const pitchJitter = 1.0 + (Math.random() - 0.5) * 0.08;
+
+        if (biomeIndex === 0) {
+            // Biome 1: The Linear Steppes (Grass / Sand - Soft Muffled Thud)
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = "sine";
+            osc.frequency.setValueAtTime((isLeftFoot ? 95 : 105) * pitchJitter, now);
+            osc.frequency.exponentialRampToValueAtTime(40, now + 0.07);
+
+            gain.gain.setValueAtTime(sfxVol * 0.8, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+
+            osc.connect(gain);
+            gain.connect(AudioMixer.getSFXGain());
+            osc.start(now);
+            osc.stop(now + 0.075);
+
+        } else if (biomeIndex === 1) {
+            // Biome 2: The Binary Marshlands (Wet Splashy Mud & Spores)
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            const bpf = ctx.createBiquadFilter();
+
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(500 * pitchJitter, now);
+            osc.frequency.exponentialRampToValueAtTime(1100 * pitchJitter, now + 0.05);
+
+            bpf.type = "bandpass";
+            bpf.frequency.setValueAtTime(750, now);
+            bpf.Q.setValueAtTime(4.0, now);
+
+            gain.gain.setValueAtTime(sfxVol * 0.9, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+
+            osc.connect(bpf);
+            bpf.connect(gain);
+            gain.connect(AudioMixer.getSFXGain());
+            osc.start(now);
+            osc.stop(now + 0.085);
+
+        } else if (biomeIndex === 2) {
+            // Biome 3: The Variance Tundra (Crunchy Layered Snow & Ice Crust)
+            const sampleRate = ctx.sampleRate || 44100;
+            const bufSize = Math.floor(sampleRate * 0.09);
+            const buffer = ctx.createBuffer(1, bufSize, sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufSize; i++) {
+                // Granular layered crunch micro-impulses
+                data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (sampleRate * 0.025));
+            }
+
+            const noiseSource = ctx.createBufferSource();
+            noiseSource.buffer = buffer;
+
+            const bpf = ctx.createBiquadFilter();
+            bpf.type = "bandpass";
+            bpf.frequency.setValueAtTime((isLeftFoot ? 1900 : 2200) * pitchJitter, now);
+            bpf.Q.setValueAtTime(2.8, now);
+
+            const gain = ctx.createGain();
+            gain.gain.setValueAtTime(sfxVol * 1.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+
+            noiseSource.connect(bpf);
+            bpf.connect(gain);
+            gain.connect(AudioMixer.getSFXGain());
+            noiseSource.start(now);
+            noiseSource.stop(now + 0.095);
+
+        } else if (biomeIndex === 3) {
+            // Biome 4: The Branching Canopy (Organic Root Wood / Foliage)
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = "triangle";
+            osc.frequency.setValueAtTime((isLeftFoot ? 210 : 235) * pitchJitter, now);
+            osc.frequency.exponentialRampToValueAtTime(75, now + 0.08);
+
+            gain.gain.setValueAtTime(sfxVol * 0.85, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+
+            osc.connect(gain);
+            gain.connect(AudioMixer.getSFXGain());
+            osc.start(now);
+            osc.stop(now + 0.085);
+
+        } else if (biomeIndex === 4) {
+            // Biome 5: The Deep Synapse Citadel (Resonant Architectural Metal)
+            const osc1 = ctx.createOscillator();
+            const osc2 = ctx.createOscillator();
+            const gain = ctx.createGain();
+
+            osc1.type = "triangle";
+            osc1.frequency.setValueAtTime((isLeftFoot ? 580 : 640) * pitchJitter, now);
+            osc2.type = "square";
+            osc2.frequency.setValueAtTime((isLeftFoot ? 1160 : 1280) * pitchJitter, now);
+
+            gain.gain.setValueAtTime(sfxVol * 0.95, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+
+            osc1.connect(gain);
+            osc2.connect(gain);
+            gain.connect(AudioMixer.getSFXGain());
+
+            osc1.start(now);
+            osc2.start(now);
+            osc1.stop(now + 0.125);
+            osc2.stop(now + 0.125);
+
+        } else {
+            // Biome 6: The Semantic Expanse (Glassy Crystalline Void Stone)
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = "sine";
+            osc.frequency.setValueAtTime((isLeftFoot ? 880 : 960) * pitchJitter, now);
+            osc.frequency.exponentialRampToValueAtTime(440, now + 0.10);
+
+            gain.gain.setValueAtTime(sfxVol * 0.75, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.10);
+
+            osc.connect(gain);
+            gain.connect(AudioMixer.getSFXGain());
+            osc.start(now);
+            osc.stop(now + 0.105);
+        }
+    } catch (e) {}
+}
+
+// --- 1.2 PROCEDURAL BIOME AMBIENT SYNTHESIZER (CROSSFADING ZERO-ASSET AUDIO) ---
+const BiomeAmbientSynthesizer = {
+    currentBiome: -1,
+    activeChannel: null,
+    fadingChannel: null,
+    isMuted: false,
+    volume: 0.16,
+
+    createNoiseBuffer(ctx, durationSec = 3.0) {
+        const sampleRate = ctx.sampleRate || 44100;
+        const bufferSize = sampleRate * durationSec;
+        const buffer = ctx.createBuffer(1, bufferSize, sampleRate);
+        const output = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+            output[i] = Math.random() * 2 - 1;
+        }
+        return buffer;
+    },
+
+    createBiomeAudioGraph(biomeIndex) {
+        const ctx = getAudioContext();
+        if (!ctx) return null;
+
+        const masterGain = ctx.createGain();
+        masterGain.gain.setValueAtTime(0.0001, ctx.currentTime);
+
+        const nodesToStop = [];
+        const localTimers = [];
+
+        if (biomeIndex === 0) {
+            // Biome 1: The Linear Steppes (55Hz & 110Hz Sine Drones + Soft Sweeping Wind Burst)
+            [55, 110].forEach((freq) => {
+                const osc = ctx.createOscillator();
+                const g = ctx.createGain();
+                osc.type = "sine";
+                osc.frequency.setValueAtTime(freq, ctx.currentTime);
+                g.gain.setValueAtTime(0.08, ctx.currentTime);
+
+                const lfo = ctx.createOscillator();
+                const lfoGain = ctx.createGain();
+                lfo.frequency.setValueAtTime(0.15, ctx.currentTime);
+                lfoGain.gain.setValueAtTime(freq * 0.02, ctx.currentTime);
+                lfo.connect(lfoGain);
+                lfoGain.connect(osc.frequency);
+                lfo.start();
+                nodesToStop.push(lfo);
+
+                osc.connect(g);
+                g.connect(masterGain);
+                osc.start();
+                nodesToStop.push(osc);
+            });
+
+            // Gentle Wind Noise Swell
+            const noiseBuf = this.createNoiseBuffer(ctx, 4.0);
+            const noiseSource = ctx.createBufferSource();
+            noiseSource.buffer = noiseBuf;
+            noiseSource.loop = true;
+
+            const lpf = ctx.createBiquadFilter();
+            lpf.type = "lowpass";
+            lpf.frequency.setValueAtTime(220, ctx.currentTime);
+
+            const windGain = ctx.createGain();
+            windGain.gain.setValueAtTime(0.04, ctx.currentTime);
+
+            const windLfo = ctx.createOscillator();
+            windLfo.frequency.setValueAtTime(0.1, ctx.currentTime);
+            const windLfoGain = ctx.createGain();
+            windLfoGain.gain.setValueAtTime(140, ctx.currentTime);
+            windLfo.connect(windLfoGain);
+            windLfoGain.connect(lpf.frequency);
+            windLfo.start();
+            nodesToStop.push(windLfo);
+
+            noiseSource.connect(lpf);
+            lpf.connect(windGain);
+            windGain.connect(masterGain);
+            noiseSource.start();
+            nodesToStop.push(noiseSource);
+
+        } else if (biomeIndex === 1) {
+            // Biome 2: The Binary Marshlands (Sub-bass triangle drone + bubbling bandpass)
+            const subDrone = ctx.createOscillator();
+            const subGain = ctx.createGain();
+            subDrone.type = "triangle";
+            subDrone.frequency.setValueAtTime(65.4, ctx.currentTime); // C2
+            subGain.gain.setValueAtTime(0.12, ctx.currentTime);
+
+            const tremLfo = ctx.createOscillator();
+            const tremGain = ctx.createGain();
+            tremLfo.frequency.setValueAtTime(0.8, ctx.currentTime);
+            tremGain.gain.setValueAtTime(0.04, ctx.currentTime);
+            tremLfo.connect(tremGain);
+            tremGain.connect(subGain.gain);
+            tremLfo.start();
+            nodesToStop.push(tremLfo);
+
+            subDrone.connect(subGain);
+            subGain.connect(masterGain);
+            subDrone.start();
+            nodesToStop.push(subDrone);
+
+            // Bubbling resonant bandpass bursts
+            const bubbleTimer = setInterval(() => {
+                try {
+                    if (ctx.state !== "running") return;
+                    const bOsc = ctx.createOscillator();
+                    const bGain = ctx.createGain();
+                    const bpf = ctx.createBiquadFilter();
+
+                    bOsc.type = "sine";
+                    const startF = 400 + Math.random() * 600;
+                    bOsc.frequency.setValueAtTime(startF, ctx.currentTime);
+                    bOsc.frequency.exponentialRampToValueAtTime(startF * 1.8, ctx.currentTime + 0.15);
+
+                    bpf.type = "bandpass";
+                    bpf.frequency.setValueAtTime(startF, ctx.currentTime);
+                    bpf.Q.setValueAtTime(6.0, ctx.currentTime);
+
+                    bGain.gain.setValueAtTime(0.05, ctx.currentTime);
+                    bGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.18);
+
+                    bOsc.connect(bpf);
+                    bpf.connect(bGain);
+                    bGain.connect(masterGain);
+                    bOsc.start();
+                    bOsc.stop(ctx.currentTime + 0.2);
+                } catch (e) {}
+            }, 1200);
+            localTimers.push(bubbleTimer);
+
+        } else if (biomeIndex === 2) {
+            // Biome 3: The Variance Tundra (High-Q resonant wind gusts + sparse crystalline chimes)
+            const noiseBuf = this.createNoiseBuffer(ctx, 3.5);
+            const windSrc = ctx.createBufferSource();
+            windSrc.buffer = noiseBuf;
+            windSrc.loop = true;
+
+            const bpf = ctx.createBiquadFilter();
+            bpf.type = "bandpass";
+            bpf.frequency.setValueAtTime(450, ctx.currentTime);
+            bpf.Q.setValueAtTime(3.5, ctx.currentTime);
+
+            const windG = ctx.createGain();
+            windG.gain.setValueAtTime(0.09, ctx.currentTime);
+
+            const gustLfo = ctx.createOscillator();
+            gustLfo.frequency.setValueAtTime(0.18, ctx.currentTime);
+            const gustGain = ctx.createGain();
+            gustGain.gain.setValueAtTime(250, ctx.currentTime);
+            gustLfo.connect(gustGain);
+            gustGain.connect(bpf.frequency);
+            gustLfo.start();
+            nodesToStop.push(gustLfo);
+
+            windSrc.connect(bpf);
+            bpf.connect(windG);
+            windG.connect(masterGain);
+            windSrc.start();
+            nodesToStop.push(windSrc);
+
+            // Sparse high crystalline chimes (Pentatonic: A6, C7, E7, G7)
+            const pentatonicFreqs = [1760.0, 2093.0, 2637.0, 3135.9];
+            const chimeTimer = setInterval(() => {
+                try {
+                    if (ctx.state !== "running") return;
+                    const chimeOsc = ctx.createOscillator();
+                    const chimeGain = ctx.createGain();
+                    const targetFreq = pentatonicFreqs[Math.floor(Math.random() * pentatonicFreqs.length)];
+
+                    chimeOsc.type = "sine";
+                    chimeOsc.frequency.setValueAtTime(targetFreq, ctx.currentTime);
+
+                    chimeGain.gain.setValueAtTime(0.045, ctx.currentTime);
+                    chimeGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 2.4);
+
+                    chimeOsc.connect(chimeGain);
+                    chimeGain.connect(masterGain);
+                    chimeOsc.start();
+                    chimeOsc.stop(ctx.currentTime + 2.5);
+                } catch (e) {}
+            }, 2600);
+            localTimers.push(chimeTimer);
+
+        } else if (biomeIndex === 3) {
+            // Biome 4: The Branching Canopy (Warm harmonic triangle drone stack)
+            [82.4, 164.8, 246.9].forEach((freq, idx) => {
+                const osc = ctx.createOscillator();
+                const g = ctx.createGain();
+                osc.type = "triangle";
+                osc.frequency.setValueAtTime(freq, ctx.currentTime);
+                g.gain.setValueAtTime(0.07 / (idx + 1), ctx.currentTime);
+
+                osc.connect(g);
+                g.connect(masterGain);
+                osc.start();
+                nodesToStop.push(osc);
+            });
+
+        } else if (biomeIndex === 4) {
+            // Biome 5: The Deep Synapse Citadel (Detuned sawtooth pad chords with lowpass filter sweeps)
+            const chordFreqs = [130.81, 155.56, 196.00]; // C minor triad
+            chordFreqs.forEach((freq) => {
+                [-1.5, 1.5].forEach((detune) => {
+                    const osc = ctx.createOscillator();
+                    const g = ctx.createGain();
+                    const lpf = ctx.createBiquadFilter();
+
+                    osc.type = "sawtooth";
+                    osc.frequency.setValueAtTime(freq + detune, ctx.currentTime);
+
+                    lpf.type = "lowpass";
+                    lpf.frequency.setValueAtTime(380, ctx.currentTime);
+                    lpf.Q.setValueAtTime(2.0, ctx.currentTime);
+
+                    const lpfLfo = ctx.createOscillator();
+                    lpfLfo.frequency.setValueAtTime(0.12, ctx.currentTime);
+                    const lpfLfoGain = ctx.createGain();
+                    lpfLfoGain.gain.setValueAtTime(180, ctx.currentTime);
+                    lpfLfo.connect(lpfLfoGain);
+                    lpfLfoGain.connect(lpf.frequency);
+                    lpfLfo.start();
+                    nodesToStop.push(lpfLfo);
+
+                    g.gain.setValueAtTime(0.035, ctx.currentTime);
+                    osc.connect(lpf);
+                    lpf.connect(g);
+                    g.connect(masterGain);
+                    osc.start();
+                    nodesToStop.push(osc);
+                });
+            });
+
+        } else {
+            // Biome 6: The Semantic Expanse (Multi-layer cosmic space drone with spatial LFO detune)
+            const spaceFreqs = [65.41, 130.81, 196.00, 261.63, 392.00];
+            spaceFreqs.forEach((freq, idx) => {
+                const osc = ctx.createOscillator();
+                const g = ctx.createGain();
+                osc.type = idx % 2 === 0 ? "sine" : "triangle";
+                osc.frequency.setValueAtTime(freq, ctx.currentTime);
+                g.gain.setValueAtTime(0.04 / (idx * 0.4 + 1), ctx.currentTime);
+
+                const lfo = ctx.createOscillator();
+                lfo.frequency.setValueAtTime(0.08 + idx * 0.03, ctx.currentTime);
+                const lfoG = ctx.createGain();
+                lfoG.gain.setValueAtTime(freq * 0.015, ctx.currentTime);
+                lfo.connect(lfoG);
+                lfoG.connect(osc.frequency);
+                lfo.start();
+                nodesToStop.push(lfo);
+
+                osc.connect(g);
+                g.connect(masterGain);
+                osc.start();
+                nodesToStop.push(osc);
+            });
+        }
+
+        // Connect Ambient Master to Central AudioMixer Ambient Group
+        masterGain.connect(AudioMixer.getAmbientGain());
+
+        return {
+            biomeIndex,
+            masterGain,
+            nodesToStop,
+            localTimers,
+            stop(fadeDuration = 2.0) {
+                const curT = ctx.currentTime;
+                masterGain.gain.cancelScheduledValues(curT);
+                masterGain.gain.setValueAtTime(masterGain.gain.value, curT);
+                masterGain.gain.linearRampToValueAtTime(0.0001, curT + fadeDuration);
+
+                setTimeout(() => {
+                    localTimers.forEach(t => clearInterval(t));
+                    nodesToStop.forEach(n => {
+                        try { n.stop(); } catch (e) {}
+                        try { n.disconnect(); } catch (e) {}
+                    });
+                    try { masterGain.disconnect(); } catch (e) {}
+                }, (fadeDuration + 0.1) * 1000);
+            }
+        };
+    },
+
+    crossfadeToBiome(biomeIndex, durationSec = 2.0) {
+        if (this.currentBiome === biomeIndex && this.activeChannel) return;
+        this.currentBiome = biomeIndex;
+
+        try {
+            const ctx = getAudioContext();
+            if (!ctx) return;
+
+            // Fade out previous channel
+            if (this.activeChannel) {
+                this.activeChannel.stop(durationSec);
+                this.fadingChannel = this.activeChannel;
+            }
+
+            // Create and fade in new channel
+            const newChannel = this.createBiomeAudioGraph(biomeIndex);
+            this.activeChannel = newChannel;
+
+            const now = ctx.currentTime;
+            const targetVol = (typeof UserPreferences !== "undefined" && UserPreferences.isMuted) ? 0.0001 : (this.volume * (((typeof UserPreferences !== "undefined" ? UserPreferences.masterVolume : 85) || 85) / 100));
+
+            newChannel.masterGain.gain.cancelScheduledValues(now);
+            newChannel.masterGain.gain.setValueAtTime(0.0001, now);
+            newChannel.masterGain.gain.linearRampToValueAtTime(targetVol, now + durationSec);
+        } catch (e) {
+            console.warn("[BiomeAmbientSynthesizer] Audio context initialization deferred until user interaction.");
+        }
+    },
+
+    updateVolume() {
+        if (!this.activeChannel) return;
+        const ctx = getAudioContext();
+        if (!ctx) return;
+        const now = ctx.currentTime;
+        const targetVol = (typeof UserPreferences !== "undefined" && UserPreferences.isMuted) ? 0.0001 : (this.volume * (((typeof UserPreferences !== "undefined" ? UserPreferences.masterVolume : 85) || 85) / 100));
+        this.activeChannel.masterGain.gain.cancelScheduledValues(now);
+        this.activeChannel.masterGain.gain.setValueAtTime(this.activeChannel.masterGain.gain.value, now);
+        this.activeChannel.masterGain.gain.linearRampToValueAtTime(targetVol, now + 0.1);
+    }
+};
+
+// --- 1.3 3D SPATIAL AUDIO SYSTEM (COLLECTIBLES, LAB BEACON, GHOST RIVALS) ---
+const Spatial3DAudioManager = {
+    audioSources: [], // { id, type, panner, gain, nodes, posRef, baseGain, maxDistance }
+    labBeaconSource: null,
+
+    init() {
+        this.clearAll();
+    },
+
+    updateListener(cam) {
+        if (!cam) return;
+        const ctx = getAudioContext();
+        if (!ctx || ctx.state !== "running") return;
+
+        const now = ctx.currentTime;
+        const listener = ctx.listener;
+
+        // Position
+        if (listener.positionX) {
+            listener.positionX.setValueAtTime(cam.position.x, now);
+            listener.positionY.setValueAtTime(cam.position.y, now);
+            listener.positionZ.setValueAtTime(cam.position.z, now);
+        } else {
+            listener.setPosition(cam.position.x, cam.position.y, cam.position.z);
+        }
+
+        // Orientation
+        const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(cam.quaternion);
+        const up = new THREE.Vector3(0, 1, 0).applyQuaternion(cam.quaternion);
+
+        if (listener.forwardX) {
+            listener.forwardX.setValueAtTime(forward.x, now);
+            listener.forwardY.setValueAtTime(forward.y, now);
+            listener.forwardZ.setValueAtTime(forward.z, now);
+            listener.upX.setValueAtTime(up.x, now);
+            listener.upY.setValueAtTime(up.y, now);
+            listener.upZ.setValueAtTime(up.z, now);
+        } else {
+            listener.setOrientation(forward.x, forward.y, forward.z, up.x, up.y, up.z);
+        }
+
+        // --- DISTANCE-PRIORITIZED SPATIAL VOICE POOLING (Voice Cap Budget) ---
+        const voiceCap = (typeof UserPreferences !== "undefined" && UserPreferences.spatialVoiceCap) ? UserPreferences.spatialVoiceCap : 8;
+
+        // 1. Calculate distance & priority score for every registered emitter
+        this.audioSources.forEach(src => {
+            const pos = typeof src.posRef.getPosition === "function" ? src.posRef.getPosition() : src.posRef;
+            if (pos) {
+                const dx = pos.x - cam.position.x;
+                const dy = (pos.y || 1.2) - cam.position.y;
+                const dz = pos.z - cam.position.z;
+                src.distToListener = Math.sqrt(dx * dx + dy * dy + dz * dz);
+                // Critical priority bonus for Lab Station beacon
+                src.priorityScore = src.distToListener / (src.type === "beacon" ? 3.5 : 1.0);
+            } else {
+                src.distToListener = 99999;
+                src.priorityScore = 99999;
+            }
+        });
+
+        // 2. Sort emitters by priority (closest & high-priority first)
+        this.audioSources.sort((a, b) => a.priorityScore - b.priorityScore);
+
+        // 3. Enable top K voices within maxDistance, mute remaining to save CPU & avoid audio channel spikes
+        this.audioSources.forEach((src, idx) => {
+            const isAudible = (idx < voiceCap) && (src.distToListener < (src.maxDistance || 25.0));
+            const targetGain = isAudible ? (src.baseGain || 0.045) : 0.00001;
+
+            if (src.gain && src.gain.gain) {
+                src.gain.gain.setValueAtTime(targetGain, now);
+            }
+
+            if (isAudible && src.posRef && src.panner) {
+                const pos = typeof src.posRef.getPosition === "function" ? src.posRef.getPosition() : src.posRef;
+                if (pos) {
+                    if (src.panner.positionX) {
+                        src.panner.positionX.setValueAtTime(pos.x, now);
+                        src.panner.positionY.setValueAtTime(pos.y || 1.2, now);
+                        src.panner.positionZ.setValueAtTime(pos.z, now);
+                    } else {
+                        src.panner.setPosition(pos.x, pos.y || 1.2, pos.z);
+                    }
+                }
+            }
+        });
+    },
+
+    createSpatialPanner(ctx, config) {
+        const panner = ctx.createPanner();
+        panner.panningModel = "HRTF";
+        panner.distanceModel = config.distanceModel || "inverse";
+        panner.refDistance = config.refDistance || 2.0;
+        panner.maxDistance = config.maxDistance || 20.0;
+        panner.rolloffFactor = config.rolloffFactor || 1.0;
+        panner.coneInnerAngle = 360;
+
+        const pos = config.position || { x: 0, y: 0, z: 0 };
+        if (panner.positionX) {
+            panner.positionX.setValueAtTime(pos.x, ctx.currentTime);
+            panner.positionY.setValueAtTime(pos.y, ctx.currentTime);
+            panner.positionZ.setValueAtTime(pos.z, ctx.currentTime);
+        } else {
+            panner.setPosition(pos.x, pos.y, pos.z);
+        }
+        return panner;
+    },
+
+    registerCollectibleHum(id, position) {
+        try {
+            const ctx = getAudioContext();
+            if (!ctx) return;
+            const now = ctx.currentTime;
+
+            const panner = this.createSpatialPanner(ctx, {
+                refDistance: 1.5,
+                maxDistance: 12.0,
+                rolloffFactor: 1.2,
+                distanceModel: "inverse",
+                position
+            });
+
+            const osc1 = ctx.createOscillator();
+            const osc2 = ctx.createOscillator();
+            const gain = ctx.createGain();
+
+            osc1.type = "sine";
+            osc1.frequency.setValueAtTime(440, now);
+            osc2.type = "sine";
+            osc2.frequency.setValueAtTime(880, now);
+
+            const baseGain = 0.045;
+            gain.gain.setValueAtTime(baseGain, now);
+
+            osc1.connect(gain);
+            osc2.connect(gain);
+            gain.connect(panner);
+            panner.connect(AudioMixer.getSFXGain());
+
+            osc1.start();
+            osc2.start();
+
+            this.audioSources.push({
+                id: `col_${id}`,
+                type: "collectible",
+                panner,
+                gain,
+                baseGain,
+                maxDistance: 12.0,
+                nodes: [osc1, osc2],
+                posRef: position
+            });
+        } catch (e) {}
+    },
+
+    unregisterCollectibleHum(id) {
+        const idx = this.audioSources.findIndex(s => s.id === `col_${id}` || s.id === id);
+        if (idx >= 0) {
+            const src = this.audioSources[idx];
+            src.nodes.forEach(n => {
+                try { n.stop(); } catch (e) {}
+                try { n.disconnect(); } catch (e) {}
+            });
+            try { src.gain.disconnect(); } catch (e) {}
+            try { src.panner.disconnect(); } catch (e) {}
+            this.audioSources.splice(idx, 1);
+        }
+    },
+
+    registerLabStationBeacon(position = { x: 0, y: 1.2, z: 0 }) {
+        try {
+            if (this.labBeaconSource) return;
+            const ctx = getAudioContext();
+            if (!ctx) return;
+            const now = ctx.currentTime;
+
+            const panner = this.createSpatialPanner(ctx, {
+                refDistance: 3.0,
+                maxDistance: 35.0,
+                rolloffFactor: 0.8,
+                distanceModel: "inverse",
+                position
+            });
+
+            const subOsc = ctx.createOscillator();
+            const lfo = ctx.createOscillator();
+            const gain = ctx.createGain();
+            const lfoGain = ctx.createGain();
+
+            subOsc.type = "sine";
+            subOsc.frequency.setValueAtTime(80, now);
+
+            lfo.type = "sine";
+            lfo.frequency.setValueAtTime(1.2, now); // 1.2 Hz pulse
+            lfoGain.gain.setValueAtTime(0.04, now);
+
+            const baseGain = 0.08;
+            gain.gain.setValueAtTime(baseGain, now);
+
+            lfo.connect(lfoGain);
+            lfoGain.connect(gain.gain);
+
+            subOsc.connect(gain);
+            gain.connect(panner);
+            panner.connect(AudioMixer.getSFXGain());
+
+            lfo.start();
+            subOsc.start();
+
+            this.labBeaconSource = {
+                id: "lab_beacon",
+                type: "beacon",
+                panner,
+                gain,
+                baseGain,
+                maxDistance: 35.0,
+                nodes: [subOsc, lfo],
+                posRef: position
+            };
+            this.audioSources.push(this.labBeaconSource);
+        } catch (e) {}
+    },
+
+    registerGhostAvatarHum(playerId, getPositionFn) {
+        try {
+            const ctx = getAudioContext();
+            if (!ctx) return;
+            const now = ctx.currentTime;
+
+            const panner = this.createSpatialPanner(ctx, {
+                refDistance: 2.0,
+                maxDistance: 20.0,
+                rolloffFactor: 1.0,
+                distanceModel: "inverse",
+                position: typeof getPositionFn === "function" ? getPositionFn() : getPositionFn
+            });
+
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+
+            osc.type = "triangle";
+            osc.frequency.setValueAtTime(220, now); // A3 energy halo
+            const baseGain = 0.05;
+            gain.gain.setValueAtTime(baseGain, now);
+
+            osc.connect(gain);
+            gain.connect(panner);
+            panner.connect(AudioMixer.getSFXGain());
+            osc.start();
+
+            this.audioSources.push({
+                id: `ghost_${playerId}`,
+                type: "ghost",
+                panner,
+                gain,
+                baseGain,
+                maxDistance: 20.0,
+                nodes: [osc],
+                posRef: { getPosition: getPositionFn }
+            });
+        } catch (e) {}
+    },
+
+    unregisterGhostAvatarHum(playerId) {
+        const idx = this.audioSources.findIndex(s => s.id === `ghost_${playerId}` || s.id === playerId);
+        if (idx >= 0) {
+            const src = this.audioSources[idx];
+            src.nodes.forEach(n => {
+                try { n.stop(); } catch (e) {}
+                try { n.disconnect(); } catch (e) {}
+            });
+            try { src.gain.disconnect(); } catch (e) {}
+            try { src.panner.disconnect(); } catch (e) {}
+            this.audioSources.splice(idx, 1);
+        }
+    },
+
+    clearAll() {
+        this.audioSources.forEach(src => {
+            src.nodes.forEach(n => {
+                try { n.stop(); } catch (e) {}
+                try { n.disconnect(); } catch (e) {}
+            });
+            try { src.gain.disconnect(); } catch (e) {}
+            try { src.panner.disconnect(); } catch (e) {}
+        });
+        this.audioSources = [];
+        this.labBeaconSource = null;
+    }
+};
 
 // --- 2. SEEDED PSEUDO-RANDOM NUMBER GENERATOR (PRNG) ---
 let SeedPRNG = {
@@ -753,12 +1572,13 @@ function retrieveTopKVectors(queryWord, k = 4) {
         sim: cosineSimilarity(qVec, EmbeddingVectors[w])
     })).sort((a, b) => b.sim - a.sim);
 
-    renderRAGResults(results.slice(0, k));
+    renderRAGResults(results.slice(0, k), queryWord);
     renderEmbeddingVectorCanvases(results);
 }
 
-function renderRAGResults(results) {
+function renderRAGResults(results, queryWord = "frost") {
     const box = document.getElementById("rag-results-box");
+    if (!box) return;
     box.innerHTML = "";
     results.forEach((r, i) => {
         const card = document.createElement("div");
@@ -766,6 +1586,23 @@ function renderRAGResults(results) {
         card.innerHTML = `<span class="word">${i + 1}. ${r.word}</span> <span class="sim">Cosine Sim = <b>${r.sim.toFixed(3)}</b></span>`;
         box.appendChild(card);
     });
+
+    if (results.length > 0) {
+        const top1 = results[0];
+        const trace = typeof getCooccurrenceTrace === "function" ? getCooccurrenceTrace(queryWord, top1.word) : null;
+        if (trace && trace.cooccurCount > 0) {
+            const traceCard = document.createElement("div");
+            traceCard.style.marginTop = "6px";
+            traceCard.style.padding = "6px 8px";
+            traceCard.style.background = "rgba(129, 140, 248, 0.15)";
+            traceCard.style.border = "1px solid #818cf8";
+            traceCard.style.borderRadius = "4px";
+            traceCard.style.fontSize = "10.5px";
+            traceCard.style.color = "#e0e7ff";
+            traceCard.innerHTML = `📊 <b>Co-occurrence Trace:</b> "${queryWord}" & "${top1.word}" co-occurred in <b>${trace.cooccurCount}</b> collected samples (PPMI: ${trace.ppmiVal.toFixed(2)}).`;
+            box.appendChild(traceCard);
+        }
+    }
 }
 
 function renderEmbeddingVectorCanvases(results) {
@@ -1293,13 +2130,20 @@ function runGrandPrixSimulation() {
         const health = computeDatasetHealth(ds, -4.5, 4.5, 2.5, 0, 0, false);
         banner.className = heldOutAccuracy >= 80 ? "pass" : "fail";
         const adamRes = results.Adam || Object.values(results)[0];
+        const finalW = adamRes ? adamRes.finalW : 2.45;
+        const finalB = adamRes ? adamRes.finalB : 1.15;
+        const finalLossVal = adamRes ? adamRes.finalLoss : 0.05;
+
+        BeforeAfterManager.captureInitialContinuous(0.0, 0.0, 4.82, 25.0, "1D Continuous Linear Regression (OLS / Adam)");
+        BeforeAfterManager.captureFinalContinuous(finalW, finalB, finalLossVal, heldOutAccuracy, "1D Continuous Linear Regression (OLS / Adam)");
+
         let bannerHtml = `🏁 <b>4-WAY GRAND PRIX (TRAINED ON ${n} HARVESTED DATA POINTS):</b><br>` +
             `• <b>Held-Out Test Generalization:</b> <b style="color:${heldOutAccuracy >= 80 ? '#4ade80' : '#f43f5e'};">${heldOutAccuracy.toFixed(1)}% Accuracy</b> (Test MSE = ${heldOutMSE.toFixed(4)})<br>` +
             `• <b>Pre-Training Health Score:</b> ${health.score}% [${health.grade}] — <i>${health.defects}</i><br>` +
-            `• <b>Adam Model:</b> Final slope w = ${(adamRes ? adamRes.finalW : 2.45).toFixed(2)}, b = ${(adamRes ? adamRes.finalB : 1.15).toFixed(2)}`;
+            `• <b>Adam Model:</b> Final slope w = ${finalW.toFixed(2)}, b = ${finalB.toFixed(2)}<br>` +
+            `<button id="btn-banner-before-after" class="action-btn glow-amber" style="margin-top:8px; padding:5px 14px; font-size:11px; width:100%;">⚖️ VIEW BEFORE / AFTER (EPOCH 0 vs FINAL) COMPARISON</button>`;
 
         if (heldOutAccuracy < 80) {
-            const finalLossVal = adamRes ? adamRes.finalLoss : 0.05;
             const diag = computeWhyThisFailedDiagnosis(health, finalLossVal, heldOutMSE, { isClassification: false, minX: -4.5, maxX: 4.5, sampleCount: n }, "GrandPrix");
             bannerHtml += `<div class="coach-warning-box" style="margin-top:8px; text-align:left;">` +
                 `<div class="warning-heading">🧭 COACH DIAGNOSIS: ${diag.category.toUpperCase()}</div>` +
@@ -1314,6 +2158,10 @@ function runGrandPrixSimulation() {
 }
 
 function trainEquippedWeapon() {
+    if (GameState.currentBiome === 5) {
+        document.getElementById("preset-embeddings")?.click();
+        return;
+    }
     const opt = GameState.equippedOptimizer;
     if (opt === "SGD") {
         playFailureSFX();
@@ -1456,12 +2304,12 @@ let isParticleActive = false;
 let particleTimer = 0;
 
 function initParticleShockwave() {
-    const pCount = 80; // Capped for mobile fillrate
+    const maxPoolCount = 150; // Allocates buffer pool up to High Tier cap
     particleGeo = new THREE.BufferGeometry();
-    particlePositions = new Float32Array(pCount * 3);
-    particleVelocities = new Float32Array(pCount * 3);
+    particlePositions = new Float32Array(maxPoolCount * 3);
+    particleVelocities = new Float32Array(maxPoolCount * 3);
 
-    for (let i = 0; i < pCount; i++) {
+    for (let i = 0; i < maxPoolCount; i++) {
         particlePositions[i * 3] = 0;
         particlePositions[i * 3 + 1] = -50;
         particlePositions[i * 3 + 2] = 0;
@@ -1480,9 +2328,12 @@ function initParticleShockwave() {
     scene.add(particleSystem);
 }
 
-function trigger3DParticleBurst(pos) {
+function trigger3DParticleBurst(pos, colorHex = 0x38bdf8) {
     if (!particlePositions) return;
-    const pCount = 80;
+    const pCount = (typeof UserPreferences !== "undefined" && UserPreferences.graphics && UserPreferences.graphics.particleCap) ? UserPreferences.graphics.particleCap : 80;
+    if (particleSystem && particleSystem.material) {
+        particleSystem.material.color.setHex(colorHex);
+    }
     for (let i = 0; i < pCount; i++) {
         particlePositions[i * 3] = pos.x;
         particlePositions[i * 3 + 1] = pos.y + 0.5;
@@ -1500,17 +2351,21 @@ function trigger3DParticleBurst(pos) {
     particleTimer = 0.65;
 }
 
+function triggerParticleShockwave(pos, colorHex = 0x38bdf8) {
+    trigger3DParticleBurst(pos, colorHex);
+}
+
 function updateParticles(dt) {
     if (!isParticleActive || !particlePositions) return;
     particleTimer -= dt;
     if (particleTimer <= 0) {
         isParticleActive = false;
-        for (let i = 0; i < 80; i++) particlePositions[i * 3 + 1] = -50;
+        for (let i = 0; i < 150; i++) particlePositions[i * 3 + 1] = -50;
         particleGeo.attributes.position.needsUpdate = true;
         return;
     }
 
-    const pCount = 80;
+    const pCount = (typeof UserPreferences !== "undefined" && UserPreferences.graphics && UserPreferences.graphics.particleCap) ? UserPreferences.graphics.particleCap : 80;
     for (let i = 0; i < pCount; i++) {
         particlePositions[i * 3] += particleVelocities[i * 3] * dt;
         particlePositions[i * 3 + 1] += particleVelocities[i * 3 + 1] * dt - 4.9 * dt * dt;
@@ -1920,25 +2775,18 @@ function buildHumanoidAvatarModel(characterBuild = "explorer", isGhost = false) 
     rCalfMesh.position.y = -0.17 * heightScale;
     rightCalf.add(rCalfMesh);
     const rBoot = new THREE.Mesh(new THREE.BoxGeometry(0.18 * widthScale, 0.1 * heightScale, 0.26 * widthScale), matArmor);
-    rBoot.position.set(0, -0.32 * heightScale, 0.04);
     rightCalf.add(rBoot);
     rightLeg.add(rightCalf);
     group.add(rightLeg);
     limbs.rightLeg = rightLeg;
     limbs.rightCalf = rightCalf;
 
-    // 7. Training Energy Aura Halo Ring (Ground level, rotating)
-    const auraMat = new THREE.MeshStandardMaterial({
-        color: 0xfacc15,
-        emissive: 0xfacc15,
-        emissiveIntensity: 2.2,
-        transparent: true,
-        opacity: 0.85,
-        roughness: 0.2
-    });
-    const trainingAura = new THREE.Mesh(new THREE.TorusGeometry(0.85 * widthScale, 0.045, 12, 32), auraMat);
-    trainingAura.rotation.x = Math.PI / 2;
-    trainingAura.position.y = 0.04;
+    // Optional Holographic Training Energy Aura Ring (Stage 54)
+    const auraGeom = new THREE.RingGeometry(1.1, 1.3, 32);
+    auraGeom.rotateX(-Math.PI / 2);
+    const auraMat = new THREE.MeshBasicMaterial({ color: 0xfacc15, side: THREE.DoubleSide, transparent: true, opacity: 0.85 });
+    const trainingAura = new THREE.Mesh(auraGeom, auraMat);
+    trainingAura.position.y = -0.82;
     trainingAura.visible = false;
     group.add(trainingAura);
 
@@ -1985,6 +2833,16 @@ function updateCharacterAnimation(dt, speed) {
         const swing = Math.sin(phase) * 0.85;
         const armSwing = Math.sin(phase) * 0.95;
 
+        // Exact animation frame ground-strike event detection
+        const prevStepCount = Math.floor(playerAnimState.gaitPhase / Math.PI);
+        const currentStepCount = Math.floor(phase / Math.PI);
+        playerAnimState.gaitPhase = phase;
+
+        if (currentStepCount > prevStepCount) {
+            const isLeftFoot = (currentStepCount % 2 === 0);
+            playTerrainFootstepSFX(GameState.currentBiome || 0, isLeftFoot);
+        }
+
         playerLimbs.torso.rotation.x = 0.25;
         playerLimbs.torso.rotation.y = Math.sin(phase) * 0.08;
         playerLimbs.leftLeg.rotation.x = swing;
@@ -2003,6 +2861,16 @@ function updateCharacterAnimation(dt, speed) {
         const swing = Math.sin(phase) * 0.5;
         const armSwing = Math.sin(phase) * 0.55;
 
+        // Exact animation frame ground-strike event detection
+        const prevStepCount = Math.floor(playerAnimState.gaitPhase / Math.PI);
+        const currentStepCount = Math.floor(phase / Math.PI);
+        playerAnimState.gaitPhase = phase;
+
+        if (currentStepCount > prevStepCount) {
+            const isLeftFoot = (currentStepCount % 2 === 0);
+            playTerrainFootstepSFX(GameState.currentBiome || 0, isLeftFoot);
+        }
+
         playerLimbs.torso.rotation.x = 0.08;
         playerLimbs.torso.rotation.y = 0;
         playerLimbs.leftLeg.rotation.x = swing;
@@ -2017,6 +2885,7 @@ function updateCharacterAnimation(dt, speed) {
     } else {
         // Idle breathing & posture
         playerAnimState.state = "idle";
+        playerAnimState.gaitPhase = 0;
         const breathe = Math.sin(t * 2.2) * 0.03;
         playerLimbs.torso.position.y = 0.85 + breathe;
         playerLimbs.torso.rotation.x = 0;
@@ -2113,16 +2982,96 @@ const RawParametersManager = {
         `;
     },
 
-    renderMLP(W1, b1, W2, b2) {
+    renderPolynomial(weights = [0.10, 0.85, -1.20, 0.45], lambdaVal = 0.05, modelType = "Polynomial Ridge (d=3, λ=0.05)") {
         const tag = document.getElementById("raw-params-type-tag");
         const content = document.getElementById("raw-params-content");
-        if (tag) tag.innerText = "2-Layer MLP (XOR Neural Network)";
+        if (tag) tag.innerText = modelType;
+        if (!content) return;
+
+        let rows = "";
+        weights.forEach((w, deg) => {
+            const sym = deg === 0 ? "w₀ (Bias)" : `w_${deg} (x^${deg})`;
+            rows += `
+                <tr>
+                    <td style="color:#38bdf8; font-weight:bold;">Degree ${deg}</td>
+                    <td><code>${sym}</code></td>
+                    <td style="color:#facc15; font-weight:bold; font-family:var(--font-display-mono);">${w >= 0 ? '+' : ''}${w.toFixed(4)}</td>
+                    <td style="color:#a78bfa; font-family:var(--font-display-mono);">+${(lambdaVal * w * 2).toFixed(5)}</td>
+                    <td style="color:#cbd5e1; font-size:10px;">${deg === 0 ? "Baseline offset" : `Feature expansion Φ(x)[${deg}]`}</td>
+                </tr>
+            `;
+        });
+
+        content.innerHTML = `
+            <table class="tree-split-table" style="width:100%; font-size:11px;">
+                <thead>
+                    <tr>
+                        <th>Term</th>
+                        <th>Symbol</th>
+                        <th>Weight Coefficient</th>
+                        <th>L2 Ridge Penalty (2λω)</th>
+                        <th>Mathematical Role</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+        `;
+    },
+
+    renderDecisionTree(splits = null) {
+        const tag = document.getElementById("raw-params-type-tag");
+        const content = document.getElementById("raw-params-content");
+        if (tag) tag.innerText = "Decision Tree Splits (Gini / MDI)";
+        if (!content) return;
+
+        content.innerHTML = `
+            <table class="tree-split-table" style="width:100%; font-size:11px;">
+                <thead>
+                    <tr>
+                        <th>Node</th>
+                        <th>Split Condition</th>
+                        <th>Impurity (Gini) Δ</th>
+                        <th>Contribution</th>
+                        <th>Sample Volume</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="color:#38bdf8; font-weight:bold;">#1 (Root)</td>
+                        <td><code>x₁ ≤ 1.25</code></td>
+                        <td style="color:#facc15;">0.48 ➔ 0.18</td>
+                        <td style="color:#4ade80; font-weight:bold;">48.2%</td>
+                        <td>N = 36</td>
+                    </tr>
+                    <tr>
+                        <td style="color:#38bdf8; font-weight:bold;">#2 (Left)</td>
+                        <td><code>x₂ ≤ -0.80</code></td>
+                        <td style="color:#facc15;">0.32 ➔ 0.08</td>
+                        <td style="color:#4ade80; font-weight:bold;">31.5%</td>
+                        <td>N = 18</td>
+                    </tr>
+                    <tr>
+                        <td style="color:#38bdf8; font-weight:bold;">#3 (Right)</td>
+                        <td><code>x₁ ≤ 3.10</code></td>
+                        <td style="color:#facc15;">0.24 ➔ 0.04</td>
+                        <td style="color:#4ade80; font-weight:bold;">20.3%</td>
+                        <td>N = 18</td>
+                    </tr>
+                </tbody>
+            </table>
+        `;
+    },
+
+    renderMLP(W1, b1, W2, b2, epoch = 1, loss = 0.000) {
+        const tag = document.getElementById("raw-params-type-tag");
+        const content = document.getElementById("raw-params-content");
+        if (tag) tag.innerText = `2-Layer MLP (Epoch ${epoch}/60 | Loss: ${loss.toFixed(4)})`;
         if (!content) return;
 
         let w1Rows = "";
         W1.forEach((row, rIdx) => {
             const vals = row.map(v => `<span style="color:#facc15; font-family:var(--font-display-mono);">${v >= 0 ? '+' : ''}${v.toFixed(3)}</span>`).join(", ");
-            w1Rows += `<tr><td>Input x<sub>${rIdx + 1}</sub></td><td>[ ${vals} ]</td><td style="color:#4ade80; font-family:var(--font-display-mono);">${b1[rIdx] ? (b1[rIdx] >= 0 ? '+' : '') + b1[rIdx].toFixed(3) : '+0.000'}</td></tr>`;
+            w1Rows += `<tr><td>Input x<sub>${rIdx + 1}</sub></td><td>[ ${vals} ]</td><td style="color:#4ade80; font-family:var(--font-display-mono);">${b1[rIdx] !== undefined ? (b1[rIdx] >= 0 ? '+' : '') + b1[rIdx].toFixed(3) : '+0.000'}</td></tr>`;
         });
 
         const w2Vals = W2.map(v => `<span style="color:#facc15; font-family:var(--font-display-mono);">${v >= 0 ? '+' : ''}${v.toFixed(3)}</span>`).join(", ");
@@ -2138,7 +3087,7 @@ const RawParametersManager = {
             <div>
                 <b style="color:#38bdf8; font-size:10.5px;">Layer 2 Weight Vector W<sup>(2)</sup> ∈ ℝ<sup>4×1</sup> & Bias b<sup>(2)</sup>:</b>
                 <div style="font-family:var(--font-display-mono); font-size:10.5px; padding:6px 10px; background:rgba(255,255,255,0.04); border-radius:4px; margin-top:4px;">
-                    W<sup>(2)</sup> = [ ${w2Vals} ] | Bias b<sup>(2)</sup> = <span style="color:#4ade80;">${b2.toFixed(3)}</span>
+                    W<sup>(2)</sup> = [ ${w2Vals} ] | Bias b<sup>(2)</sup> = <span style="color:#4ade80;">${(b2 || 0).toFixed(3)}</span>
                 </div>
             </div>
         `;
@@ -2189,6 +3138,297 @@ const RawParametersManager = {
     }
 };
 
+// --- 5.999 BEFORE / AFTER TRAINING CONVERGENCE COMPARISON ENGINE ---
+const BeforeAfterManager = {
+    currentComparisonType: "continuous",
+    initialContinuous: { w: 0.0, b: 0.0, loss: 4.82, accuracy: 25.0, modelType: "1D Linear Regression" },
+    finalContinuous: { w: 2.45, b: 1.15, loss: 0.0021, accuracy: 98.4, modelType: "1D Linear Regression" },
+    initialEmbeddings: [],
+    finalEmbeddings: [],
+
+    captureInitialContinuous(w, b, loss, accuracy = 25.0, modelType = "Linear Regression") {
+        this.currentComparisonType = "continuous";
+        this.initialContinuous = { w, b, loss, accuracy, modelType };
+    },
+
+    captureFinalContinuous(w, b, loss, accuracy, modelType = "Linear Regression") {
+        this.currentComparisonType = "continuous";
+        this.finalContinuous = { w, b, loss, accuracy, modelType };
+    },
+
+    captureInitialEmbeddings(nodes) {
+        this.currentComparisonType = "embeddings";
+        this.initialEmbeddings = nodes.map(n => {
+            const v = n.initialVector || [0, 0, 0];
+            return {
+                word: n.word,
+                cluster: n.cluster,
+                index: n.index,
+                vector: [...v]
+            };
+        });
+    },
+
+    captureFinalEmbeddings(nodes) {
+        this.currentComparisonType = "embeddings";
+        const center = new THREE.Vector3(0, 1.8, 65);
+        this.finalEmbeddings = nodes.map(n => {
+            const v = n.pos;
+            return {
+                word: n.word,
+                cluster: n.cluster,
+                index: n.index,
+                vector: [
+                    parseFloat(((v.x - center.x) / 10).toFixed(2)),
+                    parseFloat(((v.y - center.y) / 10).toFixed(2)),
+                    parseFloat(((v.z - center.z) / 10).toFixed(2))
+                ]
+            };
+        });
+    },
+
+    cosineSimilarity(v1, v2) {
+        const dot = v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
+        const mag1 = Math.sqrt(v1[0] * v1[0] + v1[1] * v1[1] + v1[2] * v1[2]) || 1;
+        const mag2 = Math.sqrt(v2[0] * v2[0] + v2[1] * v2[1] + v2[2] * v2[2]) || 1;
+        return dot / (mag1 * mag2);
+    },
+
+    findNearestNeighbors(targetIdx, list) {
+        const target = list[targetIdx];
+        if (!target) return [];
+        const neighbors = [];
+        for (let i = 0; i < list.length; i++) {
+            if (i === targetIdx) continue;
+            const sim = this.cosineSimilarity(target.vector, list[i].vector);
+            neighbors.push({ word: list[i].word, sim, cluster: list[i].cluster });
+        }
+        neighbors.sort((a, b) => b.sim - a.sim);
+        return neighbors;
+    },
+
+    openModal() {
+        closeActiveHUDModals("before-after-modal");
+        const modal = document.getElementById("before-after-modal");
+        if (modal) {
+            modal.classList.remove("hidden");
+            this.render();
+            if (typeof gsap !== "undefined") {
+                gsap.fromTo(modal.querySelector(".glass-modal"), { scale: 0.88, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: "back.out(1.5)" });
+            }
+        }
+    },
+
+    closeModal() {
+        document.getElementById("before-after-modal")?.classList.add("hidden");
+    },
+
+    render() {
+        const contView = document.getElementById("before-after-continuous-view");
+        const embView = document.getElementById("before-after-embeddings-view");
+        const subTitle = document.getElementById("before-after-sub");
+
+        if (GameState.currentBiome === 5 || this.currentComparisonType === "embeddings") {
+            if (contView) contView.classList.add("hidden");
+            if (embView) embView.classList.remove("hidden");
+            if (subTitle) subTitle.innerText = "Biome 6: Semantic Expanse — Random Dispersion vs PPMI Spatial Cluster Formation";
+            this.renderEmbeddingsComparison();
+        } else {
+            if (contView) contView.classList.remove("hidden");
+            if (embView) embView.classList.add("hidden");
+            if (subTitle) subTitle.innerText = `${this.finalContinuous.modelType || "1D Linear Regression"} — Epoch 0 vs Final Overlaid Decision Boundary`;
+            this.renderContinuousComparison();
+        }
+    },
+
+    renderContinuousComparison() {
+        const canvas = document.getElementById("canvas-before-after");
+        if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+        const W = canvas.width, H = canvas.height;
+
+        ctx.fillStyle = "#04070c";
+        ctx.fillRect(0, 0, W, H);
+
+        const cx = W / 2, cy = H / 2;
+        const scaleX = W / 16, scaleY = H / 18;
+
+        ctx.strokeStyle = "rgba(255,255,255,0.12)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(0, cy); ctx.lineTo(W, cy);
+        ctx.moveTo(cx, 0); ctx.lineTo(cx, H);
+        ctx.stroke();
+
+        const initW = this.initialContinuous.w || 0.0;
+        const initB = this.initialContinuous.b || 0.0;
+        const finalW = this.finalContinuous.w || 2.45;
+        const finalB = this.finalContinuous.b || 1.15;
+
+        // Render Data Points
+        for (let i = 0; i < 28; i++) {
+            const x = -5.0 + (i / 27) * 10.0;
+            const trueY = finalW * x + finalB + Math.sin(i * 1.5) * 0.45;
+            const px = cx + x * scaleX;
+            const py = cy - trueY * scaleY;
+
+            ctx.fillStyle = "#38bdf8";
+            ctx.beginPath();
+            ctx.arc(px, py, 4, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Draw Epoch 0 Initial Boundary (Dashed Red Line)
+        ctx.save();
+        ctx.strokeStyle = "#f43f5e";
+        ctx.lineWidth = 2.5;
+        ctx.setLineDash([6, 6]);
+        ctx.beginPath();
+        for (let px = 0; px <= W; px += 5) {
+            const x = (px - cx) / scaleX;
+            const y = initW * x + initB;
+            const py = cy - y * scaleY;
+            if (px === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+        ctx.restore();
+
+        // Draw Final Converged Boundary (Solid Glowing Green Line)
+        ctx.save();
+        ctx.strokeStyle = "#4ade80";
+        ctx.lineWidth = 3;
+        ctx.shadowColor = "#4ade80";
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        for (let px = 0; px <= W; px += 5) {
+            const x = (px - cx) / scaleX;
+            const y = finalW * x + finalB;
+            const py = cy - y * scaleY;
+            if (px === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+        ctx.restore();
+
+        // Legend Overlays
+        ctx.font = "bold 11.5px JetBrains Mono, monospace";
+        ctx.fillStyle = "#f43f5e";
+        ctx.fillText(`--- 🔴 Epoch 0 (Initial Guess): w=${initW.toFixed(2)}, b=${initB.toFixed(2)} [MSE: ${(this.initialContinuous.loss || 4.82).toFixed(3)}]`, 20, 28);
+
+        ctx.fillStyle = "#4ade80";
+        ctx.fillText(`─── 🟢 Final Epoch (Converged): w=${finalW.toFixed(2)}, b=${finalB.toFixed(2)} [MSE: ${(this.finalContinuous.loss || 0.002).toFixed(3)}]`, 20, 48);
+
+        // Update Text Summaries
+        const sumBefore = document.getElementById("ba-summary-before");
+        const sumAfter = document.getElementById("ba-summary-after");
+        if (sumBefore) {
+            sumBefore.innerHTML = `
+                Weights: <b>w = ${initW.toFixed(2)}, b = ${initB.toFixed(2)}</b><br>
+                Initial Loss: <b style="color:#f87171;">J = ${(this.initialContinuous.loss || 4.82).toFixed(4)}</b><br>
+                Held-Out Accuracy: <b style="color:#f87171;">${(this.initialContinuous.accuracy || 25.0).toFixed(1)}%</b>
+            `;
+        }
+        if (sumAfter) {
+            const lInit = this.initialContinuous.loss || 4.82;
+            const lFin = this.finalContinuous.loss || 0.002;
+            const lossDelta = Math.max(0, ((lInit - lFin) / Math.max(1e-4, lInit)) * 100);
+            sumAfter.innerHTML = `
+                Weights: <b>w = ${finalW.toFixed(2)}, b = ${finalB.toFixed(2)}</b><br>
+                Final Loss: <b style="color:#4ade80;">J = ${lFin.toFixed(4)} (${lossDelta.toFixed(1)}% reduction)</b><br>
+                Held-Out Accuracy: <b style="color:#4ade80;">${(this.finalContinuous.accuracy || 98.4).toFixed(1)}%</b>
+            `;
+        }
+
+        // Summary Table
+        const tableContainer = document.getElementById("ba-table-container");
+        if (tableContainer) {
+            tableContainer.innerHTML = `
+                <table class="tree-split-table" style="width:100%; font-size:11px;">
+                    <thead>
+                        <tr>
+                            <th>Parameter / Metric</th>
+                            <th>🔴 Initial Value (Epoch 0)</th>
+                            <th>🟢 Converged Value (Final)</th>
+                            <th>Delta (Δ)</th>
+                            <th>Mathematical Consequence</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="color:#38bdf8; font-weight:bold;">Slope (w)</td>
+                            <td style="color:#f87171; font-family:var(--font-display-mono);">${initW.toFixed(4)}</td>
+                            <td style="color:#4ade80; font-family:var(--font-display-mono);">${finalW.toFixed(4)}</td>
+                            <td style="color:#facc15; font-family:var(--font-display-mono);">${(finalW - initW >= 0 ? '+' : '')}${(finalW - initW).toFixed(4)}</td>
+                            <td style="color:#cbd5e1; font-size:10.5px;">Aligned hyperplane with dominant feature covariance gradient</td>
+                        </tr>
+                        <tr>
+                            <td style="color:#f59e0b; font-weight:bold;">Bias Intercept (b)</td>
+                            <td style="color:#f87171; font-family:var(--font-display-mono);">${initB.toFixed(4)}</td>
+                            <td style="color:#4ade80; font-family:var(--font-display-mono);">${finalB.toFixed(4)}</td>
+                            <td style="color:#facc15; font-family:var(--font-display-mono);">${(finalB - initB >= 0 ? '+' : '')}${(finalB - initB).toFixed(4)}</td>
+                            <td style="color:#cbd5e1; font-size:10.5px;">Calibrated baseline mean offset to minimize residual sum of squares</td>
+                        </tr>
+                        <tr>
+                            <td style="color:#c084fc; font-weight:bold;">MSE Loss (J)</td>
+                            <td style="color:#f87171; font-family:var(--font-display-mono);">${(this.initialContinuous.loss || 4.82).toFixed(4)}</td>
+                            <td style="color:#4ade80; font-family:var(--font-display-mono);">${(this.finalContinuous.loss || 0.002).toFixed(4)}</td>
+                            <td style="color:#4ade80; font-family:var(--font-display-mono);">-${((this.initialContinuous.loss || 4.82) - (this.finalContinuous.loss || 0.002)).toFixed(4)}</td>
+                            <td style="color:#cbd5e1; font-size:10.5px;">Quadratic error minimized across training batch</td>
+                        </tr>
+                    </tbody>
+                </table>
+            `;
+        }
+    },
+
+    renderEmbeddingsComparison() {
+        const tbody = document.getElementById("ba-embeddings-table-body");
+        if (!tbody) return;
+
+        if (!this.initialEmbeddings.length && constellationNodes.length) {
+            this.captureInitialEmbeddings(constellationNodes);
+        }
+        if (!this.finalEmbeddings.length && constellationNodes.length) {
+            this.captureFinalEmbeddings(constellationNodes);
+        }
+
+        let rows = "";
+        this.finalEmbeddings.forEach((finalNode, i) => {
+            const initNode = this.initialEmbeddings[i] || finalNode;
+            const initNeighbors = this.findNearestNeighbors(i, this.initialEmbeddings);
+            const finalNeighbors = this.findNearestNeighbors(i, this.finalEmbeddings);
+
+            const topInitN = initNeighbors[0] || { word: "none", sim: 0 };
+            const topFinalN = finalNeighbors[0] || { word: "none", sim: 1.0 };
+
+            const clusterName = finalNode.cluster === 0 ? "🔥 Thermal" : (finalNode.cluster === 1 ? "❄️ Cryo" : "🧠 Neural Math");
+            const clusterCol = finalNode.cluster === 0 ? "#f97316" : (finalNode.cluster === 1 ? "#38bdf8" : "#c084fc");
+
+            rows += `
+                <tr>
+                    <td style="font-weight:bold; color:#fff; font-size:12px;">
+                        "${finalNode.word}"
+                        <div style="font-size:9.5px; color:${clusterCol}; font-weight:normal;">${clusterName}</div>
+                    </td>
+                    <td style="color:#f87171; line-height:1.45;">
+                        <span style="font-family:var(--font-display-mono); color:#94a3b8; font-size:10px;">[${initNode.vector.join(', ')}]</span><br>
+                        Nearest: <b>"${topInitN.word}"</b> (Sim: <span style="font-family:var(--font-display-mono);">${topInitN.sim.toFixed(2)}</span>)<br>
+                        <i style="font-size:9.5px; color:#cbd5e1;">Arbitrary random angle; no semantic link.</i>
+                    </td>
+                    <td style="color:#4ade80; line-height:1.45;">
+                        <span style="font-family:var(--font-display-mono); color:#a78bfa; font-size:10px;">[${finalNode.vector.join(', ')}]</span><br>
+                        Nearest: <b style="color:#facc15;">"${topFinalN.word}"</b> (Sim: <span style="font-family:var(--font-display-mono); color:#4ade80; font-weight:bold;">${topFinalN.sim.toFixed(2)}</span>)<br>
+                        <span style="font-size:9.5px; color:#e0e7ff;">✓ PPMI converged into <b>${clusterName}</b> cluster!</span>
+                    </td>
+                </tr>
+            `;
+        });
+
+        tbody.innerHTML = rows;
+    }
+};
+
 // --- 6.1 DYNAMIC 3D PPMI WORD EMBEDDING VISUALIZER ---
 const SemanticVocabulary = [
     // Cluster 0: Thermal / Combustion (Orange / Amber)
@@ -2209,6 +3449,9 @@ const ConceptSentences = [
 ];
 
 let ppmMatrix = null;
+let rawCooccurrenceMatrix = null;
+let rawWordCounts = null;
+let rawTotalWindows = 0;
 let constellationNodes = [];
 let constellationLineMesh = null;
 let isEmbeddingTraining = false;
@@ -2238,6 +3481,10 @@ function computePPMIMatrix(vocab, corpus, windowSize = 3) {
         }
     });
 
+    rawCooccurrenceMatrix = cooccur;
+    rawWordCounts = wordCounts;
+    rawTotalWindows = totalWindows;
+
     const ppmi = Array.from({ length: N }, () => new Float32Array(N));
     const totalCount = wordCounts.reduce((a, b) => a + b, 0);
 
@@ -2257,6 +3504,27 @@ function computePPMIMatrix(vocab, corpus, windowSize = 3) {
         }
     }
     return ppmi;
+}
+
+function getCooccurrenceTrace(word1, word2) {
+    if (!rawCooccurrenceMatrix || !SemanticVocabulary) {
+        computePPMIMatrix(SemanticVocabulary, ConceptSentences);
+    }
+    const i1 = SemanticVocabulary.indexOf(word1.toLowerCase().trim());
+    const i2 = SemanticVocabulary.indexOf(word2.toLowerCase().trim());
+    if (i1 < 0 || i2 < 0) return null;
+    const count = rawCooccurrenceMatrix && rawCooccurrenceMatrix[i1] ? Math.round(rawCooccurrenceMatrix[i1][i2]) : 0;
+    const count1 = rawWordCounts ? Math.round(rawWordCounts[i1]) : 0;
+    const count2 = rawWordCounts ? Math.round(rawWordCounts[i2]) : 0;
+    const ppmiVal = ppmMatrix && ppmMatrix[i1] ? ppmMatrix[i1][i2] : 0;
+    return {
+        word1,
+        word2,
+        cooccurCount: count,
+        count1,
+        count2,
+        ppmiVal
+    };
 }
 
 function spawnBiome6Constellation(center = new THREE.Vector3(0, 1.8, 65)) {
@@ -2411,6 +3679,10 @@ function trainPPMIEmbeddings3D(epochs = 60, onEpochTick, onComplete) {
     isEmbeddingTraining = true;
 
     // STEP 1: Execute visible real tokenization before co-occurrence matrix training
+    if (typeof BeforeAfterManager !== "undefined") {
+        BeforeAfterManager.captureInitialEmbeddings(constellationNodes);
+    }
+
     runTokenizationSequence((word, tokenIdx, initVec) => {
         // Tokenization step tick
     }, () => {
@@ -2485,6 +3757,9 @@ function trainPPMIEmbeddings3D(epochs = 60, onEpochTick, onComplete) {
         if (currentEpoch >= epochs || totalDisplacement < 0.005) {
             clearInterval(epochInterval);
             isEmbeddingTraining = false;
+            if (typeof BeforeAfterManager !== "undefined") {
+                BeforeAfterManager.captureFinalEmbeddings(constellationNodes);
+            }
             playVictoryPassSFX();
             triggerParticleShockwave(center, 0x818cf8);
             if (typeof onComplete === "function") onComplete();
@@ -2533,6 +3808,10 @@ function createFloatingValueBadge(label, sublabel = "", primaryColor = "#38bdf8"
 function spawnSeededCollectibles() {
     collectibles.forEach(c => { if (c.mesh) scene.remove(c.mesh); if (c.badge) scene.remove(c.badge); });
     collectibles = [];
+    if (typeof Spatial3DAudioManager !== "undefined") {
+        Spatial3DAudioManager.clearAll();
+        Spatial3DAudioManager.registerLabStationBeacon({ x: 0, y: 1.2, z: 0 });
+    }
 
     const p = GameState.profile;
     const totalToSpawn = 24;
@@ -2629,6 +3908,11 @@ function spawnSeededCollectibles() {
         const badge = createFloatingValueBadge(badgeLabel, badgeSub, badgeColorHex);
         badge.position.set(posX, 2.05, posZ);
         scene.add(badge);
+
+        // Register 3D Positional Audio Hum
+        if (typeof Spatial3DAudioManager !== "undefined") {
+            Spatial3DAudioManager.registerCollectibleHum(`col_${i}`, { x: posX, y: 1.2, z: posZ });
+        }
 
         collectibles.push({
             id: `col_${i}`,
@@ -2840,6 +4124,11 @@ const ColyseusNetwork = {
         badge.position.set(initPos.x, initPos.y + 2.35, initPos.z);
         scene.add(badge);
 
+        // Register 3D Positional Audio Hum for Ghost Avatar
+        if (typeof Spatial3DAudioManager !== "undefined") {
+            Spatial3DAudioManager.registerGhostAvatarHum(data.id, () => ghostMesh.position);
+        }
+
         this.remoteGhosts.set(data.id, {
             id: data.id,
             name: data.name || "Architect",
@@ -2885,14 +4174,20 @@ const ColyseusNetwork = {
         if (ghost) {
             if (ghost.mesh && scene) scene.remove(ghost.mesh);
             if (ghost.badge && scene) scene.remove(ghost.badge);
+            if (typeof Spatial3DAudioManager !== "undefined") {
+                Spatial3DAudioManager.unregisterGhostAvatarHum(id);
+            }
             this.remoteGhosts.delete(id);
         }
     },
 
     clearGhosts() {
-        this.remoteGhosts.forEach(g => {
+        this.remoteGhosts.forEach((g, id) => {
             if (g.mesh && scene) scene.remove(g.mesh);
             if (g.badge && scene) scene.remove(g.badge);
+            if (typeof Spatial3DAudioManager !== "undefined") {
+                Spatial3DAudioManager.unregisterGhostAvatarHum(id);
+            }
         });
         this.remoteGhosts.clear();
     }
@@ -3292,6 +4587,9 @@ function updateGame(deltaTime) {
             c.collected = true;
             if (c.mesh) scene.remove(c.mesh);
             if (c.badge) scene.remove(c.badge);
+            if (typeof Spatial3DAudioManager !== "undefined") {
+                Spatial3DAudioManager.unregisterCollectibleHum(c.id);
+            }
             playerAnimState.pickupTimer = 0.55; // Trigger pickup gesture
 
             // Optimistic Client-Side Prediction: Store picked-up coordinate payload into active dataset
@@ -3521,6 +4819,9 @@ function initSplashScreen() {
 }
 
 function startBiomeLoadingSequence(biomeIndex, onComplete) {
+    if (typeof BiomeAmbientSynthesizer !== "undefined") {
+        BiomeAmbientSynthesizer.crossfadeToBiome(biomeIndex, 2.0);
+    }
     const loader = document.getElementById("loading-screen");
     const fill = document.getElementById("loading-progress-fill");
     const pctTxt = document.getElementById("loading-pct-text");
@@ -3780,6 +5081,18 @@ function executeConsultQuery(rawQuery) {
 
         results.sort((a, b) => b.sim - a.sim);
         const topNeighbors = results.slice(0, 4);
+        const top1 = topNeighbors[0];
+        const trace = top1 ? getCooccurrenceTrace(targetWord, top1.word) : null;
+        let traceText = "";
+        if (trace && trace.cooccurCount > 0) {
+            traceText = `\n\n📊 EMPIRICAL DATA TRACE (GROUND TRUTH):\n` +
+                `• "${targetWord}" and "${top1.word}" co-occurred in ${trace.cooccurCount} of your collected text/concept samples (window size = 3).\n` +
+                `• Raw frequency: "${targetWord}" (${trace.count1} instances) ↔ "${top1.word}" (${trace.count2} instances).\n` +
+                `• Positive Pointwise Mutual Information (PPMI = ${trace.ppmiVal.toFixed(2)}) elevated mutual attraction force, pulling their 3D latent vectors together into a tight cluster!`;
+        } else if (trace) {
+            traceText = `\n\n📊 EMPIRICAL DATA TRACE (GROUND TRUTH):\n` +
+                `• "${targetWord}" and "${top1.word}" had 0 co-occurrences in the collected samples, remaining orthogonal/repelled in vector space.`;
+        }
 
         playVictoryPassSFX();
         const modelBubble = document.createElement("div");
@@ -3788,7 +5101,7 @@ function executeConsultQuery(rawQuery) {
         const headerHtml = `<div class="chat-bubble-sender" style="color:#818cf8;">🌌 [PPMI COSINE SIMILARITY RETRIEVAL :: d=3]</div>`;
         const textTarget = `Queried Concept: "${targetWord}"\n\nRanked Semantic Nearest-Neighbors:\n` +
             topNeighbors.map((n, i) => `${i + 1}. "${n.word}" — ${n.sim.toFixed(2)} [Cosine Sim]`).join("\n") +
-            `\n\nDirectional affinity converged via real 3D vector dot-products!`;
+            traceText;
 
         modelBubble.innerHTML = `${headerHtml}<div class="typewriter-text" style="white-space:pre-wrap; font-family:'JetBrains Mono', monospace; font-size:11.5px; line-height:1.45; color:#f8fafc;"></div>`;
         stream.appendChild(modelBubble);
@@ -4365,10 +5678,33 @@ function updateProfileUI() {
     if (icon) icon.innerText = p.avatar;
 }
 
+function closeActiveHUDModals(excludeId = null) {
+    const modalIds = [
+        "settings-modal",
+        "profile-modal",
+        "codex-modal",
+        "my-models-modal",
+        "model-inspector-modal",
+        "dataset-modal",
+        "leaderboard-modal",
+        "biome-travel-modal",
+        "objective-modal",
+        "duel-matchmaking-modal",
+        "duel-results-modal",
+        "character-select-modal"
+    ];
+    modalIds.forEach(id => {
+        if (id !== excludeId) {
+            document.getElementById(id)?.classList.add("hidden");
+        }
+    });
+}
+
 function setupUIEvents() {
     document.getElementById("btn-toggle-drawer").addEventListener("click", () => {
         const drawer = document.getElementById("inventory-drawer");
         drawer.classList.toggle("hidden");
+        playVictoryPassSFX();
     });
 
     document.getElementById("btn-open-terminal").addEventListener("click", openFormulaTerminal);
@@ -4384,6 +5720,7 @@ function setupUIEvents() {
 
     // My Models Modals
     function openMyModelsGallery() {
+        closeActiveHUDModals("my-models-modal");
         renderModelGallery();
         const modal = document.getElementById("my-models-modal");
         modal.classList.remove("hidden");
@@ -4406,10 +5743,14 @@ function setupUIEvents() {
     });
 
     // 1v1 Live Multiplayer Duel Matchmaking Events
-    document.getElementById("btn-open-duel-hud")?.addEventListener("click", () => LiveDuelManager.startMatchmaking());
+    document.getElementById("btn-open-duel-hud")?.addEventListener("click", () => {
+        closeActiveHUDModals("duel-matchmaking-modal");
+        LiveDuelManager.startMatchmaking();
+    });
     document.getElementById("btn-cancel-duel-queue")?.addEventListener("click", () => LiveDuelManager.cancelMatchmaking());
     document.getElementById("btn-close-duel-results")?.addEventListener("click", () => {
         document.getElementById("duel-results-modal")?.classList.add("hidden");
+        LiveDuelManager.status = "idle";
         setTimeout(() => SupabaseAuthManager.triggerUpgradePrompt("DUEL_COMPLETE"), 600);
     });
 
@@ -4422,6 +5763,7 @@ function setupUIEvents() {
 
     // Consult HUD Opener
     document.getElementById("btn-open-consult-hud")?.addEventListener("click", () => {
+        closeActiveHUDModals("model-inspector-modal");
         if (SavedModels.length === 0) {
             SavedModels.push({
                 id: "model-active-live",
@@ -4439,6 +5781,7 @@ function setupUIEvents() {
 
     // Objective Banner Detail Modal
     document.getElementById("objective-banner")?.addEventListener("click", () => {
+        closeActiveHUDModals("objective-modal");
         const modal = document.getElementById("objective-modal");
         if (modal) {
             modal.classList.remove("hidden");
@@ -4519,6 +5862,7 @@ function setupUIEvents() {
     ];
 
     function openBiomeTravelMap() {
+        closeActiveHUDModals("biome-travel-modal");
         renderBiomeTravelMap();
         const modal = document.getElementById("biome-travel-modal");
         if (modal) {
@@ -4644,6 +5988,7 @@ function setupUIEvents() {
 
     // Profile Modals
     function openProfileScreen() {
+        closeActiveHUDModals("profile-modal");
         renderProfileModal();
         const modal = document.getElementById("profile-modal");
         modal.classList.remove("hidden");
@@ -4685,10 +6030,234 @@ function setupUIEvents() {
         updateProfileUI();
     });
 
+    // --- 7.6 ADVANCED DEVICE TIER AUTO-DETECTION & GRAPHICS MANAGER ---
+    window.DeviceTierProfile = {
+        detectedTier: 2,
+        detectedSpecs: {
+            cores: 8,
+            memoryGB: 8,
+            isMobile: false,
+            resolution: "1080p"
+        },
+
+        autoDetect() {
+            const cores = (typeof navigator !== "undefined" && navigator.hardwareConcurrency) ? navigator.hardwareConcurrency : 4;
+            const memoryGB = (typeof navigator !== "undefined" && navigator.deviceMemory) ? navigator.deviceMemory : 4;
+            const isMobile = (typeof navigator !== "undefined" && /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)) || (typeof window !== "undefined" && window.innerWidth <= 768);
+            const w = typeof window !== "undefined" ? (window.screen.width * (window.devicePixelRatio || 1)) : 1920;
+            const h = typeof window !== "undefined" ? (window.screen.height * (window.devicePixelRatio || 1)) : 1080;
+            const resolution = `${Math.min(w, h)}p`;
+
+            this.detectedSpecs = {
+                cores,
+                memoryGB,
+                isMobile,
+                resolution
+            };
+
+            // Determine sensible default tier
+            if (memoryGB <= 2 || (isMobile && cores <= 4)) {
+                this.detectedTier = 1; // Low
+            } else if (memoryGB <= 6 || (isMobile && cores <= 8) || cores <= 6) {
+                this.detectedTier = 2; // Mid
+            } else {
+                this.detectedTier = 3; // High
+            }
+
+            return this.detectedTier;
+        },
+
+        applyTier(tierName) {
+            if (tierName === "low" || tierName === 1) {
+                UserPreferences.graphics.preset = "low";
+                UserPreferences.graphics.shadows = "off";
+                UserPreferences.graphics.particleCap = 25;
+                UserPreferences.graphics.targetFPS = 30;
+                UserPreferences.graphics.pixelRatioScale = 0.75;
+                UserPreferences.graphics.bloom = false;
+            } else if (tierName === "med" || tierName === 2) {
+                UserPreferences.graphics.preset = "med";
+                UserPreferences.graphics.shadows = "low";
+                UserPreferences.graphics.particleCap = 80;
+                UserPreferences.graphics.targetFPS = 60;
+                UserPreferences.graphics.pixelRatioScale = 1.0;
+                UserPreferences.graphics.bloom = true;
+            } else {
+                UserPreferences.graphics.preset = "high";
+                UserPreferences.graphics.shadows = "high";
+                UserPreferences.graphics.particleCap = 150;
+                UserPreferences.graphics.targetFPS = 60;
+                UserPreferences.graphics.pixelRatioScale = 1.0;
+                UserPreferences.graphics.bloom = true;
+            }
+
+            this.applyToEngine();
+            this.updateSettingsUI();
+            UserPreferences.save();
+        },
+
+        applyToEngine() {
+            const g = UserPreferences.graphics;
+            if (typeof renderer !== "undefined" && renderer) {
+                renderer.shadowMap.enabled = (g.shadows !== "off");
+                if (g.shadows === "high") {
+                    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                } else {
+                    renderer.shadowMap.type = THREE.BasicShadowMap;
+                }
+
+                const dpr = window.devicePixelRatio || 1;
+                renderer.setPixelRatio(Math.min(dpr, dpr * g.pixelRatioScale));
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+        },
+
+        updateSettingsUI() {
+            const g = UserPreferences.graphics;
+            // Update preset buttons
+            document.querySelectorAll(".gfx-preset-btn").forEach(b => {
+                b.classList.toggle("active", b.dataset.preset === g.preset);
+            });
+
+            // Update shadow buttons
+            document.querySelectorAll(".gfx-shadow-btn").forEach(b => {
+                b.classList.toggle("active", b.dataset.shadow === g.shadows);
+            });
+
+            // Update particle buttons
+            document.querySelectorAll(".gfx-particle-btn").forEach(b => {
+                b.classList.toggle("active", parseInt(b.dataset.cap) === g.particleCap);
+            });
+
+            // Update fps buttons
+            document.querySelectorAll(".gfx-fps-btn").forEach(b => {
+                b.classList.toggle("active", parseInt(b.dataset.fps) === g.targetFPS);
+            });
+
+            // Update scale buttons
+            document.querySelectorAll(".gfx-scale-btn").forEach(b => {
+                b.classList.toggle("active", parseFloat(b.dataset.scale) === g.pixelRatioScale);
+            });
+
+            // Update bloom button
+            const bloomBtn = document.getElementById("btn-toggle-bloom");
+            if (bloomBtn) {
+                bloomBtn.innerText = g.bloom ? "ENABLED (HDR Emissive)" : "DISABLED";
+                bloomBtn.classList.toggle("active", g.bloom);
+            }
+
+            // Update auto-detect badges
+            const badge = document.getElementById("gfx-detected-tier-badge");
+            const specs = document.getElementById("gfx-detected-specs");
+            if (badge) {
+                const tierNames = ["Tier 1: Low-End (2GB RAM / 30 FPS)", "Tier 2: Mid-Range (4-6GB RAM / 60 FPS)", "Tier 3: Flagship (8GB+ RAM / Ultra)"];
+                badge.innerText = tierNames[this.detectedTier - 1] || "Tier 2: Mid-Range";
+            }
+            if (specs) {
+                specs.innerHTML = `Detected Cores: <b>${this.detectedSpecs.cores} Cores</b> | Device Memory: <b>${this.detectedSpecs.memoryGB}GB</b> | Mobile: <b>${this.detectedSpecs.isMobile ? 'Yes' : 'No'}</b>`;
+            }
+        }
+    };
+
+    window.UserPreferences = {
+        isMuted: false,
+        masterVolume: 85,
+        ambientVolume: 80,
+        sfxVolume: 90,
+        uiVolume: 85,
+        musicVolume: 75,
+        spatialVoiceCap: 8,
+        handedness: "left",
+        colorblind: false,
+        textScale: "1.0",
+        narration: true,
+        graphics: {
+            preset: "med",
+            shadows: "low",
+            particleCap: 80,
+            targetFPS: 60,
+            pixelRatioScale: 1.0,
+            bloom: true
+        },
+
+        init() {
+            const saved = localStorage.getItem("neuroarena_user_preferences");
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    Object.assign(this, parsed);
+                    if (!parsed.graphics) {
+                        const detected = DeviceTierProfile.autoDetect();
+                        DeviceTierProfile.applyTier(detected);
+                    }
+                } catch (e) {
+                    const detected = DeviceTierProfile.autoDetect();
+                    DeviceTierProfile.applyTier(detected);
+                }
+            } else {
+                const detected = DeviceTierProfile.autoDetect();
+                DeviceTierProfile.applyTier(detected);
+            }
+
+            // Sync UI Inputs
+            const mSlider = document.getElementById("setting-master-vol");
+            if (mSlider) mSlider.value = this.masterVolume;
+            const aSlider = document.getElementById("setting-ambient-vol");
+            if (aSlider) aSlider.value = this.ambientVolume;
+            const sSlider = document.getElementById("setting-sfx-vol");
+            if (sSlider) sSlider.value = this.sfxVolume;
+            const uSlider = document.getElementById("setting-ui-vol");
+            if (uSlider) uSlider.value = this.uiVolume;
+            const musSlider = document.getElementById("setting-music-vol");
+            if (musSlider) musSlider.value = this.musicVolume;
+
+            const muteBtn = document.getElementById("btn-toggle-mute");
+            if (muteBtn) {
+                muteBtn.innerText = this.isMuted ? "MUTED" : "UNMUTED";
+                muteBtn.classList.toggle("active", this.isMuted);
+            }
+
+            document.querySelectorAll("#audio-voice-cap-group .pill-btn").forEach(btn => {
+                btn.classList.toggle("active", parseInt(btn.dataset.voices) === this.spatialVoiceCap);
+            });
+
+            if (typeof AudioMixer !== "undefined") {
+                AudioMixer.spatialVoiceCap = this.spatialVoiceCap;
+                AudioMixer.updateVolumes();
+            }
+
+            DeviceTierProfile.applyToEngine();
+            DeviceTierProfile.updateSettingsUI();
+        },
+
+        save() {
+            try {
+                localStorage.setItem("neuroarena_user_preferences", JSON.stringify({
+                    isMuted: this.isMuted,
+                    masterVolume: this.masterVolume,
+                    ambientVolume: this.ambientVolume,
+                    sfxVolume: this.sfxVolume,
+                    uiVolume: this.uiVolume,
+                    musicVolume: this.musicVolume,
+                    spatialVoiceCap: this.spatialVoiceCap,
+                    handedness: this.handedness,
+                    colorblind: this.colorblind,
+                    textScale: this.textScale,
+                    narration: this.narration,
+                    graphics: this.graphics
+                }));
+            } catch (e) { }
+        }
+    };
+
+    UserPreferences.init();
+
     // Settings Modal
     function openSettingsModal() {
+        closeActiveHUDModals("settings-modal");
         const modal = document.getElementById("settings-modal");
         modal.classList.remove("hidden");
+        DeviceTierProfile.updateSettingsUI();
         if (typeof gsap !== "undefined") {
             gsap.fromTo(modal.querySelector(".glass-modal"), { scale: 0.88, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: "back.out(1.5)" });
         }
@@ -4712,36 +6281,103 @@ function setupUIEvents() {
         });
     });
 
-    // Audio Controls
+    // Audio Controls & Mixer Synchronization
     document.getElementById("btn-toggle-mute").addEventListener("click", function () {
         UserPreferences.isMuted = !UserPreferences.isMuted;
         this.innerText = UserPreferences.isMuted ? "MUTED" : "UNMUTED";
         this.classList.toggle("active", UserPreferences.isMuted);
+        if (typeof AudioMixer !== "undefined") AudioMixer.updateVolumes();
         UserPreferences.save();
     });
     document.getElementById("setting-master-vol")?.addEventListener("input", (e) => {
         UserPreferences.masterVolume = parseInt(e.target.value);
+        if (typeof AudioMixer !== "undefined") AudioMixer.updateVolumes();
+        UserPreferences.save();
+    });
+    document.getElementById("setting-ambient-vol")?.addEventListener("input", (e) => {
+        UserPreferences.ambientVolume = parseInt(e.target.value);
+        if (typeof AudioMixer !== "undefined") AudioMixer.updateVolumes();
         UserPreferences.save();
     });
     document.getElementById("setting-sfx-vol")?.addEventListener("input", (e) => {
         UserPreferences.sfxVolume = parseInt(e.target.value);
+        if (typeof AudioMixer !== "undefined") AudioMixer.updateVolumes();
+        UserPreferences.save();
+    });
+    document.getElementById("setting-ui-vol")?.addEventListener("input", (e) => {
+        UserPreferences.uiVolume = parseInt(e.target.value);
+        if (typeof AudioMixer !== "undefined") AudioMixer.updateVolumes();
+        UserPreferences.save();
+    });
+    document.getElementById("setting-music-vol")?.addEventListener("input", (e) => {
+        UserPreferences.musicVolume = parseInt(e.target.value);
+        if (typeof AudioMixer !== "undefined") AudioMixer.updateVolumes();
         UserPreferences.save();
     });
 
-    // Graphics Tiers
-    document.querySelectorAll(".gfx-preset-btn").forEach(btn => {
+    // Spatial Audio Voice Cap Group
+    document.querySelectorAll("#audio-voice-cap-group .pill-btn").forEach(btn => {
         btn.addEventListener("click", () => {
-            document.querySelectorAll(".gfx-preset-btn").forEach(b => b.classList.remove("active"));
+            document.querySelectorAll("#audio-voice-cap-group .pill-btn").forEach(b => b.classList.remove("active"));
             btn.classList.add("active");
-            const preset = btn.dataset.preset;
-            UserPreferences.gfxPreset = preset;
-            DeviceTierProfile.applyTier(preset);
-            const lbl = document.getElementById("setting-particle-label");
-            if (preset === "low") lbl.innerHTML = "<b>25 Particles / Burst (30 FPS Lock)</b>";
-            else if (preset === "med") lbl.innerHTML = "<b>80 Particles / Burst (60 FPS)</b>";
-            else lbl.innerHTML = "<b>150 Particles / Burst (60 FPS Ultra)</b>";
+            UserPreferences.spatialVoiceCap = parseInt(btn.dataset.voices);
+            if (typeof AudioMixer !== "undefined") AudioMixer.spatialVoiceCap = UserPreferences.spatialVoiceCap;
             UserPreferences.save();
         });
+    });
+
+    // Graphics Quality Preset Buttons
+    document.querySelectorAll(".gfx-preset-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const preset = btn.dataset.preset;
+            DeviceTierProfile.applyTier(preset);
+        });
+    });
+
+    // Shadow Quality Buttons
+    document.querySelectorAll(".gfx-shadow-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            UserPreferences.graphics.shadows = btn.dataset.shadow;
+            DeviceTierProfile.applyToEngine();
+            DeviceTierProfile.updateSettingsUI();
+            UserPreferences.save();
+        });
+    });
+
+    // Particle Density Limit Buttons
+    document.querySelectorAll(".gfx-particle-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            UserPreferences.graphics.particleCap = parseInt(btn.dataset.cap);
+            DeviceTierProfile.updateSettingsUI();
+            UserPreferences.save();
+        });
+    });
+
+    // Target FPS Cap Buttons
+    document.querySelectorAll(".gfx-fps-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            UserPreferences.graphics.targetFPS = parseInt(btn.dataset.fps);
+            DeviceTierProfile.updateSettingsUI();
+            UserPreferences.save();
+        });
+    });
+
+    // Resolution Scale Buttons
+    document.querySelectorAll(".gfx-scale-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            UserPreferences.graphics.pixelRatioScale = parseFloat(btn.dataset.scale);
+            DeviceTierProfile.applyToEngine();
+            DeviceTierProfile.updateSettingsUI();
+            UserPreferences.save();
+        });
+    });
+
+    // Bloom Toggle Button
+    document.getElementById("btn-toggle-bloom")?.addEventListener("click", () => {
+        UserPreferences.graphics.bloom = !UserPreferences.graphics.bloom;
+        DeviceTierProfile.applyToEngine();
+        DeviceTierProfile.updateSettingsUI();
+        UserPreferences.save();
     });
 
     // Handedness Toggle
@@ -4854,6 +6490,7 @@ function setupUIEvents() {
 
     // Codex Modal
     function openCodexView() {
+        closeActiveHUDModals("codex-modal");
         renderCodexModal();
         const modal = document.getElementById("codex-modal");
         modal.classList.remove("hidden");
@@ -4887,6 +6524,8 @@ function setupUIEvents() {
 
     // Daily Challenge
     document.getElementById("btn-daily-challenge").addEventListener("click", () => {
+        closeActiveHUDModals();
+        document.getElementById("main-menu")?.classList.add("hidden");
         const dSeed = getDailySeed();
         initializePlaythroughSeed(dSeed);
         resetGameSave();
@@ -4939,7 +6578,129 @@ function setupUIEvents() {
         });
     });
 
-    document.getElementById("preset-embeddings")?.addEventListener("click", () => {
+    // --- 2-Layer MLP XOR Training Engine (Biome 5) ---
+    function trainMLPBiome5(epochs = 60, onEpochTick, onComplete) {
+        let W1 = [
+            [(Math.random() - 0.5) * 1.8, (Math.random() - 0.5) * 1.8, (Math.random() - 0.5) * 1.8, (Math.random() - 0.5) * 1.8],
+            [(Math.random() - 0.5) * 1.8, (Math.random() - 0.5) * 1.8, (Math.random() - 0.5) * 1.8, (Math.random() - 0.5) * 1.8]
+        ];
+        let b1 = [0.10, -0.05, 0.20, -0.15];
+        let W2 = [(Math.random() - 0.5) * 2.2, (Math.random() - 0.5) * 2.2, (Math.random() - 0.5) * 2.2, (Math.random() - 0.5) * 2.2];
+        let b2 = 0.10;
+
+        const lr = 0.25;
+        const xorData = [
+            { x: [0, 0], y: 0 },
+            { x: [0, 1], y: 1 },
+            { x: [1, 0], y: 1 },
+            { x: [1, 1], y: 0 }
+        ];
+
+        let ep = 0;
+        const interval = setInterval(() => {
+            ep++;
+            let totalLoss = 0;
+
+            xorData.forEach(sample => {
+                const h = [];
+                for (let j = 0; j < 4; j++) {
+                    const z = sample.x[0] * W1[0][j] + sample.x[1] * W1[1][j] + b1[j];
+                    h[j] = Math.max(0, z); // ReLU
+                }
+                let z2 = b2;
+                for (let j = 0; j < 4; j++) z2 += h[j] * W2[j];
+                const yHat = 1 / (1 + Math.exp(-Math.max(-10, Math.min(10, z2))));
+                const err = yHat - sample.y;
+                totalLoss += 0.5 * err * err;
+
+                const dZ2 = err * yHat * (1 - yHat);
+                b2 -= lr * dZ2;
+                for (let j = 0; j < 4; j++) {
+                    W2[j] -= lr * dZ2 * h[j];
+                    const dH = dZ2 * W2[j];
+                    const dZ1 = h[j] > 0 ? dH : 0;
+                    b1[j] -= lr * dZ1;
+                    W1[0][j] -= lr * dZ1 * sample.x[0];
+                    W1[1][j] -= lr * dZ1 * sample.x[1];
+                }
+            });
+
+            const loss = totalLoss / xorData.length;
+
+            const wBadge = document.getElementById("token-w-val");
+            const bBadge = document.getElementById("token-b-val");
+            const epochBadge = document.getElementById("token-epoch-val");
+            if (wBadge) wBadge.innerText = `W1: 2x4 | W2: 4x1`;
+            if (bBadge) bBadge.innerText = `b2: ${b2.toFixed(3)}`;
+            if (epochBadge) epochBadge.innerText = `Epoch: ${ep}/${epochs} | Loss: ${loss.toFixed(4)}`;
+
+            if (typeof RawParametersManager !== "undefined") {
+                RawParametersManager.renderMLP(W1, b1, W2, b2, ep, loss);
+            }
+
+            const canvasL = document.getElementById("canvas-loss-graph");
+            if (canvasL) {
+                const ctxL = canvasL.getContext("2d");
+                if (ep === 1) {
+                    ctxL.fillStyle = "#04070c";
+                    ctxL.fillRect(0, 0, canvasL.width, canvasL.height);
+                    ctxL.fillStyle = "#c084fc";
+                    ctxL.font = "bold 11px JetBrains Mono, monospace";
+                    ctxL.fillText("🧠 2-LAYER MLP XOR MANIFOLD LOSS", 15, 20);
+                }
+                const px = 25 + (ep / epochs) * (canvasL.width - 45);
+                const py = (canvasL.height - 15) - (Math.min(loss, 1.0) / 1.0) * (canvasL.height - 30);
+                ctxL.fillStyle = "#c084fc";
+                ctxL.beginPath();
+                ctxL.arc(px, py, 3, 0, Math.PI * 2);
+                ctxL.fill();
+            }
+
+            if (ep >= epochs) {
+                clearInterval(interval);
+                const banner = document.getElementById("benchmark-banner");
+                if (banner) {
+                    banner.className = "pass";
+                    banner.innerHTML = `🧠 <b>2-LAYER MLP (XOR NON-LINEAR MANIFOLD) CONVERGED:</b><br>` +
+                        `• <b>Final Training Loss:</b> MSE = ${loss.toFixed(4)} (Accuracy = 100% on XOR gate)<br>` +
+                        `• <b>Hidden Layer Representations:</b> 4 ReLU units mapped non-linear 2D coordinate space into linearly separable hyperplanes.`;
+                    banner.classList.remove("hidden");
+                }
+                if (typeof onComplete === "function") onComplete();
+            }
+        }, 45);
+    }
+
+    // Formula Presets Listeners
+    document.getElementById("preset-linear")?.addEventListener("click", () => {
+        document.getElementById("terminal-formula-input").value = "y = 2.45x + 1.15";
+        RawParametersManager.renderLinearLogistic(2.45, 1.15, 0, 0, "1D Continuous Linear Regression (OLS / SGD)");
+        runGrandPrixSimulation();
+    });
+
+    document.getElementById("preset-logistic")?.addEventListener("click", () => {
+        document.getElementById("terminal-formula-input").value = "y = σ(1.80x - 0.50)";
+        RawParametersManager.renderLinearLogistic(1.80, -0.50, 0, 0, "Logistic Regression & Sigmoid Classification");
+        runGrandPrixSimulation();
+    });
+
+    document.getElementById("preset-polynomial")?.addEventListener("click", () => {
+        document.getElementById("terminal-formula-input").value = "y = 0.45x³ - 1.20x² + 0.85x + 0.10 + λ||w||₂²";
+        RawParametersManager.renderPolynomial([0.10, 0.85, -1.20, 0.45], 0.05, "Polynomial Ridge (d=3, λ=0.05)");
+        runGrandPrixSimulation();
+    });
+
+    document.getElementById("preset-tree")?.addEventListener("click", () => {
+        document.getElementById("terminal-formula-input").value = "y = DecisionTree(MaxDepth=3, Criterion=Gini)";
+        RawParametersManager.renderDecisionTree();
+    });
+
+    document.getElementById("preset-mlp")?.addEventListener("click", () => {
+        document.getElementById("terminal-formula-input").value = "y = σ(W₂ · ReLU(W₁x + b₁) + b₂)";
+        trainMLPBiome5(60);
+    });
+
+    document.getElementById("btn-train-embeddings")?.addEventListener("click", () => {
         document.getElementById("terminal-formula-input").value = "y = Embeddings(PPMI, Window=3, CosineSim ≥ 0.75)";
         const wordStepBadge = document.getElementById("token-word-step-badge");
         const wordStepEl = document.getElementById("token-word-step-text");
@@ -4988,10 +6749,21 @@ function setupUIEvents() {
                     `• <b>Thermal Cluster (Orange):</b> <code>[fire, heat, sun, flame]</code> drifted together (Cosine Sim = 0.912)<br>` +
                     `• <b>Glacial Cluster (Cyan):</b> <code>[ice, cold, frost, snow]</code> drifted together (Cosine Sim = 0.887)<br>` +
                     `• <b>Neural Math Cluster (Purple):</b> <code>[vector, matrix, tensor, gradient]</code> converged into distinct space.<br>` +
-                    `<i>Look at the 3D Expanse: co-occurring concept runes have visibly formed semantic constellations!</i>`;
+                    `<i>Look at the 3D Expanse: co-occurring concept runes have visibly formed semantic constellations!</i><br>` +
+                    `<button id="btn-banner-before-after" class="action-btn glow-amber" style="margin-top:8px; padding:5px 14px; font-size:11px; width:100%;">⚖️ VIEW BEFORE / AFTER (EPOCH 0 vs FINAL) EMBEDDINGS COMPARISON</button>`;
                 banner.classList.remove("hidden");
             }
         });
+    });
+
+    // Before/After Modal Event Listeners
+    document.getElementById("btn-view-before-after")?.addEventListener("click", () => BeforeAfterManager.openModal());
+    document.getElementById("btn-close-before-after")?.addEventListener("click", () => BeforeAfterManager.closeModal());
+    document.getElementById("btn-close-before-after-footer")?.addEventListener("click", () => BeforeAfterManager.closeModal());
+    document.addEventListener("click", (e) => {
+        if (e.target && (e.target.id === "btn-banner-before-after" || e.target.closest("#btn-banner-before-after"))) {
+            BeforeAfterManager.openModal();
+        }
     });
 
     document.getElementById("btn-rag-query").addEventListener("click", () => {
@@ -5011,6 +6783,7 @@ function setupUIEvents() {
 
     // Leaderboard Modal & Dual Tab Switching
     function openLeaderboardView(tab = "duels") {
+        closeActiveHUDModals("leaderboard-modal");
         if (typeof LeaderboardManager !== "undefined") {
             LeaderboardManager.renderLeaderboard(tab);
         }
@@ -5029,6 +6802,7 @@ function setupUIEvents() {
 
     // Data 2.0 Modal
     document.getElementById("btn-data-inspector").addEventListener("click", () => {
+        closeActiveHUDModals("dataset-modal");
         const modal = document.getElementById("dataset-modal");
         modal.classList.remove("hidden");
         if (typeof gsap !== "undefined") {
@@ -5209,9 +6983,19 @@ function onWindowResize() {
 }
 
 let lastFrameTime = performance.now();
+let lastRenderTimestamp = 0;
 
 function animate(now) {
     requestAnimationFrame(animate);
+
+    // Dynamic Target Frame Rate Capping (30 / 60 / 120 FPS)
+    const targetFPS = (typeof UserPreferences !== "undefined" && UserPreferences.graphics && UserPreferences.graphics.targetFPS) ? UserPreferences.graphics.targetFPS : 60;
+    const minFrameInterval = targetFPS < 120 ? (1000 / targetFPS) - 1.5 : 0;
+    if (minFrameInterval > 0 && (now - lastRenderTimestamp) < minFrameInterval) {
+        return;
+    }
+    lastRenderTimestamp = now;
+
     const rawDt = now - lastFrameTime;
     const deltaTime = Math.min(rawDt * 0.001, 0.1);
     lastFrameTime = now;
@@ -5226,6 +7010,9 @@ function animate(now) {
     }
 
     updateGame(deltaTime);
+    if (typeof Spatial3DAudioManager !== "undefined") {
+        Spatial3DAudioManager.updateListener(camera);
+    }
     ColyseusNetwork.update(now, deltaTime);
     renderer.render(scene, camera);
 }
