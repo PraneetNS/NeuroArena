@@ -109,9 +109,48 @@ namespace NeuroArena.Network
                 matAura.color = auraCol;
                 matAura.SetColor("_EmissionColor", auraCol * 2.2f);
                 matAura.EnableKeyword("_EMISSION");
-                auraRend.sharedMaterial = matAura;
-            }
             trainingAura.SetActive(false);
+
+            SetupSpatialAudio();
+        }
+
+        private AudioSource ghostAudioSource;
+        private double audioPhase = 0;
+
+        private void SetupSpatialAudio()
+        {
+            ghostAudioSource = gameObject.AddComponent<AudioSource>();
+            ghostAudioSource.spatialBlend = 1.0f; // Full 3D spatial
+            ghostAudioSource.rolloffMode = AudioRolloffMode.Logarithmic;
+            ghostAudioSource.minDistance = 2.0f;
+            ghostAudioSource.maxDistance = 20.0f;
+            ghostAudioSource.volume = 0.10f;
+            ghostAudioSource.loop = true;
+            ghostAudioSource.playOnAwake = true;
+            ghostAudioSource.dopplerLevel = 0.5f;
+            ghostAudioSource.Play();
+        }
+
+        private void OnAudioFilterRead(float[] data, int channels)
+        {
+            double dt = 1.0 / AudioSettings.outputSampleRate;
+            bool isTraining = activityState == "training";
+            float baseFreq = isTraining ? 330.0f : 220.0f;
+            float vol = isTraining ? 0.12f : 0.06f;
+
+            for (int i = 0; i < data.Length; i += channels)
+            {
+                audioPhase += dt * baseFreq;
+                if (audioPhase > 1.0) audioPhase -= 1.0;
+
+                // Triangle energy waveform
+                float tri = (float)(2.0 * Math.Abs(2.0 * (audioPhase - Math.Floor(audioPhase + 0.5))) - 1.0) * vol;
+
+                for (int c = 0; c < channels; c++)
+                {
+                    data[i + c] = tri;
+                }
+            }
         }
 
         private void CreateNameplate()
