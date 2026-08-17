@@ -22,6 +22,27 @@ body, html {
     color: var(--text-main);
 }
 
+/* Cyber Custom Scrollbar for all modals and scrollable views */
+*::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+*::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.6);
+    border-radius: 4px;
+}
+*::-webkit-scrollbar-thumb {
+    background: rgba(56, 189, 248, 0.4);
+    border-radius: 4px;
+}
+*::-webkit-scrollbar-thumb:hover {
+    background: rgba(56, 189, 248, 0.7);
+}
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(56, 189, 248, 0.4) rgba(15, 23, 42, 0.6);
+}
+
 #game-container {
     position: relative;
     width: 100vw;
@@ -60,13 +81,18 @@ body, html {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(3, 7, 18, 0.85);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: rgba(3, 7, 18, 0.88);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 500;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 16px;
+    box-sizing: border-box;
+    z-index: 950;
+    -webkit-overflow-scrolling: touch;
 }
 
 .loading-overlay {
@@ -306,6 +332,8 @@ body, html {
 #game-container.right-handed #look-zone {
     right: auto;
     left: 0;
+    top: 72px;
+    height: calc(100% - 72px);
 }
 
 /* =========================================================
@@ -721,9 +749,8 @@ body, html {
 .glass-objective-card {
     position: absolute;
     top: var(--space-2);
-    left: 50%;
-    transform: translateX(-50%);
-    width: min(460px, 86vw);
+    left: var(--space-2);
+    max-width: min(340px, 35vw);
     padding: var(--space-1) var(--space-2);
     background: var(--ui-bg-glass);
     border: var(--ui-border-glass);
@@ -734,6 +761,7 @@ body, html {
     display: flex;
     flex-direction: column;
     gap: 4px;
+    z-index: 500;
 }
 
 .objective-header { display: flex; align-items: center; gap: 6px; }
@@ -771,29 +799,45 @@ body, html {
     right: var(--space-2);
     display: flex;
     align-items: center;
-    gap: var(--space-1);
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    max-width: calc(100vw - 24px);
+    gap: 6px;
     pointer-events: auto;
+    z-index: 500;
 }
 
 .hud-icon-btn {
-    min-width: 48px;
-    min-height: 48px;
-    width: 48px;
-    height: 48px;
+    min-width: 44px;
+    min-height: 44px;
+    width: 44px;
+    height: 44px;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 18px;
+    font-size: 17px;
     border-radius: var(--radius-md);
     background: var(--ui-bg-glass);
     border: var(--ui-border-glass);
     backdrop-filter: var(--ui-backdrop-blur);
     color: #fff;
     cursor: pointer;
+    touch-action: manipulation;
     transition: all 0.15s ease;
+    pointer-events: auto;
+    position: relative;
+    z-index: 501;
 }
 
-.hud-icon-btn:hover { transform: translateY(-1px); }
+.hud-icon-btn:hover {
+    transform: translateY(-2px);
+    border-color: #38bdf8;
+    box-shadow: 0 0 14px rgba(56, 189, 248, 0.4);
+}
+
+.hud-icon-btn:active {
+    transform: scale(0.92) !important;
+}
 
 .glass-drawer {
     position: absolute;
@@ -810,7 +854,7 @@ body, html {
     display: flex;
     flex-direction: column;
     gap: 6px;
-    z-index: 20;
+    z-index: 550;
 }
 
 .drawer-header {
@@ -936,11 +980,35 @@ body, html {
     50% { transform: scale(1.04); box-shadow: 0 0 35px rgba(56, 189, 248, 0.9); }
 }
 
-#touch-controls { position: absolute; width: 100%; height: 100%; pointer-events: none; }
-#joystick-zone { position: absolute; bottom: var(--space-4); left: var(--space-4); width: 120px; height: 120px; pointer-events: auto; }
+#touch-controls { 
+    position: absolute; 
+    top: 0;
+    left: 0;
+    width: 100%; 
+    height: 100%; 
+    pointer-events: none; 
+    z-index: 5;
+}
+#joystick-zone { 
+    position: absolute; 
+    bottom: var(--space-4); 
+    left: var(--space-4); 
+    width: 120px; 
+    height: 120px; 
+    pointer-events: auto; 
+    z-index: 20;
+}
 #joystick-base { position: relative; width: 100%; height: 100%; border-radius: 50%; background: rgba(15, 23, 42, 0.5); border: 2px solid rgba(56, 189, 248, 0.3); }
 #joystick-stick { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 44px; height: 44px; border-radius: 50%; background: #38bdf8; box-shadow: 0 0 15px rgba(56, 189, 248, 0.8); }
-#look-zone { position: absolute; top: 0; right: 0; width: 60%; height: 100%; pointer-events: auto; }
+#look-zone { 
+    position: absolute; 
+    top: 72px; 
+    right: 0; 
+    width: 60%; 
+    height: calc(100% - 72px); 
+    pointer-events: auto; 
+    z-index: 5;
+}
 
 /* Modals & Terminal */
 .modal-overlay {
@@ -949,26 +1017,44 @@ body, html {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(3, 7, 18, 0.85);
+    background: rgba(3, 7, 18, 0.88);
     backdrop-filter: var(--ui-backdrop-blur);
+    -webkit-backdrop-filter: var(--ui-backdrop-blur);
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 100;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 16px;
+    box-sizing: border-box;
+    z-index: 950;
     opacity: 1;
     transition: opacity 0.22s ease;
+    -webkit-overflow-scrolling: touch;
 }
 
-.modal-overlay.hidden { display: none !important; opacity: 0; }
+#main-menu {
+    z-index: 900;
+}
+
+.modal-overlay:not(#main-menu) {
+    z-index: 1000;
+}
+
+.modal-overlay.hidden { display: none !important; opacity: 0; pointer-events: none; }
 
 .glass-terminal, .glass-modal, .glass-card {
     background: var(--ui-bg-glass);
     border: var(--ui-border-glass);
     border-radius: var(--radius-lg);
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
-    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);
+    margin: auto;
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+    overflow-x: hidden;
     transform: scale(1);
     animation: overshootEnter 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    -webkit-overflow-scrolling: touch;
 }
 
 @keyframes overshootEnter {
@@ -1315,32 +1401,40 @@ button:active {
 
 /* Main Menu */
 .menu-container {
-    width: min(480px, 90vw);
-    padding: var(--space-4);
+    width: min(480px, 94vw);
+    max-height: min(92vh, 780px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 22px 24px;
     text-align: center;
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
 }
 
 .game-logo {
-    font-size: 26px;
+    font-size: 24px;
     font-weight: 900;
     color: var(--text-highlight);
     letter-spacing: 1px;
+    margin-bottom: 2px;
 }
 
 .game-sublogo {
-    font-size: 11px;
+    font-size: 10.5px;
     font-weight: 700;
     color: #f59e0b;
-    margin-bottom: var(--space-3);
+    margin-bottom: var(--space-2);
 }
 
 .seed-input-container {
-    margin-bottom: var(--space-3);
+    margin-bottom: var(--space-2);
     text-align: left;
 }
 
 .seed-input-container label {
-    font-size: 11px;
+    font-size: 10.5px;
     font-weight: 700;
     color: #94a3b8;
 }
@@ -1366,8 +1460,8 @@ button:active {
 }
 
 .seed-btn {
-    min-height: 44px;
-    padding: 8px var(--space-2);
+    min-height: 40px;
+    padding: 6px var(--space-2);
     font-size: 11px;
     font-weight: 700;
     border-radius: var(--radius-sm);
@@ -1384,24 +1478,38 @@ button:active {
 .menu-actions {
     display: flex;
     flex-direction: column;
-    gap: var(--space-1);
+    gap: 7px;
 }
 
 .menu-btn {
-    padding: 12px var(--space-2);
-    font-size: 12px;
+    padding: 9px var(--space-2);
+    min-height: 40px;
+    font-size: 11.5px;
     font-weight: 800;
     border-radius: var(--radius-sm);
     border: 1px solid rgba(255, 255, 255, 0.15);
-    background: rgba(30, 41, 59, 0.8);
+    background: rgba(30, 41, 59, 0.85);
     color: #fff;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    touch-action: manipulation;
+    transition: background 0.15s ease, transform 0.1s ease, border-color 0.15s ease;
+}
+
+.menu-btn:hover:not(.disabled) {
+    background: rgba(51, 65, 85, 0.95);
+    border-color: #38bdf8;
+    transform: translateY(-1px);
 }
 
 .menu-btn.primary { background: linear-gradient(135deg, #15803d, #22c55e); border-color: #86efac; }
+.menu-btn.primary:hover { background: linear-gradient(135deg, #16a34a, #4ade80); }
 .menu-btn.danger { background: rgba(239, 68, 68, 0.2); border-color: #ef4444; color: #f87171; }
+.menu-btn.danger:hover { background: rgba(239, 68, 68, 0.35); }
 .menu-btn.disabled { opacity: 0.4; pointer-events: none; }
-.menu-sublabel { font-size: 10px; color: #64748b; margin-top: -4px; margin-bottom: 4px; }
+.menu-sublabel { font-size: 10px; color: #64748b; margin-top: -3px; margin-bottom: 3px; }
 
 /* Table Styles */
 .tree-split-table {

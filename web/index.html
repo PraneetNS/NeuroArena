@@ -329,27 +329,101 @@
                         <input type="range" id="setting-master-vol" min="0" max="100" value="85" class="cyber-slider">
                     </div>
                     <div class="setting-row">
+                        <label>🌌 Ambient Drone Volume:</label>
+                        <input type="range" id="setting-ambient-vol" min="0" max="100" value="80" class="cyber-slider">
+                    </div>
+                    <div class="setting-row">
                         <label>⚡ SFX Synthesis Volume:</label>
                         <input type="range" id="setting-sfx-vol" min="0" max="100" value="90" class="cyber-slider">
+                    </div>
+                    <div class="setting-row">
+                        <label>🔔 UI Audio Volume:</label>
+                        <input type="range" id="setting-ui-vol" min="0" max="100" value="85" class="cyber-slider">
+                    </div>
+                    <div class="setting-row">
+                        <label>🎵 Procedural Music Volume:</label>
+                        <input type="range" id="setting-music-vol" min="0" max="100" value="75" class="cyber-slider">
                     </div>
                     <div class="setting-row">
                         <label>🔇 Master Audio Mute:</label>
                         <button id="btn-toggle-mute" class="pill-btn">UNMUTED</button>
                     </div>
+                    <div class="setting-row" style="margin-top:8px; border-top:1px solid rgba(255,255,255,0.08); padding-top:8px;">
+                        <label>📊 Spatial Voice Budget (Capped Voice Pool):</label>
+                        <div class="btn-group" id="audio-voice-cap-group">
+                            <button class="pill-btn" data-voices="4">4 Low (Mobile)</button>
+                            <button class="pill-btn active" data-voices="8">8 Med (Balanced)</button>
+                            <button class="pill-btn" data-voices="16">16 High (Desktop)</button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="settings-tab-pane hidden" id="tab-graphics">
-                    <div class="setting-row">
-                        <label>📱 Graphics Preset:</label>
-                        <div class="btn-group">
-                            <button class="gfx-preset-btn pill-btn" data-preset="low">Low (30 FPS)</button>
-                            <button class="gfx-preset-btn pill-btn" data-preset="med">Medium</button>
-                            <button class="gfx-preset-btn pill-btn active" data-preset="high">High (60 FPS)</button>
+                    <!-- Hardware Tier Auto-Detection Info Banner -->
+                    <div id="gfx-autodetect-banner" class="stat-card" style="padding:10px 14px; margin-bottom:12px; background:rgba(56,189,248,0.12); border:1.5px solid #38bdf8; border-radius:8px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="color:#38bdf8; font-weight:800; font-size:11px;">✨ HARDWARE TIER AUTO-DETECTION</span>
+                            <span id="gfx-detected-tier-badge" style="font-size:10px; color:#facc15; font-weight:bold; background:rgba(245,158,11,0.2); padding:2px 8px; border-radius:4px; border:1px solid #facc15;">Tier 2: Mid-Range (4-6GB RAM)</span>
+                        </div>
+                        <div id="gfx-detected-specs" style="font-size:10.5px; color:#cbd5e1; margin-top:4px;">
+                            Detected Cores: <b>8 Cores</b> | Device Memory: <b>8GB</b> | Resolution: <b>1080p</b>
                         </div>
                     </div>
+
+                    <!-- Quality Preset Selector (URP Quality Levels) -->
                     <div class="setting-row">
-                        <label>🎆 Particle Density Limit:</label>
-                        <span id="setting-particle-label" class="cyan-text"><b>80 Particles / Burst</b></span>
+                        <label>🎨 Overall Quality Preset:</label>
+                        <div class="btn-group" id="gfx-presets-group">
+                            <button class="gfx-preset-btn pill-btn" data-preset="low">Low (Tier 1 / 30 FPS)</button>
+                            <button class="gfx-preset-btn pill-btn" data-preset="med">Medium (Tier 2)</button>
+                            <button class="gfx-preset-btn pill-btn active" data-preset="high">High (Tier 3 / Ultra)</button>
+                        </div>
+                    </div>
+
+                    <!-- Advanced Toggle: Shadow Quality -->
+                    <div class="setting-row">
+                        <label>🌑 Dynamic Shadow Quality:</label>
+                        <div class="btn-group" id="gfx-shadows-group">
+                            <button class="gfx-shadow-btn pill-btn" data-shadow="off">Off</button>
+                            <button class="gfx-shadow-btn pill-btn" data-shadow="low">Low (512 map)</button>
+                            <button class="gfx-shadow-btn pill-btn active" data-shadow="high">High (Soft PCF)</button>
+                        </div>
+                    </div>
+
+                    <!-- Advanced Toggle: Particle Density Limit (Stage 25 Pool Caps) -->
+                    <div class="setting-row">
+                        <label>🎆 Particle Density (Juice Burst Cap):</label>
+                        <div class="btn-group" id="gfx-particles-group">
+                            <button class="gfx-particle-btn pill-btn" data-cap="25">25 (Battery Saver)</button>
+                            <button class="gfx-particle-btn pill-btn" data-cap="80">80 (Balanced)</button>
+                            <button class="gfx-particle-btn pill-btn active" data-cap="150">150 (Ultra Juice)</button>
+                        </div>
+                    </div>
+
+                    <!-- Advanced Toggle: Target Framerate Cap -->
+                    <div class="setting-row">
+                        <label>⏱️ Target Frame Rate Cap:</label>
+                        <div class="btn-group" id="gfx-fps-group">
+                            <button class="gfx-fps-btn pill-btn" data-fps="30">30 FPS (Low / Saver)</button>
+                            <button class="gfx-fps-btn pill-btn active" data-fps="60">60 FPS (Smooth)</button>
+                            <button class="gfx-fps-btn pill-btn" data-fps="120">120 FPS (Uncapped)</button>
+                        </div>
+                    </div>
+
+                    <!-- Advanced Toggle: Render Resolution Scale -->
+                    <div class="setting-row">
+                        <label>🔍 Render Resolution Scale:</label>
+                        <div class="btn-group" id="gfx-scale-group">
+                            <button class="gfx-scale-btn pill-btn" data-scale="0.75">75% (Performance)</button>
+                            <button class="gfx-scale-btn pill-btn active" data-scale="1.0">100% (Native)</button>
+                            <button class="gfx-scale-btn pill-btn" data-scale="1.25">125% (Hi-DPI)</button>
+                        </div>
+                    </div>
+
+                    <!-- Advanced Toggle: Bloom & Post-Processing Glow -->
+                    <div class="setting-row">
+                        <label>✨ Post-Processing & Cyber Glow:</label>
+                        <button id="btn-toggle-bloom" class="pill-btn active">ENABLED (HDR Emissive)</button>
                     </div>
                 </div>
 
@@ -654,6 +728,78 @@
                 <div class="card-actions-row">
                     <button id="btn-download-card" class="action-btn glow-cyan">💾 Download Image Card</button>
                     <button id="btn-copy-card" class="action-btn glow-amber">📋 Copy Card Data</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ⚖️ BEFORE / AFTER TRAINING CONVERGENCE COMPARISON MODAL -->
+        <div id="before-after-modal" class="modal-overlay hidden" style="z-index: 9600;">
+            <div class="glass-modal before-after-container" style="max-width:880px; width:94%;">
+                <div class="modal-header">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span style="font-size:1.4rem;">⚖️</span>
+                        <div>
+                            <h2 style="font-size:1.15rem; color:#facc15; margin:0;">BEFORE vs AFTER TRAINING CONVERGENCE</h2>
+                            <div id="before-after-sub" style="font-size:0.75rem; color:#94a3b8;">Literal Parameter Deltas & Spatial Relocation Inspector</div>
+                        </div>
+                    </div>
+                    <button id="btn-close-before-after" class="close-btn">✕</button>
+                </div>
+
+                <div style="padding:16px 20px;">
+                    <!-- Biomes 1-5: Continuous Regression / Decision Boundary Overlay -->
+                    <div id="before-after-continuous-view">
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px;">
+                            <div class="stat-card" style="border:1.5px solid #f43f5e; background:rgba(244,63,94,0.08); padding:12px;">
+                                <div style="color:#f43f5e; font-weight:800; font-size:0.82rem; margin-bottom:4px;">🔴 BEFORE: INITIAL UNTRAINED STATE (EPOCH 0)</div>
+                                <div id="ba-summary-before" style="font-family:var(--font-display-mono); font-size:0.78rem; color:#cbd5e1; line-height:1.5;">
+                                    Weights: <b>w = 0.00, b = 0.00</b><br>
+                                    Initial Loss: <b style="color:#f87171;">J = 4.8200</b><br>
+                                    Boundary: Horizontal Baseline Arbitrary Guess
+                                </div>
+                            </div>
+                            <div class="stat-card" style="border:1.5px solid #4ade80; background:rgba(74,222,128,0.08); padding:12px;">
+                                <div style="color:#4ade80; font-weight:800; font-size:0.82rem; margin-bottom:4px;">🟢 AFTER: CONVERGED OPTIMAL STATE (FINAL EPOCH)</div>
+                                <div id="ba-summary-after" style="font-family:var(--font-display-mono); font-size:0.78rem; color:#cbd5e1; line-height:1.5;">
+                                    Weights: <b>w = 2.45, b = 1.15</b><br>
+                                    Final Loss: <b style="color:#4ade80;">J = 0.0021 (99.9% reduction)</b><br>
+                                    Boundary: Fitted Empirical Least-Squares Hyperplane
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="background:rgba(2,6,23,0.8); border:1px solid rgba(56,189,248,0.25); border-radius:8px; padding:10px; text-align:center; margin-bottom:12px;">
+                            <canvas id="canvas-before-after" width="800" height="260" style="width:100%; height:auto; max-height:260px; border-radius:6px; background:#04070c;"></canvas>
+                        </div>
+
+                        <div id="ba-table-container"></div>
+                    </div>
+
+                    <!-- Biome 6: Word Embeddings Nearest Neighbor Relocation View -->
+                    <div id="before-after-embeddings-view" class="hidden">
+                        <div style="background:rgba(129,140,248,0.1); border:1px solid #818cf8; border-radius:8px; padding:10px 14px; margin-bottom:14px; font-size:0.82rem; color:#e0e7ff; line-height:1.45;">
+                            🌌 <b>SPATIAL EMBEDDING RELOCATION:</b> At <b>Epoch 0</b>, words were scattered at random spatial angles with meaningless nearest neighbors (cosine similarity ≈ 0). Under <b>PPMI Co-occurrence Relaxation</b>, co-occurring terms were pulled across continuous latent space to form tight semantic constellations!
+                        </div>
+
+                        <div style="max-height:320px; overflow-y:auto; border:1px solid rgba(255,255,255,0.1); border-radius:6px;">
+                            <table class="tree-split-table" style="width:100%; font-size:11px;">
+                                <thead style="position:sticky; top:0; background:rgba(15,23,42,0.98); z-index:2;">
+                                    <tr>
+                                        <th style="width:18%;">Target Word</th>
+                                        <th style="width:36%; color:#f87171;">🔴 Epoch 0 (Untrained Random)</th>
+                                        <th style="width:46%; color:#4ade80;">🟢 Final Epoch (PPMI Converged)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ba-embeddings-table-body">
+                                    <!-- Populated dynamically with side-by-side nearest neighbor rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer" style="padding:10px 20px; display:flex; justify-content:flex-end; gap:10px; background:rgba(15,23,42,0.95); border-top:1px solid rgba(56,189,248,0.2);">
+                    <button id="btn-close-before-after-footer" class="action-btn glow-cyan">✕ Return to Terminal</button>
                 </div>
             </div>
         </div>
@@ -1038,8 +1184,8 @@
 
                         <div class="terminal-footer">
                             <button id="btn-train-weapon" class="action-btn glow-cyan">🧠 TRAIN / RETRIEVE</button>
-                            <button id="btn-grand-prix" class="action-btn glow-amber">🏁 4-WAY OPTIMIZER GRAND
-                                PRIX</button>
+                            <button id="btn-grand-prix" class="action-btn glow-amber">🏁 4-WAY OPTIMIZER GRAND PRIX</button>
+                            <button id="btn-view-before-after" class="action-btn glow-amber">⚖️ Before / After</button>
                             <button id="btn-view-replay-card" class="action-btn">🎴 Stat Card</button>
                             <button id="btn-return-world" class="action-btn">✕ Return</button>
                         </div>
