@@ -175,14 +175,26 @@ namespace NeuroArena.ML
 
         /// <summary>
         /// Simulates Top-K Nearest Neighbor Vector Retrieval (RAG Foundation).
+        /// If the token has never been collected in the model's vocabulary satchel, returns an honest <UNK> response.
         /// </summary>
         public static List<RetrievalResult> RetrieveTopK(string queryWord, int k = 5)
         {
             var results = new List<RetrievalResult>();
             if (cachedEmbeddings == null) ComputeAllEmbeddings();
 
-            queryWord = queryWord.Trim().ToLower();
-            if (!cachedEmbeddings.ContainsKey(queryWord)) queryWord = "frost";
+            queryWord = (queryWord ?? "").Trim().ToLower();
+            if (!cachedEmbeddings.ContainsKey(queryWord))
+            {
+                // Honest Unknown Token (<UNK>) Rejection
+                results.Add(new RetrievalResult
+                {
+                    word = $"<UNK>({queryWord})",
+                    category = "Out-Of-Vocabulary",
+                    cosineSimilarity = 0f,
+                    rank = 1
+                });
+                return results;
+            }
 
             float[] qVec = cachedEmbeddings[queryWord];
 

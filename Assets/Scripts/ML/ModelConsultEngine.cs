@@ -6,20 +6,23 @@ using NeuroArena.Data;
 namespace NeuroArena.ML
 {
     /// <summary>
-    /// Result structure for Stage 29 Model Consult / Interrogation query.
+    /// Result structure for Stage 29 & Stage 76 Model Consult / Interrogation query.
     /// Contains genuine mathematical predictions, empirical domain boundary checks,
-    /// nearest-neighbor distance metrics, and educational Extrapolation Error diagnoses.
+    /// nearest-neighbor distance metrics, Out-of-Vocabulary (<UNK>) detection,
+    /// and educational Extrapolation Error diagnoses.
     /// </summary>
     [Serializable]
     public struct ConsultInferenceResult
     {
         public float queryX;
         public float queryX2;
+        public string queryToken;
         public float predictedValue;
         public float predictedProbability;
         public int predictedClass;
 
         public bool isExtrapolation;
+        public bool isOutOfVocabulary;
         public float distanceToNearestSample;
         public float minDomainX;
         public float maxDomainX;
@@ -32,14 +35,15 @@ namespace NeuroArena.ML
     }
 
     /// <summary>
-    /// Pure C# Model Interrogation & Extrapolation Detection Engine.
+    /// Pure C# Model Interrogation, Extrapolation Detection, and Vocabulary Consultation Engine.
     /// Computes actual Euclidean distance to the nearest empirical training point and evaluates
-    /// mathematical formulas across linear, logistic, polynomial, and neural architectures.
+    /// mathematical formulas across linear, logistic, polynomial, and semantic embedding architectures.
+    /// Reinforces the Honesty Principle: The model only knows what the player actually gathered.
     /// </summary>
     public static class ModelConsultEngine
     {
         /// <summary>
-        /// Runs genuine mathematical inference on an arbitrary input point and determines if it constitutes an Extrapolation Error.
+        /// Runs genuine mathematical inference on an arbitrary numeric input point and determines if it constitutes an Extrapolation Error.
         /// </summary>
         public static ConsultInferenceResult ConsultModel(TrainedModelRecord model, float queryX, float queryX2 = 0f)
         {
@@ -47,6 +51,8 @@ namespace NeuroArena.ML
             {
                 queryX = queryX,
                 queryX2 = queryX2,
+                queryToken = queryX.ToString("F2"),
+                isOutOfVocabulary = false,
                 minDomainX = model.minX,
                 maxDomainX = model.maxX,
                 meanX = model.meanX,
@@ -135,6 +141,63 @@ namespace NeuroArena.ML
                 result.explanationText = $"⚠️ <b>EXTRAPOLATION ERROR DETECTED:</b>\n" +
                     $"This input (X = {queryX:F2}) is far outside the empirical domain [{model.minX:F1}, {model.maxX:F1}] the model was trained on (Nearest sample distance Δ = {minDistance:F2} > 1.35σ).\n" +
                     $"Linear, polynomial, and neural models calculate continuous equations unconditionally, confidently projecting decision boundaries and slopes into empty uncharted territory without any empirical data support.";
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Stage 76: Consults the model with a semantic word or concept token.
+        /// If the token was never gathered in the Data Satchel, it returns an honest <UNK> Out-of-Vocabulary response.
+        /// </summary>
+        public static ConsultInferenceResult ConsultSemanticToken(string queryToken, IReadOnlyCollection<string> customVocabulary = null)
+        {
+            queryToken = (queryToken ?? "").Trim().ToLower();
+            int vocabSize = customVocabulary != null ? customVocabulary.Count : (MLInventory.Instance != null ? MLInventory.Instance.VocabularySize : 0);
+            
+            bool isKnown = false;
+            if (customVocabulary != null)
+            {
+                foreach (string v in customVocabulary)
+                {
+                    if (string.Equals(v, queryToken, StringComparison.OrdinalIgnoreCase))
+                    {
+                        isKnown = true;
+                        break;
+                    }
+                }
+            }
+            else if (MLInventory.Instance != null)
+            {
+                isKnown = MLInventory.Instance.HasVocabularyToken(queryToken);
+            }
+
+            ConsultInferenceResult result = new ConsultInferenceResult
+            {
+                queryToken = queryToken,
+                isOutOfVocabulary = !isKnown,
+                isExtrapolation = !isKnown
+            };
+
+            if (!isKnown)
+            {
+                // Honest Out-Of-Vocabulary (<UNK>) Response
+                result.predictedValue = 0f;
+                result.predictedProbability = 0f;
+                result.confidenceLevel = "0% [HONEST REFUSAL :: OUT-OF-VOCABULARY TOKEN]";
+                result.mathEquationUsed = $"<UNK>('{queryToken}') ➔ Undefined Token Embedding";
+                result.explanationText = $"❌ <b>UNKNOWN TOKEN (<UNK>):</b> The concept '<b>{queryToken}</b>' has never been collected in your Data Satchel (Active Vocabulary Size: {vocabSize} unique words).\n" +
+                    $"Because your model was never exposed to this token during exploration, its embedding vector is completely undefined.\n" +
+                    $"In accordance with the Stage 36/76 Honesty Principle, the model honestly refuses to hallucinate fake answers or predictions for uncollected concepts.";
+            }
+            else
+            {
+                // In-Vocabulary Valid Concept
+                result.confidenceLevel = "HIGH CONFIDENCE :: IN-VOCABULARY TOKEN";
+                result.predictedValue = 1.0f;
+                result.predictedProbability = 0.95f;
+                result.mathEquationUsed = $"E('{queryToken}') ∈ ℝ^{vocabSize} ➔ Valid Vocabulary Vector";
+                result.explanationText = $"✓ <b>IN-VOCABULARY TOKEN:</b> The concept '<b>{queryToken}</b>' was empirically gathered in your Data Satchel (Vocabulary Size: {vocabSize} words). Its semantic vector representation is trained and grounded in your collected dataset.";
             }
 
             return result;
