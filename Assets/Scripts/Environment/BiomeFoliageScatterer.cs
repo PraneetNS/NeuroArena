@@ -1,26 +1,40 @@
 using System.Collections.Generic;
 using UnityEngine;
+using NeuroArena.Data;
+using NeuroArena.Core;
 
 namespace NeuroArena.Environment
 {
     /// <summary>
-    /// Scatters stylized low-poly nature props (trees, boulders, spore clusters, crystal shards)
-    /// across the active biome terrain according to Stage 18 color themes.
+    /// Master Procedural Biome Scatter System.
+    /// Uses Bridson's 2D Poisson-disc sampling seeded by the Stage 13 / playthrough world seed
+    /// to scatter stylized low-poly trees, boulders, and micro ground clutter across 2-4 km² biomes.
+    /// Spawns iconic hand-crafted landmark structures (Ruins, Monolith Clusters, Research Outposts).
+    /// Integrates Stage 86 Spatial Culling & Object Pooling with Stage 45 Device-Tier density scaling.
     /// </summary>
     public class BiomeFoliageScatterer : MonoBehaviour
     {
-        [Header("Foliage Density")]
-        [SerializeField] private int treeCount = 28;
-        [SerializeField] private int rockCount = 35;
-        [SerializeField] private int crystalClusterCount = 14;
+        [Header("World Seed Settings")]
+        [SerializeField] private string defaultWorldSeed = "NEURO-8842";
+        [SerializeField] private bool useSaveDataSeed = true;
 
         [Header("Exclusion Zones")]
-        [SerializeField] private float playerSpawnClearRadius = 8.0f;
+        [SerializeField] private float playerSpawnClearRadius = 10.0f;
         [SerializeField] private Vector3 labStationPos = new Vector3(14f, 0f, 14f);
-        [SerializeField] private float labStationClearRadius = 6.0f;
+        [SerializeField] private float labStationClearRadius = 8.5f;
+
+        [Header("Landmark Spawning")]
+        [SerializeField] private bool spawnLandmarks = true;
 
         private GameObject currentFoliageRoot;
+        private string activeSeed;
 
+        public string ActiveSeed => activeSeed;
+
+        /// <summary>
+        /// Populates the complete biome environment (Landmarks, Trees, Rocks, Ground Clutter)
+        /// across the expansive 2-4 km² terrain using Poisson-disc sampling and spatial culling.
+        /// </summary>
         public void PopulateBiomeEnvironment(int biomeIndex, StylizedBiomeTerrain terrain)
         {
             if (currentFoliageRoot != null)
@@ -28,183 +42,353 @@ namespace NeuroArena.Environment
                 Destroy(currentFoliageRoot);
             }
 
-            currentFoliageRoot = new GameObject($"BiomeFoliage_Biome_{biomeIndex}");
+            currentFoliageRoot = new GameObject($"BiomeEnvironment_Biome_{biomeIndex + 1}");
             currentFoliageRoot.transform.SetParent(transform, false);
 
-            float halfSize = terrain != null ? terrain.TerrainSize * 0.45f : 40f;
-
-            // 1. Scatter Low-Poly Trees
-            StylizedLowPolyMeshes.TreeStyle style = GetTreeStyleForBiome(biomeIndex);
-            Color[] treeColors = GetTreePalette(biomeIndex);
-
-            for (int i = 0; i < treeCount; i++)
+            // Ensure Spatial Culling Manager is initialized and cleared
+            SpatialCullingManager culling = SpatialCullingManager.Instance;
+            if (culling == null)
             {
-                Vector2 samplePos = GetRandomScatterPosition(halfSize);
-                if (IsPositionExcluded(samplePos)) continue;
+                culling = gameObject.AddComponent<SpatialCullingManager>();
+            }
+            culling.Clear();
+            culling.ApplyDeviceTierSettings();
 
-                float y = terrain != null ? terrain.GetHeightAt(samplePos.x, samplePos.y) : 0f;
-                Vector3 worldPos = new Vector3(samplePos.x, y, samplePos.y);
+            activeSeed = ResolveWorldSeed();
+            BiomeScatterConfig config = BiomeScatterConfig.GetPreset(biomeIndex);
+            float domainRadius = terrain != null ? terrain.TerrainSize * 0.44f : 350f;
 
-                GameObject tree = StylizedLowPolyMeshes.CreateLowPolyTree(
-                    style, i * 73 + 11, treeColors[0], treeColors[1], treeColors[2]);
-                tree.transform.SetParent(currentFoliageRoot.transform, false);
-                tree.transform.position = worldPos;
-                tree.transform.rotation = Quaternion.Euler(0f, Random.Range(0f, 360f), 0f);
-                float s = Random.Range(0.85f, 1.35f);
-                tree.transform.localScale = new Vector3(s, s, s);
+            // Stage 45 Device-Tier Density & Distance Scaling
+            float densityMultiplier = GetDeviceTierDensityMultiplier();
+
+            // 1. Setup Base Exclusion Zones (Player Spawn & Lab Station)
+            List<PoissonDiscSampler.ExclusionZone> exclusionZones = new List<PoissonDiscSampler.ExclusionZone>
+            {
+                new PoissonDiscSampler.ExclusionZone(Vector2.zero, playerSpawnClearRadius),
+                new PoissonDiscSampler.ExclusionZone(new Vector2(labStationPos.x, labStationPos.z), labStationClearRadius)
+            };
+
+            // 2. Spawn Landmark Structures & Register Landmark Footprint Exclusions
+            if (spawnLandmarks)
+            {
+                Transform landmarkRoot = new GameObject("Landmarks").transform;
+                landmarkRoot.SetParent(currentFoliageRoot.transform, false);
+
+                List<PoissonDiscSampler.ExclusionZone> landmarkExclusions = 
+                    BiomeLandmarkGenerator.SpawnBiomeLandmarks(biomeIndex, landmarkRoot, terrain);
+                
+                exclusionZones.AddRange(landmarkExclusions);
             }
 
-            // 2. Scatter Low-Poly Boulders & Rocks
-            Color rockColor = GetRockColor(biomeIndex);
-            for (int i = 0; i < rockCount; i++)
+            // 3. Layer 1: Scatter Stylized Trees / Primary Flora via Poisson-Disc Sampling
+            int treeCountCap = Mathf.RoundToInt(config.treeLayer.maxCount * densityMultiplier * 2.8f);
+            int treeSeed = PoissonDiscSampler.HashSeed(activeSeed, biomeIndex, 101);
+            List<Vector2> treePositions = PoissonDiscSampler.SampleRadial(
+                config.treeLayer.minDistance,
+                domainRadius,
+                treeSeed,
+                exclusionZones,
+                k: 30,
+                maxPoints: treeCountCap
+            );
+
+            Transform treesRoot = new GameObject("Flora_Trees").transform;
+            treesRoot.SetParent(currentFoliageRoot.transform, false);
+
+            for (int i = 0; i < treePositions.Count; i++)
             {
-                Vector2 samplePos = GetRandomScatterPosition(halfSize);
-                if (IsPositionExcluded(samplePos)) continue;
+                Vector2 pos2D = treePositions[i];
+                float y = terrain != null ? terrain.GetHeightAt(pos2D.x, pos2D.y) : 0f;
+                Vector3 worldPos = new Vector3(pos2D.x, y, pos2D.y);
 
-                float y = terrain != null ? terrain.GetHeightAt(samplePos.x, samplePos.y) : 0f;
-                Vector3 worldPos = new Vector3(samplePos.x, y, samplePos.y);
-
-                GameObject rock = new GameObject($"LowPolyBoulder_{i + 1}");
-                rock.transform.SetParent(currentFoliageRoot.transform, false);
-                rock.transform.position = worldPos;
-                rock.transform.rotation = Quaternion.Euler(Random.Range(-10f, 10f), Random.Range(0f, 360f), Random.Range(-10f, 10f));
-
-                Vector3 rockScale = new Vector3(
-                    Random.Range(1.2f, 2.8f),
-                    Random.Range(1.0f, 2.2f),
-                    Random.Range(1.2f, 2.8f)
+                int itemSeed = treeSeed + i * 37;
+                GameObject tree = StylizedLowPolyMeshes.CreateLowPolyTree(
+                    config.treeStyle,
+                    itemSeed,
+                    config.trunkColor,
+                    config.foliageColor,
+                    config.accentColor
                 );
 
-                MeshFilter mf = rock.AddComponent<MeshFilter>();
-                MeshRenderer mr = rock.AddComponent<MeshRenderer>();
-                MeshCollider mc = rock.AddComponent<MeshCollider>();
+                tree.transform.SetParent(treesRoot, false);
+                tree.transform.position = worldPos;
 
-                Mesh rockMesh = StylizedLowPolyMeshes.CreateLowPolyRockMesh(i * 127 + 5, rockScale);
-                mf.sharedMesh = rockMesh;
-                mc.sharedMesh = rockMesh;
+                float yaw = (itemSeed % 360);
+                tree.transform.rotation = Quaternion.Euler(0f, yaw, 0f);
 
-                Shader shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
-                Material mat = new Material(shader);
-                mat.color = rockColor * Random.Range(0.88f, 1.12f);
-                mr.sharedMaterial = mat;
+                float scaleLerp = ((itemSeed % 100) / 100f);
+                float s = Mathf.Lerp(config.treeLayer.scaleRange.x, config.treeLayer.scaleRange.y, scaleLerp);
+                tree.transform.localScale = new Vector3(s, s, s);
+
+                // Register with Stage 86 Spatial Culling
+                culling.RegisterObject(tree);
             }
 
-            // 3. Scatter Energy Formations / Crystals
-            Color crystalColor = treeColors[2];
-            for (int i = 0; i < crystalClusterCount; i++)
+            // 4. Layer 2: Scatter Low-Poly Boulders & Rocks (Avoiding Trees)
+            int rockCountCap = Mathf.RoundToInt(config.rockLayer.maxCount * densityMultiplier * 2.8f);
+            int rockSeed = PoissonDiscSampler.HashSeed(activeSeed, biomeIndex, 202);
+            List<Vector2> rockPositions = PoissonDiscSampler.SampleRadial(
+                config.rockLayer.minDistance,
+                domainRadius,
+                rockSeed,
+                exclusionZones,
+                existingObstacles: treePositions,
+                obstacleClearance: config.rockLayer.obstacleClearance,
+                k: 30,
+                maxPoints: rockCountCap
+            );
+
+            Transform rocksRoot = new GameObject("Geology_Rocks").transform;
+            rocksRoot.SetParent(currentFoliageRoot.transform, false);
+
+            for (int i = 0; i < rockPositions.Count; i++)
             {
-                Vector2 samplePos = GetRandomScatterPosition(halfSize);
-                if (IsPositionExcluded(samplePos)) continue;
+                Vector2 pos2D = rockPositions[i];
+                float y = terrain != null ? terrain.GetHeightAt(pos2D.x, pos2D.y) : 0f;
+                Vector3 worldPos = new Vector3(pos2D.x, y, pos2D.y);
 
-                float y = terrain != null ? terrain.GetHeightAt(samplePos.x, samplePos.y) : 0f;
-                Vector3 worldPos = new Vector3(samplePos.x, y + 0.35f, samplePos.y);
+                int itemSeed = rockSeed + i * 53;
+                GameObject rock = CreateLowPolyRockObject(i + 1, itemSeed, config.rockColor, config.rockLayer.scaleRange);
+                rock.transform.SetParent(rocksRoot, false);
+                rock.transform.position = worldPos;
 
-                GameObject crystal = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                crystal.name = $"BiomeCrystalNode_{i + 1}";
-                crystal.transform.SetParent(currentFoliageRoot.transform, false);
-                crystal.transform.position = worldPos;
-                crystal.transform.rotation = Quaternion.Euler(Random.Range(15f, 35f), Random.Range(0f, 360f), Random.Range(10f, 25f));
-                crystal.transform.localScale = new Vector3(0.45f, Random.Range(1.5f, 3.2f), 0.45f);
+                // Register with Stage 86 Spatial Culling
+                culling.RegisterObject(rock);
+            }
 
-                Renderer r = crystal.GetComponent<Renderer>();
-                if (r != null)
+            // 5. Layer 3: Scatter Micro Ground Clutter (Shrubs, Crystals, Spore Tufts, Ice Spikes)
+            List<Vector2> combinedObstacles = new List<Vector2>(treePositions);
+            combinedObstacles.AddRange(rockPositions);
+
+            int clutterCountCap = Mathf.RoundToInt(config.clutterLayer.maxCount * densityMultiplier * 3.2f);
+            int clutterSeed = PoissonDiscSampler.HashSeed(activeSeed, biomeIndex, 303);
+            List<Vector2> clutterPositions = PoissonDiscSampler.SampleRadial(
+                config.clutterLayer.minDistance,
+                domainRadius,
+                clutterSeed,
+                exclusionZones,
+                existingObstacles: combinedObstacles,
+                obstacleClearance: config.clutterLayer.obstacleClearance,
+                k: 30,
+                maxPoints: clutterCountCap
+            );
+
+            Transform clutterRoot = new GameObject("Ground_Clutter").transform;
+            clutterRoot.SetParent(currentFoliageRoot.transform, false);
+
+            for (int i = 0; i < clutterPositions.Count; i++)
+            {
+                Vector2 pos2D = clutterPositions[i];
+                float y = terrain != null ? terrain.GetHeightAt(pos2D.x, pos2D.y) : 0f;
+                Vector3 worldPos = new Vector3(pos2D.x, y, pos2D.y);
+
+                int itemSeed = clutterSeed + i * 19;
+                GroundClutterType clutterType = (i % 2 == 0) ? config.primaryClutterType : config.secondaryClutterType;
+
+                GameObject clutter = CreateGroundClutterObject(clutterType, itemSeed, config);
+                clutter.transform.SetParent(clutterRoot, false);
+                clutter.transform.position = worldPos;
+
+                float scaleLerp = ((itemSeed % 100) / 100f);
+                float s = Mathf.Lerp(config.clutterLayer.scaleRange.x, config.clutterLayer.scaleRange.y, scaleLerp);
+                clutter.transform.localScale = Vector3.one * s;
+
+                // Register with Stage 86 Spatial Culling
+                culling.RegisterObject(clutter);
+            }
+
+            culling.ForceRefreshCulling();
+
+            Debug.Log($"[BiomeFoliageScatterer] Generated Biome {biomeIndex + 1} ({config.biomeName}) on {terrain?.PlayableAreaKm2:F2} km² Expanse (Tier: {DeviceTierManager.Instance?.DetectedTier}): {treePositions.Count} Trees, {rockPositions.Count} Rocks, {clutterPositions.Count} Clutter items (Total Cullable: {culling.TotalRegisteredObjects})!");
+        }
+
+        private float GetDeviceTierDensityMultiplier()
+        {
+            if (DeviceTierManager.Instance != null)
+            {
+                switch (DeviceTierManager.Instance.DetectedTier)
                 {
-                    Shader s = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
-                    Material mat = new Material(s);
-                    mat.color = crystalColor;
-                    mat.EnableKeyword("_EMISSION");
-                    mat.SetColor("_EmissionColor", crystalColor * 1.8f);
-                    r.sharedMaterial = mat;
+                    case HardwareTier.LowEnd_2GB:
+                        return 0.50f; // Stage 45: 50% density on low-end
+                    case HardwareTier.MidRange_4to6GB:
+                        return 1.00f;
+                    case HardwareTier.Flagship_8GBPlus:
+                        return 1.35f;
                 }
             }
+            return 1.0f;
         }
 
-        private Vector2 GetRandomScatterPosition(float halfSize)
+        private string ResolveWorldSeed()
         {
-            float r = Random.Range(6.0f, halfSize);
-            float theta = Random.Range(0f, Mathf.PI * 2f);
-            return new Vector2(Mathf.Cos(theta) * r, Mathf.Sin(theta) * r);
-        }
-
-        private bool IsPositionExcluded(Vector2 pos)
-        {
-            if (pos.magnitude < playerSpawnClearRadius) return true;
-            if (Vector2.Distance(pos, new Vector2(labStationPos.x, labStationPos.z)) < labStationClearRadius) return true;
-            return false;
-        }
-
-        private StylizedLowPolyMeshes.TreeStyle GetTreeStyleForBiome(int biomeIndex)
-        {
-            switch (biomeIndex)
+            if (useSaveDataSeed && SaveManager.Instance != null && SaveManager.Instance.CurrentSaveData != null)
             {
-                case 0: return StylizedLowPolyMeshes.TreeStyle.ConiferPine;
-                case 1: return StylizedLowPolyMeshes.TreeStyle.SporeMushroom;
-                case 2: return StylizedLowPolyMeshes.TreeStyle.ConiferPine; // Frosted Pines
-                case 3: return StylizedLowPolyMeshes.TreeStyle.LushDeciduous;
-                case 4: return StylizedLowPolyMeshes.TreeStyle.CyberPillarTree;
-                case 5: return StylizedLowPolyMeshes.TreeStyle.AstralPrismPillar;
-                default: return StylizedLowPolyMeshes.TreeStyle.ConiferPine;
+                if (!string.IsNullOrEmpty(SaveManager.Instance.CurrentSaveData.playthroughSeed))
+                {
+                    return SaveManager.Instance.CurrentSaveData.playthroughSeed;
+                }
             }
+            return string.IsNullOrEmpty(defaultWorldSeed) ? "NEURO-8842" : defaultWorldSeed;
         }
 
-        private Color[] GetTreePalette(int biomeIndex)
+        private GameObject CreateLowPolyRockObject(int index, int seed, Color baseColor, Vector2 scaleRange)
         {
-            // Returns [TrunkColor, FoliageColor, AccentColor] matching Stage 18
-            switch (biomeIndex)
+            GameObject rock = new GameObject($"LowPolyBoulder_{index}");
+            
+            float sx = Mathf.Lerp(scaleRange.x, scaleRange.y, ((seed * 7) % 100) / 100f);
+            float sy = Mathf.Lerp(scaleRange.x, scaleRange.y, ((seed * 13) % 100) / 100f) * 0.85f;
+            float sz = Mathf.Lerp(scaleRange.x, scaleRange.y, ((seed * 19) % 100) / 100f);
+            Vector3 rockScale = new Vector3(sx, sy, sz);
+
+            MeshFilter mf = rock.AddComponent<MeshFilter>();
+            MeshRenderer mr = rock.AddComponent<MeshRenderer>();
+            MeshCollider mc = rock.AddComponent<MeshCollider>();
+
+            Mesh rockMesh = StylizedLowPolyMeshes.CreateLowPolyRockMesh(seed, rockScale);
+            mf.sharedMesh = rockMesh;
+            mc.sharedMesh = rockMesh;
+
+            float colorJitter = 0.9f + (((seed * 23) % 20) / 100f);
+            Color rockCol = baseColor * colorJitter;
+            mr.sharedMaterial = StylizedMaterialFactory.GetStylizedPropMaterial(
+                $"Rock_{index}", rockCol, metallic: 0.12f, smoothness: 0.35f);
+
+            float yaw = (seed % 360);
+            float pitch = ((seed % 20) - 10f);
+            float roll = (((seed * 3) % 20) - 10f);
+            rock.transform.rotation = Quaternion.Euler(pitch, yaw, roll);
+
+            return rock;
+        }
+
+        private GameObject CreateGroundClutterObject(GroundClutterType type, int seed, BiomeScatterConfig config)
+        {
+            GameObject clutter = new GameObject($"Clutter_{type}_{seed}");
+
+            switch (type)
             {
-                case 0: // Biome 1: The Linear Steppes (Amber / Earth)
-                    return new Color[] {
-                        new Color(0.42f, 0.24f, 0.12f), // Earth Trunk
-                        new Color(0.85f, 0.58f, 0.12f), // Amber Foliage
-                        new Color(0.98f, 0.75f, 0.14f)  // Warm Gold Crystal
-                    };
-                case 1: // Biome 2: The Binary Marshlands (Teal / Violet)
-                    return new Color[] {
-                        new Color(0.18f, 0.12f, 0.28f), // Deep Violet Stem
-                        new Color(0.08f, 0.65f, 0.58f), // Teal Spore Cap
-                        new Color(0.55f, 0.36f, 0.96f)  // Glowing Purple Gills
-                    };
-                case 2: // Biome 3: The Variance Tundra (Ice-Blue / Frost)
-                    return new Color[] {
-                        new Color(0.18f, 0.26f, 0.35f), // Slate Frost Trunk
-                        new Color(0.38f, 0.75f, 0.95f), // Ice-Blue Foliage
-                        new Color(0.72f, 0.90f, 0.98f)  // Frost Glaze Accent
-                    };
-                case 3: // Biome 4: The Branching Canopy (Emerald / Gold)
-                    return new Color[] {
-                        new Color(0.28f, 0.18f, 0.08f), // Rich Bark
-                        new Color(0.06f, 0.72f, 0.45f), // Emerald Canopy
-                        new Color(0.98f, 0.75f, 0.14f)  // Golden Sap
-                    };
-                case 4: // Biome 5: The Deep Synapse Citadel (Neon Purple / Cyan)
-                    return new Color[] {
-                        new Color(0.10f, 0.08f, 0.16f), // Obsidian Basalt
-                        new Color(0.66f, 0.33f, 0.97f), // Neon Purple Conduit
-                        new Color(0.13f, 0.83f, 0.93f)  // Cyber Cyan Light
-                    };
-                case 5: // Biome 6: The Semantic Expanse (Starlit White / Holographic)
-                    return new Color[] {
-                        new Color(0.92f, 0.94f, 0.98f), // Starlight White
-                        new Color(0.51f, 0.55f, 0.97f), // Holographic Indigo
-                        new Color(0.22f, 0.74f, 0.97f)  // Prismatic Azure
-                    };
+                case GroundClutterType.DesertSageBush:
+                case GroundClutterType.CanopyBush:
+                    {
+                        // Low-poly faceted bush clump
+                        MeshFilter mf = clutter.AddComponent<MeshFilter>();
+                        MeshRenderer mr = clutter.AddComponent<MeshRenderer>();
+                        mf.sharedMesh = StylizedLowPolyMeshes.CreateLowPolyRockMesh(seed, new Vector3(1.2f, 0.7f, 1.2f));
+                        mr.sharedMaterial = StylizedMaterialFactory.GetStylizedPropMaterial(
+                            $"Bush_{type}", config.groundClutterColor, metallic: 0.05f, smoothness: 0.25f);
+                        clutter.transform.rotation = Quaternion.Euler(0f, seed % 360, 0f);
+                    }
+                    break;
+
+                case GroundClutterType.DataQuartzShard:
+                case GroundClutterType.RegularizationCrystal:
+                case GroundClutterType.PrismaticCluster:
+                    {
+                        // Angular crystal spike
+                        MeshFilter mf = clutter.AddComponent<MeshFilter>();
+                        MeshRenderer mr = clutter.AddComponent<MeshRenderer>();
+                        mf.sharedMesh = StylizedLowPolyMeshes.CreateCrystalMesh(radius: 0.35f, height: 1.2f);
+                        mr.sharedMaterial = StylizedMaterialFactory.GetStylizedPropMaterial(
+                            $"Crystal_{type}", config.groundClutterAccent, metallic: 0.3f, smoothness: 0.92f,
+                            emission: config.groundClutterAccent, emissionIntensity: 1.6f);
+                        clutter.transform.rotation = Quaternion.Euler(15f, seed % 360, 10f);
+                    }
+                    break;
+
+                case GroundClutterType.BioluminescentMiniSpore:
+                case GroundClutterType.GoldenSapNodule:
+                    {
+                        // Small glowing spore bulb
+                        GameObject bulb = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                        bulb.name = "SporeBulb";
+                        bulb.transform.SetParent(clutter.transform, false);
+                        bulb.transform.localPosition = new Vector3(0f, 0.4f, 0f);
+                        bulb.transform.localScale = new Vector3(0.7f, 0.85f, 0.7f);
+
+                        Renderer r = bulb.GetComponent<Renderer>();
+                        if (r != null)
+                        {
+                            r.sharedMaterial = StylizedMaterialFactory.GetStylizedPropMaterial(
+                                $"SporeBulb_{type}", config.groundClutterAccent, metallic: 0.1f, smoothness: 0.9f,
+                                emission: config.groundClutterAccent, emissionIntensity: 2.0f);
+                        }
+                    }
+                    break;
+
+                case GroundClutterType.GlacialFrostNeedle:
+                case GroundClutterType.ObsidianLogicSpike:
+                    {
+                        // Shard wedge spike
+                        MeshFilter mf = clutter.AddComponent<MeshFilter>();
+                        MeshRenderer mr = clutter.AddComponent<MeshRenderer>();
+                        mf.sharedMesh = StylizedLowPolyMeshes.CreateShardMesh(0.4f, 1.4f, 0.3f);
+                        mr.sharedMaterial = StylizedMaterialFactory.GetStylizedPropMaterial(
+                            $"Spike_{type}", config.groundClutterAccent, metallic: 0.4f, smoothness: 0.85f,
+                            emission: config.groundClutterAccent, emissionIntensity: 1.4f);
+                        clutter.transform.rotation = Quaternion.Euler(20f, seed % 360, 5f);
+                    }
+                    break;
+
+                case GroundClutterType.CyberMicroNode:
+                    {
+                        // Cylindrical cyber terminal node
+                        GameObject cyl = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                        cyl.name = "MicroNodeBody";
+                        cyl.transform.SetParent(clutter.transform, false);
+                        cyl.transform.localPosition = new Vector3(0f, 0.3f, 0f);
+                        cyl.transform.localScale = new Vector3(0.5f, 0.3f, 0.5f);
+
+                        Renderer rend = cyl.GetComponent<Renderer>();
+                        if (rend != null)
+                        {
+                            rend.sharedMaterial = StylizedMaterialFactory.GetStylizedPropMaterial(
+                                "MicroNodeMat", config.rockColor, metallic: 0.8f, smoothness: 0.85f);
+                        }
+
+                        GameObject lightPuck = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                        lightPuck.name = "NodeLight";
+                        lightPuck.transform.SetParent(clutter.transform, false);
+                        lightPuck.transform.localPosition = new Vector3(0f, 0.62f, 0f);
+                        lightPuck.transform.localScale = new Vector3(0.3f, 0.15f, 0.3f);
+
+                        Renderer lightRend = lightPuck.GetComponent<Renderer>();
+                        if (lightRend != null)
+                        {
+                            lightRend.sharedMaterial = StylizedMaterialFactory.GetStylizedPropMaterial(
+                                "NodeLightMat", config.groundClutterAccent, metallic: 0.1f, smoothness: 0.95f,
+                                emission: config.groundClutterAccent, emissionIntensity: 2.2f);
+                        }
+                    }
+                    break;
+
+                case GroundClutterType.ConstellationStarSpire:
+                case GroundClutterType.LevitatingHoloRune:
+                    {
+                        // Levitating rune tablet hovering slightly above ground
+                        MeshFilter mf = clutter.AddComponent<MeshFilter>();
+                        MeshRenderer mr = clutter.AddComponent<MeshRenderer>();
+                        mf.sharedMesh = StylizedLowPolyMeshes.CreateRuneTabletMesh(0.5f, 0.7f, 0.18f);
+                        mr.sharedMaterial = StylizedMaterialFactory.GetStylizedPropMaterial(
+                            $"Rune_{type}", config.groundClutterAccent, metallic: 0.2f, smoothness: 0.95f,
+                            emission: config.groundClutterAccent, emissionIntensity: 2.0f);
+                        clutter.transform.localPosition = new Vector3(0f, 0.45f, 0f);
+                        clutter.transform.rotation = Quaternion.Euler(0f, seed % 360, 25f);
+                    }
+                    break;
+
                 default:
-                    return new Color[] { Color.gray, Color.green, Color.yellow };
+                    {
+                        // Fallback simple low poly clump
+                        MeshFilter mf = clutter.AddComponent<MeshFilter>();
+                        MeshRenderer mr = clutter.AddComponent<MeshRenderer>();
+                        mf.sharedMesh = StylizedLowPolyMeshes.CreateLowPolyRockMesh(seed, Vector3.one * 0.6f);
+                        mr.sharedMaterial = StylizedMaterialFactory.GetStylizedPropMaterial(
+                            "ClutterDefault", config.groundClutterColor, metallic: 0.1f, smoothness: 0.4f);
+                    }
+                    break;
             }
-        }
 
-        private Color GetRockColor(int biomeIndex)
-        {
-            switch (biomeIndex)
-            {
-                case 0: return new Color(0.48f, 0.38f, 0.28f); // Sandstone Earth
-                case 1: return new Color(0.22f, 0.26f, 0.32f); // Wet Marsh Stone
-                case 2: return new Color(0.35f, 0.48f, 0.62f); // Glacial Ice Granite
-                case 3: return new Color(0.24f, 0.35f, 0.26f); // Mossy Forest Rock
-                case 4: return new Color(0.12f, 0.10f, 0.18f); // Obsidian Basalt
-                case 5: return new Color(0.65f, 0.68f, 0.85f); // Astral Starlit Slate
-                default: return Color.gray;
-            }
+            return clutter;
         }
     }
 }
