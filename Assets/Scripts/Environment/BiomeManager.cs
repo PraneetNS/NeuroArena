@@ -25,6 +25,7 @@ namespace NeuroArena.Environment
         [Header("Environment Controllers")]
         [SerializeField] private StylizedBiomeTerrain stylizedTerrain;
         [SerializeField] private BiomeFoliageScatterer foliageScatterer;
+        [SerializeField] private BiomeWildlifeSpawner wildlifeSpawner;
         [SerializeField] private BiomeSkyboxController skyboxController;
 
         public int CurrentBiomeIndex => currentBiomeIndex;
@@ -71,6 +72,7 @@ namespace NeuroArena.Environment
         {
             if (stylizedTerrain == null) stylizedTerrain = FindFirstObjectByType<StylizedBiomeTerrain>();
             if (foliageScatterer == null) foliageScatterer = FindFirstObjectByType<BiomeFoliageScatterer>();
+            if (wildlifeSpawner == null) wildlifeSpawner = FindFirstObjectByType<BiomeWildlifeSpawner>();
             if (skyboxController == null) skyboxController = FindFirstObjectByType<BiomeSkyboxController>();
         }
 
@@ -89,12 +91,17 @@ namespace NeuroArena.Environment
                 foliageScatterer.PopulateBiomeEnvironment(currentBiomeIndex, stylizedTerrain);
             }
 
+            if (wildlifeSpawner != null)
+            {
+                wildlifeSpawner.SpawnBiomeWildlife(currentBiomeIndex, stylizedTerrain);
+            }
+
             if (skyboxController != null)
             {
                 skyboxController.ApplyBiomeAtmosphere(currentBiomeIndex);
             }
 
-            Debug.Log($"[BiomeManager] Loaded Biome {currentBiomeIndex + 1}: {BiomeNames[currentBiomeIndex]} with stylized low-poly terrain, foliage, and Stage 18 atmosphere!");
+            Debug.Log($"[BiomeManager] Loaded Biome {currentBiomeIndex + 1}: {BiomeNames[currentBiomeIndex]} with stylized low-poly terrain, foliage, wildlife, and Stage 18 atmosphere!");
         }
 
         public void UnlockNextBiome()
