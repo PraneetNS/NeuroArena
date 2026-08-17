@@ -147,26 +147,36 @@ namespace NeuroArena.UI
             GUILayout.EndArea();
         }
 
-        // --- 3. EXPANDABLE INVENTORY DRAWER WITH LIVE DATASET STATS & HEALTH SCORE ---
+        // --- 3. EXPANDABLE INVENTORY DRAWER WITH LIVE DATASET STATS & VOCABULARY SATCHEL ---
         private void DrawInventoryDrawer(float scale)
         {
-            float w = 270 * scale;
-            float h = 285 * scale;
+            float w = 290 * scale;
+            float h = 330 * scale;
             float pad = 12 * scale;
             Rect drawerRect = new Rect(Screen.width - w - pad, 68 * scale, w, h);
 
             GUI.Box(drawerRect, GUIContent.none, drawerBoxStyle);
             GUILayout.BeginArea(drawerRect);
 
-            GUILayout.Label("<b>🎒 COLLECTED RESOURCES</b>", subHeaderStyle);
-            GUILayout.Space(2 * scale);
-
+            int vocabSize = MLInventory.Instance != null ? MLInventory.Instance.VocabularySize : 0;
             int x = MLInventory.Instance != null ? MLInventory.Instance.FeatureCrystalXCount : 0;
             int y = MLInventory.Instance != null ? MLInventory.Instance.TargetShardYCount : 0;
 
-            GUILayout.Label($"◆ <b>Feature Crystals (X):</b> <color=#38BDF8>{x}</color>  |  ▲ <b>Shards (Y):</b> <color=#FBBF24>{y}</color>", labelStyle);
+            GUILayout.Label("<b>🎒 DATA SATCHEL :: MODEL VOCABULARY</b>", subHeaderStyle);
+            GUILayout.Label($"📚 <b>VOCABULARY SIZE:</b> <color=#38BDF8><b>{vocabSize}</b> unique tokens</color>", labelStyle);
+            GUILayout.Space(2 * scale);
 
-            GUILayout.Space(3 * scale);
+            GUILayout.Label($"◆ <b>Crystals (X):</b> <color=#38BDF8>{x}</color>  |  ▲ <b>Shards (Y):</b> <color=#FBBF24>{y}</color>", labelStyle);
+
+            if (MLInventory.Instance != null && MLInventory.Instance.CollectedVocabulary != null)
+            {
+                var vocabList = new List<string>(MLInventory.Instance.CollectedVocabulary);
+                string vocabPreview = vocabList.Count > 0 ? string.Join(", ", vocabList.GetRange(0, Mathf.Min(6, vocabList.Count))) : "None";
+                if (vocabList.Count > 6) vocabPreview += $" +{vocabList.Count - 6} more";
+                GUILayout.Label($"🔤 <i>Tokens: [{vocabPreview}]</i>", objectiveSubStyle);
+            }
+
+            GUILayout.Space(4 * scale);
             GUILayout.Label("<b>📊 LIVE DATASET STATS (REAL-TIME)</b>", subHeaderStyle);
 
             DatasetStatistics stats = MLInventory.Instance != null ? MLInventory.Instance.LiveStats : DatasetStatistics.Empty;
@@ -194,7 +204,7 @@ namespace NeuroArena.UI
 
                 GUILayout.Space(4 * scale);
                 string healthCol = health.healthScore >= 80f ? "#4ADE80" : (health.healthScore >= 50f ? "#FBBF24" : "#F43F5E");
-                GUILayout.Label($"🩺 <b>DATASET HEALTH SCORE:</b> <color={healthCol}><b>{health.healthScore:F0}% [{health.healthGrade}]</b></color>", subHeaderStyle);
+                GUILayout.Label($"🩺 <b>DATASET HEALTH:</b> <color={healthCol}><b>{health.healthScore:F0}% [{health.healthGrade}]</b></color>", subHeaderStyle);
 
                 Rect healthBarRect = GUILayoutUtility.GetRect(w - 20 * scale, 5 * scale);
                 Color barColor = health.healthScore >= 80f ? new Color(0.29f, 0.87f, 0.5f) : (health.healthScore >= 50f ? new Color(0.98f, 0.75f, 0.14f) : new Color(0.96f, 0.25f, 0.37f));

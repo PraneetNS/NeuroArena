@@ -42,9 +42,11 @@ namespace NeuroArena.Data
         [SerializeField] private List<ClassificationSample> classificationDataset = new List<ClassificationSample>();
         [SerializeField] private List<DataPoint> tundraDataset = new List<DataPoint>();
 
+        [Header("Model Vocabulary Satchel (Stage 76)")]
+        private readonly HashSet<string> collectedVocabulary = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
         private Queue<float> pendingFeatures = new Queue<float>();
         private Queue<float> pendingTargets = new Queue<float>();
-        private DatasetStatistics cachedStats = DatasetStatistics.Empty;
 
         public int FeatureCrystalsCount => featureCrystalsCount;
         public int FeatureCrystalXCount => featureCrystalsCount;
@@ -57,15 +59,19 @@ namespace NeuroArena.Data
         public int TrainFrostCoresCount => trainFrostCoresCount;
         public int ValSnowEchoesCount => valSnowEchoesCount;
 
+        /// <summary>
+        /// Literally len(unique collected words/concepts) in the player's Data Satchel.
+        /// </summary>
+        public int VocabularySize => collectedVocabulary.Count;
+        public IReadOnlyCollection<string> CollectedVocabulary => collectedVocabulary;
+
         public IReadOnlyList<DataPoint> Dataset => dataset.AsReadOnly();
         public IReadOnlyList<ClassificationSample> ClassificationDataset => classificationDataset.AsReadOnly();
         public IReadOnlyList<DataPoint> TundraDataset => tundraDataset.AsReadOnly();
         public DatasetStatistics LiveStats => cachedStats;
         public DatasetHealthMetrics LiveHealth => cachedHealth;
 
-        public event Action<DatasetStatistics> OnDatasetStatsChanged;
         public event Action<DatasetHealthMetrics> OnDatasetHealthChanged;
-        private DatasetStatistics cachedStats;
         private DatasetHealthMetrics cachedHealth = DatasetHealthMetrics.Default;
 
         private void Awake()
@@ -76,7 +82,40 @@ namespace NeuroArena.Data
                 return;
             }
             Instance = this;
+
+            InitializeDefaultVocabulary();
             RecalculateStats();
+        }
+
+        private void InitializeDefaultVocabulary()
+        {
+            if (collectedVocabulary.Count == 0)
+            {
+                // Initial empirical foundational tokens
+                collectedVocabulary.Add("feature_x");
+                collectedVocabulary.Add("target_y");
+                collectedVocabulary.Add("slope");
+                collectedVocabulary.Add("bias");
+                collectedVocabulary.Add("gradient");
+            }
+        }
+
+        public bool HasVocabularyToken(string token)
+        {
+            if (string.IsNullOrWhiteSpace(token)) return false;
+            return collectedVocabulary.Contains(token.Trim());
+        }
+
+        public void AddVocabularyToken(string token)
+        {
+            if (!string.IsNullOrWhiteSpace(token))
+            {
+                string cleaned = token.Trim().ToLower();
+                if (collectedVocabulary.Add(cleaned))
+                {
+                    OnInventoryChanged?.Invoke();
+                }
+            }
         }
 
         public DatasetStatistics RecalculateStats()
