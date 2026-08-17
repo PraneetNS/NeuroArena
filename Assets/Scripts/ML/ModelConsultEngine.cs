@@ -9,7 +9,7 @@ namespace NeuroArena.ML
     /// Result structure for Stage 29 & Stage 76 Model Consult / Interrogation query.
     /// Contains genuine mathematical predictions, empirical domain boundary checks,
     /// nearest-neighbor distance metrics, Out-of-Vocabulary (<UNK>) detection,
-    /// and educational Extrapolation Error diagnoses.
+    /// simplified attention distributions, and educational Extrapolation Error diagnoses.
     /// </summary>
     [Serializable]
     public struct ConsultInferenceResult
@@ -29,6 +29,8 @@ namespace NeuroArena.ML
         public float meanX;
         public float stdDevX;
 
+        public List<AttentionWeightEntry> attentionWeights;
+
         public string confidenceLevel;
         public string mathEquationUsed;
         public string explanationText;
@@ -36,8 +38,8 @@ namespace NeuroArena.ML
 
     /// <summary>
     /// Pure C# Model Interrogation, Extrapolation Detection, and Vocabulary Consultation Engine.
-    /// Computes actual Euclidean distance to the nearest empirical training point and evaluates
-    /// mathematical formulas across linear, logistic, polynomial, and semantic embedding architectures.
+    /// Computes actual Euclidean distance to the nearest empirical training point, evaluates
+    /// mathematical formulas, and computes simplified single-head similarity softmax attention over vocabulary.
     /// Reinforces the Honesty Principle: The model only knows what the player actually gathered.
     /// </summary>
     public static class ModelConsultEngine
@@ -53,6 +55,7 @@ namespace NeuroArena.ML
                 queryX2 = queryX2,
                 queryToken = queryX.ToString("F2"),
                 isOutOfVocabulary = false,
+                attentionWeights = null,
                 minDomainX = model.minX,
                 maxDomainX = model.maxX,
                 meanX = model.meanX,
@@ -148,6 +151,7 @@ namespace NeuroArena.ML
 
         /// <summary>
         /// Stage 76: Consults the model with a semantic word or concept token.
+        /// Computes a genuine simplified single-head similarity-softmax attention distribution over the vocabulary.
         /// If the token was never gathered in the Data Satchel, it returns an honest <UNK> Out-of-Vocabulary response.
         /// </summary>
         public static ConsultInferenceResult ConsultSemanticToken(string queryToken, IReadOnlyCollection<string> customVocabulary = null)
@@ -176,7 +180,8 @@ namespace NeuroArena.ML
             {
                 queryToken = queryToken,
                 isOutOfVocabulary = !isKnown,
-                isExtrapolation = !isKnown
+                isExtrapolation = !isKnown,
+                attentionWeights = null
             };
 
             if (!isKnown)
@@ -192,12 +197,31 @@ namespace NeuroArena.ML
             }
             else
             {
-                // In-Vocabulary Valid Concept
-                result.confidenceLevel = "HIGH CONFIDENCE :: IN-VOCABULARY TOKEN";
+                // In-Vocabulary Valid Concept -> Compute Genuine Simplified Attention Distribution
+                var attnList = VectorEmbeddingEngine.ComputeAttentionWeights(queryToken, temperature: 0.35f);
+                result.attentionWeights = attnList;
+
+                result.confidenceLevel = "HIGH CONFIDENCE :: SIMPLIFIED ATTENTION ACTIVE";
                 result.predictedValue = 1.0f;
                 result.predictedProbability = 0.95f;
-                result.mathEquationUsed = $"E('{queryToken}') ∈ ℝ^{vocabSize} ➔ Valid Vocabulary Vector";
-                result.explanationText = $"✓ <b>IN-VOCABULARY TOKEN:</b> The concept '<b>{queryToken}</b>' was empirically gathered in your Data Satchel (Vocabulary Size: {vocabSize} words). Its semantic vector representation is trained and grounded in your collected dataset.";
+
+                // Format Top Attention Pairs
+                string topAttnSummary = "";
+                if (attnList.Count > 0)
+                {
+                    int topK = Math.Min(3, attnList.Count);
+                    List<string> topParts = new List<string>();
+                    for (int k = 0; k < topK; k++)
+                    {
+                        topParts.Add($"<b>{attnList[k].word.ToUpper()}</b> (α = {(attnList[k].attentionWeight * 100f):F1}%)");
+                    }
+                    topAttnSummary = string.Join(" • ", topParts);
+                }
+
+                result.mathEquationUsed = $"α_i = softmax(CosineSim('{queryToken}', k_i) / 0.35) ➔ [{topAttnSummary}]";
+                result.explanationText = $"✓ <b>IN-VOCABULARY TOKEN (SIMPLIFIED ATTENTION):</b>\n" +
+                    $"Query '<b>{queryToken}</b>' attends over {attnList.Count} vocabulary tokens with softmax-normalized similarity weights (Σα = 100%).\n" +
+                    $"<i>Note: This is a simplified educational illustration of the mathematical core of attention mechanisms (similarity weighting + softmax normalization), not a full multi-head Transformer.</i>";
             }
 
             return result;

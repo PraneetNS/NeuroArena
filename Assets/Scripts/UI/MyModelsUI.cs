@@ -187,27 +187,43 @@ namespace NeuroArena.UI
         private void DrawConsultInterrogateView(float scale, float w)
         {
             GUILayout.BeginVertical(cardStyle);
-            GUILayout.Label("💬 <b>STAGE 29 :: MODEL CONSULT / INTERROGATE (INFERENCE REPL)</b>", headerTitleStyle);
+            GUILayout.Label("💬 <b>STAGE 29 & 76 :: MODEL CONSULT / INTERROGATE (INFERENCE REPL)</b>", headerTitleStyle);
             GUILayout.Label($"<b>Empirical Training Domain:</b> X ∈ [{selectedModel.minX:F1}, {selectedModel.maxX:F1}] | μ={selectedModel.meanX:F1} | σ={selectedModel.stdDevX:F2}", metricStyle);
 
-            // Quick scenario test buttons
+            // Quick scenario test buttons (Numeric Domain Tests)
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("🎯 In-Domain (X=1.8)", promptBtnStyle, GUILayout.Height(24 * scale))) RunQuery(1.8f);
             if (GUILayout.Button("⚠️ Boundary (X=4.4)", promptBtnStyle, GUILayout.Height(24 * scale))) RunQuery(4.4f);
-            if (GUILayout.Button("⚡ Extrapolation Error (X=14.5)", promptBtnStyle, GUILayout.Height(24 * scale))) RunQuery(14.5f);
-            if (GUILayout.Button("⚡ Far Extrapolation (X=-12.0)", promptBtnStyle, GUILayout.Height(24 * scale))) RunQuery(-12.0f);
+            if (GUILayout.Button("⚡ Extrapolation (X=14.5)", promptBtnStyle, GUILayout.Height(24 * scale))) RunQuery(14.5f);
+            GUILayout.EndHorizontal();
+
+            GUILayout.Space(2 * scale);
+
+            // Quick concept vocabulary tests (Attention & Out-of-Vocabulary Tests)
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("🔥 fire", promptBtnStyle, GUILayout.Height(22 * scale))) RunSemanticQuery("fire");
+            if (GUILayout.Button("❄️ frost", promptBtnStyle, GUILayout.Height(22 * scale))) RunSemanticQuery("frost");
+            if (GUILayout.Button("⚡ neural", promptBtnStyle, GUILayout.Height(22 * scale))) RunSemanticQuery("neural");
+            if (GUILayout.Button("❓ <UNK> token", promptBtnStyle, GUILayout.Height(22 * scale))) RunSemanticQuery("quantum_hyperdrive");
             GUILayout.EndHorizontal();
 
             // Query Input Bar
             GUILayout.Space(4 * scale);
             GUILayout.BeginHorizontal();
-            GUILayout.Label("<b>Query Input (X):</b>", metricStyle, GUILayout.Width(110 * scale));
-            queryInputText = GUILayout.TextField(queryInputText, GUILayout.Width(100 * scale), GUILayout.Height(26 * scale));
+            GUILayout.Label("<b>Query Input:</b>", metricStyle, GUILayout.Width(90 * scale));
+            queryInputText = GUILayout.TextField(queryInputText, GUILayout.Width(110 * scale), GUILayout.Height(26 * scale));
             GUILayout.Space(6 * scale);
             GUI.color = new Color(0.2f, 0.85f, 1f);
-            if (GUILayout.Button("⚡ Send Query (Genuine Inference)", buttonStyle, GUILayout.Height(26 * scale)))
+            if (GUILayout.Button("⚡ Send Query (Inference / Attention)", buttonStyle, GUILayout.Height(26 * scale)))
             {
-                if (float.TryParse(queryInputText, out float val)) RunQuery(val);
+                if (float.TryParse(queryInputText, out float val))
+                {
+                    RunQuery(val);
+                }
+                else
+                {
+                    RunSemanticQuery(queryInputText);
+                }
             }
             GUI.color = Color.white;
             GUILayout.EndHorizontal();
@@ -216,16 +232,26 @@ namespace NeuroArena.UI
             GUILayout.Space(6 * scale);
 
             // 2D Extended Decision Boundary Canvas
-            Rect graphRect = GUILayoutUtility.GetRect(w - 20 * scale, 130 * scale);
+            Rect graphRect = GUILayoutUtility.GetRect(w - 20 * scale, 120 * scale);
             DrawConsultDecisionGraph(graphRect, selectedModel, chatHistory.Count > 0 ? chatHistory[chatHistory.Count - 1] : (ConsultInferenceResult?)null);
 
             GUILayout.Space(6 * scale);
 
-            // Chat Message Stream
+            // Chat Message Stream & Attention Distribution
             if (chatHistory.Count > 0)
             {
                 var latest = chatHistory[chatHistory.Count - 1];
-                if (latest.isExtrapolation)
+                if (latest.isOutOfVocabulary)
+                {
+                    GUI.color = new Color(1f, 0.3f, 0.35f, 1f);
+                    GUILayout.BeginVertical(glitchCardStyle);
+                    GUILayout.Label($"❌ <b>[HONEST REFUSAL :: OUT-OF-VOCABULARY TOKEN]</b>", cardTitleStyle);
+                    GUILayout.Label($"<b>Model Response:</b> {latest.mathEquationUsed}", cardTitleStyle);
+                    GUILayout.Label(latest.explanationText, metricStyle);
+                    GUILayout.EndVertical();
+                    GUI.color = Color.white;
+                }
+                else if (latest.isExtrapolation)
                 {
                     GUI.color = new Color(1f, 0.35f, 0.45f, 1f);
                     GUILayout.BeginVertical(glitchCardStyle);
@@ -239,13 +265,41 @@ namespace NeuroArena.UI
                 {
                     GUI.color = new Color(0.3f, 0.9f, 0.5f, 1f);
                     GUILayout.BeginVertical(cardStyle);
-                    GUILayout.Label($"✓ <b>[HIGH CONFIDENCE :: IN-DOMAIN INTERPOLATION]</b>", cardTitleStyle);
+                    GUILayout.Label($"✓ <b>[HIGH CONFIDENCE :: IN-DOMAIN INFERENCE]</b>", cardTitleStyle);
                     GUILayout.Label($"<b>Model Output:</b> {latest.mathEquationUsed}", cardTitleStyle);
                     GUILayout.Label(latest.explanationText, metricStyle);
+
+                    // Render Attention Distribution if present
+                    if (latest.attentionWeights != null && latest.attentionWeights.Count > 0)
+                    {
+                        GUILayout.Space(6 * scale);
+                        GUILayout.Label("<b>💡 SIMPLIFIED ATTENTION DISTRIBUTION (Top-4 Softmax Weights):</b>", subHeaderStyle ?? cardTitleStyle);
+                        int topN = Mathf.Min(4, latest.attentionWeights.Count);
+                        for (int i = 0; i < topN; i++)
+                        {
+                            var a = latest.attentionWeights[i];
+                            GUILayout.BeginHorizontal();
+                            GUILayout.Label($"<b>{a.word.ToUpper()}:</b> α = <b>{(a.attentionWeight * 100f):F1}%</b> (sim = {a.rawSimilarity:F2})", metricStyle, GUILayout.Width(170 * scale));
+                            Rect barRect = GUILayoutUtility.GetRect(w - 210 * scale, 6 * scale);
+                            DrawAttentionBar(barRect, a.attentionWeight, i == 0 ? new Color(1f, 0.75f, 0.2f) : new Color(0.2f, 0.8f, 1f));
+                            GUILayout.EndHorizontal();
+                        }
+                    }
+
                     GUILayout.EndVertical();
                     GUI.color = Color.white;
                 }
             }
+        }
+
+        private void DrawAttentionBar(Rect rect, float fill01, Color color)
+        {
+            Color prev = GUI.color;
+            GUI.color = new Color(0.1f, 0.15f, 0.22f, 0.8f);
+            GUI.DrawTexture(rect, whitePixel);
+            GUI.color = color;
+            GUI.DrawTexture(new Rect(rect.x, rect.y, rect.width * Mathf.Clamp01(fill01), rect.height), whitePixel);
+            GUI.color = prev;
         }
 
         private void RunQuery(float qX)
@@ -253,6 +307,18 @@ namespace NeuroArena.UI
             queryInputText = qX.ToString("F1");
             var res = NeuroArena.ML.ModelConsultEngine.ConsultModel(selectedModel, qX);
             chatHistory.Add(res);
+        }
+
+        private void RunSemanticQuery(string token)
+        {
+            queryInputText = token;
+            var res = NeuroArena.ML.ModelConsultEngine.ConsultSemanticToken(token);
+            chatHistory.Add(res);
+
+            if (res.attentionWeights != null)
+            {
+                NeuroArena.Environment.EmbeddingConstellationVisualizer.Instance?.HighlightAttentionWeights(res.attentionWeights);
+            }
         }
 
         private void DrawConsultDecisionGraph(Rect rect, TrainedModelRecord model, ConsultInferenceResult? latestQuery)

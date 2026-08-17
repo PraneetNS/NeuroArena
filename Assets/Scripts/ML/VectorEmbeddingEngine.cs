@@ -24,10 +24,26 @@ namespace NeuroArena.ML
     }
 
     /// <summary>
-    /// Pure C# Word/Item Embedding Engine & Vector Retrieval Simulator.
+    /// Represents a single token's attention entry in the simplified attention distribution:
+    /// α_i = softmax(CosineSimilarity(query, key_i) / temperature).
+    /// </summary>
+    [Serializable]
+    public struct AttentionWeightEntry
+    {
+        public string word;
+        public string category;
+        public float rawSimilarity;
+        public float attentionWeight; // Softmax probability in [0.0, 1.0]
+        public float pulseIntensity;   // 1.0x to 6.5x scaled emission boost
+        public int rank;
+    }
+
+    /// <summary>
+    /// Pure C# Word/Item Embedding Engine, Vector Retrieval Simulator,
+    /// and Simplified Softmax Attention Mechanism.
     /// Builds a co-occurrence matrix from scratch over text corpora,
     /// computes Positive Pointwise Mutual Information (PPMI) embeddings,
-    /// evaluates Cosine Similarity, and simulates Top-K Vector Search (RAG foundation).
+    /// evaluates Cosine Similarity, and computes simplified single-head similarity-weighted attention distributions.
     /// </summary>
     public static class VectorEmbeddingEngine
     {
@@ -224,6 +240,83 @@ namespace NeuroArena.ML
             }
 
             return results.GetRange(0, Math.Min(k, results.Count));
+        }
+
+        /// <summary>
+        /// Computes a genuine simplified single-head similarity-softmax attention distribution
+        /// over all vocabulary entries: α_i = softmax(CosineSim(query, key_i) / temperature).
+        /// Returns attention weights guaranteeing sum(α_i) == 1.0 (100%).
+        /// </summary>
+        public static List<AttentionWeightEntry> ComputeAttentionWeights(string queryWord, float temperature = 0.35f)
+        {
+            var list = new List<AttentionWeightEntry>();
+            if (cachedEmbeddings == null) ComputeAllEmbeddings();
+
+            queryWord = (queryWord ?? "").Trim().ToLower();
+            if (!cachedEmbeddings.ContainsKey(queryWord))
+            {
+                // Out-of-vocabulary honest empty attention distribution
+                return list;
+            }
+
+            float[] qVec = cachedEmbeddings[queryWord];
+            int V = Vocabulary.Length;
+            float[] logits = new float[V];
+            float maxLogit = float.MinValue;
+
+            // 1. Calculate similarity logits: s_i = CosineSim(q, k_i) / tau
+            float tau = Mathf.Max(0.05f, temperature);
+            for (int i = 0; i < V; i++)
+            {
+                string w = Vocabulary[i];
+                float sim = CosineSimilarity(qVec, cachedEmbeddings[w]);
+                float logit = sim / tau;
+                logits[i] = logit;
+                if (logit > maxLogit) maxLogit = logit;
+            }
+
+            // 2. Numerically stable Softmax calculation: exp(z_i - max_z) / sum(exp)
+            float sumExp = 0f;
+            float[] exps = new float[V];
+            for (int i = 0; i < V; i++)
+            {
+                exps[i] = Mathf.Exp(logits[i] - maxLogit);
+                sumExp += exps[i];
+            }
+            if (sumExp < 1e-8f) sumExp = 1e-8f;
+
+            // 3. Construct structured attention weight entries
+            for (int i = 0; i < V; i++)
+            {
+                string w = Vocabulary[i];
+                float sim = CosineSimilarity(qVec, cachedEmbeddings[w]);
+                float alpha = exps[i] / sumExp;
+                string cat = i < 6 ? "Fire" : (i < 12 ? "Ice" : "Neural");
+
+                // Pulse intensity scales from 1.0x (baseline) up to 6.5x for dominant attention focus
+                float pulse = 1.0f + alpha * 5.5f;
+
+                list.Add(new AttentionWeightEntry
+                {
+                    word = w,
+                    category = cat,
+                    rawSimilarity = sim,
+                    attentionWeight = alpha,
+                    pulseIntensity = pulse,
+                    rank = 0
+                });
+            }
+
+            // 4. Sort descending by highest attention weight
+            list.Sort((a, b) => b.attentionWeight.CompareTo(a.attentionWeight));
+            for (int i = 0; i < list.Count; i++)
+            {
+                var item = list[i];
+                item.rank = i + 1;
+                list[i] = item;
+            }
+
+            return list;
         }
 
         /// <summary>
