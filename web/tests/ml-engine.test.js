@@ -1164,6 +1164,70 @@ function testDataSatchelVocabularyAndHonestUNKConsult() {
     console.log("✅ Data Satchel Vocabulary Size & Honest <UNK> Consult Rejection Test Passed!");
 }
 
+function testSimplifiedAttentionSoftmaxMechanismAndConstellationPulse() {
+    // 1. Vocabulary & Embeddings Simulation
+    const vocab = ["fire", "flame", "heat", "frost", "snow", "ice", "neural", "synapse"];
+    const embeddings = {
+        "fire": [0.9, 0.4, 0.1],
+        "flame": [0.85, 0.45, 0.15],
+        "heat": [0.8, 0.5, 0.2],
+        "frost": [0.1, 0.2, 0.9],
+        "snow": [0.15, 0.25, 0.85],
+        "ice": [0.2, 0.1, 0.95],
+        "neural": [0.3, 0.9, 0.3],
+        "synapse": [0.25, 0.92, 0.35]
+    };
+
+    function cosineSim(u, v) {
+        let dot = 0, n1 = 0, n2 = 0;
+        for (let i = 0; i < u.length; i++) {
+            dot += u[i] * v[i];
+            n1 += u[i] * u[i];
+            n2 += v[i] * v[i];
+        }
+        return dot / (Math.sqrt(n1) * Math.sqrt(n2) + 1e-8);
+    }
+
+    function computeAttention(query, tau = 0.35) {
+        const qVec = embeddings[query];
+        if (!qVec) return [];
+
+        const logits = vocab.map(w => cosineSim(qVec, embeddings[w]) / tau);
+        const maxLogit = Math.max(...logits);
+        const exps = logits.map(z => Math.exp(z - maxLogit));
+        const sumExp = exps.reduce((a, b) => a + b, 0);
+
+        return vocab.map((w, i) => {
+            const alpha = exps[i] / sumExp;
+            return {
+                word: w,
+                similarity: cosineSim(qVec, embeddings[w]),
+                alpha: alpha,
+                pulseIntensity: 1.0 + alpha * 5.5
+            };
+        }).sort((a, b) => b.alpha - a.alpha);
+    }
+
+    const attn = computeAttention("fire", 0.35);
+    assert.strictEqual(attn.length, 8, "Attention must cover all 8 vocabulary tokens");
+
+    // Check softmax sum
+    const totalAlpha = attn.reduce((sum, item) => sum + item.alpha, 0);
+    assert(Math.abs(totalAlpha - 1.0) < 1e-4, `Softmax weights must sum to 1.0 (got ${totalAlpha})`);
+
+    // Check self-attention peak
+    assert.strictEqual(attn[0].word, "fire", "Top attended word must be 'fire'");
+    assert(attn[0].alpha > 0.20, "Self-attention must receive highest weight");
+    assert(attn[0].pulseIntensity > 2.0, "3D Constellation pulse intensity must scale above 2.0x");
+
+    // Check cluster separation
+    const fireRelatedWeight = attn.filter(a => ["fire", "flame", "heat"].includes(a.word)).reduce((s, a) => s + a.alpha, 0);
+    const iceRelatedWeight = attn.filter(a => ["frost", "snow", "ice"].includes(a.word)).reduce((s, a) => s + a.alpha, 0);
+    assert(fireRelatedWeight > iceRelatedWeight * 3, "Fire cluster must receive dominant attention over ice cluster");
+
+    console.log("✅ Simplified Softmax Attention Mechanism & 3D Constellation Pulse Test Passed!");
+}
+
 testSeedPRNG();
 testLinearInferenceAndExtrapolation();
 testDatasetHealthAndGeneralizationDegradation();
@@ -1201,7 +1265,9 @@ testPoissonDiscScatterAndBiomeLandmarks();
 testAmbientWildlifeStateAndArchetypes();
 testSpatialCullingAndExpansiveTerrain();
 testDataSatchelVocabularyAndHonestUNKConsult();
+testSimplifiedAttentionSoftmaxMechanismAndConstellationPulse();
 console.log("🎉 All Web Unit Tests Passed Cleanly!");
+
 
 
 

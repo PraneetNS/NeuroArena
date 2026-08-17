@@ -77,6 +77,46 @@ namespace NeuroArena.Tests
 
             Object.DestroyImmediate(invObj);
         }
+
+        [Test]
+        public void TestSimplifiedAttentionSoftmaxNormalization()
+        {
+            // Query a known concept
+            var attn = VectorEmbeddingEngine.ComputeAttentionWeights("fire", temperature: 0.35f);
+
+            Assert.AreEqual(VectorEmbeddingEngine.Vocabulary.Length, attn.Count, "Attention must cover entire vocabulary");
+
+            float sumAlpha = 0f;
+            for (int i = 0; i < attn.Count; i++)
+            {
+                Assert.GreaterOrEqual(attn[i].attentionWeight, 0f, "Attention weights must be non-negative");
+                Assert.LessOrEqual(attn[i].attentionWeight, 1.0f, "Attention weights must not exceed 1.0");
+                sumAlpha += attn[i].attentionWeight;
+            }
+
+            Assert.AreEqual(1.0f, sumAlpha, 0.001f, "Softmax normalized attention weights must sum to exactly 1.0 (100%)");
+        }
+
+        [Test]
+        public void TestSimplifiedAttentionSelfAndClusterFocus()
+        {
+            var attn = VectorEmbeddingEngine.ComputeAttentionWeights("fire", temperature: 0.35f);
+
+            // Top-1 must be the query word itself
+            Assert.AreEqual("fire", attn[0].word.ToLower(), "Query word 'fire' must have highest self-attention");
+            Assert.Greater(attn[0].attentionWeight, 0.15f, "Top attended word must receive significant attention weight");
+            Assert.Greater(attn[0].pulseIntensity, 1.5f, "Pulse intensity must scale above 1.5x for top attended word");
+
+            // Opposite cluster word (e.g. frost/ice) must have much lower attention weight than fire/flame
+            float fireWeight = attn[0].attentionWeight;
+            float frostWeight = 0f;
+            for (int i = 0; i < attn.Count; i++)
+            {
+                if (attn[i].word == "frost") frostWeight = attn[i].attentionWeight;
+            }
+
+            Assert.Greater(fireWeight, frostWeight * 2f, "Fire cluster must receive significantly higher attention than frost");
+        }
     }
 }
 #endif
