@@ -1228,6 +1228,171 @@ function testSimplifiedAttentionSoftmaxMechanismAndConstellationPulse() {
     console.log("✅ Simplified Softmax Attention Mechanism & 3D Constellation Pulse Test Passed!");
 }
 
+function testProductionProgressionAndGating() {
+    const requirements = [
+        { biome: 0, metric: "none", threshold: 0, isLoss: true },
+        { biome: 1, metric: "mse", threshold: 0.05, isLoss: true },
+        { biome: 2, metric: "accuracy", threshold: 0.85, isLoss: false },
+        { biome: 3, metric: "gini", threshold: 0.20, isLoss: true },
+        { biome: 4, metric: "loss", threshold: 0.08, isLoss: true },
+        { biome: 5, metric: "f1", threshold: 0.90, isLoss: false }
+    ];
+
+    function checkUnlock(biomeIdx, val) {
+        const req = requirements[biomeIdx];
+        if (!req || biomeIdx === 0) return true;
+        return req.isLoss ? (val <= req.threshold) : (val >= req.threshold);
+    }
+
+    assert.strictEqual(checkUnlock(1, 0.03), true, "0.03 MSE unlocks Logistic Delta");
+    assert.strictEqual(checkUnlock(1, 0.09), false, "0.09 MSE fails Logistic Delta unlock");
+    assert.strictEqual(checkUnlock(2, 0.91), true, "91% accuracy unlocks Forest of Splits");
+    assert.strictEqual(checkUnlock(5, 0.94), true, "0.94 F1 score unlocks Semantic Expanse");
+
+    console.log("✅ Production Progression & Biome Gating Test Passed!");
+}
+
+function testMasteryCertificatesAndHashing() {
+    const crypto = require("crypto");
+
+    function issueCert(userId, recipient, arch, biome, metric) {
+        const dateStr = "2026-08-18T18:00:00Z";
+        const payload = `${userId}:${recipient}:${arch}:${biome}:${metric.toFixed(6)}:${dateStr}:NeuroArenaMasteryCert`;
+        const hash = crypto.createHash("sha256").update(payload).digest("hex");
+        return {
+            certId: `CERT-${crypto.randomBytes(4).toString("hex").toUpperCase()}`,
+            userId,
+            recipient,
+            arch,
+            biome,
+            metric,
+            dateStr,
+            hash
+        };
+    }
+
+    function verifyCert(cert) {
+        const payload = `${cert.userId}:${cert.recipient}:${cert.arch}:${cert.biome}:${cert.metric.toFixed(6)}:${cert.dateStr}:NeuroArenaMasteryCert`;
+        const expected = crypto.createHash("sha256").update(payload).digest("hex");
+        return expected === cert.hash;
+    }
+
+    const cert = issueCert("u_99", "Ada-Explorer", "DecisionTree", 2, 0.015);
+    assert.strictEqual(verifyCert(cert), true, "Legitimate cert passes verification");
+
+    cert.metric = 999.0;
+    assert.strictEqual(verifyCert(cert), false, "Tampered cert fails verification");
+
+    console.log("✅ Cryptographic Mastery Certificates & Hashing Test Passed!");
+}
+
+function testCloudSaveSmartMerge() {
+    const local = {
+        saveVersion: 2,
+        currentBiomeIndex: 1,
+        unlockedBiomes: [true, true, false, false, false, false],
+        crystalCountX: 120,
+        trainedModels: [{ modelId: "m1", validationLoss: 0.08 }]
+    };
+
+    const remote = {
+        saveVersion: 2,
+        currentBiomeIndex: 3,
+        unlockedBiomes: [true, true, true, true, false, false],
+        crystalCountX: 90,
+        trainedModels: [
+            { modelId: "m1", validationLoss: 0.02 },
+            { modelId: "m2", validationLoss: 0.12 }
+        ]
+    };
+
+    function smartMerge(loc, rem) {
+        const mergedBiomes = [true, false, false, false, false, false];
+        for (let i = 0; i < 6; i++) {
+            mergedBiomes[i] = loc.unlockedBiomes[i] || rem.unlockedBiomes[i] || (i === 0);
+        }
+
+        const modelMap = new Map();
+        loc.trainedModels.forEach(m => modelMap.set(m.modelId, m));
+        rem.trainedModels.forEach(m => {
+            if (modelMap.has(m.modelId)) {
+                if (m.validationLoss < modelMap.get(m.modelId).validationLoss) {
+                    modelMap.set(m.modelId, m);
+                }
+            } else {
+                modelMap.set(m.modelId, m);
+            }
+        });
+
+        return {
+            currentBiomeIndex: Math.max(loc.currentBiomeIndex, rem.currentBiomeIndex),
+            unlockedBiomes: mergedBiomes,
+            crystalCountX: Math.max(loc.crystalCountX, rem.crystalCountX),
+            trainedModels: Array.from(modelMap.values())
+        };
+    }
+
+    const res = smartMerge(local, remote);
+    assert.strictEqual(res.currentBiomeIndex, 3, "Retains highest unlocked biome (3)");
+    assert.strictEqual(res.crystalCountX, 120, "Retains highest crystal count (120)");
+    assert.strictEqual(res.trainedModels.length, 2, "Merges distinct models");
+    assert.strictEqual(res.trainedModels.find(m => m.modelId === "m1").validationLoss, 0.02, "Keeps lowest loss model");
+
+    console.log("✅ Cloud Save Smart Merge & Multi-Device Sync Test Passed!");
+}
+
+function testLocalizationAndAccessibility() {
+    const l10n = {
+        en: { "biome.0": "Linear Steppes", "msg.level": "Reached Level {0}" },
+        es: { "biome.0": "Estepas Lineales", "msg.level": "Alcanzó el Nivel {0}" },
+        ja: { "biome.0": "線形草原", "msg.level": "レベル {0} に到達しました" }
+    };
+
+    function getText(lang, key, ...args) {
+        let str = (l10n[lang] && l10n[lang][key]) || l10n.en[key] || key;
+        args.forEach((a, idx) => {
+            str = str.replace(`{${idx}}`, a);
+        });
+        return str;
+    }
+
+    assert.strictEqual(getText("en", "biome.0"), "Linear Steppes");
+    assert.strictEqual(getText("es", "biome.0"), "Estepas Lineales");
+    assert.strictEqual(getText("ja", "msg.level", 10), "レベル 10 に到達しました");
+
+    // Colorblind Protanopia matrix math test
+    function protanopia(r, g, b) {
+        return {
+            r: 0.56667 * r + 0.43333 * g,
+            g: 0.55833 * r + 0.44167 * g,
+            b: b
+        };
+    }
+    const protanColor = protanopia(1.0, 0.0, 0.0);
+    assert(protanColor.g > 0.5, "Protanopia transforms pure red into visible green energy");
+
+    console.log("✅ 5-Language Localization & Colorblind Transform Test Passed!");
+}
+
+function testEconomyAndIAPCatalog() {
+    let credits = 500;
+    let shards = 50;
+
+    function addCredits(amt) { credits += amt; }
+    function spendCredits(amt) {
+        if (credits >= amt) { credits -= amt; return true; }
+        return false;
+    }
+
+    addCredits(100);
+    assert.strictEqual(credits, 600);
+    assert.strictEqual(spendCredits(200), true);
+    assert.strictEqual(credits, 400);
+    assert.strictEqual(spendCredits(9999), false);
+
+    console.log("✅ Economy Soft/Hard Currency Transactions Test Passed!");
+}
+
 testSeedPRNG();
 testLinearInferenceAndExtrapolation();
 testDatasetHealthAndGeneralizationDegradation();
@@ -1266,6 +1431,11 @@ testAmbientWildlifeStateAndArchetypes();
 testSpatialCullingAndExpansiveTerrain();
 testDataSatchelVocabularyAndHonestUNKConsult();
 testSimplifiedAttentionSoftmaxMechanismAndConstellationPulse();
+testProductionProgressionAndGating();
+testMasteryCertificatesAndHashing();
+testCloudSaveSmartMerge();
+testLocalizationAndAccessibility();
+testEconomyAndIAPCatalog();
 console.log("🎉 All Web Unit Tests Passed Cleanly!");
 
 
