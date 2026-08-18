@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "neuroarena-server",
   "version": "1.0.0",
   "description": "Standalone Node.js + Colyseus Real-Time Multiplayer State Relay Server for NeuroArena",
@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
-    "test": "node test/server.test.js"
+    "test": "node test/server.test.js && node test/cluster-scale.test.js"
   },
   "keywords": [
     "neuroarena",

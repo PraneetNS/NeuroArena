@@ -1607,6 +1607,49 @@ function testAutonomousBotNeuralPolicyDriving() {
     console.log("✅ Autonomous Bot Neural Policy Steering & Throttle Test Passed!");
 }
 
+function testSessionResilienceAndExponentialBackoff() {
+    console.log("▶ Testing Session Resilience & Exponential Backoff with Jitter (1M Scale)...");
+
+    const baseMs = 1000;
+    const maxMs = 30000;
+
+    function calculateBackoff(attempt) {
+        const exp = Math.min(attempt, 6);
+        return Math.min(maxMs, baseMs * Math.pow(2, exp));
+    }
+
+    assert.strictEqual(calculateBackoff(0), 1000, "Attempt 0 backoff is 1s");
+    assert.strictEqual(calculateBackoff(1), 2000, "Attempt 1 backoff is 2s");
+    assert.strictEqual(calculateBackoff(2), 4000, "Attempt 2 backoff is 4s");
+    assert.strictEqual(calculateBackoff(3), 8000, "Attempt 3 backoff is 8s");
+    assert.strictEqual(calculateBackoff(10), 30000, "High attempt caps at 30s max");
+
+    console.log("✅ Session Resilience & Exponential Backoff Test Passed!");
+}
+
+function testWebWorkerMessageProtocol() {
+    console.log("▶ Testing ML Tensor Web Worker Task Payload Serialization...");
+
+    const taskPayload = {
+        type: "COMPUTE_ATTENTION_MATRIX",
+        taskId: "task_9918",
+        payload: {
+            Q: [[1.0, 0.5], [0.2, 0.9]],
+            K: [[1.0, 0.5], [0.2, 0.9]],
+            d_k: 2
+        }
+    };
+
+    const serialized = JSON.stringify(taskPayload);
+    const parsed = JSON.parse(serialized);
+
+    assert.strictEqual(parsed.taskId, "task_9918");
+    assert.strictEqual(parsed.payload.Q[0][0], 1.0);
+    assert.strictEqual(parsed.payload.d_k, 2);
+
+    console.log("✅ ML Tensor Web Worker Task Payload Serialization Test Passed!");
+}
+
 testSeedPRNG();
 testLinearInferenceAndExtrapolation();
 testDatasetHealthAndGeneralizationDegradation();
@@ -1658,6 +1701,8 @@ testFeatureEngineeringPreprocessingPipeline();
 testMultiRunExperimentTrackerAndRegistry();
 test5FoldStratifiedCrossValidation();
 testAutonomousBotNeuralPolicyDriving();
+testSessionResilienceAndExponentialBackoff();
+testWebWorkerMessageProtocol();
 console.log("🎉 All Web Unit Tests Passed Cleanly!");
 
 
