@@ -175,9 +175,87 @@ function testSubmissionIntegrityAndAuditLogging() {
     console.log("✅ Anti-Cheat Submission Integrity & Audit Logger Test Passed!");
 }
 
+function testAuthoritativeValidator() {
+    console.log("▶ Testing AuthoritativeValidator Replay Simulation & Signatures...");
+    const { AuthoritativeValidator, AuthoritativeValidatorClass } = require("../src/security/AuthoritativeValidator");
+
+    // 1. Generate Synthetic Dataset
+    const dataset = [];
+    for (let i = 0; i < 20; i++) {
+        const x = i * 0.5;
+        const y = 2.0 * x + 1.0;
+        dataset.push({ x, y });
+    }
+
+    // 2. Perform ground truth training simulation
+    let w = 0.0, b = 0.0;
+    const lr = 0.05;
+    const epochs = 100;
+    const N = dataset.length;
+    for (let ep = 0; ep < epochs; ep++) {
+        let gradW = 0, gradB = 0;
+        for (let i = 0; i < N; i++) {
+            const pred = w * dataset[i].x + b;
+            const err = pred - dataset[i].y;
+            gradW += (2 / N) * err * dataset[i].x;
+            gradB += (2 / N) * err;
+        }
+        w -= lr * gradW;
+        b -= lr * gradB;
+    }
+
+    // Test Valid Submission
+    const validResult = AuthoritativeValidator.verifyLinearRegressionTraining(
+        dataset, 0.0, 0.0, w, b, lr, epochs, 1200, 0.01, "player_123", "ValidLearner"
+    );
+    assert.strictEqual(validResult.valid, true, "Legitimate gradient replay must pass verification");
+    assert(validResult.signature && validResult.signature.length === 64, "Signature must be 64-char SHA256 hex");
+
+    // Test Fabricated Weights (Cheater injected w=999)
+    const fakeResult = AuthoritativeValidator.verifyLinearRegressionTraining(
+        dataset, 0.0, 0.0, 999.0, 999.0, lr, epochs, 1200, 0.01, "player_cheater", "Hacker"
+    );
+    assert.strictEqual(fakeResult.valid, false, "Fabricated weights must fail replay verification");
+    assert.strictEqual(fakeResult.reason, "WEIGHT_REPLAY_MISMATCH");
+
+    // Test Teleportation / Impossible Speed
+    const moveCheck = AuthoritativeValidator.validateMovement(
+        { x: 0, y: 0, z: 0 },
+        { x: 500, y: 0, z: 500 }, // 707 meters in 1 second!
+        1.0,
+        "player_speedster",
+        "Flash"
+    );
+    assert.strictEqual(moveCheck.valid, false, "Teleportation / speed hacking must be rejected");
+
+    console.log("✅ AuthoritativeValidator Replay Simulation & Signatures Test Passed!");
+}
+
+function testMatchmakingAndElo() {
+    console.log("▶ Testing Matchmaking Elo Calculator & Queue Bracket Expansion...");
+    const { calculateEloChange } = require("../src/rooms/MatchmakingRoom");
+
+    // Equal MMR win
+    const res1 = calculateEloChange(1200, 1200, 1.0, 32);
+    assert.strictEqual(res1.delta, 16, "Win against equal opponent gives +16 Elo");
+    assert.strictEqual(res1.newRating, 1216);
+
+    // Underdog win (1000 vs 1400)
+    const res2 = calculateEloChange(1000, 1400, 1.0, 32);
+    assert(res2.delta > 25, "Underdog win should award significant rating bonus");
+
+    // Heavy favorite loss (1400 vs 1000)
+    const res3 = calculateEloChange(1400, 1000, 0.0, 32);
+    assert(res3.delta < -25, "Favorite loss should penalize rating heavily");
+
+    console.log("✅ Matchmaking Elo Calculator Test Passed!");
+}
+
 testSchemaAndLifecycle();
 testActivityStateEnum();
 testServerSideCollectibleValidation();
 test1v1DuelFlowAndServerHiddenTestSet();
 testSubmissionIntegrityAndAuditLogging();
+testAuthoritativeValidator();
+testMatchmakingAndElo();
 console.log("🎉 All NeuroArena Server Unit Tests Passed Cleanly!");
