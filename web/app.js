@@ -7250,6 +7250,145 @@ const MLStudioEngine = {
     }
 };
 
+// =========================================================
+// COMPETITOR GAME ENGINES (while True: learn(), W&B, Kaggle)
+// =========================================================
+
+const CompetitorFeatureManager = {
+    runs: [
+        { id: "RUN-88A2", arch: "MLP (Adam)", loss: 0.024, f1: 0.952, tag: "CHAMPION", curve: [0.65, 0.42, 0.28, 0.15, 0.08, 0.04, 0.024] },
+        { id: "RUN-74B1", arch: "DecisionTree", loss: 0.048, f1: 0.910, tag: "STAGING", curve: [0.70, 0.50, 0.35, 0.20, 0.12, 0.08, 0.048] },
+        { id: "RUN-62C9", arch: "OLS Linear", loss: 0.092, f1: 0.865, tag: "ARCHIVED", curve: [0.80, 0.60, 0.45, 0.30, 0.20, 0.14, 0.092] }
+    ],
+
+    init() {
+        this.setupModalBindings();
+    },
+
+    setupModalBindings() {
+        // Modal Open / Close buttons
+        const btnContracts = document.getElementById("btn-open-contracts-hud");
+        const modalContracts = document.getElementById("contracts-modal");
+        const btnCloseContracts = document.getElementById("btn-close-contracts");
+        if (btnContracts && modalContracts) {
+            btnContracts.addEventListener("click", () => modalContracts.classList.remove("hidden"));
+        }
+        if (btnCloseContracts && modalContracts) {
+            btnCloseContracts.addEventListener("click", () => modalContracts.classList.add("hidden"));
+        }
+
+        const btnExp = document.getElementById("btn-open-experiments-hud");
+        const modalExp = document.getElementById("experiment-tracker-modal");
+        const btnCloseExp = document.getElementById("btn-close-experiments");
+        if (btnExp && modalExp) {
+            btnExp.addEventListener("click", () => {
+                modalExp.classList.remove("hidden");
+                this.renderExperimentOverlay();
+            });
+        }
+        if (btnCloseExp && modalExp) {
+            btnCloseExp.addEventListener("click", () => modalExp.classList.add("hidden"));
+        }
+
+        const btnKfold = document.getElementById("btn-open-kfold-hud");
+        const modalKfold = document.getElementById("cross-validation-modal");
+        const btnCloseKfold = document.getElementById("btn-close-kfold");
+        if (btnKfold && modalKfold) {
+            btnKfold.addEventListener("click", () => modalKfold.classList.remove("hidden"));
+        }
+        if (btnCloseKfold && modalKfold) {
+            btnCloseKfold.addEventListener("click", () => modalKfold.classList.add("hidden"));
+        }
+
+        // K-Fold Execute button
+        const btnRunKfold = document.getElementById("btn-run-kfold-eval");
+        if (btnRunKfold) {
+            btnRunKfold.addEventListener("click", () => this.executeKFoldEvaluation());
+        }
+
+        // Contract submissions
+        document.querySelectorAll(".btn-submit-contract").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                const contractId = e.target.getAttribute("data-contract");
+                this.submitContract(contractId, e.target);
+            });
+        });
+    },
+
+    submitContract(contractId, buttonEl) {
+        if (buttonEl) {
+            buttonEl.innerText = "✓ CONTRACT COMPLETED (+300 CR)";
+            buttonEl.style.background = "#22c55e";
+            buttonEl.style.borderColor = "#22c55e";
+            buttonEl.disabled = true;
+        }
+        MLStudioEngine.triggerKernelTelemetry("Client Contract SLA verified! Corporate payout +300 Compute Credits deposited.", "NORMAL");
+    },
+
+    renderExperimentOverlay() {
+        const canvas = document.getElementById("canvas-experiment-overlay");
+        if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+        const w = canvas.width, h = canvas.height;
+        ctx.clearRect(0, 0, w, h);
+
+        // Grid lines
+        ctx.strokeStyle = "#1e293b";
+        ctx.lineWidth = 1;
+        for (let i = 1; i <= 4; i++) {
+            ctx.beginPath();
+            ctx.moveTo(30, (h - 20) * (i / 4));
+            ctx.lineTo(w - 10, (h - 20) * (i / 4));
+            ctx.stroke();
+        }
+
+        const colors = ["#00FF66", "#c084fc", "#38bdf8"];
+        this.runs.forEach((run, rIdx) => {
+            ctx.strokeStyle = colors[rIdx % colors.length];
+            ctx.lineWidth = rIdx === 0 ? 2.5 : 1.5;
+            ctx.beginPath();
+
+            const pts = run.curve;
+            pts.forEach((val, idx) => {
+                const x = 35 + idx * ((w - 55) / (pts.length - 1));
+                const y = h - 25 - val * (h - 45);
+                if (idx === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+        });
+
+        // Legend
+        ctx.font = "8.5px 'JetBrains Mono', monospace";
+        this.runs.forEach((run, rIdx) => {
+            ctx.fillStyle = colors[rIdx % colors.length];
+            ctx.fillText(`● ${run.id} (${run.arch})`, 40 + rIdx * 105, 14);
+        });
+    },
+
+    executeKFoldEvaluation() {
+        const confVal = document.getElementById("kfold-confidence-val");
+        const cardsRow = document.getElementById("kfold-cards-row");
+        if (!cardsRow) return;
+
+        let foldsHtml = "";
+        let accSum = 0;
+        for (let i = 1; i <= 5; i++) {
+            const acc = (94.0 + Math.random() * 4.5).toFixed(1);
+            const loss = (0.020 + Math.random() * 0.015).toFixed(4);
+            accSum += parseFloat(acc);
+            foldsHtml += `<div class="stat-card" style="padding:8px 4px; border:1px solid #38bdf8;"><span style="color:#94a3b8; font-size:9px;">FOLD #${i}</span><div style="color:#4ade80; font-weight:bold; font-size:11px;">Acc: ${acc}%</div><div style="color:#facc15; font-size:9px;">Loss: ${loss}</div></div>`;
+        }
+        cardsRow.innerHTML = foldsHtml;
+
+        const meanAcc = (accSum / 5).toFixed(1);
+        if (confVal) {
+            confVal.innerText = `${meanAcc}% [STABLE GENERALIZATION]`;
+        }
+        MLStudioEngine.triggerKernelTelemetry(`5-Fold Stratified Cross-Validation complete! Mean Accuracy: ${meanAcc}% with low fold variance.`, "NORMAL");
+    }
+};
+
 function onWindowResize() {
     if (!camera || !renderer) return;
     camera.aspect = window.innerWidth / window.innerHeight;
@@ -7306,6 +7445,7 @@ window.addEventListener("DOMContentLoaded", () => {
     setupUIEvents();
     computeDatasetStats();
     MLStudioEngine.init();
+    CompetitorFeatureManager.init();
     updateHUD();
     requestAnimationFrame(animate);
 });

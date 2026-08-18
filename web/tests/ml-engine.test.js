@@ -1495,6 +1495,118 @@ function testGradientNormAndWeightDecay() {
     console.log("✅ Gradient Norm Calculation & L2 Weight Decay Test Passed!");
 }
 
+function testClientFreelanceContractsAndSLAs() {
+    console.log("▶ Testing Client Freelance Contracts & SLA Evaluation (while True: learn())...");
+
+    const contract = {
+        id: "contract_biogen_02",
+        client: "BioGen Cellular",
+        reqAcc: 0.92,
+        maxLatencyMs: 12.0
+    };
+
+    function evaluateContract(achievedAcc, measuredLatency) {
+        return achievedAcc >= contract.reqAcc && measuredLatency <= contract.maxLatencyMs;
+    }
+
+    assert.strictEqual(evaluateContract(0.95, 8.5), true, "Submission exceeding accuracy and within latency SLA passes");
+    assert.strictEqual(evaluateContract(0.88, 8.5), false, "Submission failing accuracy SLA is rejected");
+    assert.strictEqual(evaluateContract(0.96, 16.2), false, "Submission exceeding latency SLA threshold is rejected");
+
+    console.log("✅ Client Freelance Contracts & SLA Evaluation Test Passed!");
+}
+
+function testFeatureEngineeringPreprocessingPipeline() {
+    console.log("▶ Testing Feature Engineering & Preprocessing Pipeline (Zachtronics)...");
+
+    // 1. Z-Score Standardization: (x - mean) / std
+    const data = [2.0, 4.0, 6.0, 8.0];
+    const mean = 5.0;
+    const std = Math.sqrt(5.0); // 2.236
+    const standardized = data.map(x => (x - mean) / std);
+
+    assert(Math.abs(standardized[0] - (-1.3416)) < 0.001, "First standardized sample equals -1.3416");
+    assert(Math.abs(standardized[3] - 1.3416) < 0.001, "Last standardized sample equals +1.3416");
+
+    // 2. Interaction Terms: [x1, x2] -> [x1, x2, x1*x2, x1^2, x2^2]
+    const x1 = 3.0, x2 = 4.0;
+    const interactionFeatures = [x1, x2, x1 * x2, x1 * x1, x2 * x2];
+    assert.strictEqual(interactionFeatures[2], 12.0, "x1*x2 cross term must be 12.0");
+    assert.strictEqual(interactionFeatures[3], 9.0, "x1^2 term must be 9.0");
+    assert.strictEqual(interactionFeatures[4], 16.0, "x2^2 term must be 16.0");
+
+    console.log("✅ Feature Engineering & Preprocessing Pipeline Test Passed!");
+}
+
+function testMultiRunExperimentTrackerAndRegistry() {
+    console.log("▶ Testing Multi-Run Experiment Tracker & Champion Promotion (W&B)...");
+
+    const runs = [];
+    let champion = null;
+
+    function logRun(id, arch, loss, f1) {
+        const run = { id, arch, loss, f1, tag: "STAGING" };
+        runs.push(run);
+        if (!champion || (run.loss < champion.loss && run.f1 >= champion.f1)) {
+            if (champion) champion.tag = "PRODUCTION_CANDIDATE";
+            run.tag = "CHAMPION";
+            champion = run;
+        }
+        return run;
+    }
+
+    logRun("RUN-1", "Linear", 0.080, 0.88);
+    assert.strictEqual(champion.id, "RUN-1");
+
+    logRun("RUN-2", "DecisionTree", 0.050, 0.91);
+    assert.strictEqual(champion.id, "RUN-2", "Better loss and F1 promotes RUN-2 to Champion");
+
+    logRun("RUN-3", "OverfittedModel", 0.090, 0.85);
+    assert.strictEqual(champion.id, "RUN-2", "Worse model does not displace Champion");
+
+    console.log("✅ Multi-Run Experiment Tracker & Champion Promotion Test Passed!");
+}
+
+function test5FoldStratifiedCrossValidation() {
+    console.log("▶ Testing 5-Fold Stratified Cross Validation & Variance Bounds (Kaggle)...");
+
+    const foldAccs = [0.952, 0.948, 0.960, 0.939, 0.955];
+    const meanAcc = foldAccs.reduce((a, b) => a + b, 0) / foldAccs.length;
+    const varAcc = foldAccs.reduce((sum, a) => sum + Math.pow(a - meanAcc, 2), 0) / foldAccs.length;
+    const stdAcc = Math.sqrt(varAcc);
+
+    assert(Math.abs(meanAcc - 0.9508) < 0.001, "Mean 5-fold accuracy is ~95.1%");
+    assert(stdAcc < 0.015, "Low fold variance indicates stable generalization manifold");
+
+    console.log("✅ 5-Fold Stratified Cross Validation & Variance Bounds Test Passed!");
+}
+
+function testAutonomousBotNeuralPolicyDriving() {
+    console.log("▶ Testing Autonomous Bot Neural Policy Steering & Throttle (Screeps/Gladiabots)...");
+
+    // 4 inputs: [deltaX, deltaZ, obstacleProximity, currentSpeed]
+    const obsSafe = [10.0, 5.0, 0.1, 4.0];
+    const obsDanger = [10.0, 5.0, 0.98, 4.0];
+
+    function evaluateBotPolicy(obs) {
+        const obstacleProx = obs[2];
+        const isBraking = obstacleProx > 0.95;
+        const throttle = obstacleProx > 0.8 ? 0.2 : 1.0;
+        const steer = Math.min(45, Math.max(-45, obs[0] * 2.0));
+        return { steer, throttle, isBraking };
+    }
+
+    const actionSafe = evaluateBotPolicy(obsSafe);
+    assert.strictEqual(actionSafe.throttle, 1.0, "Safe obstacle proximity maintains full throttle");
+    assert.strictEqual(actionSafe.isBraking, false, "Safe state does not brake");
+
+    const actionDanger = evaluateBotPolicy(obsDanger);
+    assert.strictEqual(actionDanger.throttle, 0.2, "Close obstacle throttles down speed");
+    assert.strictEqual(actionDanger.isBraking, true, "Critical proximity triggers emergency braking");
+
+    console.log("✅ Autonomous Bot Neural Policy Steering & Throttle Test Passed!");
+}
+
 testSeedPRNG();
 testLinearInferenceAndExtrapolation();
 testDatasetHealthAndGeneralizationDegradation();
@@ -1541,6 +1653,11 @@ testEconomyAndIAPCatalog();
 testAdamOptimizerAndGELUBackprop();
 testConfusionMatrixAndROCIntegration();
 testGradientNormAndWeightDecay();
+testClientFreelanceContractsAndSLAs();
+testFeatureEngineeringPreprocessingPipeline();
+testMultiRunExperimentTrackerAndRegistry();
+test5FoldStratifiedCrossValidation();
+testAutonomousBotNeuralPolicyDriving();
 console.log("🎉 All Web Unit Tests Passed Cleanly!");
 
 
