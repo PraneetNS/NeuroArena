@@ -157,12 +157,15 @@
 
         <!-- In-Game HUD Layer (Optimized for Motion Clarity) -->
         <div id="hud-layer" class="ui-layer">
-            <!-- 0. FLOATING NON-BLOCKING MASCOT SPEECH BUBBLE -->
-            <div id="mascot-bubble" class="glass-mascot-bubble hidden">
-                <div class="mascot-avatar">🤖</div>
+            <!-- 0. KERNEL TELEMETRY COPILOT & REAL-TIME ML DIAGNOSTICS OS -->
+            <div id="mascot-bubble" class="glass-mascot-bubble hidden" style="border:1.5px solid #00F0FF; background:rgba(10,15,30,0.92); box-shadow:0 0 25px rgba(0,240,255,0.25);">
+                <div class="mascot-avatar" style="background:#00F0FF; color:#050b14; font-weight:900; font-family:'JetBrains Mono', monospace; font-size:13px; display:flex; align-items:center; justify-content:center; border-radius:6px; width:34px; height:34px;">∇θ</div>
                 <div class="mascot-content">
-                    <div class="mascot-name">ADA [AI COMPANION]</div>
-                    <div id="mascot-text" class="mascot-dialogue">Welcome to NeuroArena, Architect!</div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <div class="mascot-name" style="color:#00F0FF; font-family:'JetBrains Mono', monospace; font-size:11px; font-weight:800; letter-spacing:1px;">KERNEL TELEMETRY COPILOT [ML DIAGNOSTICS]</div>
+                        <span id="mascot-grad-badge" style="font-size:9px; background:rgba(0,255,102,0.15); color:#00FF66; border:1px solid #00FF66; padding:1px 6px; border-radius:4px; font-family:'JetBrains Mono', monospace;">‖∇W‖: NORMAL</span>
+                    </div>
+                    <div id="mascot-text" class="mascot-dialogue" style="font-family:'JetBrains Mono', monospace; font-size:11.5px; color:#e2e8f0; line-height:1.45;">Neural kernel initialized. Empirical loss manifold ready for stochastic gradient descent.</div>
                 </div>
             </div>
 
@@ -1070,52 +1073,139 @@
                         </div>
                     </div>
 
-                    <div class="terminal-section">
-                        <div class="section-title">2. VECTOR SEARCH / RAG QUERY & COSINE SIMILARITY</div>
-                        <div class="rag-query-row">
-                            <input type="text" id="rag-query-input" value="frost" class="cyber-rag-input"
-                                placeholder="Enter concept token (e.g. frost, fire, neural)...">
-                            <button id="btn-rag-query" class="rag-btn glow-cyan">🔍 Retrieve Top-K Vectors</button>
-                            <button id="btn-vector-analogy" class="rag-btn glow-amber">🧮 Analogy: fire - heat +
-                                cold</button>
+                    <!-- 1.1 DEEP LEARNING HYPERPARAMETER & OPTIMIZER DECK -->
+                    <div class="terminal-section" style="border:1.5px solid #00F0FF; background:rgba(10,20,40,0.65); padding:12px 14px; border-radius:8px; margin-top:8px;">
+                        <div class="section-title" style="color:#00F0FF; font-size:11px; display:flex; justify-content:space-between; align-items:center;">
+                            <span>⚙️ HYPERPARAMETER & OPTIMIZER CONFIGURATION</span>
+                            <span id="opt-formula-badge" style="font-size:10px; color:#facc15; font-family:'JetBrains Mono', monospace;">θ_{t+1} = θ_t - η · m̂_t / (√v̂_t + ε)</span>
                         </div>
-                        <div id="rag-results-box" class="rag-results-container">
-                            <div class="rag-card"><span class="word">1. ice</span> <span class="sim">Cosine Sim =
-                                    <b>0.942</b></span></div>
-                            <div class="rag-card"><span class="word">2. snow</span> <span class="sim">Cosine Sim =
-                                    <b>0.915</b></span></div>
-                            <div class="rag-card"><span class="word">3. glacier</span> <span class="sim">Cosine Sim =
-                                    <b>0.884</b></span></div>
+                        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:10px; margin-top:8px; font-family:'JetBrains Mono', monospace; font-size:11px;">
+                            <div>
+                                <label style="color:#94a3b8; display:block; font-size:10px;">OPTIMIZER ALGORITHM:</label>
+                                <select id="hyper-optimizer-select" class="cyber-select" style="width:100%; padding:4px 8px; font-size:11px;">
+                                    <option value="adam" selected>Adam (β₁=0.9, β₂=0.999)</option>
+                                    <option value="rmsprop">RMSprop (γ=0.99, ε=1e-8)</option>
+                                    <option value="momentum">SGD + Nesterov Momentum</option>
+                                    <option value="sgd">Vanilla SGD (Batch)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <div style="display:flex; justify-content:space-between;">
+                                    <label style="color:#94a3b8; font-size:10px;">LEARNING RATE (η):</label>
+                                    <b id="hyper-lr-val" class="text-cyan">0.050</b>
+                                </div>
+                                <input type="range" id="hyper-lr-slider" min="1" max="100" value="50" style="width:100%;">
+                            </div>
+                            <div>
+                                <div style="display:flex; justify-content:space-between;">
+                                    <label style="color:#94a3b8; font-size:10px;">L2 WEIGHT DECAY (λ):</label>
+                                    <b id="hyper-decay-val" class="text-amber">1e-4</b>
+                                </div>
+                                <input type="range" id="hyper-decay-slider" min="0" max="50" value="10" style="width:100%;">
+                            </div>
+                            <div>
+                                <label style="color:#94a3b8; display:block; font-size:10px;">ACTIVATION FUNCTION (σ):</label>
+                                <select id="hyper-activation-select" class="cyber-select" style="width:100%; padding:4px 8px; font-size:11px;">
+                                    <option value="relu" selected>ReLU (max(0, z))</option>
+                                    <option value="gelu">GELU (Gaussian Error Linear)</option>
+                                    <option value="leaky">LeakyReLU (α=0.01)</option>
+                                    <option value="tanh">Tanh (Hyperbolic Tangent)</option>
+                                    <option value="sigmoid">Sigmoid (1 / (1 + e^-z))</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="terminal-section">
-                        <div class="section-title">3. OPTIMIZERS, BAGGING PARTY & ASYNC GHOST DUEL</div>
-                        <div class="party-duel-row">
-                            <button id="btn-summon-party" class="party-btn glow-green">🌲 SUMMON BAGGING PARTY (5
-                                TREES)</button>
-                            <button id="btn-ghost-duel" class="duel-btn glow-amber">⚔️ DUEL GHOST OVERFITTER-X</button>
-                            <button id="btn-swap-ghost" class="swap-btn">🔄 Swap Rival</button>
+                    <!-- 1.2 TENSOR & WEIGHT MATRIX HEATMAP STUDIO -->
+                    <div id="tensor-studio-section" class="terminal-section" style="border:1.5px solid #BD00FF; background:rgba(20,10,35,0.75); padding:12px 14px; border-radius:8px; margin-top:8px;">
+                        <div class="section-title" style="color:#BD00FF; font-size:11px; display:flex; justify-content:space-between; align-items:center;">
+                            <span>🔬 TENSOR & WEIGHT MATRIX INSPECTOR (W ∈ ℝ^{m×n}, b ∈ ℝ^n)</span>
+                            <span id="tensor-dim-badge" style="font-size:10px; color:#c084fc; font-family:'JetBrains Mono', monospace;">Rank-2 Tensor | ‖W‖_F: 1.482</span>
+                        </div>
+                        <div id="tensor-matrix-grid-container" style="display:flex; flex-wrap:wrap; gap:12px; margin-top:8px; font-family:'JetBrains Mono', monospace; font-size:10.5px;">
+                            <!-- Populated dynamically via renderTensorWeightHeatmap -->
+                            <div class="stat-card" style="flex:1; min-width:240px; padding:8px 12px; background:rgba(15,23,42,0.9); border:1px solid #c084fc;">
+                                <div style="color:#c084fc; font-weight:800; margin-bottom:4px; font-size:10px;">WEIGHT MATRIX W⁽¹⁾ (HIDDEN LAYER)</div>
+                                <div id="tensor-w1-table" style="max-height:110px; overflow-y:auto;"></div>
+                            </div>
+                            <div class="stat-card" style="flex:1; min-width:180px; padding:8px 12px; background:rgba(15,23,42,0.9); border:1px solid #00F0FF;">
+                                <div style="color:#00F0FF; font-weight:800; margin-bottom:4px; font-size:10px;">BIAS VECTOR b⁽¹⁾ & GRADIENT NORM</div>
+                                <div id="tensor-b1-table" style="max-height:110px; overflow-y:auto;"></div>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="terminal-section">
-                        <div class="section-title">4. LIVE MATHEMATICAL DUAL-GRAPH VISUALIZER</div>
-                        <div class="graphs-viewport">
-                            <div class="graph-card">
-                                <div class="graph-card-title" id="graph-left-title">🌌 2D EMBEDDING VECTOR SPACE</div>
-                                <canvas id="canvas-loss-graph" width="380" height="200"></canvas>
-                                <!-- Live Real-Time Mathematical Narration Layer -->
-                                <div id="terminal-narration-stream" class="terminal-narration-box">
-                                    <div class="narration-header"><span class="pulse-dot"></span> 🎙️ LIVE TRAINING
-                                        NARRATION:</div>
-                                    <div id="narration-line-text" class="narration-text">Ready to optimize. Hit Train to
-                                        stream real-time mathematical commentary.</div>
+                    <!-- 1.3 CLASSIFICATION METRICS, CONFUSION MATRIX & ROC-AUC BOARD -->
+                    <div id="confusion-matrix-section" class="terminal-section" style="border:1.5px solid #00FF66; background:rgba(10,30,20,0.75); padding:12px 14px; border-radius:8px; margin-top:8px;">
+                        <div class="section-title" style="color:#00FF66; font-size:11px; display:flex; justify-content:space-between; align-items:center;">
+                            <span>📊 CLASSIFICATION METRICS & 2×2 CONFUSION MATRIX</span>
+                            <span id="metric-f1-badge" style="font-size:10px; color:#4ade80; font-family:'JetBrains Mono', monospace;">F₁-Score: 0.952 | ROC-AUC: 0.984</span>
+                        </div>
+                        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px; margin-top:8px; font-family:'JetBrains Mono', monospace;">
+                            <!-- 2x2 Matrix -->
+                            <div style="background:rgba(15,23,42,0.9); padding:10px; border-radius:6px; border:1px solid rgba(0,255,102,0.3);">
+                                <div style="font-size:10px; color:#94a3b8; text-align:center; margin-bottom:6px;">EMPIRICAL CONFUSION MATRIX</div>
+                                <table style="width:100%; border-collapse:collapse; text-align:center; font-size:11px;">
+                                    <tr>
+                                        <td></td>
+                                        <td style="color:#38bdf8; font-size:9px; padding:2px;">Pred Pos</td>
+                                        <td style="color:#38bdf8; font-size:9px; padding:2px;">Pred Neg</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="color:#f59e0b; font-size:9px; padding:2px;">Act Pos</td>
+                                        <td id="cm-tp" style="background:rgba(34,197,94,0.25); border:1px solid #22c55e; color:#4ade80; font-weight:bold; padding:6px;">TP: 18</td>
+                                        <td id="cm-fn" style="background:rgba(239,68,68,0.2); border:1px solid #ef4444; color:#f87171; font-weight:bold; padding:6px;">FN: 1</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="color:#f59e0b; font-size:9px; padding:2px;">Act Neg</td>
+                                        <td id="cm-fp" style="background:rgba(239,68,68,0.2); border:1px solid #ef4444; color:#f87171; font-weight:bold; padding:6px;">FP: 1</td>
+                                        <td id="cm-tn" style="background:rgba(34,197,94,0.25); border:1px solid #22c55e; color:#4ade80; font-weight:bold; padding:6px;">TN: 16</td>
+                                    </tr>
+                                </table>
+                            </div>
+
+                            <!-- Diagnostic Gauges -->
+                            <div style="background:rgba(15,23,42,0.9); padding:10px; border-radius:6px; border:1px solid rgba(0,255,102,0.3); font-size:11px;">
+                                <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                                    <span style="color:#94a3b8;">Precision:</span>
+                                    <b id="cm-prec-val" class="text-cyan">94.7%</b>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                                    <span style="color:#94a3b8;">Recall (Sensitivity):</span>
+                                    <b id="cm-rec-val" class="text-green">94.7%</b>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                                    <span style="color:#94a3b8;">Specificity (TNR):</span>
+                                    <b id="cm-spec-val" class="text-amber">94.1%</b>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                                    <span style="color:#94a3b8;">Balanced Accuracy:</span>
+                                    <b id="cm-bal-acc-val" class="text-green">94.4%</b>
                                 </div>
                             </div>
-                            <div class="graph-card">
-                                <div class="graph-card-title" id="graph-right-title">🧬 PAIRWISE COSINE SIMILARITY</div>
-                                <canvas id="canvas-scatter-graph" width="380" height="200"></canvas>
+
+                            <!-- Live ROC Curve Canvas -->
+                            <div style="background:rgba(15,23,42,0.9); padding:10px; border-radius:6px; border:1px solid rgba(0,255,102,0.3); text-align:center;">
+                                <div style="font-size:10px; color:#94a3b8; margin-bottom:4px;">ROC CURVE (TPR vs FPR)</div>
+                                <canvas id="canvas-roc-curve" width="180" height="95" style="background:#050b14; border-radius:4px; border:1px solid #1e293b;"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 1.4 INTERACTIVE NEURAL SYNAPSE GRAPH & ATTENTION MATRIX -->
+                    <div class="terminal-section" style="border:1.5px solid #38bdf8; background:rgba(15,23,42,0.75); padding:12px 14px; border-radius:8px; margin-top:8px;">
+                        <div class="section-title" style="color:#38bdf8; font-size:11px; display:flex; justify-content:space-between; align-items:center;">
+                            <span>🧠 SYNAPTIC ARCHITECTURE GRAPH & ATTENTION HEADS</span>
+                            <span id="synapse-info-badge" style="font-size:10px; color:#38bdf8; font-family:'JetBrains Mono', monospace;">Feedforward Flow Active</span>
+                        </div>
+                        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:12px; margin-top:8px;">
+                            <div style="background:#050b14; border:1px solid #1e293b; border-radius:6px; padding:8px; text-align:center;">
+                                <div style="font-size:10px; color:#38bdf8; font-family:'JetBrains Mono', monospace; margin-bottom:4px;">FEEDFORWARD SYNAPTIC ACTIVATION GRAPH</div>
+                                <canvas id="canvas-synapse-graph" width="340" height="140" style="width:100%; border-radius:4px;"></canvas>
+                            </div>
+                            <div style="background:#050b14; border:1px solid #1e293b; border-radius:6px; padding:8px; text-align:center;">
+                                <div style="font-size:10px; color:#c084fc; font-family:'JetBrains Mono', monospace; margin-bottom:4px;">TRANSFORMER ATTENTION MATRIX Softmax(QKᵀ / √dₖ)</div>
+                                <canvas id="canvas-attention-heatmap" width="340" height="140" style="width:100%; border-radius:4px;"></canvas>
                             </div>
                         </div>
                     </div>

@@ -200,5 +200,72 @@ namespace NeuroArena.ML
             float denom = Mathf.Sqrt(denomX * denomY);
             return denom > 1e-7f ? numer / denom : 0f;
         }
+
+        [Serializable]
+        public struct ROCCurvePoint
+        {
+            public float falsePositiveRate;
+            public float truePositiveRate;
+            public float threshold;
+        }
+
+        /// <summary>
+        /// Generates Receiver Operating Characteristic (ROC) curve coordinates and computes AUC.
+        /// </summary>
+        public static (List<ROCCurvePoint> points, float auc) ComputeROCCurve(float[] probabilities, int[] trueLabels, int numThresholds = 50)
+        {
+            var points = new List<ROCCurvePoint>();
+            if (probabilities == null || trueLabels == null || probabilities.Length == 0)
+            {
+                return (points, 0.5f);
+            }
+
+            int P = 0, N = 0;
+            for (int i = 0; i < trueLabels.Length; i++)
+            {
+                if (trueLabels[i] == 1) P++;
+                else N++;
+            }
+
+            if (P == 0 || N == 0) return (points, 0.5f);
+
+            for (int s = 0; s <= numThresholds; s++)
+            {
+                float threshold = (float)s / numThresholds;
+                int tp = 0, fp = 0;
+
+                for (int i = 0; i < probabilities.Length; i++)
+                {
+                    bool pred = probabilities[i] >= threshold;
+                    if (pred && trueLabels[i] == 1) tp++;
+                    else if (pred && trueLabels[i] == 0) fp++;
+                }
+
+                float tpr = (float)tp / P;
+                float fpr = (float)fp / N;
+
+                points.Add(new ROCCurvePoint
+                {
+                    falsePositiveRate = fpr,
+                    truePositiveRate = tpr,
+                    threshold = threshold
+                });
+            }
+
+            // Sort points by FPR ascending for trapezoidal integration
+            points.Sort((a, b) => a.falsePositiveRate.CompareTo(b.falsePositiveRate));
+
+            // Numerical integration via Trapezoidal Rule: AUC = sum 0.5 * (FPR[i] - FPR[i-1]) * (TPR[i] + TPR[i-1])
+            float auc = 0f;
+            for (int i = 1; i < points.Count; i++)
+            {
+                float dFpr = points[i].falsePositiveRate - points[i - 1].falsePositiveRate;
+                float avgTpr = (points[i].truePositiveRate + points[i - 1].truePositiveRate) * 0.5f;
+                auc += dFpr * avgTpr;
+            }
+
+            auc = Mathf.Clamp01(Mathf.Abs(auc));
+            return (points, auc);
+        }
     }
 }

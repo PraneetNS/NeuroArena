@@ -1393,6 +1393,108 @@ function testEconomyAndIAPCatalog() {
     console.log("✅ Economy Soft/Hard Currency Transactions Test Passed!");
 }
 
+function testAdamOptimizerAndGELUBackprop() {
+    console.log("▶ Testing Adam Optimizer First/Second Moments & GELU Activation...");
+
+    // GELU Approximation: 0.5x * (1 + tanh(sqrt(2/pi) * (x + 0.044715 x^3)))
+    function gelu(x) {
+        return 0.5 * x * (1 + Math.tanh(Math.sqrt(2 / Math.PI) * (x + 0.044715 * Math.pow(x, 3))));
+    }
+
+    assert(gelu(0) === 0, "GELU(0) must equal 0");
+    assert(gelu(1.0) > 0.84 && gelu(1.0) < 0.85, "GELU(1.0) should equal ~0.8413");
+    assert(gelu(-2.0) < 0 && gelu(-2.0) > -0.05, "GELU(-2.0) should equal ~-0.045");
+
+    // Adam First & Second Moment Bias Correction
+    let m = 0, v = 0;
+    const beta1 = 0.9, beta2 = 0.999, eps = 1e-8, lr = 0.01;
+    const grad = 2.5;
+
+    // Step 1
+    m = beta1 * m + (1 - beta1) * grad;
+    v = beta2 * v + (1 - beta2) * (grad * grad);
+    const mHat = m / (1 - Math.pow(beta1, 1));
+    const vHat = v / (1 - Math.pow(beta2, 1));
+
+    assert.strictEqual(mHat, 2.5, "First-step bias-corrected first moment mHat must equal raw gradient");
+    assert.strictEqual(vHat, 6.25, "First-step bias-corrected second moment vHat must equal raw gradient squared");
+
+    const step = lr * mHat / (Math.sqrt(vHat) + eps);
+    assert(Math.abs(step - lr) < 1e-5, "At step 1 with uniform gradient, Adam step equals learning rate eta");
+
+    console.log("✅ Adam Optimizer First/Second Moments & GELU Activation Test Passed!");
+}
+
+function testConfusionMatrixAndROCIntegration() {
+    console.log("▶ Testing Confusion Matrix Metrics & ROC-AUC Trapezoidal Integration...");
+
+    const preds = [0.95, 0.85, 0.70, 0.65, 0.40, 0.35, 0.20, 0.10];
+    const actuals = [1, 1, 1, 0, 1, 0, 0, 0]; // 4 Positives, 4 Negatives
+
+    function evaluateConfusionMatrix(probabilities, targets, threshold = 0.5) {
+        let tp = 0, fp = 0, tn = 0, fn = 0;
+        for (let i = 0; i < probabilities.length; i++) {
+            const p = probabilities[i] >= threshold;
+            const a = targets[i] === 1;
+            if (p && a) tp++;
+            else if (p && !a) fp++;
+            else if (!p && a) fn++;
+            else tn++;
+        }
+        const prec = tp / (tp + fp);
+        const rec = tp / (tp + fn);
+        const f1 = (2 * prec * rec) / (prec + rec);
+        return { tp, fp, tn, fn, prec, rec, f1 };
+    }
+
+    const cm = evaluateConfusionMatrix(preds, actuals, 0.5);
+    assert.strictEqual(cm.tp, 3, "True Positives must be 3");
+    assert.strictEqual(cm.fp, 1, "False Positives must be 1");
+    assert.strictEqual(cm.fn, 1, "False Negatives must be 1");
+    assert.strictEqual(cm.tn, 3, "True Negatives must be 3");
+    assert.strictEqual(cm.prec, 0.75, "Precision = 3/4 = 0.75");
+    assert.strictEqual(cm.rec, 0.75, "Recall = 3/4 = 0.75");
+    assert.strictEqual(cm.f1, 0.75, "F1-Score = 0.75");
+
+    // Trapezoidal AUC Calculation
+    const rocPoints = [
+        { fpr: 0.0, tpr: 0.0 },
+        { fpr: 0.0, tpr: 0.75 },
+        { fpr: 0.25, tpr: 0.75 },
+        { fpr: 0.25, tpr: 1.0 },
+        { fpr: 1.0, tpr: 1.0 }
+    ];
+
+    let auc = 0;
+    for (let i = 1; i < rocPoints.length; i++) {
+        const dFpr = rocPoints[i].fpr - rocPoints[i - 1].fpr;
+        const avgTpr = (rocPoints[i].tpr + rocPoints[i - 1].tpr) * 0.5;
+        auc += dFpr * avgTpr;
+    }
+
+    assert(auc > 0.85 && auc < 0.95, `ROC-AUC ${auc} must fall in expected high discriminatory range`);
+
+    console.log("✅ Confusion Matrix Metrics & ROC-AUC Trapezoidal Integration Test Passed!");
+}
+
+function testGradientNormAndWeightDecay() {
+    console.log("▶ Testing Gradient Norm Calculation & L2 Weight Decay Regularization...");
+
+    const weights = [1.2, -0.8, 0.5, -1.5];
+    const grads = [0.04, -0.02, 0.01, 0.03];
+    const lambda = 0.01;
+
+    // Gradient with L2 regularization: g_reg = g + lambda * w
+    const regGrads = grads.map((g, i) => g + lambda * weights[i]);
+    assert.strictEqual(regGrads[0], 0.04 + 0.01 * 1.2, "L2 weight decay adds lambda * w to analytical gradient");
+
+    // Frobenius / L2 Gradient Norm: sqrt(sum g_i^2)
+    const norm = Math.sqrt(regGrads.reduce((sum, g) => sum + g * g, 0));
+    assert(norm > 0.05 && norm < 0.10, "Gradient norm should be properly computed");
+
+    console.log("✅ Gradient Norm Calculation & L2 Weight Decay Test Passed!");
+}
+
 testSeedPRNG();
 testLinearInferenceAndExtrapolation();
 testDatasetHealthAndGeneralizationDegradation();
@@ -1436,6 +1538,9 @@ testMasteryCertificatesAndHashing();
 testCloudSaveSmartMerge();
 testLocalizationAndAccessibility();
 testEconomyAndIAPCatalog();
+testAdamOptimizerAndGELUBackprop();
+testConfusionMatrixAndROCIntegration();
+testGradientNormAndWeightDecay();
 console.log("🎉 All Web Unit Tests Passed Cleanly!");
 
 
