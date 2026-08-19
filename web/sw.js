@@ -1,42 +1,52 @@
-const CACHE_NAME = "neuroarena-cache-v4";
+const CACHE_NAME = 'neuroarena-cache-v2';
 const ASSETS_TO_CACHE = [
-  "./",
-  "./index.html",
-  "./style.css",
-  "./design-system.css",
-  "./app.js",
-  "./manifest.json",
-  "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js",
-  "https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js",
-  "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Outfit:wght@400;600;800;900&display=swap"
+  './',
+  './index.html',
+  './style.css',
+  './design-system.css',
+  './app.js',
+  './manifest.json',
+  './src/wasmModelRuntime.js',
+  './src/adaptiveAudioEngine.js'
 ];
 
-self.addEventListener("install", (e) => {
+self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE).catch(() => { });
-    })
+      return cache.addAll(ASSETS_TO_CACHE);
+    }).then(() => self.skipWaiting())
   );
-  self.skipWaiting();
 });
 
-self.addEventListener("activate", (e) => {
+self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
-        keys.map((k) => {
-          if (k !== CACHE_NAME) return caches.delete(k);
+        keys.map((key) => {
+          if (key !== CACHE_NAME) {
+            return caches.delete(key);
+          }
         })
       );
-    })
+    }).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
-self.addEventListener("fetch", (e) => {
+self.addEventListener('fetch', (e) => {
+  // Stale-while-revalidate strategy for maximum offline availability
   e.respondWith(
-    caches.match(e.request).then((res) => {
-      return res || fetch(e.request).catch(() => caches.match("./index.html"));
+    caches.match(e.request).then((cachedResponse) => {
+      const fetchPromise = fetch(e.request).then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(e.request, responseToCache);
+          });
+        }
+        return networkResponse;
+      }).catch(() => cachedResponse);
+
+      return cachedResponse || fetchPromise;
     })
   );
 });
