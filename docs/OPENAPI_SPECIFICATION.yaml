@@ -1,0 +1,64 @@
+openapi: 3.1.0
+info:
+  title: NeuroArena Real-Time Matchmaking & Telemetry API
+  version: 1.0.0
+  description: OpenAPI 3.1 REST and WebSocket specification for NeuroArena ML Game Services.
+paths:
+  /healthz:
+    get:
+      summary: Health check endpoint
+      responses:
+        '200':
+          description: Server healthy
+  /metrics:
+    get:
+      summary: Prometheus scrape endpoint
+      responses:
+        '200':
+          description: Prometheus formatted system metrics
+  /api/v1/leaderboard:
+    get:
+      summary: Fetch global leaderboard
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          description: Top players sorted by ELO
+  /api/v1/cloudsave/{userId}:
+    get:
+      summary: Retrieve latest cloud save revision
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User save snapshot payload
+    post:
+      summary: Commit new cloud save snapshot
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                checksum:
+                  type: string
+                data:
+                  type: object
+      responses:
+        '200':
+          description: Snapshot saved successfully
