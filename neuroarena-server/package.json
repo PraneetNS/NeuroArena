@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
-    "test": "node test/server.test.js && node test/cluster-scale.test.js"
+    "test": "node test/server.test.js && node test/cluster-scale.test.js && node test/metrics.test.js && node test/replay.test.js && node test/tournament.test.js && node test/fastBinaryProtocol.test.js && node test/security.test.js && node test/cloudSave.test.js && node test/leaderboard.test.js"
   },
   "keywords": [
     "neuroarena",
