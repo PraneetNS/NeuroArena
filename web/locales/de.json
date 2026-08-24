@@ -1,0 +1,23 @@
+{
+  "arena": {
+    "title": "NeuroArena: Mehrspieler-Neuralkampf",
+    "connecting": "Verbindung zum Neural-Cluster wird hergestellt...",
+    "connected": "Neuronale Verbindung hergestellt",
+    "loss": "Verlust: {{loss}}",
+    "accuracy": "Genauigkeit: {{acc}}%",
+    "epoch": "Epoche {{epoch}}",
+    "weights_saved": "Gewichte mit Cloud-Kontrollpunkt synchronisiert"
+  },
+  "duel": {
+    "start": "Neuronales Duell beginnt",
+    "victory": "Sieg! Generalisierungs-Überlegenheit",
+    "defeat": "Niederlage: Überanpassung (Overfitting) erkannt",
+    "draw": "Gleichgewicht: Unentschieden"
+  },
+  "hud": {
+    "score": "Punktzahl: {{score}}",
+    "ping": "{{ping}} ms",
+    "fps": "{{fps}} FPS",
+    "rank": "Rang: {{tier}}"
+  }
+}

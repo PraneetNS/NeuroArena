@@ -1,0 +1,23 @@
+{
+  "arena": {
+    "title": "ニューロアリーナ：マルチプレイヤーニューラル対戦",
+    "connecting": "ニューラルクラスターに接続中...",
+    "connected": "ニューラルアップリンク確立",
+    "loss": "損失: {{loss}}",
+    "accuracy": "精度: {{acc}}%",
+    "epoch": "エポック {{epoch}}",
+    "weights_saved": "重みがクラウドチェックポイントに同期されました"
+  },
+  "duel": {
+    "start": "ニューラルデュエル開始",
+    "victory": "勝利！汎化性能の圧倒的優位",
+    "defeat": "敗北: 過学習を検知",
+    "draw": "均衡: 引き分け"
+  },
+  "hud": {
+    "score": "スコア: {{score}}",
+    "ping": "{{ping}} ms",
+    "fps": "{{fps}} FPS",
+    "rank": "ランク: {{tier}}"
+  }
+}

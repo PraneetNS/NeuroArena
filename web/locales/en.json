@@ -1,0 +1,23 @@
+{
+  "arena": {
+    "title": "NeuroArena: Multiplayer Neural Combat",
+    "connecting": "Connecting to Neural Cluster...",
+    "connected": "Neural Uplink Established",
+    "loss": "Loss: {{loss}}",
+    "accuracy": "Accuracy: {{acc}}%",
+    "epoch": "Epoch {{epoch}}",
+    "weights_saved": "Weights synced to cloud checkpoint"
+  },
+  "duel": {
+    "start": "Neural Duel Commencing",
+    "victory": "Victory! Generalization Superiority",
+    "defeat": "Defeat: Overfitting Detected",
+    "draw": "Equilibrium: Draw"
+  },
+  "hud": {
+    "score": "Score: {{score}}",
+    "ping": "{{ping}} ms",
+    "fps": "{{fps}} FPS",
+    "rank": "Tier: {{tier}}"
+  }
+}

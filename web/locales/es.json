@@ -1,0 +1,23 @@
+{
+  "arena": {
+    "title": "NeuroArena: Combate Neural Multijugador",
+    "connecting": "Conectando al Clúster Neural...",
+    "connected": "Enlace Neural Establecido",
+    "loss": "Pérdida: {{loss}}",
+    "accuracy": "Precisión: {{acc}}%",
+    "epoch": "Época {{epoch}}",
+    "weights_saved": "Pesos sincronizados con el punto de control"
+  },
+  "duel": {
+    "start": "Comenzando Duelo Neural",
+    "victory": "¡Victoria! Superioridad de Generalización",
+    "defeat": "Derrota: Sobreajuste Detectado",
+    "draw": "Equilibrio: Empate"
+  },
+  "hud": {
+    "score": "Puntaje: {{score}}",
+    "ping": "{{ping}} ms",
+    "fps": "{{fps}} FPS",
+    "rank": "Nivel: {{tier}}"
+  }
+}
