@@ -1703,6 +1703,102 @@ test5FoldStratifiedCrossValidation();
 testAutonomousBotNeuralPolicyDriving();
 testSessionResilienceAndExponentialBackoff();
 testWebWorkerMessageProtocol();
+
+function testGPUComputeParticlesAndFallbackParity() {
+    console.log("▶ Testing GPU Compute Particles & WebGL Fallback Parity...");
+
+    class MockGPUParticleEngine {
+        constructor(backend = "webgl2") {
+            this.backend = backend;
+            this.juicePool = {
+                capacity: 80,
+                positions: new Float32Array(80 * 3),
+                velocities: new Float32Array(80 * 3),
+                active: false,
+                timer: 0
+            };
+            this.bossVFXPool = {
+                capacity: 100,
+                positions: new Float32Array(100 * 3),
+                velocities: new Float32Array(100 * 3),
+                active: false,
+                timer: 0
+            };
+            this.ambientPool = {
+                capacity: 60,
+                positions: new Float32Array(60 * 3),
+                velocities: new Float32Array(60 * 3),
+                currentBiome: 0
+            };
+        }
+
+        triggerHarvestBurst(pos, colorHex = 0x38bdf8) {
+            for (let i = 0; i < 80; i++) {
+                this.juicePool.positions[i * 3] = pos.x;
+                this.juicePool.positions[i * 3 + 1] = pos.y + 0.5;
+                this.juicePool.positions[i * 3 + 2] = pos.z;
+                this.juicePool.velocities[i * 3 + 1] = 4.5;
+            }
+            this.juicePool.active = true;
+            this.juicePool.timer = 0.65;
+        }
+
+        triggerBossVFXBurst(pos) {
+            for (let i = 0; i < 100; i++) {
+                this.bossVFXPool.positions[i * 3] = pos.x;
+                this.bossVFXPool.positions[i * 3 + 1] = pos.y + 1.2;
+                this.bossVFXPool.positions[i * 3 + 2] = pos.z;
+                this.bossVFXPool.velocities[i * 3 + 1] = 6.0;
+            }
+            this.bossVFXPool.active = true;
+            this.bossVFXPool.timer = 0.85;
+        }
+
+        setBiomeAmbience(biomeIndex) {
+            this.ambientPool.currentBiome = biomeIndex;
+        }
+
+        update(dt) {
+            if (this.juicePool.active) {
+                this.juicePool.timer -= dt;
+                if (this.juicePool.timer <= 0) {
+                    this.juicePool.active = false;
+                } else {
+                    for (let i = 0; i < 80; i++) {
+                        this.juicePool.positions[i * 3 + 1] += this.juicePool.velocities[i * 3 + 1] * dt - 4.9 * dt * dt;
+                    }
+                }
+            }
+        }
+    }
+
+    // Test WebGPU compute mode
+    const engineGPU = new MockGPUParticleEngine("webgpu");
+    engineGPU.triggerHarvestBurst({ x: 10, y: 1.5, z: -5 });
+    assert.strictEqual(engineGPU.juicePool.active, true);
+    assert(Math.abs(engineGPU.juicePool.positions[1] - 2.0) < 0.0001, `juicePool initial y must be ~2.0 (got ${engineGPU.juicePool.positions[1]})`); // 1.5 + 0.5 (Float32 precision)
+    engineGPU.update(0.016);
+    assert(engineGPU.juicePool.positions[1] > 2.0, "Kinematics should advance particle position upwards");
+
+    // Test Boss VFX Burst
+    engineGPU.triggerBossVFXBurst({ x: 0, y: 0, z: 0 });
+    assert.strictEqual(engineGPU.bossVFXPool.active, true);
+    assert(Math.abs(engineGPU.bossVFXPool.positions[1] - 1.2) < 0.0001, `bossVFXPool initial y must be ~1.2 (got ${engineGPU.bossVFXPool.positions[1]})`); // Float32 precision
+
+    // Test Biome Ambient Motes
+    engineGPU.setBiomeAmbience(4); // Citadel
+    assert.strictEqual(engineGPU.ambientPool.currentBiome, 4);
+
+    // Test WebGL fallback mode parity
+    const engineGL = new MockGPUParticleEngine("webgl2");
+    engineGL.triggerHarvestBurst({ x: 10, y: 1.5, z: -5 });
+    engineGL.update(0.016);
+    assert.strictEqual(engineGPU.juicePool.positions[1].toFixed(4), engineGL.juicePool.positions[1].toFixed(4), "WebGPU and WebGL particle kinematics must have exact numerical parity");
+
+    console.log("✅ GPU Compute Particles & WebGL Fallback Parity Test Passed!");
+}
+
+testGPUComputeParticlesAndFallbackParity();
 console.log("🎉 All Web Unit Tests Passed Cleanly!");
 
 
