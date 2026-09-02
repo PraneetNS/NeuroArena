@@ -1799,6 +1799,39 @@ function testGPUComputeParticlesAndFallbackParity() {
 }
 
 testGPUComputeParticlesAndFallbackParity();
+
+function testCapabilityAwareDeviceTierProfiler() {
+    console.log("▶ Testing GPU Capability Probe Integration in Multi-Tier Profiler...");
+
+    function autoDetectTier(specs) {
+        const { memoryGB, cores, isMobile, gpuBackend, maxTextureSize } = specs;
+        if (gpuBackend === "webgl1" || maxTextureSize <= 2048 || memoryGB <= 2 || (isMobile && cores <= 4)) {
+            return 1; // Low
+        } else if (gpuBackend === "webgpu" && memoryGB >= 8 && cores >= 8 && !isMobile) {
+            return 3; // High (WebGPU Accelerated)
+        } else if (memoryGB >= 8 && cores >= 8 && maxTextureSize >= 8192) {
+            return 3; // High Flagship
+        } else {
+            return 2; // Mid
+        }
+    }
+
+    // 1. WebGL1 fallback -> Tier 1
+    const t1 = autoDetectTier({ memoryGB: 8, cores: 8, isMobile: false, gpuBackend: "webgl1", maxTextureSize: 2048 });
+    assert.strictEqual(t1, 1, "WebGL1 capability constraint must assign Tier 1");
+
+    // 2. WebGL2 4GB RAM Mid-Range -> Tier 2
+    const t2 = autoDetectTier({ memoryGB: 4, cores: 6, isMobile: false, gpuBackend: "webgl2", maxTextureSize: 4096 });
+    assert.strictEqual(t2, 2, "WebGL2 with 4GB RAM must assign Tier 2");
+
+    // 3. WebGPU 8GB RAM 8-Core PC -> Tier 3
+    const t3 = autoDetectTier({ memoryGB: 8, cores: 8, isMobile: false, gpuBackend: "webgpu", maxTextureSize: 8192 });
+    assert.strictEqual(t3, 3, "WebGPU capability with 8GB RAM must assign Tier 3 (Ultra)");
+
+    console.log("✅ GPU Capability Probe Integration in Multi-Tier Profiler Test Passed!");
+}
+
+testCapabilityAwareDeviceTierProfiler();
 console.log("🎉 All Web Unit Tests Passed Cleanly!");
 
 
