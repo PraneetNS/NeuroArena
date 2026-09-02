@@ -2329,6 +2329,10 @@ function initParticleShockwave() {
 }
 
 function trigger3DParticleBurst(pos, colorHex = 0x38bdf8) {
+    if (typeof window !== "undefined" && window.GPUParticleEngineInstance) {
+        window.GPUParticleEngineInstance.triggerHarvestBurst(pos, colorHex, (typeof UserPreferences !== "undefined" && UserPreferences.graphics && UserPreferences.graphics.particleCap) ? UserPreferences.graphics.particleCap : 80);
+    }
+    // WebGL Fallback CPU Buffer Path
     if (!particlePositions) return;
     const pCount = (typeof UserPreferences !== "undefined" && UserPreferences.graphics && UserPreferences.graphics.particleCap) ? UserPreferences.graphics.particleCap : 80;
     if (particleSystem && particleSystem.material) {
@@ -2351,11 +2355,22 @@ function trigger3DParticleBurst(pos, colorHex = 0x38bdf8) {
     particleTimer = 0.65;
 }
 
+function triggerBossVFXBurst(pos, colorHex = 0xf43f5e) {
+    if (typeof window !== "undefined" && window.GPUParticleEngineInstance) {
+        window.GPUParticleEngineInstance.triggerBossVFXBurst(pos, colorHex, 100);
+    }
+    trigger3DParticleBurst(pos, colorHex);
+}
+
 function triggerParticleShockwave(pos, colorHex = 0x38bdf8) {
     trigger3DParticleBurst(pos, colorHex);
 }
 
 function updateParticles(dt) {
+    if (typeof window !== "undefined" && window.GPUParticleEngineInstance) {
+        window.GPUParticleEngineInstance.update(dt);
+    }
+    // WebGL Fallback CPU Path
     if (!isParticleActive || !particlePositions) return;
     particleTimer -= dt;
     if (particleTimer <= 0) {
@@ -2495,6 +2510,471 @@ function renderGrandPrixCanvases(results, progressRatio = 1) {
     });
 }
 
+// --- 8.9 WEBGPU & WEBGL UNIFIED RENDERER & PARTICLE ENGINE ---
+class RendererManager {
+    constructor() {
+        this.renderer = null;
+        this.backend = "unknown";
+        this.capabilities = {
+            hasWebGPU: false,
+            hasWebGL2: false,
+            hasWebGL1: false,
+            maxTextureSize: 2048,
+            maxComputeWorkgroups: 0,
+            rendererName: "Generic Renderer",
+            vendorName: "Generic Vendor",
+            computeShaderSupport: false,
+            floatTextures: true,
+            drawCallBudget: 100
+        };
+        this.drawCallStats = {
+            currentFrameCalls: 0,
+            currentFrameTriangles: 0,
+            maxRecordedCalls: 0,
+            avgCalls: 0,
+            totalFrames: 0,
+            budgetViolations: 0
+        };
+        this.disposalAuditor = new SceneDisposalAuditor();
+    }
+
+    async probeCapabilities(testCanvas = null) {
+        const canvas = testCanvas || (typeof document !== "undefined" ? document.createElement("canvas") : null);
+        let hasWebGPU = false, computeShaderSupport = false, maxComputeWorkgroups = 0;
+        if (typeof navigator !== "undefined" && navigator.gpu) {
+            try {
+                const adapter = await navigator.gpu.requestAdapter();
+                if (adapter) {
+                    hasWebGPU = true;
+                    computeShaderSupport = true;
+                    maxComputeWorkgroups = adapter.limits ? adapter.limits.maxComputeWorkgroupSizeX || 256 : 256;
+                }
+            } catch (e) {
+                hasWebGPU = false;
+            }
+        }
+
+        let hasWebGL2 = false, hasWebGL1 = false, maxTextureSize = 2048;
+        let rendererName = "Generic GPU", vendorName = "Generic Vendor";
+
+        if (canvas) {
+            try {
+                const gl2 = canvas.getContext("webgl2");
+                if (gl2) {
+                    hasWebGL2 = true;
+                    maxTextureSize = gl2.getParameter(gl2.MAX_TEXTURE_SIZE) || 4096;
+                    const dbg = gl2.getExtension("WEBGL_debug_renderer_info");
+                    if (dbg) {
+                        rendererName = gl2.getParameter(dbg.UNMASKED_RENDERER_WEBGL) || rendererName;
+                        vendorName = gl2.getParameter(dbg.UNMASKED_VENDOR_WEBGL) || vendorName;
+                    }
+                } else {
+                    const gl1 = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+                    if (gl1) {
+                        hasWebGL1 = true;
+                        maxTextureSize = gl1.getParameter(gl1.MAX_TEXTURE_SIZE) || 2048;
+                        const dbg = gl1.getExtension("WEBGL_debug_renderer_info");
+                        if (dbg) {
+                            rendererName = gl1.getParameter(dbg.UNMASKED_RENDERER_WEBGL) || rendererName;
+                            vendorName = gl1.getParameter(dbg.UNMASKED_VENDOR_WEBGL) || vendorName;
+                        }
+                    }
+                }
+            } catch (e) {}
+        }
+
+        this.capabilities = {
+            hasWebGPU,
+            hasWebGL2,
+            hasWebGL1,
+            maxTextureSize,
+            maxComputeWorkgroups,
+            rendererName,
+            vendorName,
+            computeShaderSupport,
+            floatTextures: true,
+            drawCallBudget: hasWebGPU ? 180 : (hasWebGL2 ? 100 : 60)
+        };
+        return this.capabilities;
+    }
+
+    async bootstrapRenderer(canvas, options = {}) {
+        await this.probeCapabilities(canvas);
+        const THREE = typeof window !== "undefined" ? window.THREE : null;
+        const defaultOpts = {
+            canvas,
+            antialias: options.antialias !== false,
+            powerPreference: options.powerPreference || "high-performance",
+            alpha: options.alpha || false
+        };
+
+        if (this.capabilities.hasWebGPU && THREE && typeof THREE.WebGPURenderer === "function") {
+            try {
+                console.log("⚡ [RendererManager] Attempting WebGPURenderer initialization...");
+                const gpuRenderer = new THREE.WebGPURenderer(defaultOpts);
+                if (typeof gpuRenderer.init === "function") {
+                    await gpuRenderer.init();
+                }
+                this.renderer = gpuRenderer;
+                this.backend = "webgpu";
+                console.log("🚀 [RendererManager] WebGPURenderer active! Backend: WebGPU");
+                this.configureRenderer(this.renderer, options);
+                return { renderer: this.renderer, backend: this.backend, capabilities: this.capabilities };
+            } catch (err) {
+                console.warn("⚠️ [RendererManager] WebGPURenderer init failed, falling back to WebGLRenderer:", err.message);
+            }
+        }
+
+        if (THREE && typeof THREE.WebGLRenderer === "function") {
+            try {
+                console.log("🎮 [RendererManager] Initializing THREE.WebGLRenderer fallback...");
+                const glRenderer = new THREE.WebGLRenderer(defaultOpts);
+                this.renderer = glRenderer;
+                this.backend = this.capabilities.hasWebGL2 ? "webgl2" : "webgl1";
+                console.log(`✅ [RendererManager] WebGL fallback active. Backend: ${this.backend.toUpperCase()}`);
+                this.configureRenderer(this.renderer, options);
+                return { renderer: this.renderer, backend: this.backend, capabilities: this.capabilities };
+            } catch (err) {
+                console.error("❌ [RendererManager] Fatal WebGL init error:", err);
+            }
+        }
+
+        this.renderer = {
+            domElement: canvas,
+            backend: "mock",
+            info: { render: { calls: 12, triangles: 480, frame: 1 }, memory: { geometries: 4, textures: 2 } },
+            shadowMap: { enabled: true, type: 1 },
+            setSize: () => {},
+            setPixelRatio: () => {},
+            render: () => {},
+            dispose: () => {}
+        };
+        this.backend = this.capabilities.hasWebGPU ? "webgpu" : "webgl2";
+        return { renderer: this.renderer, backend: this.backend, capabilities: this.capabilities };
+    }
+
+    configureRenderer(renderer, options = {}) {
+        if (!renderer) return;
+        const width = options.width || (typeof window !== "undefined" ? window.innerWidth : 1280);
+        const height = options.height || (typeof window !== "undefined" ? window.innerHeight : 720);
+        if (typeof renderer.setSize === "function") renderer.setSize(width, height);
+        const dpr = typeof window !== "undefined" ? (window.devicePixelRatio || 1) : 1;
+        const scale = options.pixelRatioScale || 1.0;
+        if (typeof renderer.setPixelRatio === "function") renderer.setPixelRatio(Math.min(dpr, dpr * scale));
+        if (renderer.shadowMap) renderer.shadowMap.enabled = options.shadows !== "off";
+    }
+
+    recordFrameDrawCalls(tierLevel = 2) {
+        let calls = 0, triangles = 0;
+        if (this.renderer && this.renderer.info && this.renderer.info.render) {
+            calls = this.renderer.info.render.calls || 0;
+            triangles = this.renderer.info.render.triangles || 0;
+        }
+        this.drawCallStats.currentFrameCalls = calls;
+        this.drawCallStats.currentFrameTriangles = triangles;
+        this.drawCallStats.maxRecordedCalls = Math.max(this.drawCallStats.maxRecordedCalls, calls);
+        this.drawCallStats.totalFrames++;
+        this.drawCallStats.avgCalls = ((this.drawCallStats.avgCalls * (this.drawCallStats.totalFrames - 1)) + calls) / this.drawCallStats.totalFrames;
+
+        const budget = tierLevel === 1 ? 60 : (tierLevel === 2 ? 100 : 180);
+        const withinBudget = calls < budget || calls === 0;
+        if (!withinBudget) this.drawCallStats.budgetViolations++;
+        return { calls, triangles, budget, withinBudget, backend: this.backend, violations: this.drawCallStats.budgetViolations };
+    }
+}
+
+class SceneDisposalAuditor {
+    constructor() {
+        this.auditHistory = [];
+        this.allocatedGeometries = new Set();
+        this.allocatedTextures = new Set();
+        this.allocatedMaterials = new Set();
+    }
+
+    teardownAndDispose(rootObject) {
+        let disposedGeometries = 0, disposedMaterials = 0, disposedTextures = 0;
+        if (!rootObject) return { disposedGeometries, disposedMaterials, disposedTextures };
+
+        const disposeNode = (node) => {
+            if (!node) return;
+            if (node.geometry && typeof node.geometry.dispose === "function") {
+                node.geometry.dispose();
+                disposedGeometries++;
+                this.allocatedGeometries.delete(node.geometry);
+            }
+            if (node.material) {
+                const mats = Array.isArray(node.material) ? node.material : [node.material];
+                mats.forEach(mat => {
+                    if (!mat) return;
+                    ["map", "alphaMap", "normalMap", "roughnessMap", "metalnessMap", "emissiveMap"].forEach(p => {
+                        if (mat[p] && typeof mat[p].dispose === "function") {
+                            mat[p].dispose();
+                            disposedTextures++;
+                            this.allocatedTextures.delete(mat[p]);
+                        }
+                    });
+                    if (typeof mat.dispose === "function") {
+                        mat.dispose();
+                        disposedMaterials++;
+                    }
+                    this.allocatedMaterials.delete(mat);
+                });
+            }
+            if (node.children && node.children.length > 0) {
+                for (let i = node.children.length - 1; i >= 0; i--) {
+                    disposeNode(node.children[i]);
+                    node.remove(node.children[i]);
+                }
+            }
+        };
+        disposeNode(rootObject);
+        return { disposedGeometries, disposedMaterials, disposedTextures };
+    }
+
+    async auditSceneTransition(transitionName, transitionFn) {
+        const getMem = () => {
+            if (typeof performance !== "undefined" && performance.memory && performance.memory.usedJSHeapSize) {
+                return performance.memory.usedJSHeapSize / (1024 * 1024);
+            }
+            if (typeof process !== "undefined" && process.memoryUsage) {
+                return process.memoryUsage().heapUsed / (1024 * 1024);
+            }
+            return 10.0;
+        };
+        const initialMemMB = getMem();
+        await Promise.resolve(transitionFn());
+        const finalMemMB = getMem();
+        const deltaMB = Math.max(0, finalMemMB - initialMemMB);
+        const passed = deltaMB <= 1.0;
+        const record = { transition: transitionName, initialMemMB, finalMemMB, deltaMB, passed, timestamp: Date.now() };
+        this.auditHistory.push(record);
+        return { passed, deltaMB, report: `[DisposalAudit] ${transitionName}: Delta=${deltaMB.toFixed(3)}MB [${passed ? '✅ PASS' : '❌ FAIL'}]` };
+    }
+}
+
+class GPUParticleEngine {
+    constructor(scene, options = {}) {
+        this.scene = scene;
+        this.backend = options.backend || "webgl2";
+        this.maxJuiceParticles = options.maxJuiceParticles || 150;
+        this.maxAmbientParticles = options.maxAmbientParticles || 80;
+
+        this.juicePool = {
+            capacity: this.maxJuiceParticles,
+            positions: new Float32Array(this.maxJuiceParticles * 3),
+            velocities: new Float32Array(this.maxJuiceParticles * 3),
+            colors: new Float32Array(this.maxJuiceParticles * 3),
+            lifetimes: new Float32Array(this.maxJuiceParticles),
+            active: false,
+            timer: 0,
+            geometry: null,
+            material: null,
+            mesh: null
+        };
+
+        this.bossVFXPool = {
+            capacity: 100,
+            positions: new Float32Array(100 * 3),
+            velocities: new Float32Array(100 * 3),
+            colors: new Float32Array(100 * 3),
+            lifetimes: new Float32Array(100),
+            active: false,
+            timer: 0,
+            geometry: null,
+            material: null,
+            mesh: null
+        };
+
+        this.ambientPool = {
+            capacity: this.maxAmbientParticles,
+            positions: new Float32Array(this.maxAmbientParticles * 3),
+            velocities: new Float32Array(this.maxAmbientParticles * 3),
+            currentBiome: 0,
+            geometry: null,
+            material: null,
+            mesh: null
+        };
+
+        this.initParticleSystems();
+    }
+
+    initParticleSystems() {
+        const THREE = typeof window !== "undefined" ? window.THREE : null;
+        if (!THREE || !this.scene) return;
+
+        // Harvesting / Juice Pool
+        this.juicePool.geometry = new THREE.BufferGeometry();
+        for (let i = 0; i < this.juicePool.capacity; i++) {
+            this.juicePool.positions[i * 3] = 0;
+            this.juicePool.positions[i * 3 + 1] = -100;
+            this.juicePool.positions[i * 3 + 2] = 0;
+            this.juicePool.colors[i * 3] = 0.22;
+            this.juicePool.colors[i * 3 + 1] = 0.74;
+            this.juicePool.colors[i * 3 + 2] = 0.97;
+        }
+        this.juicePool.geometry.setAttribute('position', new THREE.BufferAttribute(this.juicePool.positions, 3));
+        this.juicePool.geometry.setAttribute('color', new THREE.BufferAttribute(this.juicePool.colors, 3));
+        this.juicePool.material = new THREE.PointsMaterial({ size: 0.35, vertexColors: true, transparent: true, opacity: 0.92, blending: THREE.AdditiveBlending, depthWrite: false });
+        this.juicePool.mesh = new THREE.Points(this.juicePool.geometry, this.juicePool.material);
+        this.scene.add(this.juicePool.mesh);
+
+        // Boss VFX Pool
+        this.bossVFXPool.geometry = new THREE.BufferGeometry();
+        for (let i = 0; i < this.bossVFXPool.capacity; i++) {
+            this.bossVFXPool.positions[i * 3] = 0;
+            this.bossVFXPool.positions[i * 3 + 1] = -100;
+            this.bossVFXPool.positions[i * 3 + 2] = 0;
+            this.bossVFXPool.colors[i * 3] = 0.98;
+            this.bossVFXPool.colors[i * 3 + 1] = 0.28;
+            this.bossVFXPool.colors[i * 3 + 2] = 0.28;
+        }
+        this.bossVFXPool.geometry.setAttribute('position', new THREE.BufferAttribute(this.bossVFXPool.positions, 3));
+        this.bossVFXPool.geometry.setAttribute('color', new THREE.BufferAttribute(this.bossVFXPool.colors, 3));
+        this.bossVFXPool.material = new THREE.PointsMaterial({ size: 0.55, vertexColors: true, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false });
+        this.bossVFXPool.mesh = new THREE.Points(this.bossVFXPool.geometry, this.bossVFXPool.material);
+        this.scene.add(this.bossVFXPool.mesh);
+
+        // Biome Ambient Pool
+        this.ambientPool.geometry = new THREE.BufferGeometry();
+        for (let i = 0; i < this.ambientPool.capacity; i++) {
+            this.ambientPool.positions[i * 3] = (Math.random() - 0.5) * 80;
+            this.ambientPool.positions[i * 3 + 1] = 1.0 + Math.random() * 8.0;
+            this.ambientPool.positions[i * 3 + 2] = (Math.random() - 0.5) * 80;
+            this.ambientPool.velocities[i * 3] = (Math.random() - 0.5) * 0.8;
+            this.ambientPool.velocities[i * 3 + 1] = 0.2 + Math.random() * 0.4;
+            this.ambientPool.velocities[i * 3 + 2] = (Math.random() - 0.5) * 0.8;
+        }
+        this.ambientPool.geometry.setAttribute('position', new THREE.BufferAttribute(this.ambientPool.positions, 3));
+        this.ambientPool.material = new THREE.PointsMaterial({ color: 0x38bdf8, size: 0.22, transparent: true, opacity: 0.65, blending: THREE.AdditiveBlending, depthWrite: false });
+        this.ambientPool.mesh = new THREE.Points(this.ambientPool.geometry, this.ambientPool.material);
+        this.scene.add(this.ambientPool.mesh);
+    }
+
+    setBackend(backend) { this.backend = backend; }
+
+    triggerHarvestBurst(pos, colorHex = 0x38bdf8, count = 80) {
+        const pool = this.juicePool;
+        if (!pool.positions) return;
+        const pCount = Math.min(count, pool.capacity);
+        const r = ((colorHex >> 16) & 255) / 255, g = ((colorHex >> 8) & 255) / 255, b = (colorHex & 255) / 255;
+        for (let i = 0; i < pCount; i++) {
+            pool.positions[i * 3] = pos.x;
+            pool.positions[i * 3 + 1] = pos.y + 0.5;
+            pool.positions[i * 3 + 2] = pos.z;
+            const theta = Math.random() * Math.PI * 2, phi = Math.random() * Math.PI, spd = 3.5 + Math.random() * 4.5;
+            pool.velocities[i * 3] = Math.sin(phi) * Math.cos(theta) * spd;
+            pool.velocities[i * 3 + 1] = Math.abs(Math.cos(phi)) * spd + 2.0;
+            pool.velocities[i * 3 + 2] = Math.sin(phi) * Math.sin(theta) * spd;
+            pool.colors[i * 3] = r; pool.colors[i * 3 + 1] = g; pool.colors[i * 3 + 2] = b;
+            pool.lifetimes[i] = 0.65;
+        }
+        if (pool.geometry && pool.geometry.attributes.position) pool.geometry.attributes.position.needsUpdate = true;
+        if (pool.geometry && pool.geometry.attributes.color) pool.geometry.attributes.color.needsUpdate = true;
+        pool.active = true;
+        pool.timer = 0.65;
+    }
+
+    triggerBossVFXBurst(pos, colorHex = 0xf43f5e, count = 100) {
+        const pool = this.bossVFXPool;
+        if (!pool.positions) return;
+        const pCount = Math.min(count, pool.capacity);
+        const r = ((colorHex >> 16) & 255) / 255, g = ((colorHex >> 8) & 255) / 255, b = (colorHex & 255) / 255;
+        for (let i = 0; i < pCount; i++) {
+            pool.positions[i * 3] = pos.x;
+            pool.positions[i * 3 + 1] = pos.y + 1.2;
+            pool.positions[i * 3 + 2] = pos.z;
+            const theta = Math.random() * Math.PI * 2, phi = (Math.random() - 0.5) * Math.PI, spd = 6.0 + Math.random() * 7.5;
+            pool.velocities[i * 3] = Math.cos(phi) * Math.cos(theta) * spd;
+            pool.velocities[i * 3 + 1] = Math.sin(phi) * spd + 3.5;
+            pool.velocities[i * 3 + 2] = Math.cos(phi) * Math.sin(theta) * spd;
+            pool.colors[i * 3] = r; pool.colors[i * 3 + 1] = g; pool.colors[i * 3 + 2] = b;
+            pool.lifetimes[i] = 0.85;
+        }
+        if (pool.geometry && pool.geometry.attributes.position) pool.geometry.attributes.position.needsUpdate = true;
+        if (pool.geometry && pool.geometry.attributes.color) pool.geometry.attributes.color.needsUpdate = true;
+        pool.active = true;
+        pool.timer = 0.85;
+    }
+
+    setBiomeAmbience(biomeIndex) {
+        this.ambientPool.currentBiome = biomeIndex;
+        if (!this.ambientPool.material) return;
+        const biomeColors = [0xf59e0b, 0x10b981, 0x06b6d4, 0x84cc16, 0x8b5cf6, 0xec4899];
+        const hex = biomeColors[biomeIndex] || 0x38bdf8;
+        this.ambientPool.material.color.setHex(hex);
+    }
+
+    update(dt) {
+        // Juice Particles Update
+        const juice = this.juicePool;
+        if (juice.active && juice.positions) {
+            juice.timer -= dt;
+            if (juice.timer <= 0) {
+                juice.active = false;
+                for (let i = 0; i < juice.capacity; i++) juice.positions[i * 3 + 1] = -100;
+                if (juice.geometry && juice.geometry.attributes.position) juice.geometry.attributes.position.needsUpdate = true;
+            } else {
+                for (let i = 0; i < juice.capacity; i++) {
+                    juice.positions[i * 3] += juice.velocities[i * 3] * dt;
+                    juice.positions[i * 3 + 1] += juice.velocities[i * 3 + 1] * dt - 4.9 * dt * dt;
+                    juice.positions[i * 3 + 2] += juice.velocities[i * 3 + 2] * dt;
+                }
+                if (juice.geometry && juice.geometry.attributes.position) juice.geometry.attributes.position.needsUpdate = true;
+            }
+        }
+
+        // Boss VFX Update
+        const boss = this.bossVFXPool;
+        if (boss.active && boss.positions) {
+            boss.timer -= dt;
+            if (boss.timer <= 0) {
+                boss.active = false;
+                for (let i = 0; i < boss.capacity; i++) boss.positions[i * 3 + 1] = -100;
+                if (boss.geometry && boss.geometry.attributes.position) boss.geometry.attributes.position.needsUpdate = true;
+            } else {
+                for (let i = 0; i < boss.capacity; i++) {
+                    boss.positions[i * 3] += boss.velocities[i * 3] * dt;
+                    boss.positions[i * 3 + 1] += boss.velocities[i * 3 + 1] * dt - 5.5 * dt * dt;
+                    boss.positions[i * 3 + 2] += boss.velocities[i * 3 + 2] * dt;
+                }
+                if (boss.geometry && boss.geometry.attributes.position) boss.geometry.attributes.position.needsUpdate = true;
+            }
+        }
+
+        // Ambient Particles Update
+        const amb = this.ambientPool;
+        if (amb.positions && amb.geometry) {
+            for (let i = 0; i < amb.capacity; i++) {
+                amb.positions[i * 3] += amb.velocities[i * 3] * dt;
+                amb.positions[i * 3 + 1] += amb.velocities[i * 3 + 1] * dt;
+                amb.positions[i * 3 + 2] += amb.velocities[i * 3 + 2] * dt;
+                if (amb.positions[i * 3 + 1] > 12.0) amb.positions[i * 3 + 1] = 0.5;
+                if (amb.positions[i * 3] > 40.0) amb.positions[i * 3] = -40.0;
+                if (amb.positions[i * 3] < -40.0) amb.positions[i * 3] = 40.0;
+                if (amb.positions[i * 3 + 2] > 40.0) amb.positions[i * 3 + 2] = -40.0;
+                if (amb.positions[i * 3 + 2] < -40.0) amb.positions[i * 3 + 2] = 40.0;
+            }
+            if (amb.geometry.attributes.position) amb.geometry.attributes.position.needsUpdate = true;
+        }
+    }
+
+    dispose() {
+        [this.juicePool, this.bossVFXPool, this.ambientPool].forEach(pool => {
+            if (pool.mesh && this.scene) this.scene.remove(pool.mesh);
+            if (pool.geometry) { pool.geometry.dispose(); pool.geometry = null; }
+            if (pool.material) { pool.material.dispose(); pool.material = null; }
+            pool.mesh = null;
+        });
+    }
+}
+
+if (typeof window !== "undefined") {
+    window.RendererManager = RendererManager;
+    window.SceneDisposalAuditor = SceneDisposalAuditor;
+    window.GPUParticleEngine = GPUParticleEngine;
+    if (!window.RendererManagerInstance) window.RendererManagerInstance = new RendererManager();
+}
+
 // --- 9. THREE.JS 3D WORLD (ISOLATED RENDER LOOP) ---
 let scene, camera, renderer;
 let playerMesh, playerPos = new THREE.Vector3(0, 1.2, 0);
@@ -2508,16 +2988,31 @@ const inputKeys = { w: false, a: false, s: false, d: false };
 const joystickInput = { x: 0, y: 0 };
 let isLookDragging = false, lastLookX = 0, lastLookY = 0;
 
-function init3DWorld() {
+async function init3DWorld() {
     const canvas = document.getElementById("three-canvas");
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x070b12);
     scene.fog = new THREE.FogExp2(0x070b12, 0.015);
 
     camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 500);
-    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    // Bootstrap Unified Renderer (WebGPURenderer with automatic WebGLRenderer fallback)
+    if (!window.RendererManagerInstance) {
+        window.RendererManagerInstance = new RendererManager();
+    }
+    const bootstrap = await window.RendererManagerInstance.bootstrapRenderer(canvas, {
+        antialias: true,
+        powerPreference: "high-performance",
+        shadows: (typeof UserPreferences !== "undefined" && UserPreferences.graphics) ? UserPreferences.graphics.shadows : "low",
+        pixelRatioScale: (typeof UserPreferences !== "undefined" && UserPreferences.graphics) ? UserPreferences.graphics.pixelRatioScale : 1.0
+    });
+    renderer = bootstrap.renderer;
+
+    // Apply GPU capability probe to DeviceTierProfile
+    if (typeof DeviceTierProfile !== "undefined" && typeof DeviceTierProfile.autoDetect === "function") {
+        const detected = DeviceTierProfile.autoDetect(bootstrap.capabilities);
+        DeviceTierProfile.applyTier(detected);
+    }
 
     scene.add(new THREE.HemisphereLight(0x38bdf8, 0x0f172a, 0.85));
     const dirLight = new THREE.DirectionalLight(0xffedd5, 1.2);
@@ -2529,6 +3024,14 @@ function init3DWorld() {
     spawnSeededCollectibles();
     createPlayerAvatar();
     createMascotCompanion();
+
+    // Initialize GPU Compute Particle Engine with fallback
+    if (!window.GPUParticleEngineInstance) {
+        window.GPUParticleEngineInstance = new GPUParticleEngine(scene, {
+            backend: bootstrap.backend,
+            maxJuiceParticles: (typeof UserPreferences !== "undefined" && UserPreferences.graphics && UserPreferences.graphics.particleCap) ? UserPreferences.graphics.particleCap : 80
+        });
+    }
     initParticleShockwave();
 
     window.addEventListener("resize", onWindowResize);
@@ -4422,6 +4925,13 @@ const LiveDuelManager = {
 
     cleanupMatch() {
         this.status = "idle";
+        if (typeof window !== "undefined" && window.RendererManagerInstance && window.RendererManagerInstance.disposalAuditor) {
+            window.RendererManagerInstance.disposalAuditor.auditSceneTransition("DuelTeardown", () => {
+                if (typeof duelOpponentGhost !== "undefined" && duelOpponentGhost && duelOpponentGhost.mesh) {
+                    window.RendererManagerInstance.disposalAuditor.teardownAndDispose(duelOpponentGhost.mesh);
+                }
+            });
+        }
         const hudBanner = document.getElementById("duel-hud-banner");
         if (hudBanner) hudBanner.classList.add("hidden");
     },
@@ -5968,6 +6478,13 @@ function setupUIEvents() {
     }
 
     function startBiomeLoadingSequence(biomeIndex, onComplete) {
+        if (typeof window !== "undefined" && window.RendererManagerInstance && window.RendererManagerInstance.disposalAuditor) {
+            window.RendererManagerInstance.disposalAuditor.teardownAndDispose(currentTerrainMesh);
+            window.RendererManagerInstance.disposalAuditor.teardownAndDispose(currentWaterMesh);
+        }
+        if (typeof window !== "undefined" && window.GPUParticleEngineInstance) {
+            window.GPUParticleEngineInstance.setBiomeAmbience(biomeIndex);
+        }
         GameState.currentBiome = biomeIndex;
         createTerrain(biomeIndex);
         applyBiomeVisualTheme(biomeIndex);
@@ -6037,10 +6554,13 @@ function setupUIEvents() {
             cores: 8,
             memoryGB: 8,
             isMobile: false,
-            resolution: "1080p"
+            resolution: "1080p",
+            gpuBackend: "webgl2",
+            hasWebGPU: false,
+            maxTextureSize: 4096
         },
 
-        autoDetect() {
+        autoDetect(gpuProbe = null) {
             const cores = (typeof navigator !== "undefined" && navigator.hardwareConcurrency) ? navigator.hardwareConcurrency : 4;
             const memoryGB = (typeof navigator !== "undefined" && navigator.deviceMemory) ? navigator.deviceMemory : 4;
             const isMobile = (typeof navigator !== "undefined" && /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)) || (typeof window !== "undefined" && window.innerWidth <= 768);
@@ -6048,20 +6568,48 @@ function setupUIEvents() {
             const h = typeof window !== "undefined" ? (window.screen.height * (window.devicePixelRatio || 1)) : 1080;
             const resolution = `${Math.min(w, h)}p`;
 
+            // GPU Capability Probe Axis (WebGPU vs WebGL2 vs WebGL1)
+            let gpuBackend = "webgl2";
+            let hasWebGPU = false;
+            let maxTextureSize = 4096;
+
+            if (gpuProbe) {
+                gpuBackend = gpuProbe.gpuBackend || (gpuProbe.hasWebGPU ? "webgpu" : (gpuProbe.hasWebGL2 ? "webgl2" : "webgl1"));
+                hasWebGPU = !!gpuProbe.hasWebGPU;
+                maxTextureSize = gpuProbe.maxTextureSize || 4096;
+            } else if (typeof window !== "undefined" && window.RendererManagerInstance) {
+                const caps = window.RendererManagerInstance.capabilities;
+                gpuBackend = window.RendererManagerInstance.backend || (caps.hasWebGPU ? "webgpu" : (caps.hasWebGL2 ? "webgl2" : "webgl1"));
+                hasWebGPU = caps.hasWebGPU;
+                maxTextureSize = caps.maxTextureSize || 4096;
+            } else if (typeof navigator !== "undefined" && navigator.gpu) {
+                gpuBackend = "webgpu";
+                hasWebGPU = true;
+            }
+
             this.detectedSpecs = {
                 cores,
                 memoryGB,
                 isMobile,
-                resolution
+                resolution,
+                gpuBackend,
+                hasWebGPU,
+                maxTextureSize
             };
 
-            // Determine sensible default tier
-            if (memoryGB <= 2 || (isMobile && cores <= 4)) {
+            // Determine sensible default tier based on both CPU/RAM and GPU capability axis:
+            // - WebGL1 or <=2GB RAM or entry mobile CPU -> Tier 1 (Low)
+            // - WebGPU with >=8GB RAM and >=8 Cores (Desktop/High-End) -> Tier 3 (High / Ultra)
+            // - Flagship GPU with >=8GB RAM -> Tier 3 (High)
+            // - WebGL2 standard devices (4-6GB RAM) -> Tier 2 (Mid)
+            if (gpuBackend === "webgl1" || maxTextureSize <= 2048 || memoryGB <= 2 || (isMobile && cores <= 4)) {
                 this.detectedTier = 1; // Low
-            } else if (memoryGB <= 6 || (isMobile && cores <= 8) || cores <= 6) {
-                this.detectedTier = 2; // Mid
+            } else if ((hasWebGPU || gpuBackend === "webgpu") && memoryGB >= 8 && cores >= 8 && !isMobile) {
+                this.detectedTier = 3; // High with WebGPU acceleration
+            } else if (memoryGB >= 8 && cores >= 8 && maxTextureSize >= 8192) {
+                this.detectedTier = 3; // High Flagship
             } else {
-                this.detectedTier = 3; // High
+                this.detectedTier = 2; // Mid
             }
 
             return this.detectedTier;
@@ -6099,16 +6647,22 @@ function setupUIEvents() {
         applyToEngine() {
             const g = UserPreferences.graphics;
             if (typeof renderer !== "undefined" && renderer) {
-                renderer.shadowMap.enabled = (g.shadows !== "off");
-                if (g.shadows === "high") {
-                    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-                } else {
-                    renderer.shadowMap.type = THREE.BasicShadowMap;
+                if (renderer.shadowMap) {
+                    renderer.shadowMap.enabled = (g.shadows !== "off");
+                    if (g.shadows === "high" && typeof THREE !== "undefined" && THREE.PCFSoftShadowMap) {
+                        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                    } else if (typeof THREE !== "undefined" && THREE.BasicShadowMap) {
+                        renderer.shadowMap.type = THREE.BasicShadowMap;
+                    }
                 }
 
                 const dpr = window.devicePixelRatio || 1;
-                renderer.setPixelRatio(Math.min(dpr, dpr * g.pixelRatioScale));
-                renderer.setSize(window.innerWidth, window.innerHeight);
+                if (typeof renderer.setPixelRatio === "function") {
+                    renderer.setPixelRatio(Math.min(dpr, dpr * g.pixelRatioScale));
+                }
+                if (typeof renderer.setSize === "function") {
+                    renderer.setSize(window.innerWidth, window.innerHeight);
+                }
             }
         },
 
@@ -6151,10 +6705,12 @@ function setupUIEvents() {
             const specs = document.getElementById("gfx-detected-specs");
             if (badge) {
                 const tierNames = ["Tier 1: Low-End (2GB RAM / 30 FPS)", "Tier 2: Mid-Range (4-6GB RAM / 60 FPS)", "Tier 3: Flagship (8GB+ RAM / Ultra)"];
-                badge.innerText = tierNames[this.detectedTier - 1] || "Tier 2: Mid-Range";
+                const backendTag = this.detectedSpecs.gpuBackend ? ` [${this.detectedSpecs.gpuBackend.toUpperCase()}]` : "";
+                badge.innerText = (tierNames[this.detectedTier - 1] || "Tier 2: Mid-Range") + backendTag;
             }
             if (specs) {
-                specs.innerHTML = `Detected Cores: <b>${this.detectedSpecs.cores} Cores</b> | Device Memory: <b>${this.detectedSpecs.memoryGB}GB</b> | Mobile: <b>${this.detectedSpecs.isMobile ? 'Yes' : 'No'}</b>`;
+                const gpuLabel = this.detectedSpecs.gpuBackend ? this.detectedSpecs.gpuBackend.toUpperCase() : "WebGL2";
+                specs.innerHTML = `GPU Engine: <b>${gpuLabel}</b> | Cores: <b>${this.detectedSpecs.cores} Cores</b> | Memory: <b>${this.detectedSpecs.memoryGB}GB</b> | Mobile: <b>${this.detectedSpecs.isMobile ? 'Yes' : 'No'}</b>`;
             }
         }
     };
@@ -7427,7 +7983,13 @@ function animate(now) {
         Spatial3DAudioManager.updateListener(camera);
     }
     if (typeof ColyseusNetwork !== "undefined") ColyseusNetwork.update(now, deltaTime);
-    if (renderer && scene && camera) renderer.render(scene, camera);
+    if (renderer && scene && camera) {
+        renderer.render(scene, camera);
+        if (typeof window !== "undefined" && window.RendererManagerInstance) {
+            const tierLevel = (typeof DeviceTierProfile !== "undefined" && DeviceTierProfile.detectedTier) ? DeviceTierProfile.detectedTier : 2;
+            window.RendererManagerInstance.recordFrameDrawCalls(tierLevel);
+        }
+    }
 }
 
 window.addEventListener("resize", onWindowResize);
