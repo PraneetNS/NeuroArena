@@ -158,4 +158,18 @@ export class PostProcessingPipeline {
     // Pass through rendering with active FX
     this.renderer.render(this.scene, this.camera);
   }
+
+  /**
+   * Disposes all allocated render targets and textures
+   */
+  dispose() {
+    if (this.renderTargets.main && typeof this.renderTargets.main.dispose === 'function') {
+      this.renderTargets.main.dispose();
+      this.renderTargets.main = null;
+    }
+    if (this.renderTargets.bloom && typeof this.renderTargets.bloom.dispose === 'function') {
+      this.renderTargets.bloom.dispose();
+      this.renderTargets.bloom = null;
+    }
+  }
 }
