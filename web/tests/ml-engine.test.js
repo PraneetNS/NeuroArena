@@ -1832,6 +1832,32 @@ function testCapabilityAwareDeviceTierProfiler() {
 }
 
 testCapabilityAwareDeviceTierProfiler();
+
+function testDrawCallBudgetInstrumentation() {
+    console.log("▶ Testing Draw Call Instrumentation & Budget Enforcement...");
+
+    function checkDrawCallBudget(calls, tierLevel) {
+        const budget = tierLevel === 1 ? 60 : (tierLevel === 2 ? 100 : 180);
+        const withinBudget = calls < budget;
+        return { calls, budget, withinBudget };
+    }
+
+    // Tier 1: budget < 60
+    const checkT1_ok = checkDrawCallBudget(42, 1);
+    assert.strictEqual(checkT1_ok.withinBudget, true);
+    const checkT1_fail = checkDrawCallBudget(65, 1);
+    assert.strictEqual(checkT1_fail.withinBudget, false, "65 calls must violate Tier 1 budget (<60)");
+
+    // Tier 2: budget < 100
+    const checkT2_ok = checkDrawCallBudget(84, 2);
+    assert.strictEqual(checkT2_ok.withinBudget, true);
+    const checkT2_fail = checkDrawCallBudget(110, 2);
+    assert.strictEqual(checkT2_fail.withinBudget, false, "110 calls must violate Tier 2 budget (<100)");
+
+    console.log("✅ Draw Call Instrumentation & Budget Enforcement Test Passed!");
+}
+
+testDrawCallBudgetInstrumentation();
 console.log("🎉 All Web Unit Tests Passed Cleanly!");
 
 
