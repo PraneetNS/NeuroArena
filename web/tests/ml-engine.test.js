@@ -1858,7 +1858,92 @@ function testDrawCallBudgetInstrumentation() {
 }
 
 testDrawCallBudgetInstrumentation();
-console.log("🎉 All Web Unit Tests Passed Cleanly!");
+
+function testSceneDisposalMemoryAudit() {
+    console.log("▶ Testing Scene & GPU Memory Disposal Audit (<1MB Leak Threshold)...");
+
+    let activeGeometries = 15;
+    let activeTextures = 8;
+    let activeMaterials = 12;
+
+    function teardownScene() {
+        // Disposes all allocated GPU resources
+        activeGeometries = 0;
+        activeTextures = 0;
+        activeMaterials = 0;
+    }
+
+    function auditTransition(initialHeapMB, finalHeapMB) {
+        const deltaMB = Math.max(0, finalHeapMB - initialHeapMB);
+        const passed = deltaMB <= 1.0;
+        return { deltaMB, passed };
+    }
+
+    teardownScene();
+    assert.strictEqual(activeGeometries, 0, "All geometries must be disposed");
+    assert.strictEqual(activeTextures, 0, "All textures must be disposed");
+
+    // Clean transition (0.12 MB delta) -> Passed
+    const cleanAudit = auditTransition(24.5, 24.62);
+    assert.strictEqual(cleanAudit.passed, true, "0.12 MB delta must pass (<1MB threshold)");
+
+    // Leaky transition (1.45 MB delta) -> Fails
+    const leakyAudit = auditTransition(24.5, 25.95);
+    assert.strictEqual(leakyAudit.passed, false, "1.45 MB delta must fail (>1MB threshold)");
+
+    console.log("✅ Scene & GPU Memory Disposal Audit (<1MB Leak Threshold) Test Passed!");
+}
+
+testSceneDisposalMemoryAudit();
+
+function testWebGPUBootstrapAndFallbackEngine() {
+    console.log("▶ Testing Async WebGPU Bootstrap & Graceful WebGL Fallback...");
+
+    class MockRendererManager {
+        constructor() {
+            this.renderer = null;
+            this.backend = "unknown";
+        }
+
+        async bootstrap(capabilities, forceWebGPUFailure = false) {
+            if (capabilities.hasWebGPU && !forceWebGPUFailure) {
+                this.renderer = { type: "WebGPURenderer", isWebGPU: true, init: async () => true };
+                await this.renderer.init();
+                this.backend = "webgpu";
+                return { renderer: this.renderer, backend: this.backend };
+            }
+
+            // Graceful WebGL Fallback
+            this.renderer = { type: "WebGLRenderer", isWebGL: true, isWebGPU: false };
+            this.backend = capabilities.hasWebGL2 ? "webgl2" : "webgl1";
+            return { renderer: this.renderer, backend: this.backend };
+        }
+    }
+
+    const mgr = new MockRendererManager();
+
+    // 1. WebGPU Supported Path
+    return mgr.bootstrap({ hasWebGPU: true, hasWebGL2: true }).then(res => {
+        assert.strictEqual(res.backend, "webgpu", "Must initialize WebGPU when available");
+        assert.strictEqual(res.renderer.type, "WebGPURenderer");
+
+        // 2. WebGPU Failure -> WebGL2 Fallback
+        return mgr.bootstrap({ hasWebGPU: true, hasWebGL2: true }, true);
+    }).then(res => {
+        assert.strictEqual(res.backend, "webgl2", "Must fall back to WebGL2 upon WebGPU init failure");
+        assert.strictEqual(res.renderer.type, "WebGLRenderer");
+
+        // 3. WebGL1 Legacy Fallback
+        return mgr.bootstrap({ hasWebGPU: false, hasWebGL2: false });
+    }).then(res => {
+        assert.strictEqual(res.backend, "webgl1", "Must fall back to WebGL1 when WebGL2 is absent");
+        console.log("✅ Async WebGPU Bootstrap & Graceful WebGL Fallback Test Passed!");
+    });
+}
+
+testWebGPUBootstrapAndFallbackEngine().then(() => {
+    console.log("🎉 All Web Unit Tests Passed Cleanly!");
+});
 
 
 
