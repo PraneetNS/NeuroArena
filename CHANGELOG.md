@@ -8,6 +8,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- **Playable First-Session FTUE Tutorial** (`Assets/Scripts/Core/FirstRunTutorialDirector.cs`)
+  - 3-minute action-driven core loop: Guided Harvest ➔ Live Regression Fit Reaction ➔ Lab Mini-Challenge ➔ Day-1 Reward.
+  - Strict 1-sentence prompt constraint across all onboarding cues (zero text-wall modal dialogs).
+  - Real-time live regression fit reaction card displaying empirical scatter and shifting slope parameters.
+  - Contextual in-world idle nudge engine triggering spatial mascot guidance when player idles $>45$s.
+  - Day-1 tangible rewards: Glacial Crystalline terminal skin, Vector Calibrator starter tool, Biome 2 unlock.
+  - Zero-gate guest mode allowing players to reach the first "aha" moment with zero forms or auth walls.
+  - Step-by-step FTUE funnel drop-off telemetry pipeline via `ProductAnalyticsManager`.
+
 - **WebGPU Renderer Backend** (`web/src/rendererManager.js`, `web/app.js`)
   - Async `RendererManager.bootstrapRenderer()` attempts `THREE.WebGPURenderer` first
   - Catches failure and falls back silently to `THREE.WebGLRenderer` (WebGL2 → WebGL1)
