@@ -299,6 +299,8 @@ namespace NeuroArena.Environment
             }
 
             FloatingTextPopup.Create(transform.position, popupMessage, glowColor);
-        }
+
+            // Notify Tutorial Director for live FTUE fit reaction & funnel tracking
+            FirstRunTutorialDirector.Instance?.OnCrystalHarvested(featureValueX1, targetValueY);
     }
 }
