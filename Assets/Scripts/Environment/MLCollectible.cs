@@ -300,7 +300,11 @@ namespace NeuroArena.Environment
 
             FloatingTextPopup.Create(transform.position, popupMessage, glowColor);
 
+            // Trigger Systematic Juice: Tier-capped particle burst + haptic tick + audio
+            JuiceFeedbackManager.Instance?.OnTokenHarvest(transform.position, glowColor);
+
             // Notify Tutorial Director for live FTUE fit reaction & funnel tracking
             FirstRunTutorialDirector.Instance?.OnCrystalHarvested(featureValueX1, targetValueY);
+        }
     }
 }
