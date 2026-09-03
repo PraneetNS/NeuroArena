@@ -478,7 +478,10 @@ namespace NeuroArena.UI
             int sampleCount = (MLInventory.Instance != null) ? 
                 (isNeuralMode || isTreeMode ? MLInventory.Instance.ClassificationSamplesCount : MLInventory.Instance.PairedSamplesCount) : 0;
 
-            if (sampleCount < 3)
+            bool isTutorialActive = (FirstRunTutorialDirector.Instance != null && FirstRunTutorialDirector.Instance.IsTutorialActive);
+            int minRequired = isTutorialActive ? 1 : 3;
+
+            if (sampleCount < minRequired)
             {
                 isBiomeCalibrationPassed = false;
                 var stats = MLInventory.Instance != null ? MLInventory.Instance.LiveStats : DatasetStatistics.Empty;
@@ -487,7 +490,7 @@ namespace NeuroArena.UI
                 string opt = optimizerWeapons[selectedOptimizerIndex];
                 lastCoachDiagnosis = CoachSystem.DiagnoseFailure(stats, health, 2.5f, 2.5f, currentBiome, opt);
 
-                statusMessage = $"<color=#FF6666>⚠️ INSUFFICIENT SAMPLES (N = {sampleCount} < 3):</color> Harvest at least 3 empirical tokens in the biome before calibrating your model!";
+                statusMessage = $"<color=#FF6666>⚠️ INSUFFICIENT SAMPLES (N = {sampleCount} < {minRequired}):</color> Harvest at least {minRequired} empirical tokens in the biome before calibrating your model!";
                 return;
             }
 
@@ -502,6 +505,12 @@ namespace NeuroArena.UI
 
             statusMessage = $"<color=#55FF55>MODEL CONVERGED (TRAINED ON {sampleCount} HARVESTED SAMPLES)!</color>";
             isTraining = false;
+
+            // Notify Tutorial Director of Calibration Win Condition
+            if (isTutorialActive)
+            {
+                FirstRunTutorialDirector.Instance?.OnTrainingCompleted(0.024f);
+            }
         }
 
         private void InitStyles()
