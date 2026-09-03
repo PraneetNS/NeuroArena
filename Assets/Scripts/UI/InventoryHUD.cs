@@ -86,6 +86,12 @@ namespace NeuroArena.UI
         // --- 1. TOP-CENTER OBJECTIVE & BENCHMARK THRESHOLD ---
         private void DrawTopCenterObjective(float scale)
         {
+            // If the first-run tutorial is active, the tutorial director draws the dynamic FTUE banner
+            if (FirstRunTutorialDirector.Instance != null && FirstRunTutorialDirector.Instance.IsTutorialActive)
+            {
+                return;
+            }
+
             float w = Mathf.Min(440 * scale, Screen.width * 0.85f);
             float h = 58 * scale;
             Rect objRect = new Rect((Screen.width - w) * 0.5f, 12 * scale, w, h);
@@ -150,13 +156,24 @@ namespace NeuroArena.UI
         // --- 3. EXPANDABLE INVENTORY DRAWER WITH LIVE DATASET STATS & VOCABULARY SATCHEL ---
         private void DrawInventoryDrawer(float scale)
         {
-            float w = 290 * scale;
-            float h = 330 * scale;
+            float w = 310 * scale;
+            float h = 370 * scale;
             float pad = 12 * scale;
             Rect drawerRect = new Rect(Screen.width - w - pad, 68 * scale, w, h);
 
             GUI.Box(drawerRect, GUIContent.none, drawerBoxStyle);
             GUILayout.BeginArea(drawerRect);
+
+            // Day-1 Mastery Reward Section
+            bool hasDay1 = MLInventory.Instance != null && MLInventory.Instance.Day1RewardClaimed;
+            if (hasDay1)
+            {
+                GUILayout.Label("<b>🏆 DAY-1 TUTORIAL MASTERY REWARDS</b>", subHeaderStyle);
+                GUILayout.Label($"🛠️ <b>TOOL:</b> <color=#FACC15>{MLInventory.Instance.StarterToolName}</color> <color=#4ADE80>[EQUIPPED]</color>", labelStyle);
+                GUILayout.Label($"🎨 <b>SKIN:</b> <color=#38BDF8>Glacial Crystalline</color> <color=#4ADE80>[ACTIVE]</color>", labelStyle);
+                GUILayout.Label("🌐 <b>BIOME 2:</b> <color=#A78BFA>Binary Marshlands</color> <color=#4ADE80>[UNLOCKED]</color>", labelStyle);
+                GUILayout.Space(4 * scale);
+            }
 
             int vocabSize = MLInventory.Instance != null ? MLInventory.Instance.VocabularySize : 0;
             int x = MLInventory.Instance != null ? MLInventory.Instance.FeatureCrystalXCount : 0;
