@@ -8,6 +8,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- **Systematic "Juice" Feedback & Presentation Layer** (`Assets/Scripts/Core/JuiceFeedbackManager.cs`)
+  - Hit-Stop engine (2-4 frame unscaled timescale freeze) for boss critical hits, convergence, and duel wins.
+  - Procedural Camera Shake with configurable intensity/decay wired to boss hits, dataset corruption, and duels.
+  - Tier-aware particle burst scaling (Tier 1: 25 / Tier 2: 80 / Tier 3: 150) for graceful degradation on low-end hardware.
+  - Dual-motor haptic pulse vibrations for token harvest, boundary snaps, policy updates, and boss impacts.
+  - Sub-300ms procedural audio stingers for model convergence (240ms ascending shimmer) and overfitting alerts (220ms tritone warning).
+  - Reduced Motion accessibility toggle integrated into SettingsUI, suppressing shake/flash while preserving functional cues.
+
 - **Playable First-Session FTUE Tutorial** (`Assets/Scripts/Core/FirstRunTutorialDirector.cs`)
   - 3-minute action-driven core loop: Guided Harvest ➔ Live Regression Fit Reaction ➔ Lab Mini-Challenge ➔ Day-1 Reward.
   - Strict 1-sentence prompt constraint across all onboarding cues (zero text-wall modal dialogs).
