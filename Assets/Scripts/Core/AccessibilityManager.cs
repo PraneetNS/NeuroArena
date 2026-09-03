@@ -27,21 +27,25 @@ namespace NeuroArena.Core
         public event Action<ColorblindMode> OnColorblindModeChanged;
         public event Action<float> OnTextScaleChanged;
         public event Action<bool> OnSubtitlesToggled;
+        public event Action<bool> OnReducedMotionToggled;
 
         [Header("Accessibility Settings")]
         [SerializeField] private ColorblindMode currentColorblindMode = ColorblindMode.Normal;
         [Range(1.0f, 1.5f)] [SerializeField] private float uiTextScale = 1.0f;
         [SerializeField] private bool showSubtitles = true;
+        [SerializeField] private bool reducedMotion = false;
         [Range(0.8f, 1.4f)] [SerializeField] private float virtualControlScale = 1.0f;
 
         public ColorblindMode CurrentColorblindMode => currentColorblindMode;
         public float UiTextScale => uiTextScale;
         public bool ShowSubtitles => showSubtitles;
+        public bool ReducedMotion => reducedMotion;
         public float VirtualControlScale => virtualControlScale;
 
         private const string PREF_COLORBLIND = "neuroarena_a11y_colorblind";
         private const string PREF_TEXT_SCALE = "neuroarena_a11y_text_scale";
         private const string PREF_SUBTITLES = "neuroarena_a11y_subtitles";
+        private const string PREF_REDUCED_MOTION = "neuroarena_a11y_reduced_motion";
 
         private void Awake()
         {
@@ -62,6 +66,7 @@ namespace NeuroArena.Core
             currentColorblindMode = (ColorblindMode)PlayerPrefs.GetInt(PREF_COLORBLIND, (int)ColorblindMode.Normal);
             uiTextScale = PlayerPrefs.GetFloat(PREF_TEXT_SCALE, 1.0f);
             showSubtitles = PlayerPrefs.GetInt(PREF_SUBTITLES, 1) == 1;
+            reducedMotion = PlayerPrefs.GetInt(PREF_REDUCED_MOTION, 0) == 1;
         }
 
         public void SetColorblindMode(ColorblindMode mode)
@@ -71,6 +76,15 @@ namespace NeuroArena.Core
             PlayerPrefs.Save();
             Debug.Log($"[Accessibility] Colorblind mode set to: {mode}");
             OnColorblindModeChanged?.Invoke(mode);
+        }
+
+        public void SetReducedMotion(bool enabled)
+        {
+            reducedMotion = enabled;
+            PlayerPrefs.SetInt(PREF_REDUCED_MOTION, enabled ? 1 : 0);
+            PlayerPrefs.Save();
+            Debug.Log($"[Accessibility] Reduced motion set to: {enabled}");
+            OnReducedMotionToggled?.Invoke(enabled);
         }
 
         public void SetTextScale(float scale)
