@@ -20,6 +20,8 @@ namespace NeuroArena.Core
         private AudioClip epochTickClip;
         private AudioClip victoryPassClip;
         private AudioClip failureBuzzClip;
+        private AudioClip convergenceStingerClip;
+        private AudioClip overfittingAlertClip;
 
         private void Awake()
         {
@@ -45,6 +47,8 @@ namespace NeuroArena.Core
             epochTickClip = CreateClickClip("SFX_EpochTick", 1400f, 0.035f);
             victoryPassClip = CreateFanfareChordClip("SFX_VictoryPass", 0.55f);
             failureBuzzClip = CreateSawBuzzClip("SFX_FailureBuzz", 90f, 45f, 0.40f);
+            convergenceStingerClip = CreateConvergenceStingerClip("SFX_ConvergenceStinger", 0.24f);
+            overfittingAlertClip = CreateOverfittingAlertClip("SFX_OverfittingAlert", 0.22f);
         }
 
         public void PlayPickup() => PlayOneShot(pickupClip, 0.75f);
@@ -52,6 +56,8 @@ namespace NeuroArena.Core
         public void PlayEpochTick() => PlayOneShot(epochTickClip, 0.45f);
         public void PlayPassVictory() => PlayOneShot(victoryPassClip, 0.95f);
         public void PlayFailure() => PlayOneShot(failureBuzzClip, 0.90f);
+        public void PlayConvergenceStinger() => PlayOneShot(convergenceStingerClip, 1.0f);
+        public void PlayOverfittingAlertStinger() => PlayOneShot(overfittingAlertClip, 0.95f);
 
         private void PlayOneShot(AudioClip clip, float volume = 1f)
         {
@@ -149,6 +155,52 @@ namespace NeuroArena.Core
                 float env = Mathf.Pow(1f - t, 2f);
                 float saw = (2f * ((float)(i * freq / SampleRate) % 1f)) - 1f;
                 samples[i] = saw * env * 0.65f;
+            }
+
+            AudioClip clip = AudioClip.Create(name, totalSamples, 1, SampleRate, false);
+            clip.SetData(samples, 0);
+            return clip;
+        }
+
+        private AudioClip CreateConvergenceStingerClip(string name, float duration)
+        {
+            int totalSamples = (int)(SampleRate * duration);
+            float[] samples = new float[totalSamples];
+            // Rapid ascending pentatonic shimmer (C6=1046Hz, E6=1318Hz, G6=1567Hz, B6=1975Hz, C7=2093Hz)
+            float[] arpeggio = new float[] { 1046.50f, 1318.51f, 1567.98f, 1975.53f, 2093.00f };
+
+            for (int i = 0; i < totalSamples; i++)
+            {
+                float t = (float)i / totalSamples;
+                int noteIndex = Mathf.Clamp((int)(t * arpeggio.Length * 1.5f), 0, arpeggio.Length - 1);
+                float currentFreq = arpeggio[noteIndex];
+                float env = Mathf.Pow(1f - t, 1.8f);
+                float sine = Mathf.Sin(2f * Mathf.PI * currentFreq * ((float)i / SampleRate));
+                float harmonic = Mathf.Sin(4f * Mathf.PI * currentFreq * ((float)i / SampleRate)) * 0.35f;
+                samples[i] = (sine + harmonic) * env * 0.85f;
+            }
+
+            AudioClip clip = AudioClip.Create(name, totalSamples, 1, SampleRate, false);
+            clip.SetData(samples, 0);
+            return clip;
+        }
+
+        private AudioClip CreateOverfittingAlertClip(string name, float duration)
+        {
+            int totalSamples = (int)(SampleRate * duration);
+            float[] samples = new float[totalSamples];
+            // Dissonant tritone (440Hz + 622.25Hz Eb5) with rapid saw-modulation
+            float f1 = 440.0f;
+            float f2 = 622.25f;
+
+            for (int i = 0; i < totalSamples; i++)
+            {
+                float t = (float)i / totalSamples;
+                float env = Mathf.Pow(1f - t, 2.5f);
+                float s1 = (2f * ((float)(i * f1 / SampleRate) % 1f)) - 1f;
+                float s2 = Mathf.Sin(2f * Mathf.PI * f2 * ((float)i / SampleRate));
+                float noise = (UnityEngine.Random.value - 0.5f) * 0.15f;
+                samples[i] = (s1 * 0.5f + s2 * 0.5f + noise) * env * 0.80f;
             }
 
             AudioClip clip = AudioClip.Create(name, totalSamples, 1, SampleRate, false);
