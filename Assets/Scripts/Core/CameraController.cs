@@ -27,6 +27,14 @@ namespace NeuroArena.Core
         [SerializeField] private float rotationSmoothSpeed = 18f;
 
         [Header("Collision Avoidance")]
+        [SerializeField] private float collisionRadius = 0.35f;
+        [SerializeField] private float collisionBuffer = 0.25f;
+        [SerializeField] private LayerMask collisionLayers = ~0;
+
+        [Header("Camera Shake & Juice")]
+        [SerializeField] private Vector3 currentShakeOffset = Vector3.zero;
+        private Coroutine activeShakeCoroutine;
+
         [Header("Gyroscope & Motion Sensors")]
         [SerializeField] private bool enableGyroLook = true;
         [SerializeField] private float gyroSensitivityX = 1.6f;
@@ -35,6 +43,11 @@ namespace NeuroArena.Core
         public static CameraController Instance { get; private set; }
         public bool IsGyroEnabled => enableGyroLook && hasGyroHardware;
         public bool HasGyroHardware => hasGyroHardware;
+        public float Distance
+        {
+            get => currentDistance;
+            set => currentDistance = value;
+        }
 
         private bool hasGyroHardware = false;
         private float yaw = 0f;
@@ -125,11 +138,41 @@ namespace NeuroArena.Core
 
             currentDistance = Mathf.Lerp(currentDistance, desiredDistance, Time.deltaTime * 10f);
 
-            Vector3 finalPosition = focusPoint - (targetRotation * Vector3.forward * currentDistance);
+            Vector3 finalPosition = focusPoint - (targetRotation * Vector3.forward * currentDistance) + currentShakeOffset;
 
             // Smooth damping
             transform.position = Vector3.Lerp(transform.position, finalPosition, Time.deltaTime * positionSmoothSpeed);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * rotationSmoothSpeed);
+        }
+
+        /// <summary>
+        /// Triggers procedural camera shake with configurable intensity and duration.
+        /// Respects AccessibilityManager.ReducedMotion (skips shake if reduced motion is enabled).
+        /// </summary>
+        public void Shake(float intensity, float duration)
+        {
+            if (AccessibilityManager.Instance != null && AccessibilityManager.Instance.ReducedMotion)
+            {
+                currentShakeOffset = Vector3.zero;
+                return;
+            }
+
+            if (activeShakeCoroutine != null) StopCoroutine(activeShakeCoroutine);
+            activeShakeCoroutine = StartCoroutine(CameraShakeRoutine(intensity, duration));
+        }
+
+        private System.Collections.IEnumerator CameraShakeRoutine(float intensity, float duration)
+        {
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float damp = 1f - Mathf.Clamp01(elapsed / duration);
+                currentShakeOffset = UnityEngine.Random.insideUnitSphere * (intensity * damp);
+                yield return null;
+            }
+            currentShakeOffset = Vector3.zero;
+            activeShakeCoroutine = null;
         }
 
         /// <summary>
