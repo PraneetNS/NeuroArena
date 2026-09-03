@@ -49,6 +49,7 @@ namespace NeuroArena.Data
 
         [Header("Accessibility & Telemetry")]
         public bool colorblindSafePalette = false; // Blue/Orange/Yellow instead of Red/Green
+        public bool reducedMotion = false;         // Disables screen shake and flashing for motion sensitivity
         public TextScaleMode textScale = TextScaleMode.Normal;
         public bool narrationEnabled = true;
         public bool diagnosticsOptIn = false;
