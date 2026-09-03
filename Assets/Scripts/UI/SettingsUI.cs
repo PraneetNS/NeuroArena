@@ -290,23 +290,55 @@ namespace NeuroArena.UI
             if (GUILayout.Button(cbLabel, buttonStyle, GUILayout.Width(180 * scale), GUILayout.Height(28 * scale)))
             {
                 settings.colorblindSafePalette = !settings.colorblindSafePalette;
+                if (AccessibilityManager.Instance != null)
+                {
+                    AccessibilityManager.Instance.SetColorblindMode(settings.colorblindSafePalette ? ColorblindMode.HighContrast : ColorblindMode.Normal);
+                }
             }
             GUILayout.EndHorizontal();
 
             GUILayout.Space(8 * scale);
             GUILayout.BeginHorizontal();
+            GUILayout.Label("🌊 <b>Reduced Motion & Flashes:</b>", labelStyle);
+            string rmLabel = settings.reducedMotion ? "<color=#4ADE80>ENABLED (No Shake/Flash)</color>" : "<color=#94A3B8>DISABLED (Full Dynamic Juice)</color>";
+            if (GUILayout.Button(rmLabel, buttonStyle, GUILayout.Width(180 * scale), GUILayout.Height(28 * scale)))
+            {
+                settings.reducedMotion = !settings.reducedMotion;
+                if (AccessibilityManager.Instance != null)
+                {
+                    AccessibilityManager.Instance.SetReducedMotion(settings.reducedMotion);
+                }
+            }
+            GUILayout.EndHorizontal();
+            GUILayout.Label("<color=#94A3B8><i>Disables intense camera shakes and screen flashes while keeping all sound cues and UI feedback intact.</i></color>", labelStyle);
+
+            GUILayout.Space(8 * scale);
+            GUILayout.BeginHorizontal();
             GUILayout.Label("🔤 <b>UI Text Scale:</b>", labelStyle, GUILayout.Width(120 * scale));
-            if (GUILayout.Button("100%", settings.textScale == TextScaleMode.Normal ? activeTabStyle : buttonStyle, GUILayout.Width(60 * scale))) settings.textScale = TextScaleMode.Normal;
-            if (GUILayout.Button("125%", settings.textScale == TextScaleMode.Large ? activeTabStyle : buttonStyle, GUILayout.Width(60 * scale))) settings.textScale = TextScaleMode.Large;
-            if (GUILayout.Button("150%", settings.textScale == TextScaleMode.ExtraLarge ? activeTabStyle : buttonStyle, GUILayout.Width(60 * scale))) settings.textScale = TextScaleMode.ExtraLarge;
+            if (GUILayout.Button("100%", settings.textScale == TextScaleMode.Normal ? activeTabStyle : buttonStyle, GUILayout.Width(60 * scale)))
+            {
+                settings.textScale = TextScaleMode.Normal;
+                AccessibilityManager.Instance?.SetTextScale(1.0f);
+            }
+            if (GUILayout.Button("125%", settings.textScale == TextScaleMode.Large ? activeTabStyle : buttonStyle, GUILayout.Width(60 * scale)))
+            {
+                settings.textScale = TextScaleMode.Large;
+                AccessibilityManager.Instance?.SetTextScale(1.25f);
+            }
+            if (GUILayout.Button("150%", settings.textScale == TextScaleMode.ExtraLarge ? activeTabStyle : buttonStyle, GUILayout.Width(60 * scale)))
+            {
+                settings.textScale = TextScaleMode.ExtraLarge;
+                AccessibilityManager.Instance?.SetTextScale(1.50f);
+            }
             GUILayout.EndHorizontal();
 
             GUILayout.Space(10 * scale);
             GUILayout.BeginHorizontal();
             GUILayout.Label("🎙️ <b>Live Training Narration:</b>", labelStyle);
-            if (GUILayout.Button("<color=#4ADE80>ENABLED (Computed Telemetry)</color>", buttonStyle, GUILayout.Width(220 * scale), GUILayout.Height(28 * scale)))
+            string narrLabel = settings.narrationEnabled ? "<color=#4ADE80>ENABLED (Computed Telemetry)</color>" : "<color=#94A3B8>MUTED</color>";
+            if (GUILayout.Button(narrLabel, buttonStyle, GUILayout.Width(220 * scale), GUILayout.Height(28 * scale)))
             {
-                // Toggle narration
+                settings.narrationEnabled = !settings.narrationEnabled;
             }
             GUILayout.EndHorizontal();
             GUILayout.Label("<color=#94A3B8><i>Provides real-time plain-English commentary alongside the loss curve.</i></color>", labelStyle);
