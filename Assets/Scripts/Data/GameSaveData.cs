@@ -38,6 +38,12 @@ namespace NeuroArena.Data
         public int class0SporeCount = 0;
         public int class1SporeCount = 0;
 
+        // Tutorial & Day-1 Mastery Rewards
+        public bool hasCompletedTutorial = false;
+        public bool day1RewardClaimed = false;
+        public bool hasStarterToolVectorCalibrator = false;
+        public string equippedSkinId = "obsidian";
+
         // Model Configurations per Biome
         public ModelConfig biome1Config = ModelConfig.DefaultLinearRegression;
         public ModelConfig activeModelConfig = ModelConfig.DefaultLinearRegression;
