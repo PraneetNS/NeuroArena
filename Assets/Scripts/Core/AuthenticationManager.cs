@@ -147,6 +147,16 @@ namespace NeuroArena.Core
             OnAuthenticated?.Invoke(currentProfile);
         }
 
+        public bool CanPromptAccountLink()
+        {
+            // Never prompt or gate account linking before completing the first playable loop
+            if (FirstRunTutorialDirector.Instance != null && FirstRunTutorialDirector.Instance.IsTutorialActive)
+            {
+                return false;
+            }
+            return IsAnonymous;
+        }
+
         public void LinkCurrentGuestAccount(AuthProviderType provider, string authCodeOrToken, string customName = "")
         {
             if (currentProfile == null || !currentProfile.isAnonymous)
