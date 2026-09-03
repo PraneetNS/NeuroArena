@@ -64,7 +64,7 @@ namespace NeuroArena.Core
             }
         }
 
-        public void PlayBurst(Vector3 position, Color burstColor)
+        public void PlayBurst(Vector3 position, Color burstColor, int requestedCount = 60)
         {
             ParticleSystem ps = null;
             if (availableEmitters.Count > 0)
@@ -81,13 +81,27 @@ namespace NeuroArena.Core
 
             if (ps != null)
             {
+                // Gracefully clamp count to active hardware tier cap (Tier 1: 25, Tier 2: 80, Tier 3: 150)
+                int tierCap = (DeviceTierManager.Instance != null) ? DeviceTierManager.Instance.MaxParticleBurstCount : maxParticlesPerEmitter;
+                int finalCount = Mathf.Clamp(requestedCount, 10, tierCap);
+
                 ps.transform.position = position;
                 var main = ps.main;
                 main.startColor = burstColor;
+                main.maxParticles = tierCap;
+
+                var emission = ps.emission;
+                emission.SetBursts(new ParticleSystem.Burst[] { new ParticleSystem.Burst(0f, (short)finalCount) });
+
                 ps.gameObject.SetActive(true);
                 ps.Play();
                 activeEmitters.Add(ps);
             }
+        }
+
+        public void PlayBurst(Vector3 position, Color burstColor)
+        {
+            PlayBurst(position, burstColor, 60);
         }
 
         private void Update()
