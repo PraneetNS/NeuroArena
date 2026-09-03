@@ -436,6 +436,16 @@ namespace NeuroArena.UI
 
             isBiomeCalibrationPassed = lastDuelResult.Value.isPlayerVictory;
             statusMessage = $"<color=#33EEFF>DUEL EVALUATED:</color> {lastDuelResult.Value.playerModelName} scored {lastDuelResult.Value.playerTestAccuracy:F1}% vs {rival}'s {lastDuelResult.Value.ghostTestAccuracy:F1}% on unseen test points!";
+
+            // Trigger Systematic Duel Juice (Hit-stop + Camera Shake + Victory Burst / Defeat Feedback)
+            if (lastDuelResult.Value.isPlayerVictory)
+            {
+                JuiceFeedbackManager.Instance?.OnDuelWin(transform.position);
+            }
+            else
+            {
+                JuiceFeedbackManager.Instance?.OnBossHitTaken(transform.position);
+            }
         }
 
         private void RunGrandPrixRace()
@@ -472,6 +482,9 @@ namespace NeuroArena.UI
 
                 isBiomeCalibrationPassed = false;
                 statusMessage = $"<color=#FDA4AF>DATASET SHIFT SIMULATION:</color> High Compromise MSE (J = {shift.compromiseLoss:F4}) | Model failed on pure test distributions!";
+
+                // Systematic Juice: Dataset Corruption Camera Shake + Overfitting Alert Stinger
+                JuiceFeedbackManager.Instance?.OnDatasetCorruption(transform.position);
                 return;
             }
 
@@ -505,6 +518,9 @@ namespace NeuroArena.UI
 
             statusMessage = $"<color=#55FF55>MODEL CONVERGED (TRAINED ON {sampleCount} HARVESTED SAMPLES)!</color>";
             isTraining = false;
+
+            // Systematic Juice: Hit-Stop (4 frames) + Procedural Convergence Stinger (<300ms) + Shockwave Burst
+            JuiceFeedbackManager.Instance?.OnModelConvergence(transform.position);
 
             // Notify Tutorial Director of Calibration Win Condition
             if (isTutorialActive)
