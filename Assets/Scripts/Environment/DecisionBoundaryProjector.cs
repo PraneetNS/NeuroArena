@@ -82,6 +82,9 @@ namespace NeuroArena.Environment
 
             wallObject.transform.position = worldPos;
             wallObject.transform.rotation = Quaternion.Euler(0f, angleDeg, 0f);
+
+            // Systematic Juice: Boundary laser snap + haptic + particle burst
+            NeuroArena.Core.JuiceFeedbackManager.Instance?.OnClassificationBoundarySnap(worldPos);
         }
     }
 }

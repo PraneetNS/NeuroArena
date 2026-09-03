@@ -74,7 +74,20 @@ namespace NeuroArena.ML.Reinforcement
             float ratio = newProb / Mathf.Max(oldProb, 1e-7f);
             float surr1 = ratio * advantage;
             float surr2 = Mathf.Clamp(ratio, 1f - clipEpsilon, 1f + clipEpsilon) * advantage;
-            return -Mathf.Min(surr1, surr2);
+            float loss = -Mathf.Min(surr1, surr2);
+
+            if (advantage > 0f)
+            {
+                TriggerPolicyUpdateJuice();
+            }
+
+            return loss;
+        }
+
+        public void TriggerPolicyUpdateJuice()
+        {
+            // Systematic Juice: Synapse spark burst + double haptic + audio tick
+            NeuroArena.Core.JuiceFeedbackManager.Instance?.OnPPOPolicyUpdate(transform.position);
         }
     }
 }
