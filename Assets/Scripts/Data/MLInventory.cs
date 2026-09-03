@@ -71,7 +71,21 @@ namespace NeuroArena.Data
         public DatasetStatistics LiveStats => cachedStats;
         public DatasetHealthMetrics LiveHealth => cachedHealth;
 
+        [Header("Tutorial & Day-1 Rewards")]
+        [SerializeField] private bool hasCompletedTutorial = false;
+        [SerializeField] private bool day1RewardClaimed = false;
+        [SerializeField] private bool hasStarterToolVectorCalibrator = false;
+        [SerializeField] private string starterToolName = "Vector Calibrator";
+        [SerializeField] private string equippedSkinId = "obsidian";
+
+        public bool HasCompletedTutorial => hasCompletedTutorial;
+        public bool Day1RewardClaimed => day1RewardClaimed;
+        public bool HasStarterToolVectorCalibrator => hasStarterToolVectorCalibrator;
+        public string StarterToolName => starterToolName;
+        public string EquippedSkinId => equippedSkinId;
+
         public event Action<DatasetHealthMetrics> OnDatasetHealthChanged;
+        public event Action OnDay1RewardUnlocked;
         private DatasetHealthMetrics cachedHealth = DatasetHealthMetrics.Default;
 
         private void Awake()
@@ -578,32 +592,57 @@ namespace NeuroArena.Data
             return mixed;
         }
 
+        public void GrantDay1Reward(string skinId = "glacial", string toolName = "Vector Calibrator")
+        {
+            hasCompletedTutorial = true;
+            day1RewardClaimed = true;
+            hasStarterToolVectorCalibrator = true;
+            starterToolName = toolName;
+            equippedSkinId = skinId;
+
+            // Add empirical vocabulary token for calibration
+            AddVocabularyToken("linear_regression");
+            AddVocabularyToken("gradient_descent");
+            AddVocabularyToken("mse_loss");
+
+            // Grant Starter Tool Fluid
+            stepFluidCount = Mathf.Max(stepFluidCount, 3);
+            weightResiduesCount = Mathf.Max(weightResiduesCount, 2);
+            biasSparksCount = Mathf.Max(biasSparksCount, 2);
+
+            OnInventoryChanged?.Invoke();
+            OnDay1RewardUnlocked?.Invoke();
+            Debug.Log($"[MLInventory] DAY-1 TUTORIAL REWARD GRANTED! Starter Tool: '{toolName}', Skin: '{skinId}', Biome 2 Unlocked.");
+        }
+
         public void ExportToSaveData(GameSaveData saveData)
         {
-            saveData.featureCrystalsCount = featureCrystalsCount;
-            saveData.targetShardsCount = targetShardsCount;
-            saveData.weightResiduesCount = weightResiduesCount;
-            saveData.biasSparksCount = biasSparksCount;
-            saveData.stepFluidCount = stepFluidCount;
-            saveData.sigmoidMembranesCount = sigmoidMembranesCount;
-            saveData.class0SporesCount = class0SporesCount;
-            saveData.class1SporesCount = class1SporesCount;
-            saveData.crossEntropyVialsCount = crossEntropyVialsCount;
-            saveData.collectedDataset = new List<DataPoint>(dataset);
+            saveData.featureCrystalXCount = featureCrystalsCount;
+            saveData.targetShardYCount = targetShardsCount;
+            saveData.weightWCount = weightResiduesCount;
+            saveData.biasBCount = biasSparksCount;
+            saveData.learningRateAlphaCount = stepFluidCount;
+            saveData.class0SporeCount = class0SporesCount;
+            saveData.class1SporeCount = class1SporesCount;
+            saveData.hasCompletedTutorial = hasCompletedTutorial;
+            saveData.day1RewardClaimed = day1RewardClaimed;
+            saveData.hasStarterToolVectorCalibrator = hasStarterToolVectorCalibrator;
+            saveData.equippedSkinId = equippedSkinId;
         }
 
         public void ImportFromSaveData(GameSaveData saveData)
         {
-            featureCrystalsCount = saveData.featureCrystalsCount;
-            targetShardsCount = saveData.targetShardsCount;
-            weightResiduesCount = saveData.weightResiduesCount;
-            biasSparksCount = saveData.biasSparksCount;
-            stepFluidCount = saveData.stepFluidCount;
-            sigmoidMembranesCount = saveData.sigmoidMembranesCount;
-            class0SporesCount = saveData.class0SporesCount;
-            class1SporesCount = saveData.class1SporesCount;
-            crossEntropyVialsCount = saveData.crossEntropyVialsCount;
-            dataset = new List<DataPoint>(saveData.collectedDataset);
+            featureCrystalsCount = saveData.featureCrystalXCount;
+            targetShardsCount = saveData.targetShardYCount;
+            weightResiduesCount = saveData.weightWCount;
+            biasSparksCount = saveData.biasBCount;
+            stepFluidCount = saveData.learningRateAlphaCount;
+            class0SporesCount = saveData.class0SporeCount;
+            class1SporesCount = saveData.class1SporeCount;
+            hasCompletedTutorial = saveData.hasCompletedTutorial;
+            day1RewardClaimed = saveData.day1RewardClaimed;
+            hasStarterToolVectorCalibrator = saveData.hasStarterToolVectorCalibrator;
+            equippedSkinId = string.IsNullOrEmpty(saveData.equippedSkinId) ? "obsidian" : saveData.equippedSkinId;
             RecalculateStats();
             OnInventoryChanged?.Invoke();
         }
