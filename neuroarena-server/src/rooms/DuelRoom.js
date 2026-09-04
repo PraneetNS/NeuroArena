@@ -28,6 +28,7 @@ class DuelRoom extends Room {
                 if (typeof message.z === "number") player.z = message.z;
                 if (typeof message.rotationY === "number") player.rotationY = message.rotationY;
                 if (message.activityState) player.activityState = message.activityState;
+                if (typeof message.tick === "number") player.lastProcessedTick = message.tick;
                 player.lastUpdate = Date.now();
             }
         });
@@ -267,14 +268,29 @@ class DuelRoom extends Room {
         this.broadcast("duel_results", payload);
     }
 
-    onLeave(client, consented) {
-        if (this.state.players.has(client.sessionId)) {
-            const p = this.state.players.get(client.sessionId);
-            console.log(`[DuelRoom] Duelist ${p.name} left. Consented: ${consented}`);
+    async onLeave(client, consented) {
+        const p = this.state.players.get(client.sessionId);
+        if (!p) return;
+
+        console.log(`[DuelRoom] Duelist ${p.name} disconnected. Consented: ${consented}`);
+
+        try {
+            if (consented) {
+                throw new Error("consented leave");
+            }
+
+            console.log(`[DuelRoom] Waiting for ${client.sessionId} to reconnect...`);
+            p.connected = false;
+
+            const reconnectedClient = await this.allowReconnection(client, 15);
+            console.log(`[DuelRoom] ${reconnectedClient.sessionId} successfully reconnected!`);
+            p.connected = true;
+
+        } catch (e) {
+            console.log(`[DuelRoom] Duelist ${p.name} failed to reconnect or left intentionally.`);
             this.state.players.delete(client.sessionId);
 
-            // If match was active, award technical forfeit win to remaining player
-            if (this.state.status === "active") {
+            if (this.state.status === "active" || this.state.status === "countdown") {
                 this.evaluateDuelResults();
             }
         }

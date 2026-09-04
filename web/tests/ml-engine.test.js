@@ -315,7 +315,7 @@ function testSixBiomeStandaloneScenesAndWorldManager() {
     ];
 
     scenes.forEach(sceneName => {
-        const path = `Assets/Scenes/${sceneName}`;
+        const path = `../Assets/Scenes/${sceneName}`;
         assert.strictEqual(fs.existsSync(path), true, `Scene ${sceneName} must exist on disk`);
     });
 

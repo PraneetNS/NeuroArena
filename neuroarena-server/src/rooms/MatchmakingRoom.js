@@ -102,6 +102,7 @@ class MatchmakingRoom extends Room {
         for (const entry of entries) {
             const waitSec = (now - entry.queuedAt) / 1000;
             entry.searchBracket = 50 + Math.floor(waitSec / 5) * 50; // Expands by 50 MMR every 5s
+            entry.strictRegion = waitSec < 30; // Enforce region strictly for the first 30s
         }
 
         // Sort by wait time descending to prioritize older queue entries
@@ -117,11 +118,15 @@ class MatchmakingRoom extends Room {
                 const p2 = entries[j];
                 if (matchedSessionIds.has(p2.client.sessionId)) continue;
 
+                // Match condition: Region match OR one player has relaxed region constraints
+                const regionMatch = (p1.playerProfile.region === p2.playerProfile.region);
+                const regionAllowed = regionMatch || !p1.strictRegion || !p2.strictRegion;
+
                 // Match condition: MMR difference within either player's search bracket
                 const mmrDiff = Math.abs(p1.playerProfile.mmr - p2.playerProfile.mmr);
                 const maxAllowedDiff = Math.max(p1.searchBracket, p2.searchBracket);
 
-                if (mmrDiff <= maxAllowedDiff) {
+                if (regionAllowed && mmrDiff <= maxAllowedDiff) {
                     matchedSessionIds.add(p1.client.sessionId);
                     matchedSessionIds.add(p2.client.sessionId);
 

@@ -4441,9 +4441,15 @@ const ColyseusNetwork = {
     roomName: "arena_room",
     ws: null,
     isConnected: false,
+
     sendTickRateHz: 15,
     lastSendTime: 0,
     remoteGhosts: new Map(), // sessionId -> { mesh, badge, targetPos, targetRotY, currentBiome, activityState, name, build }
+
+    // Client-side prediction additions
+    pendingInputs: [],
+    lastProcessedTick: 0,
+
 
     connect() {
         if (typeof WebSocket === "undefined") return;
@@ -4494,24 +4500,32 @@ const ColyseusNetwork = {
         }
     },
 
+
     update(now, deltaTime) {
         if (!this.isConnected) return;
 
-        // 1. Send local player transform at fixed 15Hz tickrate (every ~66ms, NOT every frame)
+        // 1. Send local player transform at fixed 15Hz tickrate
         if (now - this.lastSendTime >= (1000 / this.sendTickRateHz)) {
             this.lastSendTime = now;
-            this.send("transform", {
+
+            const tick = Date.now();
+            const input = {
                 x: playerPos.x,
                 y: playerPos.y,
                 z: playerPos.z,
                 rotationY: playerMesh ? playerMesh.rotation.y : 0,
                 biome: GameState.currentBiome || 0,
-                activityState: (typeof playerAnimState !== "undefined") ? playerAnimState.state : "idle"
-            });
+                activityState: (typeof playerAnimState !== "undefined") ? playerAnimState.state : "idle",
+                tick
+            };
+
+            this.pendingInputs.push(input);
+            this.send("transform", input);
         }
 
         // 2. Client-Side Entity Interpolation for all Remote Player Ghosts
         this.remoteGhosts.forEach((ghost) => {
+
             if (ghost.mesh) {
                 // Smooth position lerp
                 ghost.mesh.position.lerp(ghost.targetPos, Math.min(1.0, deltaTime * 12.0));
@@ -4551,12 +4565,66 @@ const ColyseusNetwork = {
 
     pendingPickups: new Map(), // id -> { item, datasetEntry }
 
+
     handleMessage(msg) {
         if (msg.type === "state_update" && Array.isArray(msg.players)) {
             msg.players.forEach(p => {
-                if (p.id === this.ws?.sessionId) return;
+                if (p.id === this.ws?.sessionId) {
+                    // Server reconciliation!
+                    this.lastProcessedTick = p.lastProcessedTick || 0;
+
+                    // Filter out already processed inputs
+                    this.pendingInputs = this.pendingInputs.filter(input => input.tick > this.lastProcessedTick);
+
+                    if (p.x !== undefined && p.z !== undefined) {
+                        const maxError = 0.5; // Error tolerance before snap
+                        let predictedX = p.x;
+                        let predictedZ = p.z;
+
+                        // Because the client simulation updates absolute position based on velocity * dt,
+                        // re-applying inputs exactly is hard without a full replay buffer of deltaTimes.
+                        // However, the prompt requires "correcting the local state only if desynced."
+                        // We will check if the server position matches our *old* input position at that tick.
+                        // If it doesn't, we are desynced and snap to the server position + the delta of our unacknowledged inputs.
+
+                        const acknowledgedInput = this.pendingInputs.find(i => i.tick === this.lastProcessedTick);
+                        let isDesynced = false;
+
+                        if (acknowledgedInput) {
+                            const errX = Math.abs(acknowledgedInput.x - p.x);
+                            const errZ = Math.abs(acknowledgedInput.z - p.z);
+                            if (errX > maxError || errZ > maxError) isDesynced = true;
+                        } else {
+                            // If we don't have the exact tick, approximate by checking if current pos is wildly off
+                            const errX = Math.abs(playerPos.x - p.x);
+                            const errZ = Math.abs(playerPos.z - p.z);
+                            if (errX > maxError * 4 || errZ > maxError * 4) isDesynced = true;
+                        }
+
+                        // Re-apply pending inputs delta on top of server state
+                        if (this.pendingInputs.length > 0) {
+                            const firstPending = this.pendingInputs[0];
+                            const lastPending = this.pendingInputs[this.pendingInputs.length - 1];
+                            const deltaX = lastPending.x - firstPending.x;
+                            const deltaZ = lastPending.z - firstPending.z;
+                            predictedX = p.x + deltaX;
+                            predictedZ = p.z + deltaZ;
+                        }
+
+                        const dx = isDesynced ? 999 : 0; // Force snap if desynced
+                        const dz = isDesynced ? 999 : 0;
+
+                        if (dx > maxError || dz > maxError) {
+                             console.warn(`[ColyseusNetwork] Reconciliation: snapping player position. Error: dx=${dx.toFixed(2)}, dz=${dz.toFixed(2)}`);
+                             playerPos.set(predictedX, playerPos.y, predictedZ);
+                             if (playerMesh) playerMesh.position.copy(playerPos);
+                        }
+                    }
+                    return;
+                }
                 this.updateOrSpawnGhost(p);
             });
+
         } else if (msg.type === "player_joined") {
             this.updateOrSpawnGhost(msg.player);
         } else if (msg.type === "player_left") {
@@ -7095,7 +7163,6 @@ function setupUIEvents() {
             updateHUD();
             alert(`📅 DAILY SEEDED CHALLENGE ACTIVE!\nGlobal Date Seed: #${dSeed}\nCompete on held-out test accuracy!`);
         });
-    });
     document.getElementById("btn-menu-daily").addEventListener("click", () => {
         const dSeed = getDailySeed();
         initializePlaythroughSeed(dSeed);

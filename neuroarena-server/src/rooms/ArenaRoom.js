@@ -31,6 +31,7 @@ class ArenaRoom extends Room {
             if (typeof message.activityState === "string" && Object.values(ActivityState).includes(message.activityState)) {
                 player.activityState = message.activityState;
             }
+            if (typeof message.tick === "number") player.lastProcessedTick = message.tick;
             player.lastUpdate = Date.now();
         });
 
