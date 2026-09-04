@@ -122,16 +122,14 @@ class Glicko2Engine {
    * @param {number} baseRating
    * @param {number} rd
    * @param {number} waitTimeSeconds
-   * @param {string} playerRegion
    */
-  getSearchRange(baseRating, rd, waitTimeSeconds, playerRegion = 'NA') {
+  getSearchRange(baseRating, rd, waitTimeSeconds) {
     const baseBand = Math.max(50, rd * 0.75);
     const expansion = Math.min(400, waitTimeSeconds * 12);
     return {
       minRating: Math.max(0, Math.round(baseRating - baseBand - expansion)),
       maxRating: Math.round(baseRating + baseBand + expansion),
-      currentBand: Math.round(baseBand + expansion),
-      strictRegion: waitTimeSeconds < 30 ? playerRegion : null // Relax region bounds after 30s
+      currentBand: Math.round(baseBand + expansion)
     };
   }
 }

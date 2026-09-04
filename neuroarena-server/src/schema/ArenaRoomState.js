@@ -29,7 +29,6 @@ class PlayerSchema extends Schema {
         this.biome = 0;
         this.activityState = ActivityState.IDLE;
         this.lastUpdate = Date.now();
-        this.lastProcessedTick = 0;
     }
 }
 
@@ -43,7 +42,6 @@ type("number")(PlayerSchema.prototype, "rotationY");
 type("uint8")(PlayerSchema.prototype, "biome");
 type("string")(PlayerSchema.prototype, "activityState");
 type("number")(PlayerSchema.prototype, "lastUpdate");
-type("number")(PlayerSchema.prototype, "lastProcessedTick");
 
 /**
  * Collectible Item state schema synchronized across the room.
