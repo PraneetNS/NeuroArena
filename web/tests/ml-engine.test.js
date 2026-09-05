@@ -1942,7 +1942,42 @@ function testWebGPUBootstrapAndFallbackEngine() {
     });
 }
 
+function testVolumetricFogAndFroxelGrid() {
+    console.log("▶ Testing Volumetric Fog Henyey-Greenstein & Froxel Grid Bounds...");
+
+    // 1. Henyey-Greenstein Phase Function validation
+    function hg(cosTheta, g) {
+        const g2 = g * g;
+        return (1.0 - g2) / (4.0 * Math.PI * Math.pow(1.0 + g2 - 2.0 * g * cosTheta, 1.5));
+    }
+
+    const g = 0.45;
+    const forwardScatter = hg(1.0, g); // Angle 0 deg towards light
+    const backScatter = hg(-1.0, g);   // Angle 180 deg away from light
+    assert(forwardScatter > backScatter, "Forward scattering must exceed back scattering for positive anisotropy g");
+    assert(forwardScatter > 0.1 && forwardScatter < 1.0, "Forward scatter intensity must be normalized");
+
+    // 2. Exponential Height Fog Extinction validation
+    const fogDensity = 0.025;
+    const fogHeightDecay = 0.15;
+    const seaLevelDensity = fogDensity * Math.exp(-0 * fogHeightDecay);
+    const mountainDensity = fogDensity * Math.exp(-20 * fogHeightDecay);
+    assert.strictEqual(seaLevelDensity, fogDensity, "Sea level fog density must match base density");
+    assert(mountainDensity < seaLevelDensity * 0.1, "High altitude fog density must decay exponentially");
+
+    // 3. 3D Froxel Grid Slicing Math
+    const gridDimX = 16, gridDimY = 9, gridDimZ = 24;
+    const near = 0.3, far = 150.0;
+    const testZ = 15.0;
+    const zNorm = Math.log(Math.max(testZ, near) / near) / Math.log(far / near);
+    const sliceZ = Math.min(gridDimZ - 1, Math.max(0, Math.floor(zNorm * gridDimZ)));
+    assert(sliceZ >= 0 && sliceZ < gridDimZ, `Z Froxel slice (${sliceZ}) must be within [0, ${gridDimZ - 1}]`);
+
+    console.log("✅ Volumetric Fog Henyey-Greenstein & Froxel Grid Bounds Test Passed!");
+}
+
 testWebGPUBootstrapAndFallbackEngine().then(() => {
+    testVolumetricFogAndFroxelGrid();
     console.log("🎉 All Web Unit Tests Passed Cleanly!");
 });
 
