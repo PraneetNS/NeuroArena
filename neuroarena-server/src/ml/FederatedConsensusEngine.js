@@ -54,25 +54,28 @@ class FederatedConsensusEngine {
     if (clientUpdates.length <= 2) return clientUpdates;
 
     const numWeights = clientUpdates[0].weights.length;
-    // Compute mean update
-    const mean = new Array(numWeights).fill(0);
-    clientUpdates.forEach(u => {
-      u.weights.forEach((w, i) => mean[i] += w / clientUpdates.length);
-    });
+    // Compute median of each coordinate
+    const median = new Array(numWeights).fill(0);
+    for (let i = 0; i < numWeights; i++) {
+      const vals = clientUpdates.map(u => u.weights[i]).sort((a, b) => a - b);
+      median[i] = vals[Math.floor(vals.length / 2)];
+    }
 
-    // Compute Euclidean distance of each client from mean
+    // Compute distance from median
     const scored = clientUpdates.map(u => {
       let distSq = 0;
-      u.weights.forEach((w, i) => distSq += (w - mean[i]) ** 2);
+      u.weights.forEach((w, i) => distSq += (w - median[i]) ** 2);
       return { update: u, dist: Math.sqrt(distSq) };
     });
 
-    const avgDist = scored.reduce((acc, s) => acc + s.dist, 0) / scored.length;
-    const stdDist = Math.sqrt(scored.reduce((acc, s) => acc + (s.dist - avgDist) ** 2, 0) / scored.length) || 1e-6;
+    const dists = scored.map(s => s.dist).sort((a, b) => a - b);
+    const medianDist = dists[Math.floor(dists.length / 2)];
+    const mad = dists.map(d => Math.abs(d - medianDist)).sort((a, b) => a - b)[Math.floor(dists.length / 2)] || 1e-4;
 
-    // Filter outliers
+    // Reject updates with distance > medianDist + 3.0 * (1.4826 * mad)
+    const cutoff = medianDist + (this.byzantineThreshold * 1.4826 * mad);
     return scored
-      .filter(s => (s.dist - avgDist) / stdDist < this.byzantineThreshold)
+      .filter(s => s.dist <= cutoff)
       .map(s => s.update);
   }
 
