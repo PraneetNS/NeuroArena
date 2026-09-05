@@ -305,6 +305,7 @@ function testHumanoidCharacterAnimationStateMachine() {
 
 function testSixBiomeStandaloneScenesAndWorldManager() {
     const fs = require("fs");
+    const path = require("path");
     const scenes = [
         "Biome1_LinearSteppes.unity",
         "Biome2_BinaryMarshlands.unity",
@@ -315,8 +316,8 @@ function testSixBiomeStandaloneScenesAndWorldManager() {
     ];
 
     scenes.forEach(sceneName => {
-        const path = `../Assets/Scenes/${sceneName}`;
-        assert.strictEqual(fs.existsSync(path), true, `Scene ${sceneName} must exist on disk`);
+        const scenePath = path.resolve(__dirname, "../../Assets/Scenes", sceneName);
+        assert.strictEqual(fs.existsSync(scenePath), true, `Scene ${sceneName} must exist on disk`);
     });
 
     // Validate 6-biome catalog metadata
