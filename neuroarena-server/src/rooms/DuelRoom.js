@@ -3,22 +3,28 @@ const { Room } = colyseus;
 const { DuelRoomState } = require("../schema/DuelRoomState");
 const { PlayerSchema } = require("../schema/ArenaRoomState");
 const { auditLogger } = require("../security/AuditLogger");
+const { MovementReconciliationEngine } = require("../network/MovementReconciliationEngine");
 
 /**
  * 1v1 Private Duel Match Room.
  * Implements FIFO 2-player matchmaking, synchronized 90s training timer,
- * lightweight anti-cheat submission integrity validation, and authoritative hidden test set evaluation.
+ * 15s mid-duel disconnection grace window with full state resync,
+ * client-side movement prediction with authoritative 20Hz reconciliation,
+ * and authoritative hidden test set evaluation.
  */
 class DuelRoom extends Room {
     onCreate(options) {
         this.maxClients = 2;
         this.setState(new DuelRoomState());
-        this.setPatchRate(100);
+        this.setPatchRate(50); // 20Hz tick rate (50ms interval)
 
         this.submissions = new Map(); // sessionId -> { weightW, weightB, name, build, flagged, reason }
         this.hiddenTestSet = this.generateHiddenTestSet();
         this.matchInterval = null;
         this.matchStartTime = 0;
+        this.currentTick = 0;
+        this.reconciler = new MovementReconciliationEngine();
+        this.playerInputSeqs = new Map(); // sessionId -> lastProcessedSeq
 
         // 1. Transform / Live presence relay during duel
         this.onMessage("transform", (client, message) => {
@@ -30,6 +36,40 @@ class DuelRoom extends Room {
                 if (message.activityState) player.activityState = message.activityState;
                 player.lastUpdate = Date.now();
             }
+        });
+
+        // 1.1 Sequence-Tagged Movement Input for Client Prediction & Reconciliation
+        this.onMessage("movement_input", (client, message) => {
+            const player = this.state.players.get(client.sessionId);
+            if (!player) return;
+
+            const seq = message.seq || 0;
+            const dt = typeof message.dt === "number" ? Math.min(0.1, message.dt) : 0.05;
+            const input = message.input || { dx: 0, dz: 0, rotY: player.rotationY };
+
+            // Authoritative step simulation
+            const updated = this.reconciler.serverSimulateStep(
+                { x: player.x, z: player.z, rotationY: player.rotationY },
+                input,
+                dt,
+                seq
+            );
+
+            player.x = updated.x;
+            player.z = updated.z;
+            player.rotationY = updated.rotationY;
+            player.lastUpdate = updated.timestamp;
+            this.playerInputSeqs.set(client.sessionId, seq);
+
+            // Send authoritative reconciliation packet back to client
+            client.send("movement_ack", {
+                lastProcessedSeq: seq,
+                tick: this.currentTick,
+                x: player.x,
+                z: player.z,
+                rotationY: player.rotationY,
+                serverTimestamp: updated.timestamp
+            });
         });
 
         // 2. Player Submits Trained Model Weights (With Integrity Checks)
@@ -155,22 +195,26 @@ class DuelRoom extends Room {
         this.state.status = "active";
         this.state.timerSec = 90;
         this.matchStartTime = Date.now();
+        this.currentTick = 0;
 
         this.broadcast("match_started", {
             durationSec: 90,
             seed: this.state.seed
         });
 
-        // 1Hz Synchronized Match Timer
+        // 20Hz Simulation & Match Timer
         this.matchInterval = this.clock.setInterval(() => {
-            if (this.state.timerSec > 0) {
-                this.state.timerSec--;
-                this.broadcast("timer_tick", { timerSec: this.state.timerSec });
-            } else {
-                this.clock.clearInterval(this.matchInterval);
-                this.evaluateDuelResults();
+            this.currentTick++;
+            if (this.currentTick % 20 === 0) {
+                if (this.state.timerSec > 0) {
+                    this.state.timerSec--;
+                    this.broadcast("timer_tick", { timerSec: this.state.timerSec, tick: this.currentTick });
+                } else {
+                    this.clock.clearInterval(this.matchInterval);
+                    this.evaluateDuelResults();
+                }
             }
-        }, 1000);
+        }, 50);
     }
 
     evaluateDuelResults() {
@@ -267,13 +311,62 @@ class DuelRoom extends Room {
         this.broadcast("duel_results", payload);
     }
 
-    onLeave(client, consented) {
-        if (this.state.players.has(client.sessionId)) {
-            const p = this.state.players.get(client.sessionId);
-            console.log(`[DuelRoom] Duelist ${p.name} left. Consented: ${consented}`);
-            this.state.players.delete(client.sessionId);
+    async onLeave(client, consented) {
+        const player = this.state.players.get(client.sessionId);
+        if (!player) return;
 
-            // If match was active, award technical forfeit win to remaining player
+        // Consented departure or match not active: Clean up immediately
+        if (consented || this.state.status !== "active") {
+            console.log(`[DuelRoom] Duelist ${player.name} left. Consented: ${consented}`);
+            this.state.players.delete(client.sessionId);
+            if (this.state.status === "active") {
+                this.evaluateDuelResults();
+            }
+            return;
+        }
+
+        // Mid-duel unexpected disconnection: Grant 15s grace period for reconnection
+        console.log(`[DuelRoom] Duelist ${player.name} disconnected mid-match. Holding 15s reconnection grace window...`);
+        player.activityState = "DISCONNECTED_WAITING_RECONNECT";
+
+        this.broadcast("player_disconnected", {
+            sessionId: client.sessionId,
+            playerName: player.name,
+            gracePeriodSec: 15
+        }, { except: client });
+
+        try {
+            // Allow client 15 seconds to reconnect
+            const reconnectedClient = await this.allowReconnection(client, 15);
+            console.log(`[DuelRoom] Duelist ${player.name} reconnected successfully! Resyncing state from tick ${this.currentTick}...`);
+            player.activityState = "IDLE";
+
+            // Dispatch full authoritative state resync from last confirmed tick
+            reconnectedClient.send("resync_state", {
+                roomId: this.roomId,
+                status: this.state.status,
+                timerSec: this.state.timerSec,
+                lastConfirmedTick: this.currentTick,
+                seed: this.state.seed,
+                players: Array.from(this.state.players.values()).map(p => ({
+                    id: p.id,
+                    name: p.name,
+                    x: p.x,
+                    z: p.z,
+                    rotationY: p.rotationY,
+                    activityState: p.activityState
+                })),
+                hasSubmitted: this.submissions.has(client.sessionId)
+            });
+
+            this.broadcast("player_reconnected", {
+                sessionId: client.sessionId,
+                playerName: player.name
+            }, { except: reconnectedClient });
+
+        } catch (e) {
+            console.log(`[DuelRoom] 15s Reconnection grace period expired for ${player.name}. Triggering forfeit.`);
+            this.state.players.delete(client.sessionId);
             if (this.state.status === "active") {
                 this.evaluateDuelResults();
             }
