@@ -4,9 +4,14 @@
  * seasonal trophy scoring, and guild war declarations.
  */
 class GuildEngine {
-  constructor() {
+  constructor(options = {}) {
     this.guilds = new Map(); // guildId -> guildObject
     this.playerGuildMap = new Map(); // playerId -> guildId
+    this.weeklyObjectiveEngine = options.weeklyObjectiveEngine || null;
+  }
+
+  setWeeklyObjectiveEngine(engine) {
+    this.weeklyObjectiveEngine = engine;
   }
 
   createGuild(guildId, guildName, leaderId, tag = 'NEURO') {
@@ -62,7 +67,12 @@ class GuildEngine {
       guild.level++;
       this.checkPerkUnlocks(guild);
     }
-    return { level: guild.level, exp: guild.exp };
+
+    if (this.weeklyObjectiveEngine) {
+      this.weeklyObjectiveEngine.recordGuildContribution(guildId, playerId, expAmount).catch?.(() => {});
+    }
+
+    return { level: guild.level, exp: guild.exp, guildId };
   }
 
   checkPerkUnlocks(guild) {
