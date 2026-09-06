@@ -6201,7 +6201,8 @@ function closeActiveHUDModals(excludeId = null) {
         "objective-modal",
         "duel-matchmaking-modal",
         "duel-results-modal",
-        "character-select-modal"
+        "character-select-modal",
+        "daily-challenge-modal"
     ];
     modalIds.forEach(id => {
         if (id !== excludeId) {
@@ -7078,33 +7079,83 @@ function setupUIEvents() {
         alert("Stat Card metrics copied to clipboard!");
     });
 
-    // Daily Challenge
-    document.getElementById("btn-daily-challenge").addEventListener("click", () => {
-        closeActiveHUDModals();
-        document.getElementById("main-menu")?.classList.add("hidden");
-        const dSeed = getDailySeed();
-        initializePlaythroughSeed(dSeed);
-        resetGameSave();
-        ProfileSlots[activeSaveSlot].streak++;
-        if (ProfileSlots[activeSaveSlot].streak > ProfileSlots[activeSaveSlot].bestStreak) {
-            ProfileSlots[activeSaveSlot].bestStreak = ProfileSlots[activeSaveSlot].streak;
-        }
-        saveActiveProfile();
-        startBiomeLoadingSequence(0, () => {
-            spawnSeededCollectibles();
-            updateHUD();
-            alert(`📅 DAILY SEEDED CHALLENGE ACTIVE!\nGlobal Date Seed: #${dSeed}\nCompete on held-out test accuracy!`);
+    // Daily Challenge & Engagement Hub Modal
+    function openDailyChallengeModal() {
+        closeActiveHUDModals("daily-challenge-modal");
+        const modal = document.getElementById("daily-challenge-modal");
+        const mount = document.getElementById("daily-challenge-content-mount");
+        if (!modal || !mount) return;
+
+        modal.classList.remove("hidden");
+
+        const now = new Date();
+        const y = now.getUTCFullYear();
+        const m = String(now.getUTCMonth() + 1).padStart(2, '0');
+        const d = String(now.getUTCDate()).padStart(2, '0');
+        const dateKey = `${y}-${m}-${d}`;
+
+        const currentSlot = ProfileSlots[activeSaveSlot] || { streak: 1, bestStreak: 1 };
+
+        // Fallback offline deterministic objective calculation
+        let hash = 0;
+        for (let i = 0; i < dateKey.length; i++) hash = ((hash << 5) - hash) + dateKey.charCodeAt(i);
+        const objectivesCatalog = [
+            { title: "The Outlier Titan: Strict Convergence", biome: "Linear Steppes", boss: "The Outlier Titan", description: "Defeat The Outlier Titan with validation MSE < 0.05 using SGD or Momentum.", baseReward: { computeCredits: 100, seasonXp: 75 } },
+            { title: "The Hyperplane Hydra: Decision Boundary", biome: "Binary Marshlands", boss: "The Hyperplane Hydra", description: "Defeat The Hyperplane Hydra with Binary Cross-Entropy and Accuracy >= 95%.", baseReward: { computeCredits: 120, seasonXp: 85 } },
+            { title: "The Overfit Colossus: L1 Regularization", biome: "Variance Tundra", boss: "The Overfit Colossus", description: "Beat Overfit Colossus using only L1 Lasso regularization with validation MSE < 0.03.", baseReward: { computeCredits: 150, seasonXp: 100 } },
+            { title: "The Dendrogram Dragon: Bagging Vanguard", biome: "Branching Canopy", boss: "The Dendrogram Dragon", description: "Defeat The Dendrogram Dragon using a 5-tree Bagging ensemble with Gini impurity < 0.10.", baseReward: { computeCredits: 180, seasonXp: 110 } },
+            { title: "The Non-Linear Overlord: Citadel Convergence", biome: "Deep Synapse Citadel", boss: "The Non-Linear Overlord", description: "Solve the XOR manifold against The Non-Linear Overlord in under 20 epochs.", baseReward: { computeCredits: 200, seasonXp: 125 } },
+            { title: "The High-Dimensional Void: Cosine Resonance", biome: "Semantic Expanse", boss: "The High-Dimensional Void", description: "Retrieve Top-K semantic embedding concepts with average Cosine Similarity >= 0.85.", baseReward: { computeCredits: 220, seasonXp: 140 } }
+        ];
+        const selectedObj = objectivesCatalog[Math.abs(hash) % objectivesCatalog.length];
+        selectedObj.dateKey = dateKey;
+
+        const streak = currentSlot.streak || 1;
+        const bestStreak = currentSlot.bestStreak || streak;
+        const streakTier = streak >= 30 ? "GRANDMASTER" : streak >= 14 ? "PLATINUM" : streak >= 7 ? "GOLD" : streak >= 3 ? "SILVER" : "BRONZE";
+
+        mount.innerHTML = `
+            <div class="daily-challenge-card">
+                <div class="daily-header">
+                    <div class="daily-badge-row">
+                        <span class="badge-daily">📅 UTC DATE: ${dateKey}</span>
+                        <span class="badge-streak ${streakTier.toLowerCase()}">🔥 STREAK: ${streak} DAYS (Best: ${bestStreak})</span>
+                    </div>
+                    <div class="daily-timer">⏳ UTC Midnight Reset</div>
+                </div>
+                <div class="daily-body">
+                    <h3 class="daily-title">${selectedObj.title}</h3>
+                    <p class="daily-desc">${selectedObj.description}</p>
+                    <div class="daily-meta-grid">
+                        <div class="meta-item"><span class="meta-label">Realm</span><span class="meta-value">${selectedObj.biome}</span></div>
+                        <div class="meta-item"><span class="meta-label">Boss / Target</span><span class="meta-value">${selectedObj.boss}</span></div>
+                        <div class="meta-item"><span class="meta-label">Base Reward</span><span class="meta-value">${selectedObj.baseReward.computeCredits} Credits + ${selectedObj.baseReward.seasonXp} XP</span></div>
+                        <div class="meta-item"><span class="meta-label">Streak Bonus</span><span class="meta-value text-cyan">${streakTier} (+${Math.min(300, Math.max(0, streak - 1) * 15)}%)</span></div>
+                    </div>
+                </div>
+                <div class="daily-footer">
+                    <button class="btn-play-daily glow-amber" id="btn-launch-daily-run">⚔️ LAUNCH DAILY SEEDED RUN</button>
+                </div>
+            </div>
+        `;
+
+        document.getElementById("btn-launch-daily-run")?.addEventListener("click", () => {
+            modal.classList.add("hidden");
+            document.getElementById("main-menu")?.classList.add("hidden");
+            const dSeed = getDailySeed();
+            initializePlaythroughSeed(dSeed);
+            resetGameSave();
+            startBiomeLoadingSequence(0, () => {
+                spawnSeededCollectibles();
+                updateHUD();
+            });
         });
-    });
-    document.getElementById("btn-menu-daily").addEventListener("click", () => {
-        const dSeed = getDailySeed();
-        initializePlaythroughSeed(dSeed);
-        resetGameSave();
-        document.getElementById("main-menu").classList.add("hidden");
-        startBiomeLoadingSequence(0, () => {
-            spawnSeededCollectibles();
-            updateHUD();
-        });
+    }
+
+    document.getElementById("btn-daily-challenge")?.addEventListener("click", openDailyChallengeModal);
+    document.getElementById("btn-menu-daily")?.addEventListener("click", openDailyChallengeModal);
+    document.getElementById("btn-close-daily-modal")?.addEventListener("click", () => {
+        document.getElementById("daily-challenge-modal")?.classList.add("hidden");
     });
 
     // Cosmetic Skins
