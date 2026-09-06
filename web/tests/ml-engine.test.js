@@ -1976,8 +1976,192 @@ function testVolumetricFogAndFroxelGrid() {
     console.log("✅ Volumetric Fog Henyey-Greenstein & Froxel Grid Bounds Test Passed!");
 }
 
+function testRecurringEngagementAndLiveOpsRemoteConfig() {
+    console.log("▶ Testing Web Client Recurring Engagement, Daily Challenges, Streaks & Live-Ops Remote Config...");
+
+    // 1. Deterministic Daily Objective Generation from UTC Date String
+    function getDailyObjectiveForDate(dateKey) {
+        let hash = 0;
+        for (let i = 0; i < dateKey.length; i++) {
+            hash = ((hash << 5) - hash) + dateKey.charCodeAt(i);
+        }
+        const objectivesCatalog = [
+            { id: "daily_biome1", title: "The Outlier Titan: Strict Convergence", biome: "Linear Steppes", boss: "The Outlier Titan", req: { maxMse: 0.05 } },
+            { id: "daily_biome2", title: "The Hyperplane Hydra: Decision Boundary", biome: "Binary Marshlands", boss: "The Hyperplane Hydra", req: { minAccuracy: 0.95 } },
+            { id: "daily_biome3", title: "The Overfit Colossus: L1 Regularization", biome: "Variance Tundra", boss: "The Overfit Colossus", req: { reg: "L1", maxMse: 0.03 } },
+            { id: "daily_biome4", title: "The Dendrogram Dragon: Bagging Vanguard", biome: "Branching Canopy", boss: "The Dendrogram Dragon", req: { minTrees: 5 } },
+            { id: "daily_biome5", title: "The Non-Linear Overlord: Citadel Convergence", biome: "Deep Synapse Citadel", boss: "The Non-Linear Overlord", req: { maxEpochs: 20 } },
+            { id: "daily_biome6", title: "The High-Dimensional Void: Cosine Resonance", biome: "Semantic Expanse", boss: "The High-Dimensional Void", req: { minCosineSim: 0.85 } }
+        ];
+        const obj = objectivesCatalog[Math.abs(hash) % objectivesCatalog.length];
+        return { dateKey, ...obj };
+    }
+
+    const d1 = getDailyObjectiveForDate("2026-09-06");
+    const d2 = getDailyObjectiveForDate("2026-09-06");
+    assert.strictEqual(d1.id, d2.id, "Daily objective must be globally deterministic for same UTC date");
+    assert.strictEqual(d1.boss, d2.boss);
+
+    // 2. Persistent Streak Calculation & Non-Predatory Guarantee
+    function calculateStreakProgress(prevCompletedDate, currentDate, currentStreak, bestStreak) {
+        if (!prevCompletedDate) {
+            return { streak: 1, bestStreak: Math.max(bestStreak, 1) };
+        }
+        const [y1, m1, day1] = prevCompletedDate.split('-').map(Number);
+        const [y2, m2, day2] = currentDate.split('-').map(Number);
+        const t1 = Date.UTC(y1, m1 - 1, day1);
+        const t2 = Date.UTC(y2, m2 - 1, day2);
+        const diffDays = Math.round((t2 - t1) / 86400000);
+
+        if (diffDays === 1) {
+            const next = currentStreak + 1;
+            return { streak: next, bestStreak: Math.max(bestStreak, next) };
+        } else if (diffDays === 0) {
+            return { streak: currentStreak, bestStreak };
+        } else {
+            // Missed day: streak resets to 1, but bestStreak and owned inventory are preserved!
+            return { streak: 1, bestStreak };
+        }
+    }
+
+    // Consecutive day test
+    const consecutive = calculateStreakProgress("2026-09-05", "2026-09-06", 5, 8);
+    assert.strictEqual(consecutive.streak, 6, "Consecutive day must advance streak from 5 to 6");
+    assert.strictEqual(consecutive.bestStreak, 8);
+
+    // Missed days test (3 days skipped)
+    const missed = calculateStreakProgress("2026-09-01", "2026-09-06", 12, 15);
+    assert.strictEqual(missed.streak, 1, "Missed days must reset streak to 1");
+    assert.strictEqual(missed.bestStreak, 15, "Non-predatory guarantee: best streak must NEVER be lost");
+
+    // 3. Escalating Rewards Curve
+    function getStreakReward(baseCredits, streak) {
+        const multiplier = 1 + Math.min(20, Math.max(1, streak) - 1) * 0.15;
+        return {
+            credits: Math.round(baseCredits * multiplier),
+            tier: streak >= 30 ? "Grandmaster" : streak >= 14 ? "Platinum" : streak >= 7 ? "Gold" : streak >= 3 ? "Silver" : "Bronze"
+        };
+    }
+
+    const day1Reward = getStreakReward(100, 1);
+    const day7Reward = getStreakReward(100, 7);
+    const day30Reward = getStreakReward(100, 30);
+    assert.strictEqual(day1Reward.credits, 100);
+    assert.strictEqual(day1Reward.tier, "Bronze");
+    assert.strictEqual(day7Reward.credits, 190);
+    assert.strictEqual(day7Reward.tier, "Gold");
+    assert.strictEqual(day30Reward.credits, 400);
+    assert.strictEqual(day30Reward.tier, "Grandmaster");
+
+    // 4. Live-Ops Modifier Remote Config Engine
+    const remoteConfigState = {
+        version: 1,
+        liveOpsEventSlot: {
+            id: "modifier_harvest_weekend",
+            title: "2x Harvest Yield Weekend",
+            multiplier: 2.0,
+            active: true
+        }
+    };
+
+    function applyHarvestYield(baseYield, config) {
+        if (config.liveOpsEventSlot && config.liveOpsEventSlot.active) {
+            return baseYield * (config.liveOpsEventSlot.multiplier || 1.0);
+        }
+        return baseYield;
+    }
+
+    const activeYield = applyHarvestYield(10, remoteConfigState);
+    assert.strictEqual(activeYield, 20, "2x Harvest Modifier must double base yield");
+
+    remoteConfigState.liveOpsEventSlot.active = false;
+    const inactiveYield = applyHarvestYield(10, remoteConfigState);
+    assert.strictEqual(inactiveYield, 10, "When modifier is toggled off, base yield must return to 10");
+
+    console.log("✅ Web Client Recurring Engagement, Daily Challenges, Streaks & Live-Ops Remote Config Tests Passed!");
+}
+
+function testClientMovementPredictionAnd15sReconnectGrace() {
+    console.log("▶ Testing Web Client Movement Prediction, Reconciliation (>80ms RTT) & 15s Reconnect Grace...");
+
+    // 1. Client Prediction Ring Buffer & Instant Local Motion
+    class TestReconciler {
+        constructor() {
+            this.pos = { x: 0, z: 0 };
+            this.unacknowledged = [];
+            this.seq = 0;
+        }
+
+        processInput(dx, dz, dt) {
+            this.seq++;
+            this.pos.x += dx * 15.0 * dt;
+            this.pos.z += dz * 15.0 * dt;
+            this.unacknowledged.push({ seq: this.seq, dt, dx, dz, predicted: { ...this.pos } });
+            return { seq: this.seq, pos: { ...this.pos } };
+        }
+
+        onServerAck(authSeq, authX, authZ) {
+            const idx = this.unacknowledged.findIndex(f => f.seq === authSeq);
+            if (idx === -1) return;
+            const ackFrame = this.unacknowledged[idx];
+            const dist = Math.hypot(authX - ackFrame.predicted.x, authZ - ackFrame.predicted.z);
+            this.unacknowledged = this.unacknowledged.slice(idx + 1);
+
+            if (dist > 0.05) {
+                // Replay remaining inputs from authoritative position
+                let curX = authX;
+                let curZ = authZ;
+                for (const f of this.unacknowledged) {
+                    curX += f.dx * 15.0 * f.dt;
+                    curZ += f.dz * 15.0 * f.dt;
+                    f.predicted = { x: curX, z: curZ };
+                }
+                this.pos = { x: curX, z: curZ };
+                return { corrected: true, pos: this.pos };
+            }
+            return { corrected: false, pos: this.pos };
+        }
+    }
+
+    const rec = new TestReconciler();
+    rec.processInput(1.0, 0, 0.05); // seq 1
+    rec.processInput(1.0, 0, 0.05); // seq 2
+    rec.processInput(1.0, 0, 0.05); // seq 3
+    assert.strictEqual(parseFloat(rec.pos.x.toFixed(2)), 2.25, "Client position predicted 3 steps ahead immediately");
+
+    // Server acknowledges seq 1 exactly
+    const r1 = rec.onServerAck(1, 0.75, 0);
+    assert.strictEqual(r1.corrected, false, "No rollback needed when server matches client");
+
+    // Server acknowledges seq 2 with slight friction correction (e.g. 1.20 instead of 1.50)
+    const r2 = rec.onServerAck(2, 1.20, 0);
+    assert.strictEqual(r2.corrected, true, "Rollback and replay must trigger on server divergence");
+    assert.strictEqual(parseFloat(rec.pos.x.toFixed(2)), 1.95, "Position replayed seamlessly: 1.20 + 0.75 = 1.95");
+
+    // 2. 15s Reconnect Grace Window Verification
+    function evaluateReconnectEligibility(disconnectedAt, reconnectedAt, graceLimitSec = 15) {
+        const elapsedSec = (reconnectedAt - disconnectedAt) / 1000;
+        return {
+            eligible: elapsedSec <= graceLimitSec,
+            elapsedSec,
+            remainingGraceSec: Math.max(0, graceLimitSec - elapsedSec)
+        };
+    }
+
+    const validReconnect = evaluateReconnectEligibility(10000, 22000, 15); // 12s elapsed
+    assert.strictEqual(validReconnect.eligible, true, "12s elapsed reconnect must be accepted within 15s window");
+    assert.strictEqual(validReconnect.remainingGraceSec, 3);
+
+    const expiredReconnect = evaluateReconnectEligibility(10000, 28000, 15); // 18s elapsed
+    assert.strictEqual(expiredReconnect.eligible, false, "18s elapsed reconnect must forfeit");
+
+    console.log("✅ Web Client Movement Prediction, Reconciliation & 15s Reconnect Grace Tests Passed!");
+}
+
 testWebGPUBootstrapAndFallbackEngine().then(() => {
     testVolumetricFogAndFroxelGrid();
+    testRecurringEngagementAndLiveOpsRemoteConfig();
+    testClientMovementPredictionAnd15sReconnectGrace();
     console.log("🎉 All Web Unit Tests Passed Cleanly!");
 });
 
