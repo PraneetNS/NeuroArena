@@ -17,10 +17,14 @@ const { auditLogger } = require("./security/AuditLogger");
 const { TokenBucketRateLimiter } = require("./security/RateLimiter");
 const { SessionManager } = require("./cluster/SessionManager");
 const { RedisClusterConfig } = require("./cluster/RedisClusterConfig");
+const { RecurringEngagementManager } = require("./engagement/RecurringEngagementManager");
+const { GuildEngine } = require("./guildSystem");
 
 const rateLimiter = new TokenBucketRateLimiter(120, 60); // 120 bucket capacity, 60/sec refill
 const sessionManager = new SessionManager();
 const redisConfig = new RedisClusterConfig();
+const engagementManager = new RecurringEngagementManager(redisConfig);
+const guildEngine = new GuildEngine({ weeklyObjectiveEngine: engagementManager.weeklyGuildEngine });
 
 // Ingress Rate Limiter Middleware
 app.use((req, res, next) => {
@@ -86,6 +90,89 @@ app.get("/api/security/anomalies", (req, res) => {
     });
 });
 
+// ==========================================
+// 📅 RECURRING ENGAGEMENT & LIVE-OPS ROUTES
+// ==========================================
+
+// 1. Daily Challenge & Player Streak Status
+app.get("/api/engagement/daily", async (req, res) => {
+    const playerId = req.query.playerId || "guest_player";
+    const guildId = req.query.guildId || null;
+    try {
+        const summary = await engagementManager.getPlayerEngagementSummary(playerId, guildId);
+        res.json({ success: true, ...summary });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 2. Server-Authoritative Daily Challenge Submission Verification
+app.post("/api/engagement/daily/verify", async (req, res) => {
+    const { playerId, submission } = req.body;
+    if (!playerId) return res.status(400).json({ success: false, error: "MISSING_PLAYER_ID" });
+    if (!submission) return res.status(400).json({ success: false, error: "MISSING_SUBMISSION_PAYLOAD" });
+
+    try {
+        const result = await engagementManager.dailyEngine.verifyDailyChallenge(playerId, submission);
+        if (!result.success) {
+            return res.status(400).json(result);
+        }
+        res.json(result);
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 3. Weekly Guild Objective Summary & Progress
+app.get("/api/engagement/guild-weekly", async (req, res) => {
+    const guildId = req.query.guildId;
+    const playerId = req.query.playerId || null;
+    if (!guildId) return res.status(400).json({ success: false, error: "MISSING_GUILD_ID" });
+
+    try {
+        const summary = await engagementManager.weeklyGuildEngine.getWeeklySummary(guildId, playerId);
+        res.json({ success: true, ...summary });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 4. Claim Guild Weekly Objective Reward
+app.post("/api/engagement/guild-weekly/claim", async (req, res) => {
+    const { guildId, playerId } = req.body;
+    if (!guildId || !playerId) return res.status(400).json({ success: false, error: "MISSING_PARAMS" });
+
+    try {
+        const result = await engagementManager.weeklyGuildEngine.claimMemberWeeklyReward(guildId, playerId);
+        if (!result.success) {
+            return res.status(400).json(result);
+        }
+        res.json(result);
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 5. Remote Config & Live-Ops Event Slot
+app.get("/api/remote-config", async (req, res) => {
+    try {
+        const config = await engagementManager.remoteConfigEngine.getRemoteConfig();
+        res.json({ success: true, config });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 6. Admin Live-Ops Modifier Toggle (<5 minutes, instantaneous)
+app.post("/api/remote-config/modifier", async (req, res) => {
+    try {
+        const result = await engagementManager.remoteConfigEngine.setLiveOpsModifier(req.body);
+        res.json(result);
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // 2. Attach Colyseus WebSocket Server
 const server = http.createServer(app);
 const gameServer = new Server({
@@ -136,5 +223,7 @@ module.exports = {
     gameServer,
     sessionManager,
     rateLimiter,
-    redisConfig
+    redisConfig,
+    engagementManager,
+    guildEngine
 };
