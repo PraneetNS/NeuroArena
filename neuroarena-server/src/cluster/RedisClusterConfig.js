@@ -45,6 +45,74 @@ class RedisClusterConfig {
         return [];
     }
 
+    async set(key, value, ttlSeconds = null) {
+        if (this.isMock) {
+            const expiresAt = ttlSeconds ? Date.now() + (ttlSeconds * 1000) : null;
+            if (!this.mockStore) this.mockStore = new Map();
+            this.mockStore.set(key, { value: typeof value === 'object' ? JSON.stringify(value) : String(value), expiresAt });
+            return "OK";
+        }
+        return "OK";
+    }
+
+    async get(key) {
+        if (this.isMock) {
+            if (!this.mockStore) this.mockStore = new Map();
+            const entry = this.mockStore.get(key);
+            if (!entry) return null;
+            if (entry.expiresAt && Date.now() > entry.expiresAt) {
+                this.mockStore.delete(key);
+                return null;
+            }
+            return entry.value;
+        }
+        return null;
+    }
+
+    async del(key) {
+        if (this.isMock) {
+            if (!this.mockStore) this.mockStore = new Map();
+            return this.mockStore.delete(key) ? 1 : 0;
+        }
+        return 1;
+    }
+
+    async incrBy(key, amount = 1) {
+        if (this.isMock) {
+            const currentStr = await this.get(key);
+            const currentVal = currentStr ? parseInt(currentStr, 10) || 0 : 0;
+            const newVal = currentVal + amount;
+            await this.set(key, newVal);
+            return newVal;
+        }
+        return amount;
+    }
+
+    async expire(key, seconds) {
+        if (this.isMock) {
+            if (!this.mockStore) this.mockStore = new Map();
+            const entry = this.mockStore.get(key);
+            if (entry) {
+                entry.expiresAt = Date.now() + (seconds * 1000);
+                return 1;
+            }
+            return 0;
+        }
+        return 1;
+    }
+
+    async ttl(key) {
+        if (this.isMock) {
+            if (!this.mockStore) this.mockStore = new Map();
+            const entry = this.mockStore.get(key);
+            if (!entry) return -2;
+            if (!entry.expiresAt) return -1;
+            const remaining = Math.ceil((entry.expiresAt - Date.now()) / 1000);
+            return remaining > 0 ? remaining : -2;
+        }
+        return -1;
+    }
+
     getPresenceOptions() {
         return {
             host: this.host,
