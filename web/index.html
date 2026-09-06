@@ -169,6 +169,9 @@
                 </div>
             </div>
 
+            <!-- 0.1 LIVE-OPS EVENT MODIFIER BANNER (CONFIG-DRIVEN 2X HARVEST / BOSS SURGE) -->
+            <div id="live-ops-banner-container" class="hidden"></div>
+
             <!-- 1. TOP-CENTER PRIMARY OBJECTIVE & THRESHOLD BANNER -->
             <div id="objective-banner" class="glass-objective-card">
                 <div class="objective-header">
@@ -734,6 +737,26 @@
                 <div class="card-actions-row">
                     <button id="btn-download-card" class="action-btn glow-cyan">💾 Download Image Card</button>
                     <button id="btn-copy-card" class="action-btn glow-amber">📋 Copy Card Data</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 📅 RECURRING ENGAGEMENT & DAILY CHALLENGE HUB MODAL -->
+        <div id="daily-challenge-modal" class="modal-overlay hidden" style="z-index: 9650;">
+            <div class="glass-modal daily-modal-container" style="max-width: 680px; width: 94%;">
+                <div class="modal-header">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span style="font-size:1.4rem;">📅</span>
+                        <div>
+                            <h2 style="font-size:1.15rem; color:#facc15; margin:0;">DAILY SEEDED OBJECTIVE & STREAK HUB</h2>
+                            <div style="font-size:0.75rem; color:#94a3b8;">Server-Authoritative Evaluation & Non-Predatory Escalating Rewards</div>
+                        </div>
+                    </div>
+                    <button id="btn-close-daily-modal" class="close-btn">✕</button>
+                </div>
+
+                <div id="daily-challenge-content-mount" style="padding: 16px 20px;">
+                    <!-- Mounted via DailyChallengeUI.js -->
                 </div>
             </div>
         </div>
