@@ -132,6 +132,41 @@ class Glicko2Engine {
       currentBand: Math.round(baseBand + expansion)
     };
   }
+
+  /**
+   * Region-aware matchmaking eligibility with 3-tier time decay relaxation:
+   * - 0 to 10s: Strict regional isolation (lowest latency)
+   * - 10 to 25s: Adjacent regional pool relaxation (acceptable latency)
+   * - 25s+: Global fallback (guarantees match within ~30s worst-case)
+   * @param {string} region1
+   * @param {string} region2
+   * @param {number} waitTimeSeconds
+   */
+  getRegionMatchEligibility(region1 = 'us-east', region2 = 'us-east', waitTimeSeconds = 0) {
+    if (region1 === region2) return true;
+
+    // After 25 seconds of waiting, open to global pool
+    if (waitTimeSeconds >= 25) return true;
+
+    // Between 10 and 25 seconds, allow adjacent region pairing
+    if (waitTimeSeconds >= 10) {
+      const adjacentMap = {
+        'us-east': ['us-west', 'sa-east', 'eu-west'],
+        'us-west': ['us-east', 'ap-northeast'],
+        'eu-central': ['eu-west', 'us-east'],
+        'eu-west': ['eu-central', 'us-east'],
+        'ap-southeast': ['ap-northeast', 'eu-central'],
+        'ap-northeast': ['ap-southeast', 'us-west'],
+        'sa-east': ['us-east']
+      };
+
+      const adjacent = adjacentMap[region1] || [];
+      return adjacent.includes(region2);
+    }
+
+    // Under 10s: strict region isolation
+    return false;
+  }
 }
 
 module.exports = { Glicko2Engine };

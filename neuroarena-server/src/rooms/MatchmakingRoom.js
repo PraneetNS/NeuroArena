@@ -1,12 +1,13 @@
 const colyseus = require("colyseus");
 const { Room } = colyseus;
+const { Glicko2Engine } = require("../glicko2Matchmaking");
 
 /**
  * MatchmakingRoom
  * Production-ready Matchmaking Queue & Elo Ranking Matchmaker.
  * Features:
  * - Skill-based MMR queue with expanding rating search bracket (+/- 50 MMR per 5 seconds).
- * - Regional clustering ("us-east", "eu-central", "ap-southeast").
+ * - Regional clustering ("us-east", "eu-central", "ap-southeast") with 3-tier time decay relaxation.
  * - Match token generation for seamless handover to dedicated DuelRoom or ArenaRoom.
  * - Disconnect & Reconnect tolerance with reservation hold.
  */
@@ -16,6 +17,7 @@ class MatchmakingRoom extends Room {
         this.queue = new Map(); // sessionId -> { client, playerProfile, queuedAt, searchBracket }
         this.activeMatches = new Map(); // matchId -> matchData
         this.region = options.region || "us-east";
+        this.glicko = new Glicko2Engine();
 
         // Matchmaking ticker running every 1000ms
         this.setSimulationInterval(() => this.processMatchmakingQueue(), 1000);
@@ -117,11 +119,18 @@ class MatchmakingRoom extends Room {
                 const p2 = entries[j];
                 if (matchedSessionIds.has(p2.client.sessionId)) continue;
 
-                // Match condition: MMR difference within either player's search bracket
+                // Match condition: MMR difference within search bracket AND region eligibility met
                 const mmrDiff = Math.abs(p1.playerProfile.mmr - p2.playerProfile.mmr);
                 const maxAllowedDiff = Math.max(p1.searchBracket, p2.searchBracket);
+                const maxWaitSec = Math.max((now - p1.queuedAt) / 1000, (now - p2.queuedAt) / 1000);
 
-                if (mmrDiff <= maxAllowedDiff) {
+                const regionEligible = this.glicko.getRegionMatchEligibility(
+                    p1.playerProfile.region || this.region,
+                    p2.playerProfile.region || this.region,
+                    maxWaitSec
+                );
+
+                if (mmrDiff <= maxAllowedDiff && regionEligible) {
                     matchedSessionIds.add(p1.client.sessionId);
                     matchedSessionIds.add(p2.client.sessionId);
 
