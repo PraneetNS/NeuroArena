@@ -46,3 +46,11 @@ NeuroArena contains an optional, local-only diagnostics system designed to assis
 
 ## 4. Store Listing & Real Device Screenshot Standards
 - All store listing promotional assets and screenshots are captured directly from **real physical device hardware builds** (Android & WebGL targets) with genuine HUD and screen-safe margins, never from simulated or artificial mockups.
+
+---
+
+## 5. Privacy-Conscious Server Event Telemetry (Multiplayer & Live Services)
+- **Zero Personally Identifiable Information (PII)**: Client telemetry never collects or stores emails, real names, precise location, or hardware serial numbers.
+- **Anonymous Player & Session IDs**: Guest players are assigned ephemeral cryptographic random UUIDs (`anon_...`). Authenticated players use opaque Supabase IDs.
+- **Opt-Out Control**: Players can disable telemetry at any time via in-game settings (`PrivacyConsentManager.cs` / `localStorage` opt-out).
+
