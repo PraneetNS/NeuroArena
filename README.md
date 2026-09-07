@@ -264,6 +264,16 @@ A dynamic commentary system converts live training telemetry into plain-English 
 - **Atomic Pre-Write Backup (`neuroarena_save.bak`):** Safety duplication before disk writes with automatic corruption recovery.
 - **Global Error Boundary (`GlobalErrorBoundary.cs`):** Intercepts fatal exceptions, records crash stack traces, executes an emergency save, and displays a user recovery prompt.
 
+### 📊 Privacy-Conscious Event Analytics Pipeline
+- **Cross-Platform Telemetry (Unity + Web):** Emits structured events for session lifecycle, FTUE tutorial step completion, biome entry/exit, boss encounters, duels, and crashes.
+- **Server Aggregation & Prometheus / OTel Exporter:** Ingestion API (`POST /api/telemetry/events`) calculating real-time D1/D7/D30 retention, step-by-step tutorial funnel drop-off, and biome completion rates.
+- **Internal Live Dashboard & Grafana:** Executive dashboard embedded in web client and pre-built Grafana template (`deploy/grafana-analytics-dashboard.json`).
+
+### ⚙️ Live-Ops Remote Configuration & Dynamic Balance Tuning
+- **Supabase/PostgreSQL Source of Truth:** Versioned remote config with 5-minute TTL caching and safe last-known-good local fallback on Unity and Web.
+- **Schema v3 Save Safety Validation:** Guarantees balance tuning changes (harvest yield multipliers, boss HP/damage, daily challenges) can never corrupt player saves.
+- **1-Click Rollback:** One-action rollback mechanism reverting to any previous version snapshot in real time.
+
 ---
 
 ## 🛠️ Developer CLI & Testing Harness
