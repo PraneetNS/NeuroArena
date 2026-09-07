@@ -19,6 +19,8 @@ const { SessionManager } = require("./cluster/SessionManager");
 const { RedisClusterConfig } = require("./cluster/RedisClusterConfig");
 const { RecurringEngagementManager } = require("./engagement/RecurringEngagementManager");
 const { GuildEngine } = require("./guildSystem");
+const { metrics } = require("./metrics");
+const { analyticsIngestEngine } = require("./telemetry/AnalyticsIngestEngine");
 
 const rateLimiter = new TokenBucketRateLimiter(120, 60); // 120 bucket capacity, 60/sec refill
 const sessionManager = new SessionManager();
@@ -58,6 +60,77 @@ app.get("/api/status", (req, res) => {
         rooms: ["arena_room", "duel_room", "matchmaking_room"],
         documentation: "https://github.com/PraneetNS/NeuroArena"
     });
+});
+
+// Prometheus Metrics Scrape Endpoint
+app.get("/metrics", (req, res) => {
+    res.set("Content-Type", "text/plain; version=0.0.4");
+    res.send(metrics.exportPrometheusFormat());
+});
+
+// ==========================================
+// 📊 PRIVACY-CONSCIOUS EVENT TELEMETRY & ANALYTICS
+// ==========================================
+
+// 1. Client Event Ingestion Endpoint (Batch & Single Event)
+app.post("/api/telemetry/events", (req, res) => {
+    try {
+        const body = req.body;
+        if (Array.isArray(body)) {
+            const result = analyticsIngestEngine.ingestBatch(body);
+            return res.json({ success: true, ...result });
+        } else if (Array.isArray(body.events)) {
+            const result = analyticsIngestEngine.ingestBatch(body.events);
+            return res.json({ success: true, ...result });
+        } else if (body && (body.eventName || body.event)) {
+            const ingested = analyticsIngestEngine.ingestEvent(body);
+            return res.json({ success: true, eventId: ingested.id });
+        } else {
+            return res.status(400).json({ error: "INVALID_EVENT_PAYLOAD", message: "Expected event object or events array" });
+        }
+    } catch (err) {
+        return res.status(400).json({ error: "INGESTION_ERROR", message: err.message });
+    }
+});
+
+// 2. Executive Analytics Dashboard Summary (Retention, Funnel, Biomes, KPIs)
+app.get("/api/telemetry/analytics/dashboard", (req, res) => {
+    try {
+        const summary = analyticsIngestEngine.getDashboardSummary();
+        res.json({ success: true, ...summary });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 3. D1/D7/D30 Player Retention Cohort Analysis
+app.get("/api/telemetry/analytics/retention", (req, res) => {
+    try {
+        const retention = analyticsIngestEngine.computeRetention();
+        res.json({ success: true, retention });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 4. FTUE Tutorial Step-by-Step Funnel & Drop-Off
+app.get("/api/telemetry/analytics/funnel", (req, res) => {
+    try {
+        const funnel = analyticsIngestEngine.computeTutorialFunnel();
+        res.json({ success: true, funnel });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 5. Biome-by-Biome Completion & Boss Win Rates
+app.get("/api/telemetry/analytics/biomes", (req, res) => {
+    try {
+        const biomes = analyticsIngestEngine.computeBiomeProgression();
+        res.json({ success: true, biomes });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
 });
 
 // Stateless Session Ticket Issuance Endpoint (1M Scale Browser Handshake)
@@ -153,17 +226,61 @@ app.post("/api/engagement/guild-weekly/claim", async (req, res) => {
     }
 });
 
-// 5. Remote Config & Live-Ops Event Slot
+// 5. Remote Config & Live-Ops Event Slot (5-min TTL cache header)
 app.get("/api/remote-config", async (req, res) => {
     try {
         const config = await engagementManager.remoteConfigEngine.getRemoteConfig();
+        res.set("Cache-Control", "public, max-age=300"); // 5 minutes TTL
         res.json({ success: true, config });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
 });
 
-// 6. Admin Live-Ops Modifier Toggle (<5 minutes, instantaneous)
+// 6. Publish Dynamic Balance or Feature Flags (Schema v3 Validated)
+app.post("/api/remote-config/publish", async (req, res) => {
+    const { config, author, changeReason } = req.body;
+    try {
+        const result = await engagementManager.remoteConfigEngine.publishConfig(
+            config || req.body,
+            author || "designer_admin",
+            changeReason || "Live balance tuning update"
+        );
+        res.json(result);
+    } catch (err) {
+        res.status(400).json({ success: false, error: err.message });
+    }
+});
+
+// 7. One-Action Rollback to a Previous Config Version
+app.post("/api/remote-config/rollback", async (req, res) => {
+    const { targetVersion, author } = req.body;
+    if (targetVersion === undefined || targetVersion === null) {
+        return res.status(400).json({ success: false, error: "MISSING_TARGET_VERSION" });
+    }
+
+    try {
+        const result = await engagementManager.remoteConfigEngine.rollbackToVersion(
+            targetVersion,
+            author || "rollback_admin"
+        );
+        res.json(result);
+    } catch (err) {
+        res.status(400).json({ success: false, error: err.message });
+    }
+});
+
+// 8. Remote Config Version History Audit Trail
+app.get("/api/remote-config/history", (req, res) => {
+    try {
+        const history = engagementManager.remoteConfigEngine.getHistory();
+        res.json({ success: true, totalVersions: history.length, history });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 9. Admin Live-Ops Modifier Toggle (<5 minutes, instantaneous)
 app.post("/api/remote-config/modifier", async (req, res) => {
     try {
         const result = await engagementManager.remoteConfigEngine.setLiveOpsModifier(req.body);
@@ -225,5 +342,7 @@ module.exports = {
     rateLimiter,
     redisConfig,
     engagementManager,
-    guildEngine
+    guildEngine,
+    metrics,
+    analyticsIngestEngine
 };
