@@ -8,6 +8,20 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- **Lightweight, Privacy-Conscious Event Analytics Pipeline** (`ProductAnalyticsManager.cs`, `AnalyticsSDK.js`, `AnalyticsIngestEngine.js`, `20260819_create_analytics_events.sql`)
+  - Cross-platform client SDKs emitting structured events for session start/end, FTUE step completion, biome entry/exit, boss encounters, duels, rewards, and unhandled exception crashes.
+  - Zero-PII sanitization and guest session anonymization with GDPR/opt-out compliance.
+  - Server-side ingestion pipeline into Prometheus metrics exporter (`GET /metrics`) and in-memory analytical aggregation engine.
+  - Automated calculation of D1/D7/D30 player retention cohorts, step-by-step tutorial funnel drop-off %, and biome progression rates without requiring manual ad-hoc DB queries.
+  - Built-in Executive Analytics Dashboard modal in web client and pre-configured Grafana dashboard template (`deploy/grafana-analytics-dashboard.json`).
+
+- **Live-Ops Remote Configuration & Dynamic Balance Tuning Layer** (`RemoteConfigManager.cs`, `RemoteConfigClient.js`, `RemoteConfigEngine.js`, `20260820_create_remote_config.sql`)
+  - Dynamic balance tuning for harvest yield multipliers, boss HP/damage parameters, daily challenge thresholds, and 2x modifier-weekend flags.
+  - Supabase/PostgreSQL source of truth with 5-minute TTL caching and safe local fallback to last-known-good configuration on network failure or offline play.
+  - Schema v3 save-compatibility validation engine rejecting invalid balance values to prevent corrupting player save files.
+  - 1-action rollback mechanism and version history audit trail (`POST /api/remote-config/rollback`, `GET /api/remote-config/history`).
+  - Interactive balance tuning and rollback controls in web operations dashboard.
+
 - **Systematic "Juice" Feedback & Presentation Layer** (`Assets/Scripts/Core/JuiceFeedbackManager.cs`)
   - Hit-Stop engine (2-4 frame unscaled timescale freeze) for boss critical hits, convergence, and duel wins.
   - Procedural Camera Shake with configurable intensity/decay wired to boss hits, dataset corruption, and duels.
