@@ -1622,8 +1622,151 @@
                             <button id="btn-menu-codex" class="menu-btn">📖 CODEX & ML JOURNAL</button>
                             <button id="btn-menu-settings" class="menu-btn">⚙️ SETTINGS & AUDIO</button>
                             <button id="btn-biome-map" class="menu-btn">🗺️ BIOME PROGRESSION MAP</button>
+                            <button id="btn-menu-analytics" class="menu-btn glow-cyan">📊 LIVE ANALYTICS DASHBOARD</button>
                             <button id="btn-reset-save" class="menu-btn danger">🗑️ Reset Local Save</button>
                             <button id="btn-quit-game" class="menu-btn">🚪 QUIT GAME</button>
+                        </div>
+
+                        <!-- 4. LIVE INTERNAL ANALYTICS DASHBOARD MODAL -->
+                        <div id="modal-analytics-dashboard" class="modal-overlay hidden" style="z-index: 10000;">
+                            <div class="glass-modal analytics-dashboard-card" style="max-width: 900px; width: 95vw; max-height: 90vh; overflow-y: auto;">
+                                <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(56, 189, 248, 0.2); padding-bottom: 12px;">
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <h2 style="margin: 0; color: #38bdf8; font-family: 'Outfit', sans-serif; font-size: 1.25rem;">📊 PRIVACY-CONSCIOUS EVENT ANALYTICS DASHBOARD</h2>
+                                        <span class="live-pill" style="background: rgba(34, 197, 94, 0.2); color: #4ade80; padding: 2px 8px; border-radius: 9999px; font-size: 11px; font-weight: 600; border: 1px solid rgba(74, 222, 128, 0.4);">LIVE</span>
+                                    </div>
+                                    <div style="display: flex; gap: 8px;">
+                                        <button id="btn-refresh-analytics" class="pill-btn" style="padding: 4px 12px; font-size: 11px; background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 4px; cursor: pointer;">🔄 Refresh</button>
+                                        <button id="btn-close-analytics" class="close-btn" style="background: none; border: none; color: #94a3b8; font-size: 18px; cursor: pointer;">✕</button>
+                                    </div>
+                                </div>
+                                
+                                <div class="analytics-body" style="padding: 16px 4px; display: flex; flex-direction: column; gap: 20px;">
+                                    <!-- Top Row: Core KPIs -->
+                                    <div class="analytics-kpi-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px;">
+                                        <div class="kpi-card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 12px; text-align: center;">
+                                            <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase;">D1 Retention</div>
+                                            <div id="kpi-d1-retention" style="font-size: 22px; font-weight: 700; color: #38bdf8; margin: 4px 0;">--%</div>
+                                            <div id="kpi-d1-sub" style="font-size: 10px; color: #64748b;">0 / 0 players</div>
+                                        </div>
+                                        <div class="kpi-card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 12px; text-align: center;">
+                                            <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase;">D7 Retention</div>
+                                            <div id="kpi-d7-retention" style="font-size: 22px; font-weight: 700; color: #818cf8; margin: 4px 0;">--%</div>
+                                            <div id="kpi-d7-sub" style="font-size: 10px; color: #64748b;">0 / 0 players</div>
+                                        </div>
+                                        <div class="kpi-card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 12px; text-align: center;">
+                                            <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase;">D30 Retention</div>
+                                            <div id="kpi-d30-retention" style="font-size: 22px; font-weight: 700; color: #c084fc; margin: 4px 0;">--%</div>
+                                            <div id="kpi-d30-sub" style="font-size: 10px; color: #64748b;">0 / 0 players</div>
+                                        </div>
+                                        <div class="kpi-card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 8px; padding: 12px; text-align: center;">
+                                            <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase;">Tutorial Complete</div>
+                                            <div id="kpi-tutorial-rate" style="font-size: 22px; font-weight: 700; color: #4ade80; margin: 4px 0;">--%</div>
+                                            <div id="kpi-tutorial-sub" style="font-size: 10px; color: #64748b;">FTUE conversion</div>
+                                        </div>
+                                        <div class="kpi-card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 12px; text-align: center;">
+                                            <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase;">Tracked Players</div>
+                                            <div id="kpi-total-players" style="font-size: 22px; font-weight: 700; color: #fbbf24; margin: 4px 0;">0</div>
+                                            <div id="kpi-total-events" style="font-size: 10px; color: #64748b;">0 events ingested</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Middle Section: FTUE Funnel Drop-Off -->
+                                    <div class="funnel-container" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 8px; padding: 14px;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                            <h3 style="margin: 0; font-size: 14px; color: #f1f5f9; display: flex; align-items: center; gap: 6px;">🎯 FTUE TUTORIAL STEP CONVERSION & DROP-OFF FUNNEL</h3>
+                                            <span id="funnel-starters-badge" style="font-size: 11px; color: #94a3b8;">0 Total Starters</span>
+                                        </div>
+                                        <div id="funnel-step-list" style="display: flex; flex-direction: column; gap: 10px;">
+                                            <!-- Dynamically populated -->
+                                        </div>
+                                    </div>
+
+                                    <!-- Lower Section: Biome-by-Biome Progression -->
+                                    <div class="biomes-container" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 8px; padding: 14px;">
+                                        <h3 style="margin: 0 0 12px 0; font-size: 14px; color: #f1f5f9;">🗺️ BIOME-BY-BIOME PROGRESSION & BOSS WIN RATES</h3>
+                                        <div id="biome-analytics-list" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px;">
+                                            <!-- Dynamically populated -->
+                                        </div>
+                                    </div>
+
+                                    <!-- Crash / Error Telemetry Logs -->
+                                    <div class="errors-container" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 8px; padding: 14px;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                            <h3 style="margin: 0; font-size: 13px; color: #f87171;">⚠️ CLIENT ERROR & CRASH TELEMETRY</h3>
+                                            <span id="error-count-badge" style="font-size: 11px; color: #94a3b8;">0 errors logged</span>
+                                        </div>
+                                        <div id="analytics-error-logs" style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #cbd5e1; max-height: 120px; overflow-y: auto; background: rgba(2, 6, 23, 0.8); padding: 8px; border-radius: 4px; border: 1px solid rgba(239, 68, 68, 0.1);">
+                                            No errors reported. System health nominal.
+                                        </div>
+                                    </div>
+
+                                    <!-- ⚙️ REMOTE CONFIG & LIVE-OPS BALANCE TUNING PANEL (DESIGNER/PM) -->
+                                    <div class="remote-config-admin-container" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 14px;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid rgba(245, 158, 11, 0.2); padding-bottom: 8px;">
+                                            <div>
+                                                <h3 style="margin: 0; font-size: 14px; color: #fbbf24; display: flex; align-items: center; gap: 6px;">⚙️ LIVE REMOTE CONFIG & BALANCE TUNING</h3>
+                                                <div style="font-size: 11px; color: #94a3b8;">Active Version: <b id="rc-active-version" style="color: #38bdf8;">v1</b> | Schema v3 Save Validated | 5-Min TTL Caching</div>
+                                            </div>
+                                            <button id="btn-rc-refresh" class="pill-btn" style="padding: 4px 10px; font-size: 11px; background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 4px; cursor: pointer;">🔄 Sync Config</button>
+                                        </div>
+
+                                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 14px;">
+                                            <!-- Harvest Multiplier -->
+                                            <div style="background: rgba(2, 6, 23, 0.6); padding: 10px; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.15);">
+                                                <label style="font-size: 11px; color: #94a3b8; display: block; margin-bottom: 4px;">🌾 Base Harvest Yield Multiplier:</label>
+                                                <div style="display: flex; align-items: center; gap: 8px;">
+                                                    <input type="number" id="input-rc-harvest-yield" min="0.1" max="10.0" step="0.1" value="1.0" class="cyber-input" style="width: 80px; padding: 4px 8px; font-size: 12px;">
+                                                    <span style="font-size: 11px; color: #64748b;">(0.1x - 10.0x)</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Boss HP Tuning -->
+                                            <div style="background: rgba(2, 6, 23, 0.6); padding: 10px; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.15);">
+                                                <label style="font-size: 11px; color: #94a3b8; display: block; margin-bottom: 4px;">🐉 Overfit Hydra Max HP:</label>
+                                                <div style="display: flex; align-items: center; gap: 8px;">
+                                                    <input type="number" id="input-rc-boss-hp" min="100" max="50000" step="50" value="500" class="cyber-input" style="width: 90px; padding: 4px 8px; font-size: 12px;">
+                                                    <span style="font-size: 11px; color: #64748b;">HP</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Daily Challenge Reward -->
+                                            <div style="background: rgba(2, 6, 23, 0.6); padding: 10px; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.15);">
+                                                <label style="font-size: 11px; color: #94a3b8; display: block; margin-bottom: 4px;">📅 Daily Challenge Reward (Crystals):</label>
+                                                <div style="display: flex; align-items: center; gap: 8px;">
+                                                    <input type="number" id="input-rc-daily-reward" min="50" max="5000" step="25" value="150" class="cyber-input" style="width: 90px; padding: 4px 8px; font-size: 12px;">
+                                                    <span style="font-size: 11px; color: #64748b;">crystals</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Modifier Weekend Toggle -->
+                                            <div style="background: rgba(2, 6, 23, 0.6); padding: 10px; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.15);">
+                                                <label style="font-size: 11px; color: #94a3b8; display: block; margin-bottom: 4px;">⚡ 2x Live-Ops Modifier Weekend:</label>
+                                                <div style="display: flex; align-items: center; gap: 8px;">
+                                                    <input type="checkbox" id="input-rc-modifier-active" style="cursor: pointer;">
+                                                    <span id="rc-modifier-status-label" style="font-size: 11px; color: #f87171;">Inactive</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 12px;">
+                                            <button id="btn-rc-publish" class="action-btn glow-amber" style="padding: 6px 16px; font-size: 12px;">🚀 Publish Balance Update (Zero Downtime)</button>
+                                            
+                                            <!-- One-Click Rollback -->
+                                            <div style="display: flex; align-items: center; gap: 8px;">
+                                                <span style="font-size: 11px; color: #94a3b8;">Rollback to:</span>
+                                                <select id="select-rc-rollback-version" style="background: #0f172a; color: #f1f5f9; border: 1px solid rgba(239, 68, 68, 0.4); padding: 4px 8px; border-radius: 4px; font-size: 11px;">
+                                                    <option value="1">v1 (Initial)</option>
+                                                </select>
+                                                <button id="btn-rc-rollback" class="action-btn danger" style="padding: 4px 12px; font-size: 11px;">⏪ 1-Click Rollback</button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Status notification -->
+                                        <div id="rc-status-msg" style="font-size: 11px; color: #4ade80; display: none;"></div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <div id="biome-map-subpanel" class="hidden">
