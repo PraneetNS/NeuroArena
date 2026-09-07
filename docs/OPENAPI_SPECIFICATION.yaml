@@ -59,6 +59,76 @@ paths:
                   type: string
                 data:
                   type: object
+  /api/telemetry/events:
+    post:
+      summary: Ingest single or batch telemetry events
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                eventName:
+                  type: string
+                playerId:
+                  type: string
+                sessionId:
+                  type: string
+                isGuest:
+                  type: boolean
+                payload:
+                  type: object
+      responses:
+        '200':
+          description: Events successfully ingested
+  /api/telemetry/analytics/dashboard:
+    get:
+      summary: Fetch executive analytics dashboard summary (Retention, FTUE Funnel, Biomes)
+      responses:
+        '200':
+          description: Executive KPIs and cohort retention data
+  /api/remote-config:
+    get:
+      summary: Fetch active remote configuration (5-min TTL cached)
+      responses:
+        '200':
+          description: Active balance tuning and feature flag configuration
+  /api/remote-config/publish:
+    post:
+      summary: Publish new balance tuning or modifier parameters (Schema v3 Validated)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Configuration version published
+  /api/remote-config/rollback:
+    post:
+      summary: One-action rollback to a previous version snapshot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                targetVersion:
+                  type: integer
+      responses:
+        '200':
+          description: Configuration successfully rolled back
+  /api/remote-config/history:
+    get:
+      summary: Fetch remote config version audit trail
+      responses:
+        '200':
+          description: List of historical configuration snapshots
+
+                  type: object
       responses:
         '200':
           description: Snapshot saved successfully
