@@ -975,7 +975,24 @@ window.addEventListener("unhandledrejection", (event) => {
 function handleGlobalError(message, stack) {
     console.error("[GlobalErrorBoundary] Caught fatal unhandled error:", message, stack);
 
-    // Emergency Backup Save
+    // 1. Emit Crash Telemetry Event
+    try {
+        if (window.NeuroAnalytics && typeof window.NeuroAnalytics.trackCrashOrError === "function") {
+            window.NeuroAnalytics.trackCrashOrError("WebFatalException", message, stack);
+        } else {
+            // Fallback direct beacon/fetch if SDK not yet attached
+            fetch("/api/telemetry/events", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    eventName: "crash_error",
+                    payload: { error_type: "WebFatalException", message: String(message).substring(0, 300), stack: String(stack).substring(0, 800) }
+                })
+            }).catch(() => {});
+        }
+    } catch (e) {}
+
+    // 2. Emergency Backup Save
     try {
         if (typeof saveProfileSlots === "function") saveProfileSlots();
         if (typeof saveModelVault === "function") saveModelVault();
@@ -993,11 +1010,243 @@ function handleGlobalError(message, stack) {
     }
 }
 
+async function fetchAndRenderAnalyticsDashboard() {
+    try {
+        const res = await fetch("/api/telemetry/analytics/dashboard");
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!data.success) return;
+
+        // Retention
+        const r = data.retention || {};
+        const d1El = document.getElementById("kpi-d1-retention");
+        if (d1El) d1El.innerText = `${r.d1RetentionRate ?? 0}%`;
+        const d1Sub = document.getElementById("kpi-d1-sub");
+        if (d1Sub) d1Sub.innerText = `${r.returnedD1 ?? 0} / ${r.eligibleD1 ?? 0} players`;
+
+        const d7El = document.getElementById("kpi-d7-retention");
+        if (d7El) d7El.innerText = `${r.d7RetentionRate ?? 0}%`;
+        const d7Sub = document.getElementById("kpi-d7-sub");
+        if (d7Sub) d7Sub.innerText = `${r.returnedD7 ?? 0} / ${r.eligibleD7 ?? 0} players`;
+
+        const d30El = document.getElementById("kpi-d30-retention");
+        if (d30El) d30El.innerText = `${r.d30RetentionRate ?? 0}%`;
+        const d30Sub = document.getElementById("kpi-d30-sub");
+        if (d30Sub) d30Sub.innerText = `${r.returnedD30 ?? 0} / ${r.eligibleD30 ?? 0} players`;
+
+        // FTUE & Totals
+        const tf = data.tutorialFunnel || {};
+        const tutEl = document.getElementById("kpi-tutorial-rate");
+        if (tutEl) tutEl.innerText = `${tf.overallCompletionRate ?? 0}%`;
+        const tutSub = document.getElementById("kpi-tutorial-sub");
+        if (tutSub) tutSub.innerText = `${tf.completedTutorialCount ?? 0} completed`;
+
+        const totalPlayers = document.getElementById("kpi-total-players");
+        if (totalPlayers) totalPlayers.innerText = `${data.summaryKpis?.totalTrackedPlayers ?? 0}`;
+        const totalEvents = document.getElementById("kpi-total-events");
+        if (totalEvents) totalEvents.innerText = `${data.summaryKpis?.totalEventsIngested ?? 0} events ingested`;
+
+        const startersBadge = document.getElementById("funnel-starters-badge");
+        if (startersBadge) startersBadge.innerText = `${tf.totalStarters ?? 0} Total Starters`;
+        const errorBadge = document.getElementById("error-count-badge");
+        if (errorBadge) errorBadge.innerText = `${data.summaryKpis?.totalCrashesLogged ?? 0} errors logged`;
+
+        // Funnel steps
+        const funnelList = document.getElementById("funnel-step-list");
+        if (funnelList && Array.isArray(tf.steps)) {
+            funnelList.innerHTML = tf.steps.map(s => `
+                <div style="background: rgba(2, 6, 23, 0.6); padding: 10px; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.15);">
+                    <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+                        <span style="font-weight: 600; color: #f1f5f9;">${s.stepName}</span>
+                        <span style="color: #38bdf8; font-weight: 700;">${s.playersCompleted} players (${s.overallConversionRate}%) <span style="color: #f87171; font-size: 11px; margin-left: 6px;">-${s.dropOffRate}% drop</span></span>
+                    </div>
+                    <div style="background: rgba(15, 23, 42, 0.8); height: 8px; border-radius: 9999px; overflow: hidden;">
+                        <div style="width: ${Math.min(100, Math.max(2, s.overallConversionRate))}%; height: 100%; background: linear-gradient(90deg, #38bdf8, #4ade80); border-radius: 9999px; transition: width 0.4s ease;"></div>
+                    </div>
+                </div>
+            `).join("");
+        }
+
+        // Biome Progression
+        const biomeList = document.getElementById("biome-analytics-list");
+        if (biomeList && Array.isArray(data.biomeProgression)) {
+            biomeList.innerHTML = data.biomeProgression.map(b => `
+                <div style="background: rgba(2, 6, 23, 0.6); padding: 10px; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.15);">
+                    <div style="font-size: 12px; font-weight: 600; color: #f1f5f9; margin-bottom: 4px;">${b.biomeName}</div>
+                    <div style="font-size: 11px; color: #94a3b8; display: flex; justify-content: space-between;">
+                        <span>Entries: <b>${b.playerEntries}</b></span>
+                        <span>Completed: <b style="color: #4ade80;">${b.playerCompletions}</b> (${b.completionRate}%)</span>
+                    </div>
+                    <div style="font-size: 11px; color: #94a3b8; display: flex; justify-content: space-between; margin-top: 4px;">
+                        <span>Boss Attempts: <b>${b.bossAttempts}</b></span>
+                        <span>Boss Win Rate: <b style="color: #facc15;">${b.bossWinRate}%</b></span>
+                    </div>
+                </div>
+            `).join("");
+        }
+
+        // Recent Errors
+        const errorLogs = document.getElementById("analytics-error-logs");
+        if (errorLogs) {
+            if (Array.isArray(data.recentErrors) && data.recentErrors.length > 0) {
+                errorLogs.innerHTML = data.recentErrors.map(e => `
+                    <div style="margin-bottom: 6px; border-bottom: 1px solid rgba(239, 68, 68, 0.15); padding-bottom: 4px;">
+                        <span style="color: #f87171;">[${e.timestamp.substring(11, 19)}] ${e.errorType}:</span> ${e.message}
+                    </div>
+                `).join("");
+            } else {
+                errorLogs.innerText = "No errors reported. System health nominal.";
+            }
+        }
+    } catch (err) {
+        console.warn("[NeuroAnalytics UI] Failed to load dashboard stats:", err);
+    }
+}
+
+async function fetchAndRenderRemoteConfigAdmin() {
+    try {
+        const res = await fetch("/api/remote-config");
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!data.success || !data.config) return;
+
+        const cfg = data.config;
+        const vEl = document.getElementById("rc-active-version");
+        if (vEl) vEl.innerText = `v${cfg.version}`;
+
+        const yieldInput = document.getElementById("input-rc-harvest-yield");
+        if (yieldInput && cfg.harvestBalance) yieldInput.value = cfg.harvestBalance.baseYieldMultiplier ?? 1.0;
+
+        const bossHpInput = document.getElementById("input-rc-boss-hp");
+        if (bossHpInput && cfg.bossTuning?.overfit_hydra) bossHpInput.value = cfg.bossTuning.overfit_hydra.maxHp ?? 500;
+
+        const rewardInput = document.getElementById("input-rc-daily-reward");
+        if (rewardInput && cfg.dailyChallengeTuning) rewardInput.value = cfg.dailyChallengeTuning.baseRewardCrystals ?? 150;
+
+        const modCheckbox = document.getElementById("input-rc-modifier-active");
+        const modLabel = document.getElementById("rc-modifier-status-label");
+        const isModActive = Boolean(cfg.liveOpsEventSlot?.active);
+        if (modCheckbox) modCheckbox.checked = isModActive;
+        if (modLabel) {
+            modLabel.innerText = isModActive ? `Active (${cfg.liveOpsEventSlot.multiplier}x Surge)` : "Inactive";
+            modLabel.style.color = isModActive ? "#4ade80" : "#f87171";
+        }
+
+        // Fetch version history for rollback select
+        const historyRes = await fetch("/api/remote-config/history");
+        if (historyRes.ok) {
+            const hData = await historyRes.json();
+            const selectEl = document.getElementById("select-rc-rollback-version");
+            if (selectEl && Array.isArray(hData.history)) {
+                selectEl.innerHTML = hData.history.map(h => `
+                    <option value="${h.version}">v${h.version} - ${h.changeReason.substring(0, 30)}</option>
+                `).join("");
+            }
+        }
+    } catch (e) {
+        console.warn("[RemoteConfig UI] Sync error:", e);
+    }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     const btnReload = document.getElementById("btn-error-reload");
     const btnDismiss = document.getElementById("btn-error-dismiss");
     if (btnReload) btnReload.addEventListener("click", () => window.location.reload());
     if (btnDismiss) btnDismiss.addEventListener("click", () => document.getElementById("error-boundary-modal").classList.add("hidden"));
+
+    // Analytics & Remote Config Dashboard listeners
+    const btnMenuAnalytics = document.getElementById("btn-menu-analytics");
+    const modalAnalytics = document.getElementById("modal-analytics-dashboard");
+    const btnCloseAnalytics = document.getElementById("btn-close-analytics");
+    const btnRefreshAnalytics = document.getElementById("btn-refresh-analytics");
+    const btnRcRefresh = document.getElementById("btn-rc-refresh");
+    const btnRcPublish = document.getElementById("btn-rc-publish");
+    const btnRcRollback = document.getElementById("btn-rc-rollback");
+
+    if (btnMenuAnalytics && modalAnalytics) {
+        btnMenuAnalytics.addEventListener("click", () => {
+            modalAnalytics.classList.remove("hidden");
+            fetchAndRenderAnalyticsDashboard();
+            fetchAndRenderRemoteConfigAdmin();
+        });
+    }
+    if (btnCloseAnalytics && modalAnalytics) {
+        btnCloseAnalytics.addEventListener("click", () => {
+            modalAnalytics.classList.add("hidden");
+        });
+    }
+    if (btnRefreshAnalytics) {
+        btnRefreshAnalytics.addEventListener("click", () => {
+            fetchAndRenderAnalyticsDashboard();
+        });
+    }
+    if (btnRcRefresh) {
+        btnRcRefresh.addEventListener("click", () => {
+            fetchAndRenderRemoteConfigAdmin();
+        });
+    }
+    if (btnRcPublish) {
+        btnRcPublish.addEventListener("click", async () => {
+            const yieldVal = parseFloat(document.getElementById("input-rc-harvest-yield")?.value || 1.0);
+            const bossHpVal = parseInt(document.getElementById("input-rc-boss-hp")?.value || 500, 10);
+            const rewardVal = parseInt(document.getElementById("input-rc-daily-reward")?.value || 150, 10);
+            const isMod = Boolean(document.getElementById("input-rc-modifier-active")?.checked);
+            const msgEl = document.getElementById("rc-status-msg");
+
+            try {
+                const payload = {
+                    harvestBalance: { baseYieldMultiplier: yieldVal },
+                    bossTuning: { overfit_hydra: { maxHp: bossHpVal } },
+                    dailyChallengeTuning: { baseRewardCrystals: rewardVal },
+                    liveOpsEventSlot: { active: isMod, multiplier: isMod ? 2.0 : 1.0 }
+                };
+                const res = await fetch("/api/remote-config/publish", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ config: payload, author: "web_designer_admin", changeReason: "Tuned balance parameters via dashboard" })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    if (msgEl) {
+                        msgEl.innerText = `✅ Balance update published! Active version: v${result.version}`;
+                        msgEl.style.display = "block";
+                        setTimeout(() => { msgEl.style.display = "none"; }, 4000);
+                    }
+                    fetchAndRenderRemoteConfigAdmin();
+                } else {
+                    alert(`Schema v3 Validation Error: ${result.error}`);
+                }
+            } catch (err) {
+                alert(`Publish error: ${err.message}`);
+            }
+        });
+    }
+    if (btnRcRollback) {
+        btnRcRollback.addEventListener("click", async () => {
+            const targetV = parseInt(document.getElementById("select-rc-rollback-version")?.value || 1, 10);
+            const msgEl = document.getElementById("rc-status-msg");
+            try {
+                const res = await fetch("/api/remote-config/rollback", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ targetVersion: targetV, author: "web_rollback_admin" })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    if (msgEl) {
+                        msgEl.innerText = `⏪ Rolled back cleanly to v${result.rolledBackTo}! New active version: v${result.newVersion}`;
+                        msgEl.style.display = "block";
+                        setTimeout(() => { msgEl.style.display = "none"; }, 4000);
+                    }
+                    fetchAndRenderRemoteConfigAdmin();
+                } else {
+                    alert(`Rollback Error: ${result.error}`);
+                }
+            } catch (err) {
+                alert(`Rollback error: ${err.message}`);
+            }
+        });
+    }
 });
 
 // --- 3. GAME STATE & CODEX DATABASE ---
