@@ -21,6 +21,28 @@ class ServerMetricsRegistry {
     // Histograms
     this.registerHistogram('neuroarena_tick_duration_ms', 'Server simulation tick duration in ms', [1, 2, 5, 10, 16.6, 33.3, 50, 100]);
     this.registerHistogram('neuroarena_inference_latency_ms', 'Client neural inference response time in ms', [5, 10, 25, 50, 100, 250, 500]);
+
+    // Privacy-Conscious Event Telemetry Metrics
+    this.registerCounter('neuroarena_telemetry_events_total', 'Total client telemetry events ingested');
+    this.registerCounter('neuroarena_session_starts_total', 'Total client session start events');
+    this.registerCounter('neuroarena_session_ends_total', 'Total client session end events');
+    this.registerCounter('neuroarena_tutorial_steps_completed_total', 'Total FTUE tutorial steps completed');
+    this.registerCounter('neuroarena_tutorial_completed_total', 'Total complete tutorial completions');
+    this.registerCounter('neuroarena_biome_entries_total', 'Total biome entry events');
+    this.registerCounter('neuroarena_biome_exits_total', 'Total biome exit events');
+    this.registerCounter('neuroarena_biome_completions_total', 'Total biome completion events');
+    this.registerCounter('neuroarena_boss_attempts_total', 'Total boss encounter attempts');
+    this.registerCounter('neuroarena_boss_wins_total', 'Total boss encounter victories');
+    this.registerCounter('neuroarena_boss_losses_total', 'Total boss encounter defeats');
+    this.registerCounter('neuroarena_duel_starts_total', 'Total live duel matches started');
+    this.registerCounter('neuroarena_duel_results_total', 'Total live duel matches concluded');
+    this.registerCounter('neuroarena_rewards_claimed_total', 'Total reward claims');
+    this.registerCounter('neuroarena_purchases_total', 'Total in-app purchases or currency transactions');
+    this.registerCounter('neuroarena_client_errors_total', 'Total client crashes or unhandled exceptions');
+
+    this.registerHistogram('neuroarena_session_duration_seconds', 'Player session length in seconds', [30, 60, 180, 300, 600, 1200, 1800, 3600]);
+    this.registerHistogram('neuroarena_tutorial_duration_seconds', 'FTUE tutorial completion duration in seconds', [30, 60, 90, 120, 180, 240, 300, 600]);
+    this.registerHistogram('neuroarena_biome_dwell_seconds', 'Player dwell time inside a biome in seconds', [30, 60, 120, 300, 600, 1200]);
   }
 
   registerCounter(name, help) {
