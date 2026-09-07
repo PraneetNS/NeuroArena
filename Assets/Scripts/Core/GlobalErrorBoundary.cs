@@ -79,7 +79,20 @@ namespace NeuroArena.Core
                     Debug.LogWarning($"[GlobalErrorBoundary] Emergency save failed: {ex.Message}");
                 }
 
-                // 3. Trigger Recovery Screen
+                // 3. Emit Crash Telemetry Event
+                try
+                {
+                    if (ProductAnalyticsManager.Instance != null)
+                    {
+                        ProductAnalyticsManager.Instance.TrackCrashOrError(type.ToString(), logString, stackTrace);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogWarning($"[GlobalErrorBoundary] Failed to emit crash analytics: {ex.Message}");
+                }
+
+                // 4. Trigger Recovery Screen
                 isErrorModalActive = true;
             }
         }
