@@ -42,3 +42,14 @@
 ### 2.3 Audio & Rendering Pipeline
 - **WebGPU / WebGL2 Fallback**: Clustered Forward+ lighting with 3D froxel light grid and volumetric atmospheric scattering.
 - **Procedural Audio Synthesis**: Real-time vocal tract formant filter graph and dynamic biome synthesizers.
+
+### 2.4 Privacy-Conscious Event Analytics Pipeline
+- **Zero-PII Client Telemetry (Unity & Web)**: Emits structured lifecycle events (session start/end, FTUE step completion, biome entry/exit, boss attempt/result, duels, reward claims, and unhandled exception crash traces).
+- **Server Aggregation & Prometheus / OTel Metrics**: Ingestion endpoint (`POST /api/telemetry/events`) updates live Prometheus counters/histograms and an in-memory cohort repository computing D1/D7/D30 retention, step-by-step FTUE conversion, and biome-by-biome completion rates.
+- **Supabase / PostgreSQL Store**: `analytics_events` table with stored SQL analytical functions for cohorts and funnel drop-off without requiring manual ad-hoc queries.
+
+### 2.5 Live-Ops Remote Configuration & Dynamic Balance Engine
+- **Supabase / PostgreSQL Source of Truth**: `remote_config_active` and `remote_config_history` versioned tables with atomic rollback stored procedures.
+- **Schema v3 Save Compatibility Protection**: Strict validation engine rejects invalid balance changes (negative multipliers, out-of-range boss HP, corrupted types) before publishing to prevent corrupting player save files.
+- **Client 5-Min TTL Caching & Last-Known-Good Fallback**: Unity (`RemoteConfigManager.cs`) and Web (`RemoteConfigClient.js`) cache balance configurations in `PlayerPrefs`/`localStorage` with seamless offline and network failure fallback.
+
