@@ -6,8 +6,8 @@ console.log('▶ Testing Kolmogorov-Smirnov & PSI Model Drift Monitor...');
 const monitor = new ModelDriftMonitor({ psiThreshold: 0.2 });
 
 // 1. Stationary distribution test (No drift)
-const baseline = Array.from({ length: 200 }, () => Math.random() * 10);
-const stationary = Array.from({ length: 200 }, () => Math.random() * 10);
+const baseline = Array.from({ length: 200 }, (_, i) => (i % 20) * 0.5 + 0.1);
+const stationary = Array.from({ length: 200 }, (_, i) => ((i + 1) % 20) * 0.5 + 0.1);
 
 const ksStationary = monitor.computeKSStatistic(baseline, stationary);
 assert.strictEqual(ksStationary.isDrift, false, 'Stationary distribution must not trigger KS drift alert');
