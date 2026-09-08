@@ -6,24 +6,30 @@
 
 ### Biome 1: The Linear Steppes
 - **Core Concept:** Linear Regression, Gradients, and Optimizer Weapons.
-- **Boss Puzzle:** Navigate a steep gradient ravine. Vanilla SGD oscillates and fails; Adam/RMSprop dynamically scale coordinates to converge.
+- **Procedural Variant:** Dynamic slope $w \in \pm[1.2, 3.5]$, intercept $b \in [-2.5, 2.5]$, verified solvable via analytical OLS.
+- **Boss (The Outlier Titan):** Alternate move-sets: *Gradient Avalanche*, *Residual Shockwave*, *Momentum Surge*.
 
 ### Biome 2: The Binary Marshlands
 - **Core Concept:** Logistic Regression, Sigmoid activation, and Decision Boundaries.
-- **Boss Puzzle:** Poison Spore Separation. Project a hyperplane that cleanly divides Class 0 (Purple) from Class 1 (Azure).
+- **Procedural Variant:** Alternate boundary geometries (`linear_hyperplane`, `circular_boundary`, `polynomial_ridge`) with margin tuning.
+- **Boss (The Hyperplane Hydra):** Alternate move-sets: *Sigmoid Breath*, *Log-Loss Poison Spores*, *Dual-Head Hyperplane Cleave*.
 
 ### Biome 3: The Variance Tundra
 - **Core Concept:** Bias-Variance Tradeoff, Polynomial Fitting, Ridge (L2) & Lasso (L1).
-- **Boss Puzzle:** Blizzard Overfitting. High-degree polynomials overfit to train noise; Ridge/Lasso regularization shrinks weights to generalize.
+- **Procedural Variant:** Degree-2/3 polynomial curves with bounded noise and cross-validation MSE validation.
+- **Boss (The Overfit Colossus):** Alternate move-sets: *Degree-7 Polynomial Wave*, *Zero-Variance Freeze Storm*, *L1 Lasso Sparse Needle Rain*.
 
 ### Biome 4: The Branching Canopy
 - **Core Concept:** Decision Trees, Gini Impurity, and Bagging Ensembles (Random Forests).
-- **Boss Puzzle:** Summon a "Party of 5 Trees" using bootstrapped subsets to defeat high-variance anomalies.
+- **Procedural Variant:** 2 to 4 orthogonal axis splits in 2D space with verified Gini target $\le 0.08$.
+- **Boss (The Dendrogram Dragon):** Alternate move-sets: *Binary Decision Split Tail*, *5-Tree Bagging Summon*, *Cost-Complexity Pruning Gale*.
 
 ### Biome 5: Deep Synapse Citadel
 - **Core Concept:** Multi-Layer Perceptrons (MLPs), Backpropagation, and Non-linear XOR boundaries.
-- **Boss Puzzle:** XOR Energy Gate. Linear models cannot solve non-linear XOR; a 2-layer MLP with ReLU/Tanh creates curved decision surfaces.
+- **Procedural Variant:** Alternate non-linear manifolds (`xor_quadrants`, `concentric_rings`, `checkerboard_2x2`).
+- **Boss (The Non-Linear Overlord):** Alternate move-sets: *XOR Non-Linear Laser Manifold*, *Gradient Backprop Focus Beam*, *Sigmoid Saturation Dark Zone*.
 
 ### Biome 6: The Semantic Expanse
 - **Core Concept:** Vector Embeddings, PPMI Matrices, and Retrieval-Augmented Generation (RAG).
-- **Boss Puzzle:** Constellation Vector Analogies (`fire - heat + cold = ice`).
+- **Procedural Variant:** Dynamic vocabulary clusters across Physics, Compute, and Optimizers with cosine similarity verification.
+- **Boss (The High-Dimensional Void):** Alternate move-sets: *High-Dimensional Vector Singularity*, *PCA Eigen-Beam*, *Constellation Concept Barrage*.
