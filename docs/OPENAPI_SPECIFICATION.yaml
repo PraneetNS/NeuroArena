@@ -127,8 +127,86 @@ paths:
       responses:
         '200':
           description: List of historical configuration snapshots
-
-                  type: object
+  /api/procedural/daily-seed:
+    get:
+      summary: Get active UTC daily challenge seed
       responses:
         '200':
-          description: Snapshot saved successfully
+          description: Standard daily seed string (DAILY-YYYYMMDD)
+  /api/procedural/variant/{biomeIndex}:
+    get:
+      summary: Generate certified solvable procedural biome variant
+      parameters:
+        - name: biomeIndex
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: seed
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Procedural dataset, boss move-set, and Poisson terrain layout
+  /api/ranked/profile:
+    get:
+      summary: Get unified cross-platform player ranked profile
+      parameters:
+        - name: accountId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Player Glicko-2 rating, tier, cosmetics, and season status
+  /api/ranked/leaderboard:
+    get:
+      summary: Get active season Top 100 leaderboard
+      responses:
+        '200':
+          description: Ranked players sorted by MMR
+  /api/ranked/seasons/active:
+    get:
+      summary: Get active season metadata and days remaining
+      responses:
+        '200':
+          description: Active season lifecycle data
+  /api/ranked/seasons/{seasonId}/leaderboard:
+    get:
+      summary: Get historical season Top 100 snapshot archive
+      parameters:
+        - name: seasonId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Archived season leaderboard
+  /api/ranked/match:
+    post:
+      summary: Process 1v1 ranked match outcome and return rank-up Juice triggers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Updated MMR ratings and visible rank transitions
+  /api/ranked/rollover:
+    post:
+      summary: Execute season rollover, soft MMR reset, and reward disbursement
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Rollover audit and archived season snapshot
