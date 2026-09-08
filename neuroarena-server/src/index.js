@@ -21,12 +21,16 @@ const { RecurringEngagementManager } = require("./engagement/RecurringEngagement
 const { GuildEngine } = require("./guildSystem");
 const { metrics } = require("./metrics");
 const { analyticsIngestEngine } = require("./telemetry/AnalyticsIngestEngine");
+const { ProceduralVariantEngine } = require("./ml/ProceduralVariantEngine");
+const { SeasonalRankedEngine } = require("./engagement/SeasonalRankedEngine");
 
 const rateLimiter = new TokenBucketRateLimiter(120, 60); // 120 bucket capacity, 60/sec refill
 const sessionManager = new SessionManager();
 const redisConfig = new RedisClusterConfig();
 const engagementManager = new RecurringEngagementManager(redisConfig);
 const guildEngine = new GuildEngine({ weeklyObjectiveEngine: engagementManager.weeklyGuildEngine });
+const proceduralEngine = new ProceduralVariantEngine();
+const rankedEngine = new SeasonalRankedEngine(redisConfig);
 
 // Ingress Rate Limiter Middleware
 app.use((req, res, next) => {
@@ -285,6 +289,92 @@ app.post("/api/remote-config/modifier", async (req, res) => {
     try {
         const result = await engagementManager.remoteConfigEngine.setLiveOpsModifier(req.body);
         res.json(result);
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 10. Procedural Variant Generator & Solvability Validator
+app.get("/api/procedural/daily-seed", (req, res) => {
+    try {
+        const dailySeed = proceduralEngine.getDailySeed();
+        res.json({ success: true, dailySeed, serverTimeUtc: new Date().toISOString() });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.get("/api/procedural/variant/:biomeIndex", (req, res) => {
+    try {
+        const biomeIndex = parseInt(req.params.biomeIndex, 10) || 0;
+        const seed = req.query.seed || proceduralEngine.getDailySeed();
+        const variant = proceduralEngine.generateBiomeVariant(biomeIndex, seed);
+        res.json(variant);
+    } catch (err) {
+        res.status(400).json({ success: false, error: err.message });
+    }
+});
+
+// 11. Seasonal Ranked League & Cross-Progression APIs
+app.get("/api/ranked/profile", async (req, res) => {
+    try {
+        const { accountId, name, build } = req.query;
+        if (!accountId) return res.status(400).json({ success: false, error: "MISSING_ACCOUNT_ID" });
+        const profile = await rankedEngine.getPlayerProfile(accountId, name, build);
+        const season = rankedEngine.getSeasonStatus();
+        res.json({ success: true, profile, season });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.get("/api/ranked/leaderboard", (req, res) => {
+    try {
+        const limit = parseInt(req.query.limit, 10) || 100;
+        const leaderboard = rankedEngine.getLeaderboard(limit);
+        const season = rankedEngine.getSeasonStatus();
+        res.json({ success: true, total: leaderboard.length, season, leaderboard });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.get("/api/ranked/seasons/active", (req, res) => {
+    try {
+        res.json({ success: true, season: rankedEngine.getSeasonStatus() });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.get("/api/ranked/seasons/:seasonId/leaderboard", (req, res) => {
+    try {
+        const archive = rankedEngine.getArchivedSeason(req.params.seasonId);
+        if (!archive) return res.status(404).json({ success: false, error: "SEASON_NOT_FOUND" });
+        res.json({ success: true, archive });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.post("/api/ranked/rollover", async (req, res) => {
+    try {
+        const { nextSeasonId, nextSeasonName } = req.body;
+        const result = await rankedEngine.rolloverSeason(nextSeasonId, nextSeasonName);
+        res.json(result);
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.post("/api/ranked/match", async (req, res) => {
+    try {
+        const { playerA, playerB, outcomeScoreA } = req.body;
+        if (!playerA || !playerB || outcomeScoreA === undefined) {
+            return res.status(400).json({ success: false, error: "INVALID_MATCH_PAYLOAD" });
+        }
+        const result = await rankedEngine.processRankedMatch(playerA, playerB, outcomeScoreA);
+        res.json({ success: true, result });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
