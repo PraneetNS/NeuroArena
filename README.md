@@ -181,6 +181,21 @@ A dynamic commentary system converts live training telemetry into plain-English 
 - **Authoritative Verification:** At match conclusion, submitted weight matrices $(w, b)$ are scored simultaneously on the server against a **secret held-out test distribution of 50 samples** unknown to both clients.
 - **Zero-Trust Scoring:** Prevents client memory inspection or hardcoded target models.
 
+### 6-Biome Procedural Variant & Mathematical Solvability Engine
+- **Seeded Procedural Diversity:** No two runs of a biome present identical slope/intercept bounds, classification boundary shapes, polynomial degrees, or noise envelopes.
+- **Closed-Form Solvability Prover:** Analytically validates each candidate dataset (e.g. OLS fit $\text{MSE}_{\text{clean}} \le 0.05$) to guarantee target loss is reachable before presenting it to the player. Unsolvable seeds are automatically reseeded.
+- **Boss Move-Set Variations:** 3 distinct attack patterns and modulated stat profiles per boss selected deterministically by seed.
+- **Poisson-Disc Terrain Scatter Layout:** Modulates terrain density, minimum scatter distance ($4.8\text{--}6.2\text{m}$), and landmark orientation while preserving player/lab spawn exclusion zones.
+- **Daily Seed Mode:** Synchronizes all players globally to `DAILY-YYYYMMDD` challenges.
+
+### Seasonal Ranked League, Glicko-2 Tier Progression & Cross-Platform Parity
+- **5 Competitive Tiers:** Bronze ($0\text{--}999$) ➔ Silver ($1000\text{--}1399$) ➔ Gold ($1400\text{--}1799$) ➔ Platinum ($1800\text{--}2199$) ➔ Architect ($2200+$).
+- **Visible Rank-Up Juice Moment:** Emits high-impact hit-stop (65ms), camera shake (0.50), 150 GPU particles, dual-motor haptics, and fanfare audio.
+- **6-Week Season Cadence & Soft MMR Reset:** Regresses player rating toward mean ($\text{Rating} \leftarrow 1500 + (\text{Rating} - 1500) \times 0.65$) at season rollover without hard wipes.
+- **End-of-Season Reward Disbursement:** Automatically grants exclusive cosmetics, titles, and quantum shards to player accounts.
+- **Historical Season Top 100 Archival:** Permanent immutable snapshots queryable via `GET /api/ranked/seasons/:seasonId/leaderboard`.
+- **100% Cross-Progression Parity:** Unity Android and Web PWA clients access the identical account state, MMR, guild status, and inventory.
+
 ### Skill-Based Matchmaking (Glicko-2 Engine)
 - **Mathematical Rating System:** Full Glicko-2 implementation tracking Player Rating ($\mu$), Rating Deviation ($\phi$), and Rating Volatility ($\sigma$).
 - **Dynamic Search Radius:** Matchmaking pool expands progressively:
