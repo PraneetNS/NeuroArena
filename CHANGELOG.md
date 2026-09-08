@@ -8,6 +8,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- **Real-Time Mathematical Narration Adaptive Difficulty & Opt-In Coaching Layer** (`AdaptiveCoachingEngine.js`, `AdaptiveCoachingClient.js`, `AdaptiveCoachingManager.cs`, `AdaptiveCoachingTests.cs`, `adaptiveCoaching.test.js`)
+  - Telemetry struggle tracking: tracks repeated boss failures, overfitting alerts, and slow gradient descent plateaus to adjust generated procedural difficulty envelopes within strictly bounded ranges (noise $\in [0.75, 1.00]$, outliers $\in [0.70, 1.00]$, boss HP $\in [0.85, 1.00]$).
+  - Anti-rubberbanding guarantee: datasets remain non-trivial, analytical solvability certificates are verified, and auto-wins are strictly prohibited.
+  - Opt-in coaching escalation: offers diagnostic concept guidance after $\ge 2$ failed boss attempts (e.g. teaching L2 regularization/weight decay to suppress high-order polynomial variance), unlocked exclusively on player opt-in with zero answer/weight spoilers.
+  - Player transparency audit logs: every adjusted run generates an inspectable explanation ("Why was this run easier?") detailing telemetry struggle triggers and applied envelope modifiers.
+  - Authoritative room-type security guard: server and client enforce that adaptive difficulty and coaching logic can never execute in `DuelRoom` or ranked competitive matches.
+
 - **6-Biome Procedural Variant & Mathematical Solvability Engine** (`ProceduralVariantEngine.js`, `ProceduralVariantClient.js`, `ProceduralBiomeVariantGenerator.cs`, `ProceduralVariantTests.cs`, `proceduralVariant.test.js`)
   - Deterministic Mulberry32 PRNG ensuring bit-exact replayability across client and server.
   - Per-biome mathematical difficulty envelopes for linear regressions, classification shapes, polynomials, decision splits, XOR manifolds, and semantic embeddings.

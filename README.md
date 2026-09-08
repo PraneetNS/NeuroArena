@@ -128,11 +128,15 @@ $$\text{Health Score} = 0.35 \cdot S_{\text{balance}} + 0.35 \cdot S_{\text{clea
 - **Demonstration of Model Failure:** The optimizer struggles on conflicting multi-modal gradients, showing elevated MSE ($J \approx 3.42$).
 - **Live Visual Diagnosis:** Dual-color scatter points clearly illustrate **Covariate Shift** ($P_{\text{train}}(X) \neq P_{\text{test}}(X)$) and **Concept Drift** ($P_{\text{train}}(Y|X) \neq P_{\text{test}}(Y|X)$).
 
-### Real-Time Mathematical Training Narration
-A dynamic commentary system converts live training telemetry into plain-English mathematical explanations without canned flavor text:
+### Real-Time Mathematical Training Narration & Adaptive Coaching Layer
+A dynamic commentary system converts live training telemetry into plain-English mathematical explanations without canned flavor text, extending seamlessly into an opt-in coaching and bounded adaptive-difficulty layer for practice sessions:
 - **Slope Rotation:** *"The decision line is rotating rapidly ($\Delta w = +0.75$) to reduce initial residual errors."*
 - **Overfitting Alert:** *"Overfitting detected: training error is low ($J_{\text{train}} = 0.040$) but validation error rose ($J_{\text{val}} = 1.850$, gap $= +1.81$). Model is memorizing noise."*
 - **Gradient Oscillation:** *"Gradient reversed sign ($\nabla w = -0.75 \to +0.85$): optimizer is bouncing across steep coordinate canyon walls."*
+- **Bounded Adaptive Difficulty:** Tracks telemetry struggle signals (3x consecutive boss failures, repeated overfitting alerts) to apply strictly bounded difficulty envelopes (noise scale $\ge 0.75$, outlier rate $\ge 0.70$, boss HP $\ge 0.85$). Solvability certificates are verified and auto-wins are forbidden.
+- **Opt-In Coaching Escalation:** After $\ge 2$ boss failures, the system offers diagnostic concept guidance (e.g. suggesting $L_2$ regularization / weight decay) strictly upon player opt-in with zero spoilers of solution weights or answers.
+- **Player Transparency Audit Log:** Every difficulty adjustment produces an inspectable log ("Why was this run easier?") explaining the exact telemetry reasons and modifier values applied.
+- **Server-Side Ranked Guard:** Adaptive assistance and hints are strictly forbidden and rejected via server-side room-type guards in `DuelRoom` and ranked matches.
 
 ### Neuroevolution & Genetic Hyperparameter Optimization
 - **Population-Based Search:** Population of $N=20$ candidate parameter sets evolved over successive generations.
