@@ -1,8 +1,17 @@
+# Redis Cluster Deployment for NeuroArena Real-Time High-Scale Backend
+# Keyspace Schema:
+# - ranked:leaderboard:<seasonId> -> ZSET (member: accountId, score: rating)
+# - ranked:profile:<accountId>    -> HASH / JSON (rating, rd, tier, cosmetics, shards)
+# - daily:completed:<accountId:dateKey> -> STRING TTL 48h
+# - remote:config:active          -> STRING JSON TTL 5m
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: redis-cluster
   namespace: neuroarena-prod
+  labels:
+    app: redis-cluster
+    tier: in-memory-data-layer
 spec:
   serviceName: "redis-cluster-service"
   replicas: 6
