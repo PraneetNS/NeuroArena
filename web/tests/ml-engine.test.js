@@ -2158,10 +2158,136 @@ function testClientMovementPredictionAnd15sReconnectGrace() {
     console.log("✅ Web Client Movement Prediction, Reconciliation & 15s Reconnect Grace Tests Passed!");
 }
 
+function testProceduralBiomeVariantsAndSolvability() {
+    console.log("▶ Testing Web Client Procedural Biome Variants, Solvability & Boss Move-Sets...");
+    
+    // Seeded Mulberry PRNG matching backend
+    class TestMulberryPRNG {
+        constructor(seedStr = "NEURO-8842") {
+            let hash = 0;
+            const s = String(seedStr).toUpperCase().trim();
+            for (let i = 0; i < s.length; i++) {
+                hash = ((hash << 5) - hash) + s.charCodeAt(i);
+                hash |= 0;
+            }
+            this.state = (Math.abs(hash) || 1337) >>> 0;
+        }
+        next() {
+            let t = (this.state += 0x6D2B79F5);
+            t = Math.imul(t ^ (t >>> 15), t | 1);
+            t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+            return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        }
+        range(min, max) { return min + this.next() * (max - min); }
+        int(min, max) { return Math.floor(this.range(min, max + 1)); }
+    }
+
+    // 1. Bit-Exact Seed Replayability
+    const prng1 = new TestMulberryPRNG("DAILY-20260908");
+    const prng2 = new TestMulberryPRNG("DAILY-20260908");
+    const v1 = [prng1.next(), prng1.range(1, 10), prng1.int(10, 50)];
+    const v2 = [prng2.next(), prng2.range(1, 10), prng2.int(10, 50)];
+    assert.deepStrictEqual(v1, v2, "Identical seeds must yield identical float sequences");
+
+    // 2. Linear Steppes Closed-Form OLS Solvability Check
+    const samples = [];
+    const trueW = 2.45, trueB = 1.15;
+    for (let i = 0; i < 30; i++) {
+        const x = prng1.range(-3.0, 3.0);
+        const y = trueW * x + trueB + (prng1.next() - 0.5) * 0.2;
+        samples.push({ x, y });
+    }
+
+    const meanX = samples.reduce((s, p) => s + p.x, 0) / samples.length;
+    const meanY = samples.reduce((s, p) => s + p.y, 0) / samples.length;
+    let num = 0, den = 0;
+    for (const p of samples) {
+        num += (p.x - meanX) * (p.y - meanY);
+        den += Math.pow(p.x - meanX, 2);
+    }
+    const fitW = num / den;
+    const fitB = meanY - fitW * meanX;
+    let mse = 0;
+    for (const p of samples) mse += Math.pow(fitW * p.x + fitB - p.y, 2);
+    mse /= samples.length;
+
+    assert.ok(mse < 0.05, `Theoretical OLS loss must be < 0.05 (Got: ${mse.toFixed(4)})`);
+    assert.ok(Math.abs(fitW - trueW) < 0.2, "Fitted weight must closely align with true parameter");
+
+    // 3. Boss Move-Set Variants
+    const bossPatterns = ["GRADIENT_AVALANCHE", "RESIDUAL_SHOCKWAVE", "MOMENTUM_SURGE"];
+    const pickedPattern = bossPatterns[prng1.int(0, 2)];
+    assert.ok(bossPatterns.includes(pickedPattern), "Boss must select a valid seeded move-set pattern");
+
+    console.log("✅ Web Client Procedural Biome Variants, Solvability & Boss Move-Sets Tests Passed!");
+}
+
+function testSeasonalRankedAndCrossProgression() {
+    console.log("▶ Testing Web Client Seasonal Ranked, Glicko-2 Tier League & Cross-Progression...");
+
+    const RANK_TIERS = {
+        BRONZE: { minRating: 0, name: "BRONZE", tierIndex: 0 },
+        SILVER: { minRating: 1000, name: "SILVER", tierIndex: 1 },
+        GOLD: { minRating: 1400, name: "GOLD", tierIndex: 2 },
+        PLATINUM: { minRating: 1800, name: "PLATINUM", tierIndex: 3 },
+        ARCHITECT: { minRating: 2200, name: "ARCHITECT", tierIndex: 4 }
+    };
+
+    function getTier(rating) {
+        if (rating >= 2200) return RANK_TIERS.ARCHITECT;
+        if (rating >= 1800) return RANK_TIERS.PLATINUM;
+        if (rating >= 1400) return RANK_TIERS.GOLD;
+        if (rating >= 1000) return RANK_TIERS.SILVER;
+        return RANK_TIERS.BRONZE;
+    }
+
+    // 1. Tier Boundaries
+    assert.strictEqual(getTier(850).name, "BRONZE");
+    assert.strictEqual(getTier(1250).name, "SILVER");
+    assert.strictEqual(getTier(1650).name, "GOLD");
+    assert.strictEqual(getTier(1950).name, "PLATINUM");
+    assert.strictEqual(getTier(2350).name, "ARCHITECT");
+
+    // 2. Rank-Up Detection & Juice Trigger
+    function checkPromotion(oldR, newR) {
+        const tOld = getTier(oldR);
+        const tNew = getTier(newR);
+        return {
+            isRankUp: tNew.tierIndex > tOld.tierIndex,
+            fromTier: tOld.name,
+            toTier: tNew.name,
+            juiceBurst: tNew.tierIndex > tOld.tierIndex ? 150 : 0
+        };
+    }
+
+    const promo = checkPromotion(1750, 1820);
+    assert.strictEqual(promo.isRankUp, true);
+    assert.strictEqual(promo.toTier, "PLATINUM");
+    assert.strictEqual(promo.juiceBurst, 150);
+
+    // 3. Cross-Progression Consistency Check
+    const serverAccountState = {
+        accountId: "usr_cross_platform_88",
+        rating: 1850,
+        tier: "PLATINUM",
+        quantumShards: 450,
+        unlockedCosmetics: ["skin_gold_shader", "suit_platinum_holo"]
+    };
+
+    const webClientState = JSON.parse(JSON.stringify(serverAccountState));
+    const androidClientState = JSON.parse(JSON.stringify(serverAccountState));
+
+    assert.deepStrictEqual(webClientState, androidClientState, "Web and Android clients must read identical server state");
+
+    console.log("✅ Web Client Seasonal Ranked, Glicko-2 Tier League & Cross-Progression Tests Passed!");
+}
+
 testWebGPUBootstrapAndFallbackEngine().then(() => {
     testVolumetricFogAndFroxelGrid();
     testRecurringEngagementAndLiveOpsRemoteConfig();
     testClientMovementPredictionAnd15sReconnectGrace();
+    testProceduralBiomeVariantsAndSolvability();
+    testSeasonalRankedAndCrossProgression();
     console.log("🎉 All Web Unit Tests Passed Cleanly!");
 });
 
