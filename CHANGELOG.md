@@ -8,6 +8,22 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- **6-Biome Procedural Variant & Mathematical Solvability Engine** (`ProceduralVariantEngine.js`, `ProceduralVariantClient.js`, `ProceduralBiomeVariantGenerator.cs`, `ProceduralVariantTests.cs`, `proceduralVariant.test.js`)
+  - Deterministic Mulberry32 PRNG ensuring bit-exact replayability across client and server.
+  - Per-biome mathematical difficulty envelopes for linear regressions, classification shapes, polynomials, decision splits, XOR manifolds, and semantic embeddings.
+  - Closed-form analytical OLS and class separability validator with automatic re-seeding to ensure no generated dataset has an unreachable target loss.
+  - 3 distinct attack patterns and modulated stat profiles per boss.
+  - Deterministic Poisson-disc scattering layout variations for foliage, rocks, and landmarks while respecting exclusion zones.
+  - Synchronized UTC Daily Seed mode (`DAILY-YYYYMMDD`) feeding directly into global daily challenges.
+
+- **Seasonal Ranked League, Glicko-2 Tier Progression & Cross-Platform System** (`SeasonalRankedEngine.js`, `SeasonalRankedClient.js`, `SeasonalRankedManager.cs`, `seasonalRanked.test.js`, `20260821_create_seasonal_ranked.sql`)
+  - 5-Tier competitive rank league (Bronze, Silver, Gold, Platinum, Architect) with dynamic Glicko-2 MMR rating updates.
+  - Visible rank-up Juice moments with 4-frame hit-stop, camera shake, 150 GPU particles, dual-motor haptic pulse, and fanfare audio.
+  - 6-week standardized season lifecycle with soft MMR reset (regression toward 1500 mean) avoiding hard wipes.
+  - End-of-season cosmetic/title reward disbursement via Supabase account profiles.
+  - 100% cross-progression parity between Web PWA and Unity Android clients accessing the identical server state.
+  - Permanent historical Top 100 season leaderboard snapshot archiving.
+
 - **Lightweight, Privacy-Conscious Event Analytics Pipeline** (`ProductAnalyticsManager.cs`, `AnalyticsSDK.js`, `AnalyticsIngestEngine.js`, `20260819_create_analytics_events.sql`)
   - Cross-platform client SDKs emitting structured events for session start/end, FTUE step completion, biome entry/exit, boss encounters, duels, rewards, and unhandled exception crashes.
   - Zero-PII sanitization and guest session anonymization with GDPR/opt-out compliance.
