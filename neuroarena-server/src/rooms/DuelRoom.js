@@ -137,6 +137,14 @@ class DuelRoom extends Room {
             }
         });
 
+        // Authoritative Room-Type Guard: Reject any adaptive coaching/hint requests in competitive Duels
+        this.onMessage("request_coaching_hint", (client) => {
+            client.send("coaching_error", {
+                error: "ADAPTIVE_COACHING_FORBIDDEN_IN_RANKED",
+                message: "Coaching hints and adaptive difficulty are strictly disabled in competitive Duels."
+            });
+        });
+
         console.log(`[DuelRoom] Created 1v1 private duel room ${this.roomId}. Hidden test samples: ${this.hiddenTestSet.length}`);
     }
 

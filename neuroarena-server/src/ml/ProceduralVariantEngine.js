@@ -285,21 +285,31 @@ class ProceduralVariantEngine {
   /**
    * Generates a complete procedural variant for a given biome and seed.
    * Enforces server-side mathematical solvability validation and automatic re-seeding.
+   * Supports optional bounded adaptive modifiers for struggling players in single-player/practice.
    */
-  generateBiomeVariant(biomeIndex = 0, seedStr = "NEURO-8842", maxRetries = 10) {
+  generateBiomeVariant(biomeIndex = 0, seedStr = "NEURO-8842", maxRetries = 10, adaptiveModifiers = null) {
     const safeBiome = Math.max(0, Math.min(5, Number(biomeIndex) || 0));
     let currentSeed = seedStr || "NEURO-8842";
     let attempts = 0;
+
+    // Clamped modifiers
+    const mods = adaptiveModifiers ? {
+      noiseScaleMultiplier: Math.max(0.75, Math.min(1.0, Number(adaptiveModifiers.noiseScaleMultiplier) || 1.0)),
+      outlierScaleMultiplier: Math.max(0.70, Math.min(1.0, Number(adaptiveModifiers.outlierScaleMultiplier) || 1.0)),
+      bossHpMultiplier: Math.max(0.85, Math.min(1.0, Number(adaptiveModifiers.bossHpMultiplier) || 1.0)),
+      bossDamageMultiplier: Math.max(0.85, Math.min(1.0, Number(adaptiveModifiers.bossDamageMultiplier) || 1.0)),
+      targetLossRelaxation: Math.max(1.0, Math.min(1.20, Number(adaptiveModifiers.targetLossRelaxation) || 1.0))
+    } : null;
 
     while (attempts < maxRetries) {
       attempts++;
       const prng = new SeededPRNG(`${currentSeed}_B${safeBiome}`);
 
-      // 1. Generate Dataset Variant within Per-Biome Difficulty Envelope
-      const datasetVariant = this._generateDatasetForBiome(safeBiome, prng);
+      // 1. Generate Dataset Variant within Per-Biome Difficulty Envelope (incorporating adaptive modifiers if active)
+      const datasetVariant = this._generateDatasetForBiome(safeBiome, prng, mods);
 
       // 2. Mathematically Validate Dataset Solvability
-      const solvability = this._validateSolvability(safeBiome, datasetVariant);
+      const solvability = this._validateSolvability(safeBiome, datasetVariant, mods);
       if (!solvability.isSolvable) {
         // Unsolvable seed envelope: automatically iterate with deterministic retry salt
         currentSeed = `${currentSeed}_R${attempts}`;
@@ -307,7 +317,7 @@ class ProceduralVariantEngine {
       }
 
       // 3. Generate Boss Move-Set and Stat Variant
-      const bossVariant = this._generateBossVariant(safeBiome, prng);
+      const bossVariant = this._generateBossVariant(safeBiome, prng, mods);
 
       // 4. Generate Terrain & Prop Layout parameters using Poisson-disc specs
       const terrainVariant = this._generateTerrainLayout(safeBiome, prng);
@@ -323,6 +333,7 @@ class ProceduralVariantEngine {
         solvabilityCertificate: solvability,
         bossVariant,
         terrainVariant,
+        adaptiveModifiersApplied: mods,
         generatedAtUtc: new Date().toISOString()
       };
     }
@@ -333,15 +344,18 @@ class ProceduralVariantEngine {
   /**
    * 1. Per-Biome Difficulty Envelope & Dataset Generation
    */
-  _generateDatasetForBiome(biomeIndex, prng) {
+  _generateDatasetForBiome(biomeIndex, prng, mods = null) {
+    const noiseScale = mods ? mods.noiseScaleMultiplier : 1.0;
+    const outlierScale = mods ? mods.outlierScaleMultiplier : 1.0;
+
     switch (biomeIndex) {
       case 0: {
         // Biome 1: The Linear Steppes (1D Continuous Linear Regression)
         const sign = prng.next() > 0.4 ? 1 : -1;
         const slopeW = sign * prng.range(1.2, 3.5);
         const interceptB = prng.range(-2.5, 2.5);
-        const noiseLevel = prng.range(0.06, 0.18);
-        const outlierRate = prng.range(0.02, 0.06);
+        const noiseLevel = prng.range(0.06, 0.18) * noiseScale;
+        const outlierRate = prng.range(0.02, 0.06) * outlierScale;
         const sampleCount = prng.int(28, 42);
 
         const samples = [];
@@ -431,7 +445,7 @@ class ProceduralVariantEngine {
         const c1 = prng.range(-2.0, 2.0);
         const c2 = prng.range(-0.8, 0.8);
         const c3 = polyDegree === 3 ? prng.range(-0.25, 0.25) : 0;
-        const noiseLevel = prng.range(0.12, 0.25);
+        const noiseLevel = prng.range(0.12, 0.25) * noiseScale;
         const sampleCount = prng.int(30, 44);
 
         const samples = [];
@@ -559,8 +573,9 @@ class ProceduralVariantEngine {
    * 2. Mathematical Solvability Validator
    * Analytically proves that the target loss/accuracy is mathematically reachable.
    */
-  _validateSolvability(biomeIndex, datasetVariant) {
+  _validateSolvability(biomeIndex, datasetVariant, mods = null) {
     const { samples } = datasetVariant;
+    const lossRelaxation = mods ? mods.targetLossRelaxation : 1.0;
 
     switch (biomeIndex) {
       case 0: {
@@ -590,9 +605,9 @@ class ProceduralVariantEngine {
         }
         mse /= inliers.length;
 
-        // Solvability requirement: Theoretical inlier MSE must be <= 0.05
-        const targetMseThreshold = Math.max(0.04, Number((mse * 1.5).toFixed(4)));
-        const isSolvable = mse <= 0.05;
+        // Solvability requirement: Theoretical inlier MSE must be <= 0.05 * lossRelaxation
+        const targetMseThreshold = Math.max(0.04, Number((mse * 1.5 * lossRelaxation).toFixed(4)));
+        const isSolvable = mse <= (0.05 * lossRelaxation);
 
         return {
           isSolvable,
@@ -607,11 +622,11 @@ class ProceduralVariantEngine {
         // Biome 2: Minimum achievable classification accuracy >= 90%
         const nonOverlap = samples.filter(s => !s.isOverlap);
         const accuracy = nonOverlap.length / samples.length;
-        const isSolvable = accuracy >= 0.90;
+        const isSolvable = accuracy >= (0.90 / lossRelaxation);
         return {
           isSolvable,
           theoreticalAccuracy: Number(accuracy.toFixed(4)),
-          targetAccuracyThreshold: 0.90,
+          targetAccuracyThreshold: Number((0.90 / lossRelaxation).toFixed(3)),
           metric: "ACCURACY"
         };
       }
@@ -621,7 +636,7 @@ class ProceduralVariantEngine {
         return {
           isSolvable: true,
           theoreticalMinMse: 0.035,
-          targetMseThreshold: 0.05,
+          targetMseThreshold: Number((0.05 * lossRelaxation).toFixed(4)),
           metric: "MSE"
         };
       }
@@ -632,7 +647,7 @@ class ProceduralVariantEngine {
       default: {
         return {
           isSolvable: true,
-          targetLossThreshold: 0.08,
+          targetLossThreshold: Number((0.08 * lossRelaxation).toFixed(4)),
           metric: "GENERAL_CONVERGENCE"
         };
       }
@@ -642,9 +657,12 @@ class ProceduralVariantEngine {
   /**
    * 3. Boss Move-Set & Stat Variant Selection
    */
-  _generateBossVariant(biomeIndex, prng) {
+  _generateBossVariant(biomeIndex, prng, mods = null) {
     const bossDef = this.bossDefinitions[biomeIndex];
     const moveSet = prng.choice(bossDef.moveSets);
+
+    const hpMultiplier = mods ? mods.bossHpMultiplier : 1.0;
+    const damageMultiplier = mods ? mods.bossDamageMultiplier : 1.0;
 
     // Stat modulation (+- 10-15%)
     const hpDelta = prng.range(-0.10, 0.15);
@@ -654,8 +672,8 @@ class ProceduralVariantEngine {
     return {
       bossId: bossDef.bossId,
       bossName: bossDef.bossName,
-      maxHp: Math.round(bossDef.baseHp * (1 + hpDelta)),
-      attackDamage: Math.round(bossDef.baseDamage * (1 + damageDelta)),
+      maxHp: Math.round(bossDef.baseHp * (1 + hpDelta) * hpMultiplier),
+      attackDamage: Math.round(bossDef.baseDamage * (1 + damageDelta) * damageMultiplier),
       enrageTimerSec: bossDef.baseEnrageSec + enrageDelta,
       selectedMoveSet: {
         variantId: moveSet.variantId,

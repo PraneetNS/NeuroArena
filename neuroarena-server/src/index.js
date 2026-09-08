@@ -23,6 +23,7 @@ const { metrics } = require("./metrics");
 const { analyticsIngestEngine } = require("./telemetry/AnalyticsIngestEngine");
 const { ProceduralVariantEngine } = require("./ml/ProceduralVariantEngine");
 const { SeasonalRankedEngine } = require("./engagement/SeasonalRankedEngine");
+const { AdaptiveCoachingEngine } = require("./ml/AdaptiveCoachingEngine");
 
 const rateLimiter = new TokenBucketRateLimiter(120, 60); // 120 bucket capacity, 60/sec refill
 const sessionManager = new SessionManager();
@@ -31,6 +32,7 @@ const engagementManager = new RecurringEngagementManager(redisConfig);
 const guildEngine = new GuildEngine({ weeklyObjectiveEngine: engagementManager.weeklyGuildEngine });
 const proceduralEngine = new ProceduralVariantEngine();
 const rankedEngine = new SeasonalRankedEngine(redisConfig);
+const adaptiveCoachingEngine = new AdaptiveCoachingEngine();
 
 // Ingress Rate Limiter Middleware
 app.use((req, res, next) => {
@@ -380,6 +382,79 @@ app.post("/api/ranked/match", async (req, res) => {
     }
 });
 
+// 12. Adaptive Difficulty & Coaching Layer APIs (Single-Player/Practice Only)
+app.post("/api/coaching/signal", (req, res) => {
+    try {
+        const { playerId, biomeIndex, signalType, metadata, roomType, isRanked } = req.body;
+        const profile = adaptiveCoachingEngine.recordTelemetrySignal(
+            playerId,
+            biomeIndex,
+            signalType,
+            metadata,
+            roomType,
+            isRanked
+        );
+        res.json({ success: true, profile });
+    } catch (err) {
+        const status = err.code === "FORBIDDEN_IN_RANKED" ? 403 : 400;
+        res.status(status).json({ success: false, error: err.message, code: err.code });
+    }
+});
+
+app.post("/api/coaching/adaptive-variant/:biomeIndex", (req, res) => {
+    try {
+        const biomeIndex = parseInt(req.params.biomeIndex, 10) || 0;
+        const { playerId, seed, roomType, isRanked, runId } = req.body || {};
+        const envelope = adaptiveCoachingEngine.computeAdaptiveEnvelope(playerId, biomeIndex, {
+            roomType,
+            isRanked,
+            runId
+        });
+        const variantSeed = seed || proceduralEngine.getDailySeed();
+        const variant = proceduralEngine.generateBiomeVariant(
+            biomeIndex,
+            variantSeed,
+            10,
+            envelope.modifiers
+        );
+        res.json({
+            success: true,
+            adaptation: envelope,
+            variant
+        });
+    } catch (err) {
+        const status = err.code === "FORBIDDEN_IN_RANKED" ? 403 : 400;
+        res.status(status).json({ success: false, error: err.message, code: err.code });
+    }
+});
+
+app.post("/api/coaching/hint", (req, res) => {
+    try {
+        const { playerId, biomeIndex, optIn, roomType, isRanked } = req.body || {};
+        const hintResult = adaptiveCoachingEngine.getCoachingHint(
+            playerId,
+            biomeIndex,
+            optIn === true,
+            { roomType, isRanked }
+        );
+        res.json({ success: true, ...hintResult });
+    } catch (err) {
+        const status = err.code === "FORBIDDEN_IN_RANKED" ? 403 : 400;
+        res.status(status).json({ success: false, error: err.message, code: err.code });
+    }
+});
+
+app.get("/api/coaching/transparency/:playerId", (req, res) => {
+    try {
+        const { playerId } = req.params;
+        const runId = req.query.runId || null;
+        const auditLog = adaptiveCoachingEngine.getTransparencyAuditLog(playerId, runId);
+        res.json({ success: true, playerId, auditLog });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // 2. Attach Colyseus WebSocket Server
 const server = http.createServer(app);
 const gameServer = new Server({
@@ -434,5 +509,8 @@ module.exports = {
     engagementManager,
     guildEngine,
     metrics,
-    analyticsIngestEngine
+    analyticsIngestEngine,
+    proceduralEngine,
+    rankedEngine,
+    adaptiveCoachingEngine
 };
