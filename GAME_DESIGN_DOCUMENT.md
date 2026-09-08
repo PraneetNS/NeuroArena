@@ -410,3 +410,21 @@ public struct MatrixMultiplyJob : IJobParallelFor
 | **3** | **Variance Tundra** | Bias/Variance & Regularization | Train/Val Echoes, L1/L2 Runes, Poly Catalysts | $J_{\text{Ridge}} = \text{MSE} + \frac{\lambda}{2m}\sum w_j^2$ | **Phantom Wyrm** (Penalize wild polynomial spikes in blizzard) |
 | **4** | **Branching Canopy** | Decision Trees & Ensembles | Feature Trunks, Gini Sap, Shannon Amber, Shears | $IG(S,A) = H(S) - \sum \frac{\|S_v\|}{\|S\|} H(S_v)$ | **Dendrite Hydra** (Max-IG splits & pruning depth) |
 | **5** | **Deep Synapse Citadel** | Multilayer Perceptron & Backprop | Synaptic Filaments, Activation Runes, Chain Catalysts | $\delta^{[1]} = (W^{[2]T}\delta^{[2]})\odot \text{ReLU}'(Z^{[1]})$, $dW^{[1]} = \frac{1}{m}\delta^{[1]}X^T$ | **XOR Leviathan** (2-Layer MLP warps non-linear spiral barrier) |
+| **6** | **The Semantic Expanse** | Word Embeddings & PPMI | Semantic Runes, Vector Tokens, Constellation Gems | $\text{PMI}(u,v) = \log_2 \frac{P(u,v)}{P(u)P(v)}$, $\text{sim}(u,v) = \frac{u \cdot v}{\|u\|\|v\|}$ | **The High-Dimensional Void** (Vector Analogy Constellations) |
+
+---
+
+## 7. Seasonal Ranked League & Cross-Progression
+- **5-Tier Ladder:** Bronze (0-999), Silver (1000-1399), Gold (1400-1799), Platinum (1800-2199), Architect (2200+).
+- **Juice Presentation on Rank-Up:** 4-frame unscaled hit-stop, 0.50 camera shake, 150 gold/cyan GPU particle burst, and grand fanfare stinger.
+- **Season Rollover & Soft MMR Reset:** 6-week seasons with soft MMR regression: $\text{MMR} \leftarrow 1500 + (\text{MMR} - 1500) \times 0.65$.
+- **Cross-Progression:** Unified Supabase/Redis backend ensures instant MMR and cosmetic consistency between Web PWA and Unity Android.
+
+---
+
+## 8. 6-Biome Procedural Variant System
+- **Deterministic Seeded PRNG:** Bit-exact 32-bit Mulberry32 seed reproducibility.
+- **Mathematical Solvability Bounds:** Closed-form OLS proof verifies candidate datasets never present unreachable losses.
+- **3 Boss Move-Sets Per Biome:** Dynamic attack sequences and modulated stats.
+- **Poisson-Disc Terrain Scattering:** Reuses Bridson's 2D sampling for terrain layouts with spawn exclusion zones.
+- **Daily Seed Mode:** Synchronizes global players to `DAILY-YYYYMMDD` challenge variants.
