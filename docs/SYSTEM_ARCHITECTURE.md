@@ -53,3 +53,18 @@
 - **Schema v3 Save Compatibility Protection**: Strict validation engine rejects invalid balance changes (negative multipliers, out-of-range boss HP, corrupted types) before publishing to prevent corrupting player save files.
 - **Client 5-Min TTL Caching & Last-Known-Good Fallback**: Unity (`RemoteConfigManager.cs`) and Web (`RemoteConfigClient.js`) cache balance configurations in `PlayerPrefs`/`localStorage` with seamless offline and network failure fallback.
 
+### 2.6 Procedural Biome Variant & Mathematical Solvability Engine
+- **Seeded Difficulty Envelopes (6 Biomes)**: Generates slope/intercept bounds, classification boundary shapes, polynomial degrees, and noise rates without making datasets unsolvable.
+- **Analytical Solvability Validator & Auto-Reseeding**: Uses closed-form OLS and class separability checks to verify that candidate datasets achieve reachable loss before serving to players.
+- **Boss Move-Set Variations**: Selects from 3 distinct attack patterns and modulated stat profiles per boss based on seed.
+- **Poisson-Disc Terrain Layout Variation**: Reuses `PoissonDiscSampler` with deterministic seeds to vary foliage, rocks, and landmark rotations while respecting spawn exclusion zones.
+- **Daily Seed Mode**: Synchronizes all players globally to `DAILY-YYYYMMDD` challenges.
+
+### 2.7 Seasonal Ranked League & Cross-Platform Progression
+- **5-Tier Competitive League**: Bronze -> Silver -> Gold -> Platinum -> Architect based on Glicko-2 MMR.
+- **Visible Rank-Up Juice Presentations**: Emits high-impact hit-stop (65ms), camera shake (0.50), 150 GPU particles, and fanfare audio.
+- **6-Week Season Cadence & Soft MMR Reset**: Regresses player rating toward mean (`1500 + (rating - 1500) * 0.65`) at season rollover without hard wipes.
+- **End-of-Season Reward Disbursement**: Automatically grants cosmetic unlocks, title badges, and quantum shards to player accounts.
+- **Historical Season Top 100 Archival**: Immutable snapshots stored in Supabase `seasonal_leaderboard_archives` and Redis.
+- **100% Cross-Progression Parity**: Unity Android and Web PWA clients access the identical account state, MMR, guild status, and inventory.
+
