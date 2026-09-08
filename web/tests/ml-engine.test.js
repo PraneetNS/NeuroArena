@@ -2282,12 +2282,84 @@ function testSeasonalRankedAndCrossProgression() {
     console.log("✅ Web Client Seasonal Ranked, Glicko-2 Tier League & Cross-Progression Tests Passed!");
 }
 
-testWebGPUBootstrapAndFallbackEngine().then(() => {
+async function testAdaptiveDifficultyAndCoachingLayer() {
+    console.log("▶ Testing Web Client Adaptive Difficulty, Opt-In Coaching & Transparency Engine...");
+    const { AdaptiveCoachingClient } = require("../src/ml/AdaptiveCoachingClient");
+
+    const client = new AdaptiveCoachingClient();
+    const playerId = "web_user_struggle_772";
+    const biomeIndex = 2; // Biome 3: Variance Tundra
+
+    // 1. Initial State: Unadapted baseline
+    const initialEnv = await client.getAdaptiveEnvelope(playerId, biomeIndex, "practice", false);
+    assert.strictEqual(initialEnv.isAdapted, false);
+    assert.strictEqual(initialEnv.modifiers.noiseScaleMultiplier, 1.0);
+    assert.strictEqual(initialEnv.modifiers.bossHpMultiplier, 1.0);
+
+    // 2. Struggle Tracking: 3x boss failures + overfitting alert
+    await client.recordStruggleSignal(playerId, biomeIndex, "BOSS_ATTEMPT_FAILED", {}, "practice", false);
+    await client.recordStruggleSignal(playerId, biomeIndex, "BOSS_ATTEMPT_FAILED", {}, "practice", false);
+    await client.recordStruggleSignal(playerId, biomeIndex, "BOSS_ATTEMPT_FAILED", {}, "practice", false);
+    await client.recordStruggleSignal(playerId, biomeIndex, "OVERFITTING_ALERT", {}, "practice", false);
+
+    assert.strictEqual(client.localStruggleState.consecutiveBossFailures[biomeIndex], 3);
+    assert.strictEqual(client.localStruggleState.overfittingAlertCount, 1);
+
+    // 3. Bounded Envelope Calculation
+    const adaptedEnv = await client.getAdaptiveEnvelope(playerId, biomeIndex, "practice", false, "RUN_WEB_001");
+    assert.strictEqual(adaptedEnv.isAdapted, true);
+    assert.ok(adaptedEnv.modifiers.noiseScaleMultiplier <= 0.95);
+    assert.ok(adaptedEnv.modifiers.noiseScaleMultiplier >= 0.75);
+    assert.ok(adaptedEnv.modifiers.bossHpMultiplier <= 0.96);
+    assert.ok(adaptedEnv.modifiers.bossHpMultiplier >= 0.85);
+    assert.ok(adaptedEnv.reasons.some(r => r.includes("STUCK_ON_BOSS_3X")));
+
+    // 4. Hard Bounds Clamp (20 failures)
+    for (let i = 0; i < 17; i++) {
+        await client.recordStruggleSignal(playerId, biomeIndex, "BOSS_ATTEMPT_FAILED", {}, "practice", false);
+    }
+    const extremeEnv = await client.getAdaptiveEnvelope(playerId, biomeIndex, "practice", false);
+    assert.strictEqual(extremeEnv.modifiers.noiseScaleMultiplier, 0.75, "Must clamp to 0.75 floor");
+    assert.strictEqual(extremeEnv.modifiers.outlierScaleMultiplier, 0.70, "Must clamp to 0.70 floor");
+    assert.strictEqual(extremeEnv.modifiers.bossHpMultiplier, 0.85, "Must clamp to 0.85 floor");
+
+    // 5. Opt-In Coaching Escalation (No Spoilers)
+    const hintOffer = await client.requestCoachingHint(playerId, biomeIndex, false, "practice", false);
+    assert.strictEqual(hintOffer.isAvailable, true);
+    assert.strictEqual(hintOffer.optedIn, false);
+    assert.strictEqual(hintOffer.hintText, undefined, "Hint text must remain hidden before opt-in");
+
+    const hintUnlocked = await client.requestCoachingHint(playerId, biomeIndex, true, "practice", false);
+    assert.strictEqual(hintUnlocked.isAvailable, true);
+    assert.strictEqual(hintUnlocked.optedIn, true);
+    assert.strictEqual(hintUnlocked.category, "REGULARIZATION");
+    assert.strictEqual(hintUnlocked.isAnswerSpoiled, false);
+    assert.ok(hintUnlocked.hintText.includes("L2 regularization"));
+
+    // 6. Transparency Audit Log ("Why was this run easier?")
+    const auditLogs = await client.getTransparencyAuditLog(playerId);
+    assert.ok(auditLogs.length > 0);
+    assert.ok(auditLogs[0].explanation.includes("Difficulty envelope adjusted"));
+
+    // 7. Strict Room-Type Guard: Rejection in Duel and Ranked
+    assert.throws(() => {
+        client.assertRoomEligibility("duel_room", false);
+    }, /ADAPTIVE_COACHING_FORBIDDEN_IN_RANKED/);
+
+    assert.throws(() => {
+        client.assertRoomEligibility("practice", true);
+    }, /ADAPTIVE_COACHING_FORBIDDEN_IN_RANKED/);
+
+    console.log("✅ Web Client Adaptive Difficulty, Opt-In Coaching & Transparency Engine Tests Passed!");
+}
+
+testWebGPUBootstrapAndFallbackEngine().then(async () => {
     testVolumetricFogAndFroxelGrid();
     testRecurringEngagementAndLiveOpsRemoteConfig();
     testClientMovementPredictionAnd15sReconnectGrace();
     testProceduralBiomeVariantsAndSolvability();
     testSeasonalRankedAndCrossProgression();
+    await testAdaptiveDifficultyAndCoachingLayer();
     console.log("🎉 All Web Unit Tests Passed Cleanly!");
 });
 
