@@ -2187,3 +2187,19 @@ button:active {
     font-size: 12px;
 }
 
+/* Seasonal Rank-Up Banner Toast */
+.rank-up-banner-toast {
+    animation: rankUpPop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes rankUpPop {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -20px) scale(0.85);
+    }
+    100% {
+        opacity: 1;
+        transform: translate(-50%, 0) scale(1);
+    }
+}
+
