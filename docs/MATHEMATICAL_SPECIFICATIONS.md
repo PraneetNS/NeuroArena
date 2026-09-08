@@ -44,3 +44,20 @@ This document outlines the pure mathematical formulas and update rules implement
 - **Pointwise Mutual Information (PMI):** $\text{PMI}(u, v) = \log_2 \left( \frac{P(u, v)}{P(u) P(v)} \right)$
 - **Positive PMI:** $\text{PPMI}(u, v) = \max(0, \text{PMI}(u, v))$
 - **Cosine Similarity:** $\text{sim}(u, v) = \frac{u \cdot v}{\|u\| \|v\|}$
+
+---
+
+## 7. Procedural Dataset OLS Solvability Proof
+For any generated 1D linear regression dataset $\{ (x_i, y_i) \}_{i=1}^N$, the analytical closed-form Ordinary Least Squares solution is:
+$$w^* = \frac{\sum_{i=1}^N (x_i - \bar{x})(y_i - \bar{y})}{\sum_{i=1}^N (x_i - \bar{x})^2}, \quad b^* = \bar{y} - w^*\bar{x}$$
+Theoretical minimal clean MSE is:
+$$\text{MSE}_{\min} = \frac{1}{N_{\text{inliers}}} \sum_{i \in \text{inliers}} (w^* x_i + b^* - y_i)^2 \le 0.05$$
+
+---
+
+## 8. Glicko-2 Skill-Based Rating System
+- **Scale Conversion:** $\mu = \frac{r - 1500}{173.7178}, \quad \phi = \frac{\text{RD}}{173.7178}$
+- **Impact Factor:** $g(\phi) = \frac{1}{\sqrt{1 + 3\phi^2 / \pi^2}}$
+- **Expected Outcome:** $E(\mu, \mu_j, \phi_j) = \frac{1}{1 + \exp(-g(\phi_j)(\mu - \mu_j))}$
+- **Estimated Variance:** $v = \left[ \sum_{j} g(\phi_j)^2 E(1 - E) \right]^{-1}$
+- **Seasonal Soft Reset:** $r_{\text{new}} = \text{round}\Big(1500 + (r_{\text{old}} - 1500) \times 0.65\Big)$
