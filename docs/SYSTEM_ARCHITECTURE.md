@@ -68,3 +68,11 @@
 - **Historical Season Top 100 Archival**: Immutable snapshots stored in Supabase `seasonal_leaderboard_archives` and Redis.
 - **100% Cross-Progression Parity**: Unity Android and Web PWA clients access the identical account state, MMR, guild status, and inventory.
 
+### 2.8 2-4 Player Collaborative Co-op Rooms & ML Dataset Health Mechanics
+- **CoopRoom Colyseus State Sync**: Synchronizes 2-4 players with live pooled empirical dataset metrics, multi-partition domain coverage, and real-time blind spot analysis.
+- **Genuine ML Collaboration**: Players cover complementary domain sectors ($P_1$: Sector Alpha through $P_4$: Sector Delta). Low coverage ($<40\%$) causes high extrapolation error; high coverage ($>90\%$) unlocks 100% boss damage capacity.
+- **Non-Linear Party Scaling**: Sub-linear difficulty curve derived from mathematical envelope ($N=2 \to 1.65\times\text{ HP}$, $N=3 \to 2.25\times\text{ HP}$, $N=4 \to 2.80\times\text{ HP}$) rather than flat damage stacking.
+- **Tactical Non-Verbal Ping System**: Real-time spatial/domain pings (`HARVEST_HERE`, `COVERAGE_GAP`, `OUTLIER_ALERT`, `BOSS_HAZARD`, `ASSEMBLE_TRAIN`) paired with dual-motor tactile haptic profiles.
+- **Server-Authoritative Equal Reward Ledger**: Evaluates collective model fits against secret server hidden test sets and deposits equal shares with an immutable ledger ID (`SERVER_AUTHORITATIVE_EQUAL_SPLIT`), eliminating ninja looting.
+
+
