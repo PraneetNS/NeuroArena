@@ -71,7 +71,7 @@ namespace NeuroArena.ML
         public static void AssertRoomEligibility(string roomType, bool isRanked)
         {
             string norm = (roomType ?? "").ToLower().Trim();
-            if (norm == "duel_room" || norm == "duel" || isRanked || norm == "ranked" || norm == "ranked_coop")
+            if (norm == "duel_room" || norm == "duel" || isRanked || norm == "ranked" || norm == "ranked_coop" || norm == "coop_room" || norm == "coop")
             {
                 throw new InvalidOperationException("ADAPTIVE_COACHING_FORBIDDEN_IN_RANKED");
             }
