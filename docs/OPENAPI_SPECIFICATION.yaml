@@ -28,6 +28,62 @@ paths:
       responses:
         '200':
           description: Top players sorted by ELO
+  /api/ranked/profile:
+    get:
+      summary: Retrieve unified cross-platform player ranked profile and season metadata
+      parameters:
+        - name: accountId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: name
+          in: query
+          schema:
+            type: string
+        - name: build
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Ranked profile and active season details
+  /api/ranked/match:
+    post:
+      summary: Process authoritative ranked 1v1 match outcome with Glicko-2 updates
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [playerA, playerB, outcomeScoreA]
+              properties:
+                playerA:
+                  type: object
+                playerB:
+                  type: object
+                outcomeScoreA:
+                  type: number
+      responses:
+        '200':
+          description: Updated ratings, tier transitions, and Juice moment payloads
+  /api/ranked/rollover:
+    post:
+      summary: Trigger season rollover with soft MMR reset and rewards disbursement
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nextSeasonId:
+                  type: string
+                nextSeasonName:
+                  type: string
+      responses:
+        '200':
+          description: Rollover summary and top 100 snapshot archive snapshot payload
   /api/v1/cloudsave/{userId}:
     get:
       summary: Retrieve latest cloud save revision
