@@ -58,6 +58,25 @@ $$\text{MSE}_{\min} = \frac{1}{N_{\text{inliers}}} \sum_{i \in \text{inliers}} (
 ## 8. Glicko-2 Skill-Based Rating System
 - **Scale Conversion:** $\mu = \frac{r - 1500}{173.7178}, \quad \phi = \frac{\text{RD}}{173.7178}$
 - **Impact Factor:** $g(\phi) = \frac{1}{\sqrt{1 + 3\phi^2 / \pi^2}}$
-- **Expected Outcome:** $E(\mu, \mu_j, \phi_j) = \frac{1}{1 + \exp(-g(\phi_j)(\mu - \mu_j))}$
-- **Estimated Variance:** $v = \left[ \sum_{j} g(\phi_j)^2 E(1 - E) \right]^{-1}$
-- **Seasonal Soft Reset:** $r_{\text{new}} = \text{round}\Big(1500 + (r_{\text{old}} - 1500) \times 0.65\Big)$
+- **Expected Match Outcome:** $E(\mu, \mu_j, \phi_j) = \frac{1}{1 + \exp\left( -g(\phi_j)(\mu - \mu_j) \right)}$
+- **Seasonal Soft Reset Formula:**
+  $$\text{Rating}_{\text{new}} = \max\left(800, 1500 + (\text{Rating}_{\text{old}} - 1500) \times 0.65\right)$$
+
+---
+
+## 9. 2-4 Player Collaborative Dataset Health Scoring & Blind Spot Math
+- **Multi-Partition Domain Coverage:**
+  $$C_{\text{cov}} = \left( 0.50 \cdot \frac{K_{\text{sampled}}}{K_{\text{total}}} + 0.35 \cdot \frac{\text{Span}_{\text{actual}}}{\text{Span}_{\text{target}}} + 0.15 \cdot \min\left(1.0, \frac{N_{\text{total}}}{8 \cdot N_{\text{party}}}\right) \right) \times 100$$
+- **Extrapolation Error Penalty on Hidden Test Set:**
+  $$\text{MSE}_{\text{effective}} = \text{MSE}_{\text{raw}} \times \left(1 + \max(0, 70 - C_{\text{cov}}) \times 0.05\right)$$
+- **Boss Damage Scaling:**
+  $$\text{Damage} = \min\left(\text{HP}_{\text{boss}}, \text{HP}_{\text{boss}} \times \frac{\text{Accuracy}}{95} \times \text{HealthMultiplier}\right)$$
+
+---
+
+## 10. Non-Linear Party Difficulty Envelope Scaling
+- **Sub-Linear Boss HP Scaling ($N \in [2, 4]$):**
+  $$\text{HP}_{\text{scaled}}(N) = \text{HP}_{\text{base}} \times \left(1.0 + 0.65(N - 1)^{0.85}\right)$$
+  - $N=2 \implies 1.65\times\text{ HP}$
+  - $N=3 \implies 2.25\times\text{ HP}$
+  - $N=4 \implies 2.80\times\text{ HP}$
