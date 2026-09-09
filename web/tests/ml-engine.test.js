@@ -2353,6 +2353,101 @@ async function testAdaptiveDifficultyAndCoachingLayer() {
     console.log("✅ Web Client Adaptive Difficulty, Opt-In Coaching & Transparency Engine Tests Passed!");
 }
 
+async function testCoopRoomClientAndSharedDatasetCollaboration() {
+    console.log("▶ Testing Web Client 2-4 Player Co-op Room, Shared Dataset Health & Tactical Pings...");
+    const { CoopRoomClient } = require("../src/rooms/CoopRoomClient");
+    const { ProceduralVariantEngine } = require("../../neuroarena-server/src/ml/ProceduralVariantEngine");
+
+    const client = new CoopRoomClient("ws://localhost:2567");
+    assert.strictEqual(client.status, "idle");
+    assert.strictEqual(client.partySize, 4);
+
+    // 1. Difficulty Envelope Scaling (Party 2 vs Party 4)
+    const procEngine = new ProceduralVariantEngine();
+    const env2 = procEngine.getPartyDifficultyEnvelope(2, 0);
+    const env4 = procEngine.getPartyDifficultyEnvelope(4, 0);
+
+    assert.strictEqual(env2.bossHpMultiplier, 1.65);
+    assert.strictEqual(env4.bossHpMultiplier, 2.80);
+    assert.strictEqual(env2.partitions.length, 2);
+    assert.strictEqual(env4.partitions.length, 4);
+    assert.ok(env4.domainSpan.totalSpan > env2.domainSpan.totalSpan);
+
+    // 2. Ping Dispatch & Tactical Non-Verbal Communication
+    let pingReceived = null;
+    client.onPingReceived = (p) => { pingReceived = p; };
+
+    // Simulate incoming broadcast ping
+    client.handleMessage({
+        type: "player_ping",
+        pingType: "COVERAGE_GAP",
+        senderId: "p1",
+        senderName: "Ada-Lovelace",
+        domainX: -4.5,
+        targetPartition: 0,
+        hapticPulse: "MediumImpact",
+        textPrompt: "Watch coverage gap! Sample this feature boundary!"
+    });
+
+    assert.strictEqual(pingReceived.pingType, "COVERAGE_GAP");
+    assert.strictEqual(pingReceived.hapticPulse, "MediumImpact");
+    assert.strictEqual(pingReceived.domainX, -4.5);
+
+    // 3. Shared Dataset Health Metrics Updates
+    let metricsUpdated = null;
+    client.onMetricsChanged = (m) => { metricsUpdated = m; };
+
+    client.handleMessage({
+        type: "shared_dataset_updated",
+        totalSamples: 24,
+        metrics: {
+            coverageScore: 92,
+            balanceScore: 88,
+            cleanlinessScore: 95,
+            overallHealthScore: 91,
+            healthGrade: "EXCELLENT",
+            blindSpotsCount: 0
+        }
+    });
+
+    assert.strictEqual(metricsUpdated.overallHealthScore, 91);
+    assert.strictEqual(metricsUpdated.healthGrade, "EXCELLENT");
+    assert.strictEqual(metricsUpdated.blindSpotsCount, 0);
+
+    // 4. Results & Equal Reward Split Handling
+    let resultsReceived = null;
+    client.onResultsReceived = (r) => { resultsReceived = r; };
+
+    client.handleMessage({
+        type: "coop_results",
+        partySize: 4,
+        evaluation: {
+            teamAccuracy: 98.5,
+            datasetHealthScore: 91
+        },
+        bossOutcome: {
+            isDefeated: true
+        },
+        rewards: {
+            distributionMode: "SERVER_AUTHORITATIVE_EQUAL_SPLIT",
+            equalShareTokens: 950,
+            equalShareExp: 2375,
+            allocations: [
+                { sessionId: "p1", tokensAwarded: 950, isFlagged: false },
+                { sessionId: "p2", tokensAwarded: 950, isFlagged: false },
+                { sessionId: "p3", tokensAwarded: 950, isFlagged: false },
+                { sessionId: "p4", tokensAwarded: 950, isFlagged: false }
+            ]
+        }
+    });
+
+    assert.strictEqual(resultsReceived.bossOutcome.isDefeated, true);
+    assert.strictEqual(resultsReceived.rewards.distributionMode, "SERVER_AUTHORITATIVE_EQUAL_SPLIT");
+    assert.strictEqual(resultsReceived.rewards.allocations[0].tokensAwarded, resultsReceived.rewards.allocations[3].tokensAwarded);
+
+    console.log("✅ Web Client 2-4 Player Co-op Room, Shared Dataset Health & Tactical Pings Tests Passed!");
+}
+
 testWebGPUBootstrapAndFallbackEngine().then(async () => {
     testVolumetricFogAndFroxelGrid();
     testRecurringEngagementAndLiveOpsRemoteConfig();
@@ -2360,8 +2455,10 @@ testWebGPUBootstrapAndFallbackEngine().then(async () => {
     testProceduralBiomeVariantsAndSolvability();
     testSeasonalRankedAndCrossProgression();
     await testAdaptiveDifficultyAndCoachingLayer();
+    await testCoopRoomClientAndSharedDatasetCollaboration();
     console.log("🎉 All Web Unit Tests Passed Cleanly!");
 });
+
 
 
 
