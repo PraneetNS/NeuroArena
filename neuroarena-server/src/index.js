@@ -5,6 +5,7 @@ const { Server } = require("colyseus");
 const { WebSocketTransport } = require("@colyseus/ws-transport");
 const { ArenaRoom } = require("./rooms/ArenaRoom");
 const { DuelRoom } = require("./rooms/DuelRoom");
+const { CoopRoom } = require("./rooms/CoopRoom");
 const { MatchmakingRoom } = require("./rooms/MatchmakingRoom");
 
 const PORT = parseInt(process.env.PORT || "2567", 10);
@@ -63,7 +64,7 @@ app.get("/api/status", (req, res) => {
         service: "NeuroArena Real-Time Multiplayer State Relay",
         version: "2.0.0-prod",
         port: PORT,
-        rooms: ["arena_room", "duel_room", "matchmaking_room"],
+        rooms: ["arena_room", "duel_room", "coop_room", "matchmaking_room"],
         documentation: "https://github.com/PraneetNS/NeuroArena"
     });
 });
@@ -318,9 +319,10 @@ app.get("/api/procedural/variant/:biomeIndex", (req, res) => {
 });
 
 // 11. Seasonal Ranked League & Cross-Progression APIs
-app.get("/api/ranked/profile", async (req, res) => {
+app.get(["/api/ranked/profile", "/api/ranked/profile/:accountId"], async (req, res) => {
     try {
-        const { accountId, name, build } = req.query;
+        const accountId = req.params.accountId || req.query.accountId;
+        const { name, build } = req.query;
         if (!accountId) return res.status(400).json({ success: false, error: "MISSING_ACCOUNT_ID" });
         const profile = await rankedEngine.getPlayerProfile(accountId, name, build);
         const season = rankedEngine.getSeasonStatus();
@@ -463,9 +465,10 @@ const gameServer = new Server({
     })
 });
 
-// 3. Register Arena Multiplayer, 1v1 Live Duel & Matchmaking Queue Rooms
+// 3. Register Arena Multiplayer, 1v1 Live Duel, 2-4 Player Co-op & Matchmaking Queue Rooms
 gameServer.define("arena_room", ArenaRoom);
 gameServer.define("duel_room", DuelRoom).enableRealtimeListing();
+gameServer.define("coop_room", CoopRoom).enableRealtimeListing();
 gameServer.define("matchmaking_room", MatchmakingRoom);
 
 // Graceful Container Teardown / Drainage (Kubernetes SIGTERM)
@@ -495,7 +498,7 @@ server.listen(PORT, () => {
     console.log(`⚡ NEURO-ARENA MULTIPLAYER RELAY SERVER ACTIVE (1M SCALE READY)`);
     console.log(`🌐 Listening on ws://localhost:${PORT}`);
     console.log(`🩺 Healthcheck: http://localhost:${PORT}/health`);
-    console.log(`🚪 Defined Rooms: "arena_room", "duel_room" (1v1 Duels)`);
+    console.log(`🚪 Defined Rooms: "arena_room", "duel_room" (1v1 Duels), "coop_room" (2-4p Co-op)`);
     console.log("==================================================");
 });
 
