@@ -28,7 +28,7 @@ class AdaptiveCoachingEngine {
    */
   assertRoomEligibility(roomType = "practice", isRanked = false) {
     const normalizedType = String(roomType || "").toLowerCase();
-    if (normalizedType === "duel_room" || normalizedType === "duel" || isRanked === true || normalizedType === "ranked_coop" || normalizedType === "ranked") {
+    if (normalizedType === "duel_room" || normalizedType === "duel" || isRanked === true || normalizedType === "ranked_coop" || normalizedType === "ranked" || normalizedType === "coop_room" || normalizedType === "coop") {
       const err = new Error("ADAPTIVE_COACHING_FORBIDDEN_IN_RANKED");
       err.code = "FORBIDDEN_IN_RANKED";
       err.roomType = roomType;
