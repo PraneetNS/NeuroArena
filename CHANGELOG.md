@@ -8,6 +8,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- **2-4 Player Collaborative Co-op Room (`CoopRoom`)** (`CoopRoom.js`, `CoopRoomState.js`, `CoopRoomClient.js`, `coopRoom.test.js`, `ProceduralVariantEngine.js`)
+  - Server-authoritative 2-4 player collaborative multiplayer room mirroring `DuelRoom`'s resilient Colyseus network stack.
+  - Shared objective designed around genuine ML collaboration: domain is partitioned into complementary sectors ($N=2 \to 2$ partitions, $N=4 \to 4$ partitions). Combining datasets eliminates extrapolation blind spots and raises shared Dataset Health Score from critical ($<40\%$) to excellent ($>90\%$).
+  - Non-linear party difficulty envelope scaling: procedurally scales domain breadth ($[-4.5, 4.5]$ for 2P up to $[-6.5, 6.5]$ for 4P), noise/outlier envelope, boss HP ($1.65\times$ for 2P, $2.80\times$ for 4P), and multi-hazard movesets without flat damage stacking.
+  - Tactical non-verbal ping system (`HARVEST_HERE`, `COVERAGE_GAP`, `OUTLIER_ALERT`, `BOSS_HAZARD`, `ASSEMBLE_TRAIN`) with dual-motor haptic pulse integration (`LightTick`, `MediumImpact`, `HeavyRumble`, `SuccessBurst`).
+  - Authoritative hidden test set evaluation against the shared Boss and 100% equal server-authoritative reward distribution with audit ledger (anti ninja-looting).
+  - 15s mid-match disconnection grace window with authoritative state resynchronization.
+
 - **Real-Time Mathematical Narration Adaptive Difficulty & Opt-In Coaching Layer** (`AdaptiveCoachingEngine.js`, `AdaptiveCoachingClient.js`, `AdaptiveCoachingManager.cs`, `AdaptiveCoachingTests.cs`, `adaptiveCoaching.test.js`)
   - Telemetry struggle tracking: tracks repeated boss failures, overfitting alerts, and slow gradient descent plateaus to adjust generated procedural difficulty envelopes within strictly bounded ranges (noise $\in [0.75, 1.00]$, outliers $\in [0.70, 1.00]$, boss HP $\in [0.85, 1.00]$).
   - Anti-rubberbanding guarantee: datasets remain non-trivial, analytical solvability certificates are verified, and auto-wins are strictly prohibited.
