@@ -185,6 +185,14 @@ A dynamic commentary system converts live training telemetry into plain-English 
 - **Authoritative Verification:** At match conclusion, submitted weight matrices $(w, b)$ are scored simultaneously on the server against a **secret held-out test distribution of 50 samples** unknown to both clients.
 - **Zero-Trust Scoring:** Prevents client memory inspection or hardcoded target models.
 
+### 2-4 Player Collaborative Co-op Rooms (`CoopRoom`) & ML Dataset Health
+- **Genuine ML Collaboration:** Party members are assigned complementary domain partitions (e.g. Sector Alpha $x \in [-6.5, -3.25]$ through Sector Delta $x \in [3.25, 6.5]$).
+- **Dataset Health Score Mechanic:** Success requires covering each other's blind spots. Single-player harvesting suffers severe extrapolation risk (Coverage $<40\%$, Critical Health); coordinated multi-player harvesting achieves full domain coverage ($>90\%$, Excellent Health) and unlocks 100% boss damage capacity.
+- **Non-Linear Party Difficulty Envelope:** Scales procedural difficulty curve mathematically per party size ($N=2 \to 1.65\times\text{ HP}$, $N=3 \to 2.25\times\text{ HP}$, $N=4 \to 2.80\times\text{ HP}$ with multi-hazard movesets and expanded feature domains) rather than flat damage-stacking.
+- **Tactical Non-Verbal Ping System:** Players coordinate via real-time spatial/domain pings (`HARVEST_HERE`, `COVERAGE_GAP`, `OUTLIER_ALERT`, `BOSS_HAZARD`, `ASSEMBLE_TRAIN`) tied directly into dual-motor tactile haptic vibration profiles.
+- **Authoritative Equal Reward Split:** Server computes total pool from shared dataset health + hidden test accuracy + boss defeat and deposits equal shares with an immutable ledger audit trail (no ninja-looting).
+- **15s Reconnection Grace Window:** Mid-session disconnects allow 15 seconds for reconnection with authoritative state resync.
+
 ### 6-Biome Procedural Variant & Mathematical Solvability Engine
 - **Seeded Procedural Diversity:** No two runs of a biome present identical slope/intercept bounds, classification boundary shapes, polynomial degrees, or noise envelopes.
 - **Closed-Form Solvability Prover:** Analytically validates each candidate dataset (e.g. OLS fit $\text{MSE}_{\text{clean}} \le 0.05$) to guarantee target loss is reachable before presenting it to the player. Unsolvable seeds are automatically reseeded.
