@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: neuroarena-coop-service
+  namespace: neuroarena-prod
+  labels:
+    app: neuroarena-server
+    tier: coop-relay
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "2567"
+    prometheus.io/path: "/metrics"
+spec:
+  type: ClusterIP
+  ports:
+    - name: websocket-coop
+      port: 2567
+      targetPort: 2567
+      protocol: TCP
+  selector:
+    app: neuroarena-server
+    tier: multiplayer-relay
