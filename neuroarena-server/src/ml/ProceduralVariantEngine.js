@@ -707,6 +707,82 @@ class ProceduralVariantEngine {
       ]
     };
   }
+
+  /**
+   * 5. Party-Scaled Difficulty Envelope
+   * Computes non-linear, mathematically bounded difficulty scaling for 2-4 player co-op rooms.
+   */
+  getPartyDifficultyEnvelope(partySize = 2, biomeIndex = 0) {
+    const safeParty = Math.max(2, Math.min(4, Math.round(Number(partySize) || 2)));
+    const safeBiome = Math.max(0, Math.min(5, Number(biomeIndex) || 0));
+
+    // Mathematical difficulty envelope curves (sub-linear, not flat multiplier)
+    const envelopes = {
+      2: {
+        partySize: 2,
+        domainSpan: { minX: -4.5, maxX: 4.5, totalSpan: 9.0 },
+        partitions: [
+          { partitionIndex: 0, name: "Negative Domain Region", minX: -4.5, maxX: 0.0, targetRole: "Lower-Bound Extrapolation Guard" },
+          { partitionIndex: 1, name: "Positive Domain Region", minX: 0.0, maxX: 4.5, targetRole: "Upper-Bound Extrapolation Guard" }
+        ],
+        noiseScaleMultiplier: 1.10,
+        outlierScaleMultiplier: 1.15,
+        bossHpMultiplier: 1.65,
+        bossDamageMultiplier: 1.15,
+        enrageTimerSecOffset: -20,
+        requiredCoverageForMaxHealth: 70,
+        hazardRadiusMultiplier: 1.15,
+        rewardPoolMultiplier: 2.10
+      },
+      3: {
+        partySize: 3,
+        domainSpan: { minX: -5.5, maxX: 5.5, totalSpan: 11.0 },
+        partitions: [
+          { partitionIndex: 0, name: "Far-Left Domain Flank", minX: -5.5, maxX: -1.8, targetRole: "Negative Tail Coverage" },
+          { partitionIndex: 1, name: "Central Feature Spine", minX: -1.8, maxX: 1.8, targetRole: "Core Distribution Anchor" },
+          { partitionIndex: 2, name: "Far-Right Domain Flank", minX: 1.8, maxX: 5.5, targetRole: "Positive Tail Coverage" }
+        ],
+        noiseScaleMultiplier: 1.20,
+        outlierScaleMultiplier: 1.25,
+        bossHpMultiplier: 2.25,
+        bossDamageMultiplier: 1.25,
+        enrageTimerSecOffset: -30,
+        requiredCoverageForMaxHealth: 75,
+        hazardRadiusMultiplier: 1.30,
+        rewardPoolMultiplier: 3.25
+      },
+      4: {
+        partySize: 4,
+        domainSpan: { minX: -6.5, maxX: 6.5, totalSpan: 13.0 },
+        partitions: [
+          { partitionIndex: 0, name: "Sector Alpha (Deep Negative)", minX: -6.5, maxX: -3.25, targetRole: "Asymptotic Minima Harvester" },
+          { partitionIndex: 1, name: "Sector Beta (Mid Negative)", minX: -3.25, maxX: 0.0, targetRole: "Lower Gradient Balancer" },
+          { partitionIndex: 2, name: "Sector Gamma (Mid Positive)", minX: 0.0, maxX: 3.25, targetRole: "Upper Gradient Balancer" },
+          { partitionIndex: 3, name: "Sector Delta (Deep Positive)", minX: 3.25, maxX: 6.5, targetRole: "Asymptotic Maxima Harvester" }
+        ],
+        noiseScaleMultiplier: 1.30,
+        outlierScaleMultiplier: 1.35,
+        bossHpMultiplier: 2.80,
+        bossDamageMultiplier: 1.35,
+        enrageTimerSecOffset: -35,
+        requiredCoverageForMaxHealth: 80,
+        hazardRadiusMultiplier: 1.45,
+        rewardPoolMultiplier: 4.50
+      }
+    };
+
+    const envelope = envelopes[safeParty];
+    const bossDef = this.bossDefinitions[safeBiome];
+
+    return {
+      ...envelope,
+      biomeIndex: safeBiome,
+      biomeName: bossDef ? bossDef.biomeName : "Unknown Biome",
+      scaledBossHp: Math.round((bossDef ? bossDef.baseHp : 1000) * envelope.bossHpMultiplier),
+      scaledBossDamage: Math.round((bossDef ? bossDef.baseDamage : 50) * envelope.bossDamageMultiplier),
+      scaledEnrageTimerSec: Math.max(60, (bossDef ? bossDef.baseEnrageSec : 120) + envelope.enrageTimerSecOffset)
+    };
+  }
 }
 
 module.exports = {
