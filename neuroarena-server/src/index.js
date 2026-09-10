@@ -7,6 +7,8 @@ const { ArenaRoom } = require("./rooms/ArenaRoom");
 const { DuelRoom } = require("./rooms/DuelRoom");
 const { CoopRoom } = require("./rooms/CoopRoom");
 const { MatchmakingRoom } = require("./rooms/MatchmakingRoom");
+const { BotArenaRoom } = require("./rooms/BotArenaRoom");
+const { ClientContractEngine } = require("./ml/ClientContractEngine");
 
 const PORT = parseInt(process.env.PORT || "2567", 10);
 
@@ -34,6 +36,7 @@ const guildEngine = new GuildEngine({ weeklyObjectiveEngine: engagementManager.w
 const proceduralEngine = new ProceduralVariantEngine();
 const rankedEngine = new SeasonalRankedEngine(redisConfig);
 const adaptiveCoachingEngine = new AdaptiveCoachingEngine();
+const contractEngine = new ClientContractEngine();
 
 // Ingress Rate Limiter Middleware
 app.use((req, res, next) => {
@@ -457,6 +460,34 @@ app.get("/api/coaching/transparency/:playerId", (req, res) => {
     }
 });
 
+// 12. Corporate Client Freelance Contracts API
+app.get("/api/contracts", (req, res) => {
+    try {
+        const reputation = parseInt(req.query.reputation || "0", 10);
+        const contracts = contractEngine.getAvailableContracts(reputation);
+        res.json({ success: true, count: contracts.length, contracts });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.post("/api/contracts/submit", (req, res) => {
+    try {
+        const { contractId, achievedMetric, measuredLatencyMs, architecture } = req.body;
+        if (!contractId || achievedMetric === undefined || measuredLatencyMs === undefined) {
+            return res.status(400).json({ success: false, error: "Missing required submission fields" });
+        }
+        const result = contractEngine.evaluateSubmission(contractId, {
+            achievedMetric: parseFloat(achievedMetric),
+            measuredLatencyMs: parseFloat(measuredLatencyMs),
+            architecture: architecture || "NeuralNetwork"
+        });
+        res.json({ success: true, ...result });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // 2. Attach Colyseus WebSocket Server
 const server = http.createServer(app);
 const gameServer = new Server({
@@ -465,10 +496,11 @@ const gameServer = new Server({
     })
 });
 
-// 3. Register Arena Multiplayer, 1v1 Live Duel, 2-4 Player Co-op & Matchmaking Queue Rooms
+// 3. Register Arena Multiplayer, 1v1 Live Duel, 2-4 Player Co-op, Bot Arena & Matchmaking Queue Rooms
 gameServer.define("arena_room", ArenaRoom);
 gameServer.define("duel_room", DuelRoom).enableRealtimeListing();
 gameServer.define("coop_room", CoopRoom).enableRealtimeListing();
+gameServer.define("bot_arena_room", BotArenaRoom).enableRealtimeListing();
 gameServer.define("matchmaking_room", MatchmakingRoom);
 
 // Graceful Container Teardown / Drainage (Kubernetes SIGTERM)
@@ -515,5 +547,6 @@ module.exports = {
     analyticsIngestEngine,
     proceduralEngine,
     rankedEngine,
-    adaptiveCoachingEngine
+    adaptiveCoachingEngine,
+    contractEngine
 };
