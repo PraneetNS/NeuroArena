@@ -8,6 +8,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- **Freelance Corporate Client Contracts & SLA Marketplace (`ClientContractEngine.js`, `ClientContractClient.js`, `ClientContractManager.cs`, `clientContracts.test.js`)**
+  - Enterprise contract marketplace across 5 tiers (Startup Incubator, Biotech Research, FinTech Quant Lab, Autonomous Robotics, Deep Space AI).
+  - Strict SLA verification enforcing target architectures, accuracy/loss thresholds, and sub-millisecond inference latency ceilings.
+  - Performance bonus multipliers awarding up to $1.5\times$ credits for low-latency headroom and up to $1.3\times$ for metric accuracy outperformance.
+  - Corporate client reputation progression unlocking elite enterprise contracts and quantum shards.
+
+- **Autonomous Bot Policy Driving Arena (`BotArenaRoom.js`, `BotArenaRoomState.js`, `BotArenaPolicyEngine.js`, `BotArenaClient.js`, `AutonomousBotArena.cs`)**
+  - Colyseus real-time multi-agent battle arena for neural policy driving drones.
+  - 4-element raycast observation vectors (target direction, obstacle proximity, current speed) fed into 2-layer MLP policies (ReLU hidden, Tanh steer, Sigmoid throttle/brake).
+  - High-frequency 20Hz vehicle kinematics simulation with obstacle collision penalties, arena perimeter clamping, and competitive crystal harvesting leaderboards.
+
 - **2-4 Player Collaborative Co-op Room (`CoopRoom`)** (`CoopRoom.js`, `CoopRoomState.js`, `CoopRoomClient.js`, `coopRoom.test.js`, `ProceduralVariantEngine.js`)
   - Server-authoritative 2-4 player collaborative multiplayer room mirroring `DuelRoom`'s resilient Colyseus network stack.
   - Shared objective designed around genuine ML collaboration: domain is partitioned into complementary sectors ($N=2 \to 2$ partitions, $N=4 \to 4$ partitions). Combining datasets eliminates extrapolation blind spots and raises shared Dataset Health Score from critical ($<40\%$) to excellent ($>90\%$).

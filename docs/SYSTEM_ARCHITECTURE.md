@@ -75,4 +75,10 @@
 - **Tactical Non-Verbal Ping System**: Real-time spatial/domain pings (`HARVEST_HERE`, `COVERAGE_GAP`, `OUTLIER_ALERT`, `BOSS_HAZARD`, `ASSEMBLE_TRAIN`) paired with dual-motor tactile haptic profiles.
 - **Server-Authoritative Equal Reward Ledger**: Evaluates collective model fits against secret server hidden test sets and deposits equal shares with an immutable ledger ID (`SERVER_AUTHORITATIVE_EQUAL_SPLIT`), eliminating ninja looting.
 
+### 2.9 Corporate Client Contracts & Autonomous Bot Policy Arena
+- **Enterprise Contract SLA Marketplace**: Multi-tier freelance engineering contracts (Startup to Deep Space AI) with authoritative SLA verification on model architecture, convergence loss, accuracy, and sub-millisecond edge latency bounds.
+- **Dynamic SLA Performance Bonus Ledger**: Server evaluates latency headroom and metric margin to award up to $1.5\times$ credits and reputation bonuses.
+- **Autonomous Bot Policy Colyseus Arena (`BotArenaRoom`)**: 20Hz physics simulation running player-trained 2-layer MLP neural policies for raycast observation steering, throttle modulation, and obstacle avoidance.
+- **Cross-Platform Drone Kinematics**: Bit-exact parity between Unity C# (`AutonomousBotArena.cs`) and Web PWA client (`BotArenaClient.js`).
+
 
