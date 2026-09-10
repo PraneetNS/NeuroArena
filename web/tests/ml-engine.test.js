@@ -2448,6 +2448,60 @@ async function testCoopRoomClientAndSharedDatasetCollaboration() {
     console.log("✅ Web Client 2-4 Player Co-op Room, Shared Dataset Health & Tactical Pings Tests Passed!");
 }
 
+async function testWebClientContractsAndBotArena() {
+    console.log("▶ Testing Web Client Freelance Contracts, SLA Validation & Bot Arena Policy Driving...");
+
+    // 1. ClientContractClient Test
+    const { ClientContractClient } = await import("../src/contracts/ClientContractClient.js");
+    const contractClient = new ClientContractClient("http://mock-offline/api");
+
+    const contracts = await contractClient.fetchContracts();
+    assert.ok(contracts.length >= 3, "Contracts catalog should load at least 3 starter contracts");
+    assert.strictEqual(contracts[0].isUnlocked, true, "Tier 1 contract must be unlocked");
+
+    // Passing submission
+    const passResult = await contractClient.submitModelForContract("contract_startup_01", {
+        achievedMetric: 0.94,
+        measuredLatencyMs: 12.0,
+        architecture: "LogisticClassifier"
+    });
+    assert.strictEqual(passResult.passed, true, "Valid submission should pass");
+    assert.strictEqual(contractClient.reputation >= 25, true, "Reputation should increase after passing contract");
+
+    // Failing submission (breach latency)
+    const failLatency = await contractClient.submitModelForContract("contract_startup_01", {
+        achievedMetric: 0.95,
+        measuredLatencyMs: 25.0, // Max allowed is 18.0
+        architecture: "LogisticClassifier"
+    });
+    assert.strictEqual(failLatency.passed, false);
+    assert.strictEqual(failLatency.reason, "LATENCY_SLA_BREACH");
+
+    // 2. BotArenaClient Test
+    const { BotArenaClient } = await import("../src/rooms/BotArenaClient.js");
+    const botClient = new BotArenaClient("ws://mock-offline");
+    await botClient.joinBotArena("NeuralRacer");
+
+    assert.strictEqual(botClient.status, "active");
+    assert.strictEqual(botClient.bots.size, 1);
+
+    // Evaluate local neural policy
+    const obs = {
+        targetDeltaX: 8.0,
+        targetDeltaZ: 14.0,
+        obstacleProximity: 4.5,
+        currentSpeed: 3.5
+    };
+
+    const action = botClient.evaluateLocalPolicy(obs);
+    assert(action.steerAngle >= -45 && action.steerAngle <= 45, "Steer angle must be within [-45, 45]");
+    assert(action.throttle >= 0 && action.throttle <= 1, "Throttle must be within [0, 1]");
+    assert(typeof action.isBraking === "boolean", "isBraking must be boolean");
+
+    botClient.leave();
+    console.log("✅ Web Client Freelance Contracts, SLA Validation & Bot Arena Policy Driving Tests Passed!");
+}
+
 testWebGPUBootstrapAndFallbackEngine().then(async () => {
     testVolumetricFogAndFroxelGrid();
     testRecurringEngagementAndLiveOpsRemoteConfig();
@@ -2456,6 +2510,7 @@ testWebGPUBootstrapAndFallbackEngine().then(async () => {
     testSeasonalRankedAndCrossProgression();
     await testAdaptiveDifficultyAndCoachingLayer();
     await testCoopRoomClientAndSharedDatasetCollaboration();
+    await testWebClientContractsAndBotArena();
     console.log("🎉 All Web Unit Tests Passed Cleanly!");
 });
 
