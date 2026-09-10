@@ -2203,3 +2203,106 @@ button:active {
     }
 }
 
+/* --- Freelance Corporate Contracts Marketplace --- */
+.contract-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    margin-top: 14px;
+}
+
+.contract-card {
+    background: rgba(15, 23, 42, 0.82);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.contract-card:hover {
+    border-color: rgba(56, 189, 248, 0.6);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45), 0 0 20px rgba(56, 189, 248, 0.15);
+}
+
+.contract-tier-badge {
+    align-self: flex-start;
+    padding: 3px 8px;
+    border-radius: 9999px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.tier-startup { background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); }
+.tier-biotech { background: rgba(74, 222, 128, 0.2); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.4); }
+.tier-fintech { background: rgba(250, 204, 21, 0.2); color: #facc15; border: 1px solid rgba(250, 204, 21, 0.4); }
+.tier-autodrive { background: rgba(249, 115, 22, 0.2); color: #f97316; border: 1px solid rgba(249, 115, 22, 0.4); }
+.tier-deepspace { background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.4); box-shadow: 0 0 12px rgba(168, 85, 247, 0.3); }
+
+.sla-meter-container {
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 6px;
+    padding: 8px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sla-meter-bar {
+    height: 6px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, #38bdf8, #818cf8);
+    transition: width 0.4s ease;
+}
+
+/* --- Autonomous Bot Arena Telemetry HUD --- */
+.bot-arena-panel {
+    background: rgba(10, 15, 30, 0.9);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(147, 197, 253, 0.25);
+    border-radius: var(--radius-lg);
+    padding: 18px;
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
+}
+
+.drone-radar-display {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(56, 189, 248, 0.5);
+    position: relative;
+    background: radial-gradient(circle, rgba(14, 165, 233, 0.15) 0%, rgba(2, 6, 23, 0.8) 75%);
+    box-shadow: 0 0 20px rgba(56, 189, 248, 0.2), inset 0 0 16px rgba(56, 189, 248, 0.15);
+}
+
+.drone-radar-sweep {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: conic-gradient(from 0deg, transparent 75%, rgba(56, 189, 248, 0.4) 100%);
+    animation: radarSweep 3s linear infinite;
+}
+
+@keyframes radarSweep {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.policy-metric-pill {
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-family: var(--font-mono, monospace);
+    background: rgba(30, 41, 59, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #e2e8f0;
+}
+
+
