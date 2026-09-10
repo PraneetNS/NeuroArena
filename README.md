@@ -2,10 +2,11 @@
 ### *Next-Gen 3D Machine Learning Action-Adventure, Simulation Engine & Competitive Multiplayer Ecosystem*
 
 [![Platform](https://img.shields.io/badge/Platform-Unity%202022.3%20LTS+%20%7C%20Android%20%7C%20WebGL%20%7C%20PWA-blue.svg)](https://unity.com/)
-[![Render Pipeline](https://img.shields.io/badge/Render%20Pipeline-Universal%20RP%2014.0+%20%7C%20WebGL%20Shaders-lightgrey.svg)](https://unity.com/)
+[![Render Pipeline](https://img.shields.io/badge/Render%20Pipeline-Universal%20RP%2014.0+%20%7C%20WebGPU%20%2B%20WebGL-lightgrey.svg)](https://unity.com/)
 [![Optimization](https://img.shields.io/badge/SIMD-Unity.Jobs%20%2B%20Burst%20%7C%20WASM%20Runtime-green.svg)](https://docs.unity3d.com/Packages/com.unity.burst@latest)
 [![Zero ML Dependencies](https://img.shields.io/badge/ML%20Engine-Pure%20From--Scratch%20C%23%20%26%20JS-orange.svg)](https://dotnet.microsoft.com/)
 [![Netcode](https://img.shields.io/badge/Netcode-Colyseus%20%7C%20Zero--Copy%20Binary%20(28B)-yellow.svg)](https://colyseus.io/)
+[![Co-op Netcode](https://img.shields.io/badge/Co--op-2--4%20Player%20ML%20Partitions-brightgreen.svg)](https://colyseus.io/)
 [![Matchmaking](https://img.shields.io/badge/SBMM-Glicko--2%20%2B%20Swiss%20Tournaments-red.svg)](https://en.wikipedia.org/wiki/Glicko_rating_system)
 [![Audio Layer](https://img.shields.io/badge/Audio-Spatial%203D%20DSP%20%2B%20Procedural%20Synth-purple.svg)](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API)
 [![Infra](https://img.shields.io/badge/Cloud-Agones%20K8s%20%7C%20Redis%20%7C%20Terraform-cyan.svg)](https://agones.dev/)
@@ -19,7 +20,7 @@
    - [Dataset Health Score & Honest Generalization](#dataset-health-score--honest-generalization)
    - [Stage 29 Model Consult & Extrapolation Visualizer](#stage-29-model-consult--extrapolation-visualizer)
    - [Dataset Shift Sandbox (Concept Drift & Covariate Shift)](#dataset-shift-sandbox-concept-drift--covariate-shift)
-   - [Real-Time Mathematical Training Narration](#real-time-mathematical-training-narration)
+   - [Real-Time Mathematical Training Narration & Adaptive Coaching Layer](#real-time-mathematical-training-narration--adaptive-coaching-layer)
    - [Neuroevolution & Genetic Hyperparameter Optimization](#neuroevolution--genetic-hyperparameter-optimization)
    - [Reinforcement Learning PPO Policy Agents](#reinforcement-learning-ppo-policy-agents)
    - [WebAssembly (WASM) Model Runtime & Web Workers](#webassembly-wasm-model-runtime--web-workers)
@@ -27,12 +28,18 @@
 5. [⚔️ Competitive Multiplayer, Netcode & Esports](#️-competitive-multiplayer-netcode--esports)
    - [Colyseus Authoritative Server & Zero-Copy Binary Protocol](#colyseus-authoritative-server--zero-copy-binary-protocol)
    - [1v1 Live Duels & Hidden Test Set Evaluation](#1v1-live-duels--hidden-test-set-evaluation)
+   - [2-4 Player Collaborative Co-op Rooms (CoopRoom) & ML Dataset Health](#2-4-player-collaborative-co-op-rooms-cooproom--ml-dataset-health)
+   - [6-Biome Procedural Variant & Mathematical Solvability Engine](#6-biome-procedural-variant--mathematical-solvability-engine)
+   - [Seasonal Ranked League, Glicko-2 Tier Progression & Cross-Platform Parity](#seasonal-ranked-league-glicko-2-tier-progression--cross-platform-parity)
    - [Skill-Based Matchmaking (Glicko-2 Engine)](#skill-based-matchmaking-glicko-2-engine)
    - [Clans & Factions: Guild Warfare & Shared Skill Trees](#clans--factions-guild-warfare--shared-skill-trees)
    - [Deterministic Tick Replay & Spectator Verification](#deterministic-tick-replay--spectator-verification)
    - [Telemetry Anomaly Detection & Anti-Cheat Pipeline](#telemetry-anomaly-detection--anti-cheat-pipeline)
 6. [🎨 Graphics, Audio & Cross-Platform UX](#-graphics-audio--cross-platform-ux)
-   - [Dynamic WebGL Post-Processing Pipeline](#dynamic-webgl-post-processing-pipeline)
+   - [Dynamic WebGPU & WebGL Post-Processing Pipeline](#dynamic-webgpu--webgl-post-processing-pipeline)
+   - [GPU Compute Particle Engine (Harvest, Boss, Ambience)](#gpu-compute-particle-engine-harvest-boss-ambience)
+   - [Systematic "Juice" Feedback & Presentation Layer](#systematic-juice-feedback--presentation-layer)
+   - [Playable First-Session FTUE Tutorial](#playable-first-session-ftue-tutorial)
    - [Spatial 3D Audio DSP & Adaptive Soundtrack](#spatial-3d-audio-dsp--adaptive-soundtrack)
    - [Gamepad, Keyboard Remapping & Haptic Feedback](#gamepad-keyboard-remapping--haptic-feedback)
    - [Android Gyroscope & Motion-Orientation Camera](#android-gyroscope--motion-orientation-camera)
@@ -42,6 +49,8 @@
    - [Supabase Auth & Distributed Redis Leaderboards](#supabase-auth--distributed-redis-leaderboards)
    - [Delta-Compressed Cloud Saves & Cryptographic Integrity](#delta-compressed-cloud-saves--cryptographic-integrity)
    - [Hardened Save Migration Engine (Schema v3)](#hardened-save-migration-engine-schema-v3)
+   - [Privacy-Conscious Event Analytics Pipeline](#privacy-conscious-event-analytics-pipeline)
+   - [Live-Ops Remote Configuration & Dynamic Balance Tuning](#live-ops-remote-configuration--dynamic-balance-tuning)
 8. [🛠️ Developer CLI & Testing Harness](#️-developer-cli--testing-harness)
 9. [🚀 Getting Started & Deployment Guide](#-getting-started--deployment-guide)
 10. [📁 Repository Structure](#-repository-structure)
@@ -66,7 +75,8 @@
 flowchart TD
     subgraph ClientLayer ["Client Layer (Dual Platform Parity)"]
         UnityClient["Unity 2022.3 LTS Client\n(C# / Burst / Jobs / URP 14+)"]
-        WebClient["Web PWA Client (Three.js)\n(WASM Runtime / Web Workers / WebGL Shaders)"]
+        WebClient["Web PWA Client (Three.js)\n(WebGPU + WebGL Fallback / WASM / Workers)"]
+        ComputeParticles["GPU Compute Particles\n(Compute Shaders / Float32Array CPU Fallback)"]
         AudioDSP["Spatial 3D Audio DSP\n(Web Audio API / Procedural Synth)"]
         InputEngine["Input Manager\n(Gamepad / Gyro / Keyboard Remap)"]
     end
@@ -75,12 +85,15 @@ flowchart TD
         ColyseusCore["Colyseus Game Server\n(Node.js / TypeScript)"]
         ArenaRoom["ArenaRoom (Exploration & Relays)"]
         DuelRoom["DuelRoom (90s 1v1 Synchronized Duels)"]
+        CoopRoom["CoopRoom (2-4 Player Collaborative ML Rooms)"]
         FastProto["Fast Binary Protocol\n(28-byte Zero-Copy Packed Ticks)"]
         ReplayEngine["Deterministic Tick Replay &\nState Reconciliation Engine"]
     end
 
     subgraph BackendServices ["Backend Services & Microservices"]
         Glicko2["Glicko-2 SBMM Engine\n(Volatility & Queue Expansion)"]
+        SeasonalRanked["Seasonal Ranked League\n(5 Tiers & Soft MMR Resets)"]
+        AdaptiveCoaching["Adaptive Coaching & Difficulty\n(Bounded Envelopes & Audit Logs)"]
         GuildSystem["Guilds & Factions Service\n(Skill Trees & Seasonal Trophies)"]
         CheatEngine["Telemetry & Anomaly Detector\n(Anti-Speedhack & Weight Replay)"]
         TournamentEngine["Swiss Tournament Bracket Engine"]
@@ -90,17 +103,18 @@ flowchart TD
     subgraph DataStorage ["Persistence & Cloud Infrastructure"]
         Supabase["Supabase Auth & PostgreSQL"]
         CloudSave["Cloud Save Snapshot Engine\n(LZ Delta Compression & HMAC-SHA256)"]
+        RemoteConfig["Live-Ops Remote Config\n(Schema v3 Safe Balance Tuning)"]
         AgonesK8s["Agones Game Server Fleet\n(Terraform AWS/GCP Multi-Region K8s)"]
         PromMetrics["Prometheus & OpenTelemetry Exporter"]
     end
 
     UnityClient <-->|WebSocket / Binary| ColyseusCore
     WebClient <-->|WebSocket / Binary| ColyseusCore
-    ColyseusCore --> ArenaRoom & DuelRoom
-    ArenaRoom & DuelRoom --> FastProto & ReplayEngine
-    ColyseusCore --> Glicko2 & GuildSystem & CheatEngine & TournamentEngine
+    ColyseusCore --> ArenaRoom & DuelRoom & CoopRoom
+    ArenaRoom & DuelRoom & CoopRoom --> FastProto & ReplayEngine
+    ColyseusCore --> Glicko2 & SeasonalRanked & AdaptiveCoaching & GuildSystem & CheatEngine & TournamentEngine
     ColyseusCore --> LeaderboardService
-    ColyseusCore --> Supabase & CloudSave
+    ColyseusCore --> Supabase & CloudSave & RemoteConfig
     ColyseusCore --> PromMetrics
     AgonesK8s -.-> ColyseusCore
 ```
@@ -187,10 +201,28 @@ A dynamic commentary system converts live training telemetry into plain-English 
 
 ### 2-4 Player Collaborative Co-op Rooms (`CoopRoom`) & ML Dataset Health
 - **Genuine ML Collaboration:** Party members are assigned complementary domain partitions (e.g. Sector Alpha $x \in [-6.5, -3.25]$ through Sector Delta $x \in [3.25, 6.5]$).
-- **Dataset Health Score Mechanic:** Success requires covering each other's blind spots. Single-player harvesting suffers severe extrapolation risk (Coverage $<40\%$, Critical Health); coordinated multi-player harvesting achieves full domain coverage ($>90\%$, Excellent Health) and unlocks 100% boss damage capacity.
-- **Non-Linear Party Difficulty Envelope:** Scales procedural difficulty curve mathematically per party size ($N=2 \to 1.65\times\text{ HP}$, $N=3 \to 2.25\times\text{ HP}$, $N=4 \to 2.80\times\text{ HP}$ with multi-hazard movesets and expanded feature domains) rather than flat damage-stacking.
-- **Tactical Non-Verbal Ping System:** Players coordinate via real-time spatial/domain pings (`HARVEST_HERE`, `COVERAGE_GAP`, `OUTLIER_ALERT`, `BOSS_HAZARD`, `ASSEMBLE_TRAIN`) tied directly into dual-motor tactile haptic vibration profiles.
-- **Authoritative Equal Reward Split:** Server computes total pool from shared dataset health + hidden test accuracy + boss defeat and deposits equal shares with an immutable ledger audit trail (no ninja-looting).
+- **Multi-Partition Domain Coverage ($C_{\text{cov}}$):**
+  $$C_{\text{cov}} = \left( 0.50 \cdot \frac{K_{\text{sampled}}}{K_{\text{total}}} + 0.35 \cdot \frac{\text{Span}_{\text{actual}}}{\text{Span}_{\text{target}}} + 0.15 \cdot \min\left(1.0, \frac{N_{\text{total}}}{8 \cdot N_{\text{party}}}\right) \right) \times 100$$
+- **Extrapolation Penalty & Blind Spot Mitigation:** Uncoordinated single-player harvesting leaves uncovered partitions, triggering severe extrapolation error on the server's hidden test set:
+  $$\text{MSE}_{\text{effective}} = \text{MSE}_{\text{raw}} \times \left(1 + \max(0, 70 - C_{\text{cov}}) \times 0.05\right)$$
+  Combining datasets eliminates blind spots, moving shared health from critical ($<40\%$) to excellent ($>90\%$) and unlocking 100% boss damage capacity.
+- **Sub-Linear Party Difficulty Envelope Scaling ($N \in [2, 4]$):**
+  $$\text{HP}_{\text{scaled}}(N) = \text{HP}_{\text{base}} \times \left(1.0 + 0.65(N - 1)^{0.85}\right)$$
+
+| Party Size | Domain Span | Domain Partitions | Noise Multiplier | Outlier Multiplier | Boss HP Multiplier | Enrage Timer |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **1 Player (Solo)** | $[-4.0, 4.0]$ ($8.0$) | 1 Sector | $1.00\times$ | $1.00\times$ | $1.00\times$ ($1000$ HP) | $120\text{s}$ |
+| **2 Players** | $[-4.5, 4.5]$ ($9.0$) | 2 Sectors | $1.10\times$ | $1.15\times$ | $1.65\times$ ($1650$ HP) | $100\text{s}$ |
+| **3 Players** | $[-5.5, 5.5]$ ($11.0$) | 3 Sectors | $1.20\times$ | $1.25\times$ | $2.25\times$ ($2250$ HP) | $90\text{s}$ |
+| **4 Players** | $[-6.5, 6.5]$ ($13.0$) | 4 Sectors | $1.30\times$ | $1.35\times$ | $2.80\times$ ($2800$ HP) | $85\text{s}$ |
+
+- **Tactical Non-Verbal Ping System:** Real-time spatial and domain coordination via structured events paired with dual-motor tactile haptic vibration profiles:
+  - `HARVEST_HERE` $\to$ `LightTick` haptic pulse ($35\text{ms}$).
+  - `COVERAGE_GAP` $\to$ `MediumImpact` triple pulse ($40\text{ms}, 30\text{ms}, 40\text{ms}$).
+  - `OUTLIER_ALERT` $\to$ `MediumImpact` pulse.
+  - `BOSS_HAZARD` $\to$ `HeavyRumble` dual-motor pulse ($100\text{ms}, 50\text{ms}, 100\text{ms}$).
+  - `ASSEMBLE_TRAIN` $\to$ `SuccessBurst` fanfare pulse ($50\text{ms}, 40\text{ms}, 80\text{ms}$).
+- **Server-Authoritative Equal Reward Ledger:** Server calculates total pool from shared dataset health + hidden test accuracy + boss defeat and deposits equal shares with an immutable ledger ID (`SERVER_AUTHORITATIVE_EQUAL_SPLIT`), eliminating ninja-looting while flagging cheaters with 0 reward.
 - **15s Reconnection Grace Window:** Mid-session disconnects allow 15 seconds for reconnection with authoritative state resync.
 
 ### 6-Biome Procedural Variant & Mathematical Solvability Engine
@@ -203,7 +235,8 @@ A dynamic commentary system converts live training telemetry into plain-English 
 ### Seasonal Ranked League, Glicko-2 Tier Progression & Cross-Platform Parity
 - **5 Competitive Tiers:** Bronze ($0\text{--}999$) ➔ Silver ($1000\text{--}1399$) ➔ Gold ($1400\text{--}1799$) ➔ Platinum ($1800\text{--}2199$) ➔ Architect ($2200+$).
 - **Visible Rank-Up Juice Moment:** Emits high-impact hit-stop (65ms), camera shake (0.50), 150 GPU particles, dual-motor haptics, and fanfare audio.
-- **6-Week Season Cadence & Soft MMR Reset:** Regresses player rating toward mean ($\text{Rating} \leftarrow 1500 + (\text{Rating} - 1500) \times 0.65$) at season rollover without hard wipes.
+- **6-Week Season Cadence & Soft MMR Reset:** Regresses player rating toward mean at season rollover without hard wipes:
+  $$\text{Rating}_{\text{new}} = \max\left(800, 1500 + (\text{Rating}_{\text{old}} - 1500) \times 0.65\right)$$
 - **End-of-Season Reward Disbursement:** Automatically grants exclusive cosmetics, titles, and quantum shards to player accounts.
 - **Historical Season Top 100 Archival:** Permanent immutable snapshots queryable via `GET /api/ranked/seasons/:seasonId/leaderboard`.
 - **100% Cross-Progression Parity:** Unity Android and Web PWA clients access the identical account state, MMR, guild status, and inventory.
@@ -235,12 +268,38 @@ A dynamic commentary system converts live training telemetry into plain-English 
 
 ## 🎨 Graphics, Audio & Cross-Platform UX
 
-### Dynamic WebGL Post-Processing Pipeline
-- **Custom Shader Pipeline:** Multi-pass WebGL post-processing stack containing:
+### Dynamic WebGPU & WebGL Post-Processing Pipeline
+- **Next-Gen WebGPU First:** `RendererManager.bootstrapRenderer()` attempts `THREE.WebGPURenderer` on initialization with one-time GPU capability probing (`web/src/gpuCapabilityProbe.js`), falling back silently to `THREE.WebGLRenderer` (WebGL2 $\to$ WebGL1) if unavailable.
+- **Custom Post-Processing Stack:** Multi-pass post-processing pipeline featuring:
   - High-Dynamic Range (HDR) Bloom with luminance thresholding.
   - Radial Chromatic Aberration with dynamic aberration intensity upon boss strikes.
   - ACES Film Tonemapping curve for cinematic color rendering.
+- **Draw Call Budget Enforcement:** Per-frame draw call instrumentation enforcing strict performance budgets: Tier 1: $<60$ calls, Tier 2: $<100$ calls, Tier 3: $<180$ calls.
+- **Scene Disposal Auditor:** Recursive Three.js hierarchy teardown and `WebGLRenderTarget` disposal on biome transitions, enforcing a $<1.0\text{ MB}$ memory leak threshold.
 - **Dynamic Resolution Scaling:** Auto-adjusts Device Pixel Ratio (DPR $0.75x - 2.0x$) to maintain a stable 60 FPS frame rate budget.
+
+### GPU Compute Particle Engine (Harvest, Boss, Ambience)
+- **Three GPU Compute Subsystems:**
+  - **Harvesting / Crystal Burst:** 150-particle shockwave with additive cyan blending and radial momentum.
+  - **Boss VFX Explosion:** 100-particle phase-transition shockwave with additive crimson emissive coloring.
+  - **Biome Ambience Motes:** 80 floating atmospheric particles procedurally tinted to match the active biome color palette.
+- **Compute Shader & CPU Parity:** Dispatches native WebGPU compute passes when available and falls back to zero-allocation `Float32Array` CPU kinematics on WebGL devices without frame drops.
+
+### Systematic "Juice" Feedback & Presentation Layer
+- **Hit-Stop Engine:** 2-4 frame unscaled timescale freeze ($65\text{ms}$) on boss critical strikes, model convergence, and ranked duel victories.
+- **Procedural Camera Shake:** Configurable multi-axis shake with exponential decay triggered by boss impacts, dataset corruption events, and rank-up fanfare.
+- **Tier-Aware Particle Burst Scaling:** Dynamically scales particle emitters per hardware tier (Tier 1: 25 / Tier 2: 80 / Tier 3: 150) for smooth mobile performance.
+- **Tactile Dual-Motor Haptic Engine:** Distinct vibration profiles (`LightTick`, `MediumImpact`, `HeavyRumble`, `SuccessBurst`) wired to crystal harvesting, boundary snaps, and boss hazards.
+- **Sub-300ms Procedural Audio Stingers:** Synthesized sound cues including a 240ms ascending shimmer for model convergence and a 220ms tritone alert for overfitting.
+- **Reduced Motion Accessibility Toggle:** Fully suppresses camera shake and flashing animations while preserving all gameplay feedback cues.
+
+### Playable First-Session FTUE Tutorial
+- **3-Minute Action-Driven Core Loop:** Guided Harvest ➔ Live Regression Fit Reaction ➔ Lab Mini-Challenge ➔ Day-1 Reward.
+- **1-Sentence Constraint:** Every tutorial prompt is strictly constrained to a single clear sentence (zero modal dialog walls).
+- **Live Regression Fit Reaction Card:** Dynamic HUD card displaying shifting slope parameters and empirical scatter in real time during the initial fit.
+- **Spatial Mascot Idle Nudging:** Contextual in-world mascot appears to offer spatial navigation cues if the player idles $>45\text{s}$.
+- **Day-1 Tangible Rewards:** Awards Glacial Crystalline terminal skin, Vector Calibrator starter tool, and Biome 2 unlock.
+- **Zero-Gate Guest Access:** Instant onboarding without registration forms, saving tutorial funnel milestones to `ProductAnalyticsManager`.
 
 ### Spatial 3D Audio DSP & Adaptive Soundtrack
 - **Web Audio API DSP Nodes:** Full 3D positional audio graph with `PannerNode`, distance exponential rolloff, and lowpass filter occlusion when obscured by terrain geometry.
@@ -317,8 +376,8 @@ node scripts/neuro-cli.js audit-assets    # Validate scene assets and biomes
 # 2. Complete Web ML Engine Test Suite (50+ Unit & Integration Tests)
 node web/tests/ml-engine.test.js
 
-# 3. Multiplayer Server Test Suite (Colyseus, Glicko-2, Anti-Cheat, Replay)
-cd neuroarena-server && npm test
+# 3. Multiplayer Server Test Suite (Colyseus, Glicko-2, Anti-Cheat, Replay, Co-op, Ranked, Analytics)
+cd neuroarena-server && npm test          # Runs 29 chained automated test suites (31 total suites available)
 
 # 4. Multi-Tier Mobile Hardware Profiler & Memory Leak Benchmark
 node scripts/benchmark-tiers.js
@@ -365,10 +424,12 @@ cd deploy/terraform
 terraform init
 terraform apply -auto-approve
 
-# Deploy Agones Game Server Fleet & Redis Cluster
+# Deploy Agones Game Server Fleet, Co-op Relay & Redis Cluster
 kubectl apply -f deploy/redis-cluster.yaml
 kubectl apply -f deploy/agones-fleet.yaml
+kubectl apply -f deploy/k8s-coop-service.yaml
 kubectl apply -f deploy/nginx-ingress.conf
+kubectl apply -f deploy/prometheus-alerts.yaml
 ```
 
 ---
@@ -382,39 +443,50 @@ NeuroArena/
 │   ├── Models/                    # Low-poly 3D models & collectibles
 │   ├── Scenes/                    # MainArena & 6 Biome Unity scenes
 │   ├── Scripts/                   # Pure C# ML Engine, SIMD Jobs & Managers
-│   │   ├── Core/                  # Replay, SaveMigration & DeviceTier
+│   │   ├── Core/                  # Replay, SaveMigration, JuiceFeedback, Tutorial & DeviceTier
 │   │   ├── Environment/           # Poisson-disc scattering & terrain
-│   │   ├── ML/                    # From-scratch optimizers, neural layers
+│   │   ├── ML/                    # From-scratch optimizers, neural layers, procedural variants
 │   │   └── UI/                    # HUD, Formula Terminal & Mobile Touch
 │   └── Tests/                     # Unity EditMode/PlayMode C# Test Suites
 ├── deploy/                        # Production Infrastructure & Deployment
 │   ├── agones-fleet.yaml          # Agones Game Server K8s Fleet Configuration
+│   ├── grafana-analytics-dashboard.json # Grafana Executive Analytics template
+│   ├── k8s-coop-service.yaml      # Kubernetes WebSocket relay for 2-4P Co-op rooms
 │   ├── nginx-ingress.conf         # NGINX reverse proxy & SSL termination
+│   ├── prometheus-alerts.yaml     # Prometheus alert rules for server fleet
 │   ├── redis-cluster.yaml         # Distributed Redis Cluster configuration
 │   └── terraform/                 # Multi-region AWS/GCP Kubernetes IaC
 ├── docs/                          # Architecture & Scientific Documentation
-│   ├── ADR/                       # Architectural Decision Records
+│   ├── ADR/                       # Architectural Decision Records (e.g. WebGPU Migration)
 │   ├── BIOME_CURRICULUM_GUIDE.md  # 6-Biome ML curriculum breakdown
+│   ├── COOP_ROOM_SPECIFICATION.md # 2-4 player collaborative co-op room specs
+│   ├── FTUE_TUTORIAL_SPECIFICATION.md # 3-minute onboarding loop & funnel metrics
+│   ├── JUICE_SYSTEM_SPECIFICATION.md # Hit-stop, camera shake & haptic feedback
 │   ├── MATHEMATICAL_SPECIFICATIONS.md # Analytical formulas and proofs
 │   ├── MOBILE_OPTIMIZATION_GUIDE.md # 2GB RAM budget & profiling rules
+│   ├── NETCODE_PROTOCOL_SPEC.md   # Fast binary packet layout & sequence flow
 │   ├── OPENAPI_SPECIFICATION.yaml # REST and WebSocket API specification
+│   ├── PROCEDURAL_VARIANT_SPECIFICATION.md # Mulberry32 seed envelopes & solvability
+│   ├── SEASONAL_RANKED_SPECIFICATION.md # 5-tier Glicko-2 league & soft MMR resets
+│   ├── SYSTEM_ARCHITECTURE.md     # Full distributed cloud & netcode topology
 │   └── PRIVACY_POLICY.md          # 100% Offline & local diagnostics privacy
 ├── neuroarena-server/             # Colyseus Real-Time Multiplayer Backend
-│   ├── src/                       # Room handlers, Glicko-2, Anti-Cheat, Guilds
-│   └── test/                      # 13 server test suites & scale benchmarks
+│   ├── src/                       # Room handlers (Duel, Coop, Arena), Glicko-2, Anti-Cheat, Guilds
+│   └── test/                      # 31 server test suites & scale benchmarks
 ├── scripts/                       # Developer CLI tools & benchmark harnesses
 │   ├── benchmark-tiers.js         # Mobile hardware profiling benchmark
 │   ├── ml-cli.js                  # Model consult and extrapolation CLI
 │   ├── network-chaos-simulator.js # Latency & packet-loss chaos test
 │   ├── neuro-cli.js               # Multi-command developer management CLI
+│   ├── verify-submission-checklist.js # Hard pre-flight checklist & network isolation
 │   └── websocket-stress-test.js   # 1,000-client load test simulator
 ├── supabase/                      # Cloud Auth & Database Schema
-│   └── migrations/                # PostgreSQL schema for leaderboards & duels
+│   └── migrations/                # PostgreSQL schema for leaderboards, duels & ranked
 └── web/                           # Three.js PWA Client & Simulation
     ├── app.js                     # Core 3D engine, gameplay loop & HUD modals
     ├── index.html                 # Main web client interface
     ├── locales/                   # i18n translations (EN, ES, JA, DE, ZH)
-    ├── src/                       # Web Audio DSP, Post-Processing, WASM runtime
+    ├── src/                       # WebGPU/WebGL renderers, Compute Particles, Audio DSP, WASM
     ├── style.css                  # Cyber-formula glassmorphic UI design system
     └── tests/                     # Automated JavaScript ML test harness
 ```
