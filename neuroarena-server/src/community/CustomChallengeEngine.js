@@ -150,6 +150,67 @@ class CustomChallengeEngine {
   }
 
   /**
+   * Server-Paginated Browsable Community Challenges
+   */
+  getPaginatedChallenges({
+    page = 1,
+    limit = 6,
+    sort = "popular",
+    functionFamily = null
+  } = {}) {
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const limitNum = Math.max(1, Math.min(50, parseInt(limit, 10) || 6));
+
+    let items = Array.from(this.challenges.values());
+
+    if (functionFamily && functionFamily !== "ALL") {
+      items = items.filter(c => c.functionFamily === functionFamily);
+    }
+
+    switch (sort) {
+      case "rating":
+      case "top_rated":
+        items.sort((a, b) => (b.stats.upvotes - b.stats.downvotes) - (a.stats.upvotes - a.stats.downvotes));
+        break;
+      case "completions":
+        items.sort((a, b) => b.stats.completions - a.stats.completions);
+        break;
+      case "newest":
+        items.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        break;
+      case "popular":
+      default:
+        items.sort((a, b) => {
+          const popA = (a.stats.upvotes - a.stats.downvotes) * 2 + a.stats.completions * 3 + a.stats.plays;
+          const popB = (b.stats.upvotes - b.stats.downvotes) * 2 + b.stats.completions * 3 + b.stats.plays;
+          return popB - popA;
+        });
+        break;
+    }
+
+    const total = items.length;
+    const totalPages = Math.ceil(total / limitNum) || 1;
+    const startIndex = (pageNum - 1) * limitNum;
+    const paginatedItems = items.slice(startIndex, startIndex + limitNum).map(c => this._formatChallengeSummary(c));
+
+    return {
+      success: true,
+      total,
+      page: pageNum,
+      totalPages,
+      limit: limitNum,
+      challenges: paginatedItems
+    };
+  }
+
+  getChallengeById(challengeId) {
+    const ch = this.challenges.get(challengeId);
+    if (!ch) return null;
+    ch.stats.plays++;
+    return ch;
+  }
+
+  /**
    * Validate Candidate Challenge Parameters & Analytical Solvability
    */
   validateCandidateChallenge(candidate) {
