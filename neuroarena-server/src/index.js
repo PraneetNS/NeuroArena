@@ -27,6 +27,7 @@ const { analyticsIngestEngine } = require("./telemetry/AnalyticsIngestEngine");
 const { ProceduralVariantEngine } = require("./ml/ProceduralVariantEngine");
 const { SeasonalRankedEngine } = require("./engagement/SeasonalRankedEngine");
 const { AdaptiveCoachingEngine } = require("./ml/AdaptiveCoachingEngine");
+const { CustomChallengeEngine } = require("./community/CustomChallengeEngine");
 
 const rateLimiter = new TokenBucketRateLimiter(120, 60); // 120 bucket capacity, 60/sec refill
 const sessionManager = new SessionManager();
@@ -37,6 +38,7 @@ const proceduralEngine = new ProceduralVariantEngine();
 const rankedEngine = new SeasonalRankedEngine(redisConfig);
 const adaptiveCoachingEngine = new AdaptiveCoachingEngine();
 const contractEngine = new ClientContractEngine();
+const customChallengeEngine = new CustomChallengeEngine();
 
 // Ingress Rate Limiter Middleware
 app.use((req, res, next) => {
@@ -488,6 +490,110 @@ app.post("/api/contracts/submit", (req, res) => {
     }
 });
 
+// 13. Creator-Driven Mod-Tools & Custom Biome Challenges APIs
+// Pre-flight candidate validation (checks bounds, solvability, exploit prevention)
+app.post("/api/community/challenges/validate", (req, res) => {
+    try {
+        const candidate = req.body;
+        const result = customChallengeEngine.validateCandidateChallenge(candidate);
+        if (!result.isValid) {
+            return res.status(400).json({
+                success: false,
+                code: result.code,
+                error: result.reason,
+                details: result.details || null
+            });
+        }
+        res.json({
+            success: true,
+            solvabilityCertificate: result.sanitized.solvabilityCertificate,
+            sanitized: {
+                title: result.sanitized.title,
+                functionFamily: result.sanitized.functionFamily,
+                datasetParams: result.sanitized.datasetParams,
+                bossTemplate: result.sanitized.bossTemplate
+            }
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Automated publish flow (automated validation -> instant listing)
+app.post("/api/community/challenges/publish", (req, res) => {
+    try {
+        const { candidate, authorId, authorName } = req.body || {};
+        const result = customChallengeEngine.publishChallenge(
+            candidate,
+            authorId || "player_creator",
+            authorName || "Community Architect"
+        );
+        res.json(result);
+    } catch (err) {
+        res.status(400).json({ success: false, error: err.message });
+    }
+});
+
+// Server-paginated community challenges browse
+app.get("/api/community/challenges", (req, res) => {
+    try {
+        const { page, limit, sort, functionFamily } = req.query;
+        const result = customChallengeEngine.getPaginatedChallenges({
+            page,
+            limit,
+            sort,
+            functionFamily
+        });
+        res.json(result);
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Get individual challenge by ID
+app.get("/api/community/challenges/:challengeId", (req, res) => {
+    try {
+        const ch = customChallengeEngine.getChallengeById(req.params.challengeId);
+        if (!ch) {
+            return res.status(404).json({ success: false, error: "CHALLENGE_NOT_FOUND" });
+        }
+        res.json({ success: true, challenge: ch });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Rate challenge (Thumbs Up / Down)
+app.post("/api/community/challenges/:challengeId/rate", (req, res) => {
+    try {
+        const { playerId, vote } = req.body || {};
+        if (!playerId || !vote) {
+            return res.status(400).json({ success: false, error: "Missing playerId or vote parameter" });
+        }
+        const result = customChallengeEngine.rateChallenge(req.params.challengeId, playerId, vote);
+        if (!result.success) {
+            return res.status(400).json(result);
+        }
+        res.json(result);
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Unified Authoritative Scoring & Anti-Cheat Pipeline for Community Challenges
+app.post("/api/community/challenges/:challengeId/verify-submission", (req, res) => {
+    try {
+        const submission = req.body;
+        const result = customChallengeEngine.evaluateChallengeSubmission(req.params.challengeId, submission);
+        if (!result.success) {
+            return res.status(400).json(result);
+        }
+        res.json(result);
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // 2. Attach Colyseus WebSocket Server
 const server = http.createServer(app);
 const gameServer = new Server({
@@ -548,5 +654,6 @@ module.exports = {
     proceduralEngine,
     rankedEngine,
     adaptiveCoachingEngine,
-    contractEngine
+    contractEngine,
+    customChallengeEngine
 };
