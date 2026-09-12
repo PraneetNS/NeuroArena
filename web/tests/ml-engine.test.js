@@ -2502,6 +2502,83 @@ async function testWebClientContractsAndBotArena() {
     console.log("✅ Web Client Freelance Contracts, SLA Validation & Bot Arena Policy Driving Tests Passed!");
 }
 
+async function testWebClientCustomChallengesAndModTools() {
+    console.log("▶ Testing Web Client Creator-Driven Mod-Tools, Custom Challenges & Solvability Prover...");
+    const { CustomChallengeClient } = require("../src/community/CustomChallengeClient");
+    const client = new CustomChallengeClient("http://localhost:2567");
+
+    // 1. Initial State & Fallback Curated Catalog
+    const initialList = await client.fetchChallenges({ page: 1, limit: 6 });
+    assert.strictEqual(initialList.success, true);
+    assert(initialList.challenges.length >= 3, "Curated fallback challenges must be populated");
+    assert.strictEqual(initialList.page, 1);
+
+    // 2. Family Filter
+    const linearOnly = await client.fetchChallenges({ functionFamily: "LINEAR_REGRESSION" });
+    assert(linearOnly.challenges.every(c => c.functionFamily === "LINEAR_REGRESSION"), "Filter must enforce family");
+
+    // 3. Pre-flight Solvability Check
+    const validCandidate = {
+        title: "Clean Linear Ascent",
+        functionFamily: "LINEAR_REGRESSION",
+        datasetParams: { sampleCount: 30, noiseSigma: 0.06, outlierRate: 0.02 },
+        bossTemplate: { bossName: "Ascent Guardian", maxHp: 1200, attackDamage: 40, enrageTimerSec: 100 }
+    };
+    const validCheck = await client.validateCandidate(validCandidate);
+    assert.strictEqual(validCheck.success, true);
+    assert.strictEqual(validCheck.solvabilityCertificate.isSolvable, true);
+
+    // Unsolvable candidate (> 0.25 noise in fallback mode or high noise)
+    const unsolvableCandidate = {
+        title: "Extreme Noise Deluge",
+        functionFamily: "LINEAR_REGRESSION",
+        datasetParams: { sampleCount: 30, noiseSigma: 0.35, outlierRate: 0.10 },
+        bossTemplate: { bossName: "Noise Titan", maxHp: 1500, attackDamage: 45, enrageTimerSec: 110 }
+    };
+    const unsolvableCheck = await client.validateCandidate(unsolvableCandidate);
+    assert.strictEqual(unsolvableCheck.solvabilityCertificate.isSolvable, false);
+    assert.ok(unsolvableCheck.code === "REJECTED_UNSOLVABLE" || unsolvableCheck.error.includes("solvability"),
+        "Unsolvable candidate must be rejected with explicit mathematical explanation");
+
+    // 4. Community Rating (Thumbs Up / Down)
+    const targetId = initialList.challenges[0].challengeId;
+    const rateResult = await client.rateChallenge(targetId, "test_architect", "UP");
+    assert.strictEqual(rateResult.success, true);
+    assert(rateResult.netRating !== undefined, "Net rating must be tracked");
+
+    // 5. Authoritative Submission Payload Formation & Verification
+    const submissionPayload = {
+        playerId: "test_architect",
+        playerName: "Lead Creator",
+        initialW: 0.0,
+        initialB: 0.0,
+        targetW: 2.15,
+        targetB: 0.95,
+        learningRate: 0.05,
+        epochs: 50,
+        elapsedMs: 3800,
+        reportedMse: 0.025
+    };
+    const evalResult = await client.submitChallengeTraining(targetId, submissionPayload);
+    assert.strictEqual(evalResult.success, true);
+    assert.strictEqual(evalResult.verified, true);
+    assert.strictEqual(evalResult.bossDefeated, true);
+    assert.ok(evalResult.score >= 1000, "Score must reflect victory");
+
+    // 6. UI HTML Generation Check
+    const browseHtml = client._getBrowseHtml();
+    assert.ok(browseHtml.includes("comm-filter-family"));
+    assert.ok(browseHtml.includes("comm-challenges-grid"));
+
+    const authorHtml = client._getAuthorHtml();
+    assert.ok(authorHtml.includes("slider-sample-count"));
+    assert.ok(authorHtml.includes("slider-noise-sigma"));
+    assert.ok(authorHtml.includes("btn-test-solvability"));
+    assert.ok(authorHtml.includes("btn-publish-challenge"));
+
+    console.log("✅ Web Client Creator-Driven Mod-Tools, Custom Challenges & Solvability Prover Tests Passed!");
+}
+
 testWebGPUBootstrapAndFallbackEngine().then(async () => {
     testVolumetricFogAndFroxelGrid();
     testRecurringEngagementAndLiveOpsRemoteConfig();
@@ -2511,6 +2588,7 @@ testWebGPUBootstrapAndFallbackEngine().then(async () => {
     await testAdaptiveDifficultyAndCoachingLayer();
     await testCoopRoomClientAndSharedDatasetCollaboration();
     await testWebClientContractsAndBotArena();
+    await testWebClientCustomChallengesAndModTools();
     console.log("🎉 All Web Unit Tests Passed Cleanly!");
 });
 
