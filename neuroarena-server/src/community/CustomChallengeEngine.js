@@ -36,6 +36,117 @@ class CustomChallengeEngine {
       "ENSEMBLE_ROAR",
       "PRUNING_GALE"
     ];
+
+    this._seedInitialCuratedChallenges();
+  }
+
+  /**
+   * Publish Flow (Automated Validation -> Instant Listing, No Manual Review Bottleneck)
+   */
+  publishChallenge(candidate, authorId = "player_creator", authorName = "Community Architect") {
+    const validation = this.validateCandidateChallenge(candidate);
+    if (!validation.isValid) {
+      throw new Error(`PUBLISH_REJECTED: ${validation.reason}`);
+    }
+
+    const { sanitized } = validation;
+    const challengeId = `ch_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
+
+    const challenge = {
+      challengeId,
+      title: sanitized.title,
+      description: sanitized.description,
+      author: { id: authorId, name: authorName },
+      functionFamily: sanitized.functionFamily,
+      datasetParams: sanitized.datasetParams,
+      bossTemplate: sanitized.bossTemplate,
+      seed: sanitized.seed,
+      dataset: sanitized.dataset,
+      solvabilityCertificate: sanitized.solvabilityCertificate,
+      createdAt: new Date().toISOString(),
+      stats: {
+        plays: 0,
+        completions: 0,
+        upvotes: 0,
+        downvotes: 0,
+        voters: {}
+      }
+    };
+
+    this.challenges.set(challengeId, challenge);
+    return {
+      success: true,
+      challengeId,
+      challenge: this._formatChallengeSummary(challenge)
+    };
+  }
+
+  _formatChallengeSummary(ch) {
+    return {
+      challengeId: ch.challengeId,
+      title: ch.title,
+      description: ch.description,
+      author: ch.author,
+      functionFamily: ch.functionFamily,
+      bossTemplate: ch.bossTemplate,
+      solvabilityCertificate: {
+        isSolvable: ch.solvabilityCertificate.isSolvable,
+        metric: ch.solvabilityCertificate.metric,
+        targetThreshold: ch.solvabilityCertificate.targetMseThreshold || ch.solvabilityCertificate.targetAccuracyThreshold || 0.05
+      },
+      stats: {
+        plays: ch.stats.plays,
+        completions: ch.stats.completions,
+        upvotes: ch.stats.upvotes,
+        downvotes: ch.stats.downvotes,
+        netRating: ch.stats.upvotes - ch.stats.downvotes
+      },
+      createdAt: ch.createdAt
+    };
+  }
+
+  _seedInitialCuratedChallenges() {
+    this.publishChallenge({
+      title: "The Gauss-Markov Gauntlet",
+      description: "Steep slope regression with strict low-noise bounds and punishing residual shockwaves.",
+      functionFamily: "LINEAR_REGRESSION",
+      datasetParams: { sampleCount: 36, noiseSigma: 0.08, outlierRate: 0.03, slopeW: 2.8, interceptB: 1.2 },
+      bossTemplate: {
+        bossName: "Markov Sentinel",
+        maxHp: 1200,
+        attackDamage: 45,
+        enrageTimerSec: 120,
+        moveSetPattern: "RESIDUAL_SHOCKWAVE"
+      }
+    }, "creator_01", "Ada Master");
+
+    this.publishChallenge({
+      title: "Logistic Razor Cleave",
+      description: "Tight margin classification test designed to punish inaccurate decision hyperplanes.",
+      functionFamily: "LOGISTIC_CLASSIFICATION",
+      datasetParams: { sampleCount: 42, noiseSigma: 0.10, marginDistance: 0.65, overlapRate: 0.02 },
+      bossTemplate: {
+        bossName: "Hyperplane Warden",
+        maxHp: 1600,
+        attackDamage: 55,
+        enrageTimerSec: 140,
+        moveSetPattern: "DUAL_HYPERPLANE_CLEAVE"
+      }
+    }, "creator_02", "Euler Pioneer");
+
+    this.publishChallenge({
+      title: "Runge Cubic Tempest",
+      description: "High-variance cubic curve requiring regularized precision under extreme blizzard conditions.",
+      functionFamily: "POLYNOMIAL_REGRESSION",
+      datasetParams: { sampleCount: 38, noiseSigma: 0.14, polyDegree: 3, c0: 0.2, c1: -1.5, c2: 0.6, c3: -0.18 },
+      bossTemplate: {
+        bossName: "Cubic Colossus",
+        maxHp: 2200,
+        attackDamage: 70,
+        enrageTimerSec: 160,
+        moveSetPattern: "POLYNOMIAL_OSCILLATION"
+      }
+    }, "creator_03", "Runge Phenom");
   }
 
   /**
