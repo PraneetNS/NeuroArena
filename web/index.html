@@ -213,6 +213,8 @@
                 <button id="btn-open-codex" class="hud-icon-btn glow-cyan" title="ML Codex / Journal">📖</button>
                 <button id="btn-daily-challenge" class="hud-icon-btn glow-amber"
                     title="Daily Seeded Challenge">📅</button>
+                <button id="btn-community-challenges" class="hud-icon-btn glow-amber"
+                    title="Community Challenges & Mod-Tools (Creator Biomes)">🛠️</button>
                 <button id="btn-toggle-drawer" class="hud-icon-btn glow-cyan" title="Inventory Drawer">🎒</button>
                 <button id="btn-data-inspector" class="hud-icon-btn glow-amber" title="Dataset Inspector">📊</button>
                 <button id="btn-leaderboard" class="hud-icon-btn glow-green" title="Leaderboards">🏆</button>
@@ -757,6 +759,26 @@
 
                 <div id="daily-challenge-content-mount" style="padding: 16px 20px;">
                     <!-- Mounted via DailyChallengeUI.js -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 🛠️ CREATOR-DRIVEN MOD-TOOLS & COMMUNITY CHALLENGES MODAL -->
+        <div id="community-challenge-modal" class="modal-overlay hidden" style="z-index: 9660;">
+            <div class="glass-modal community-modal-container" style="max-width: 960px; width: 95%; max-height: 90vh; overflow-y: auto;">
+                <div class="modal-header">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span style="font-size:1.5rem;">🛠️</span>
+                        <div>
+                            <h2 style="font-size:1.2rem; color:#facc15; margin:0;">COMMUNITY BIOME CHALLENGES & MOD-TOOLS</h2>
+                            <div style="font-size:0.75rem; color:#94a3b8;">Creator-Driven Live-Service Content • Server-Certified Solvability & Anti-Cheat</div>
+                        </div>
+                    </div>
+                    <button id="btn-close-community-modal" class="close-btn">✕</button>
+                </div>
+
+                <div id="community-challenge-content-mount" style="padding: 16px 20px;">
+                    <!-- Mounted via CustomChallengeClient.js -->
                 </div>
             </div>
         </div>
@@ -1617,6 +1639,7 @@
                             <div id="save-info-label" class="menu-sublabel">No local save found</div>
                             <button id="btn-new-game" class="menu-btn glow-cyan">🌟 NEW GAME (APPLY SEED)</button>
                             <button id="btn-menu-daily" class="menu-btn glow-amber">📅 PLAY DAILY CHALLENGE</button>
+                            <button id="btn-menu-community" class="menu-btn glow-amber">🛠️ COMMUNITY CHALLENGES & MOD-TOOLS</button>
                             <button id="btn-menu-models" class="menu-btn glow-cyan">💾 MY MODELS (VAULT)</button>
                             <button id="btn-menu-profile" class="menu-btn">👤 ARCHITECT PROFILE</button>
                             <button id="btn-menu-codex" class="menu-btn">📖 CODEX & ML JOURNAL</button>
@@ -1822,6 +1845,8 @@
         </div>
     </div>
 
+    <!-- Community Challenges & Mod-Tools Client -->
+    <script type="module" src="src/community/CustomChallengeClient.js"></script>
     <!-- Main Game Script -->
     <script src="app.js"></script>
 </body>
