@@ -39,6 +39,108 @@ class CustomChallengeEngine {
   }
 
   /**
+   * Validate Candidate Challenge Parameters & Analytical Solvability
+   */
+  validateCandidateChallenge(candidate) {
+    if (!candidate || typeof candidate !== "object") {
+      return { isValid: false, code: "INVALID_PAYLOAD", reason: "Candidate payload must be an object." };
+    }
+
+    const { functionFamily, datasetParams, bossTemplate, title, description } = candidate;
+
+    if (!title || typeof title !== "string" || title.trim().length < 3 || title.trim().length > 64) {
+      return { isValid: false, code: "INVALID_TITLE", reason: "Challenge title must be a string between 3 and 64 characters." };
+    }
+
+    if (!this.ALLOWED_FAMILIES.includes(functionFamily)) {
+      return { isValid: false, code: "UNSUPPORTED_FAMILY", reason: `Function family '${functionFamily}' is unsupported.` };
+    }
+
+    if (!datasetParams || typeof datasetParams !== "object") {
+      return { isValid: false, code: "INVALID_DATASET_PARAMS", reason: "Missing dataset configuration parameters." };
+    }
+
+    const sampleCount = Number(datasetParams.sampleCount) || 30;
+    if (sampleCount < 20 || sampleCount > 60) {
+      return {
+        isValid: false,
+        code: "REJECTED_TRIVIAL_DATASET",
+        reason: `Sample count (${sampleCount}) is outside the safe difficulty envelope [20, 60]. Cannot trivialize or overwhelm scoring.`
+      };
+    }
+
+    const noiseSigma = Number(datasetParams.noiseSigma);
+    if (isNaN(noiseSigma) || noiseSigma < 0.02 || noiseSigma > 0.40) {
+      return {
+        isValid: false,
+        code: "REJECTED_TRIVIAL_DATASET",
+        reason: `Noise sigma (${noiseSigma}) must fall within safe bounds [0.02, 0.40]. Zero-noise flatlines are forbidden.`
+      };
+    }
+
+    const outlierRate = Number(datasetParams.outlierRate !== undefined ? datasetParams.outlierRate : 0.04);
+    if (isNaN(outlierRate) || outlierRate < 0.0 || outlierRate > 0.15) {
+      return { isValid: false, code: "INVALID_OUTLIER_RATE", reason: `Outlier rate (${outlierRate}) must be between 0.0 and 0.15.` };
+    }
+
+    if (!bossTemplate || typeof bossTemplate !== "object") {
+      return { isValid: false, code: "INVALID_BOSS_TEMPLATE", reason: "Boss stat template is required." };
+    }
+
+    const bossName = String(bossTemplate.bossName || "Custom Boss").trim();
+    if (bossName.length < 3 || bossName.length > 32) {
+      return { isValid: false, code: "INVALID_BOSS_NAME", reason: "Boss name must be between 3 and 32 characters." };
+    }
+
+    const maxHp = Number(bossTemplate.maxHp);
+    if (isNaN(maxHp) || maxHp < 300 || maxHp > 4000) {
+      return { isValid: false, code: "INVALID_BOSS_HP", reason: `Boss Max HP (${maxHp}) must fall within the bounded envelope [300, 4000].` };
+    }
+
+    const attackDamage = Number(bossTemplate.attackDamage);
+    if (isNaN(attackDamage) || attackDamage < 15 || attackDamage > 120) {
+      return { isValid: false, code: "INVALID_BOSS_DAMAGE", reason: `Boss Attack Damage (${attackDamage}) must fall within the bounded envelope [15, 120].` };
+    }
+
+    const enrageTimerSec = Number(bossTemplate.enrageTimerSec);
+    if (isNaN(enrageTimerSec) || enrageTimerSec < 60 || enrageTimerSec > 240) {
+      return { isValid: false, code: "INVALID_BOSS_ENRAGE", reason: `Boss Enrage Timer (${enrageTimerSec}s) must fall within safe limits [60s, 240s].` };
+    }
+
+    const moveSetPattern = bossTemplate.moveSetPattern || "GRADIENT_AVALANCHE";
+    if (!this.ALLOWED_MOVE_SETS.includes(moveSetPattern)) {
+      return { isValid: false, code: "INVALID_BOSS_MOVESET", reason: `Move-set '${moveSetPattern}' is unrecognized.` };
+    }
+
+    const prngSeed = candidate.seed || `MOD_${Date.now()}_${Math.floor(Math.random() * 99999)}`;
+    const prng = new SeededPRNG(prngSeed);
+
+    const generated = this._generateDatasetAndProof(functionFamily, datasetParams, prng);
+    if (!generated.solvability.isSolvable) {
+      return {
+        isValid: false,
+        code: "REJECTED_UNSOLVABLE",
+        reason: generated.solvability.reason || "Candidate dataset failed mathematical solvability check.",
+        details: generated.solvability
+      };
+    }
+
+    return {
+      isValid: true,
+      sanitized: {
+        title: title.trim(),
+        description: (description || "").trim(),
+        functionFamily,
+        datasetParams: { sampleCount, noiseSigma, outlierRate, ...generated.datasetParams },
+        bossTemplate: { bossName, maxHp, attackDamage, enrageTimerSec, moveSetPattern },
+        seed: prngSeed,
+        dataset: generated.dataset,
+        solvabilityCertificate: generated.solvability
+      }
+    };
+  }
+
+  /**
    * Analytical Solvability Prover matching Prompt 9 Procedural Generator
    * Computes closed-form OLS optimal inlier MSE for Linear Steppes and class separability.
    */
