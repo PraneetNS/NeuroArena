@@ -211,6 +211,46 @@ class CustomChallengeEngine {
   }
 
   /**
+   * Community Rating (Thumbs Up / Down) with per-player deduplication
+   */
+  rateChallenge(challengeId, playerId, vote) {
+    const ch = this.challenges.get(challengeId);
+    if (!ch) {
+      return { success: false, error: "CHALLENGE_NOT_FOUND" };
+    }
+
+    if (vote !== "UP" && vote !== "DOWN") {
+      return { success: false, error: "INVALID_VOTE_TYPE", reason: "Vote must be 'UP' or 'DOWN'." };
+    }
+
+    const prevVote = ch.stats.voters[playerId];
+    if (prevVote === vote) {
+      return {
+        success: true,
+        alreadyVoted: true,
+        upvotes: ch.stats.upvotes,
+        downvotes: ch.stats.downvotes,
+        netRating: ch.stats.upvotes - ch.stats.downvotes
+      };
+    }
+
+    if (prevVote === "UP") ch.stats.upvotes--;
+    if (prevVote === "DOWN") ch.stats.downvotes--;
+
+    if (vote === "UP") ch.stats.upvotes++;
+    if (vote === "DOWN") ch.stats.downvotes++;
+    ch.stats.voters[playerId] = vote;
+
+    return {
+      success: true,
+      vote,
+      upvotes: ch.stats.upvotes,
+      downvotes: ch.stats.downvotes,
+      netRating: ch.stats.upvotes - ch.stats.downvotes
+    };
+  }
+
+  /**
    * Validate Candidate Challenge Parameters & Analytical Solvability
    */
   validateCandidateChallenge(candidate) {
