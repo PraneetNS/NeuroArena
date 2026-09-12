@@ -8,6 +8,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- **Creator-Driven Custom Biome Challenges & Mod-Tools Layer (`CustomChallengeEngine.js`, `CustomChallengeClient.js`, `customChallenge.test.js`, `MOD_TOOLS_CUSTOM_CHALLENGES.md`)**
+  - Constrained authoring UI allowing advanced players to define custom biome challenges: function family (Linear, Logistic, Polynomial, Decision Tree), noise/outlier parameters, and boss stat-lines within hard mathematical envelopes.
+  - Analytical solvability checks matching Prompt 9 procedural generator parity (closed-form OLS inlier fit $\text{MSE} \le 0.05$, logistic separability $\ge 90\%$, etc.), rejecting unsolvable or exploitable candidate datasets with clear, human-readable error reasons.
+  - Automated validation-to-publish flow with zero manual review bottlenecks for v1.
+  - Server-paginated community challenge browser with family filters and dynamic sorting (`popular`, `top_rated`, `completions`, `newest`).
+  - Community rating ledger with thumbs up/down voting and per-player deduplication, alongside completion tallying.
+  - 100% scoring and anti-cheat pipeline parity: community challenge gameplay is evaluated authoritatively via `AuthoritativeValidator` and `auditLogger` (minimum training time $\ge 2500$ ms, gradient replay verification, and cryptographic parameter signatures).
+
 - **Freelance Corporate Client Contracts & SLA Marketplace (`ClientContractEngine.js`, `ClientContractClient.js`, `ClientContractManager.cs`, `clientContracts.test.js`)**
   - Enterprise contract marketplace across 5 tiers (Startup Incubator, Biotech Research, FinTech Quant Lab, Autonomous Robotics, Deep Space AI).
   - Strict SLA verification enforcing target architectures, accuracy/loss thresholds, and sub-millisecond inference latency ceilings.

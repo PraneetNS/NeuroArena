@@ -29,6 +29,7 @@
    - [Colyseus Authoritative Server & Zero-Copy Binary Protocol](#colyseus-authoritative-server--zero-copy-binary-protocol)
    - [1v1 Live Duels & Hidden Test Set Evaluation](#1v1-live-duels--hidden-test-set-evaluation)
    - [2-4 Player Collaborative Co-op Rooms (CoopRoom) & ML Dataset Health](#2-4-player-collaborative-co-op-rooms-cooproom--ml-dataset-health)
+   - [Creator-Driven Custom Biome Challenges & Mod-Tools Layer](#creator-driven-custom-biome-challenges--mod-tools-layer)
    - [6-Biome Procedural Variant & Mathematical Solvability Engine](#6-biome-procedural-variant--mathematical-solvability-engine)
    - [Seasonal Ranked League, Glicko-2 Tier Progression & Cross-Platform Parity](#seasonal-ranked-league-glicko-2-tier-progression--cross-platform-parity)
    - [Skill-Based Matchmaking (Glicko-2 Engine)](#skill-based-matchmaking-glicko-2-engine)
@@ -231,6 +232,13 @@ A dynamic commentary system converts live training telemetry into plain-English 
 - **Boss Move-Set Variations:** 3 distinct attack patterns and modulated stat profiles per boss selected deterministically by seed.
 - **Poisson-Disc Terrain Scatter Layout:** Modulates terrain density, minimum scatter distance ($4.8\text{--}6.2\text{m}$), and landmark orientation while preserving player/lab spawn exclusion zones.
 - **Daily Seed Mode:** Synchronizes all players globally to `DAILY-YYYYMMDD` challenges.
+
+### Creator-Driven Custom Biome Challenges & Mod-Tools Layer
+- **Constrained Authoring Mod-Tools:** Allows advanced players to craft custom biome challenges across 4 function families (`LINEAR_REGRESSION`, `LOGISTIC_CLASSIFICATION`, `POLYNOMIAL_REGRESSION`, `DECISION_TREE_ENSEMBLE`) with safe bounded parameters (samples $N \in [20, 60]$, noise $\sigma \in [0.02, 0.40]$, outliers $r \in [0, 0.15]$) and boss statlines (HP $\in [300, 4000]$, damage $\in [15, 120]$, enrage $\in [60, 240\text{s}]$).
+- **Closed-Form Solvability Parity (Prompt 9):** Automated server-side OLS inlier proof ($\text{MSE} \le 0.05$) and class separability checks guarantee every listed challenge is certified solvable before publication; rejected submissions return explicit, human-readable mathematical reasons.
+- **Automated Instant Listing:** Frictionless publish flow with zero manual review bottlenecks.
+- **Server-Paginated Community Hub:** Browsable community challenges with family filtering, sorting (`popular`, `top_rated`, `completions`, `newest`), and community rating ledgers (thumbs up/down with deduplication).
+- **100% Anti-Cheat & Scoring Coverage:** Submissions run through the exact same `AuthoritativeValidator` replay simulation and `auditLogger` anomaly detection as official campaign and ranked duel matches.
 
 ### Seasonal Ranked League, Glicko-2 Tier Progression & Cross-Platform Parity
 - **5 Competitive Tiers:** Bronze ($0\text{--}999$) ➔ Silver ($1000\text{--}1399$) ➔ Gold ($1400\text{--}1799$) ➔ Platinum ($1800\text{--}2199$) ➔ Architect ($2200+$).
