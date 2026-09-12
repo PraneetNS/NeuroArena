@@ -6451,7 +6451,8 @@ function closeActiveHUDModals(excludeId = null) {
         "duel-matchmaking-modal",
         "duel-results-modal",
         "character-select-modal",
-        "daily-challenge-modal"
+        "daily-challenge-modal",
+        "community-challenge-modal"
     ];
     modalIds.forEach(id => {
         if (id !== excludeId) {
@@ -7405,6 +7406,51 @@ function setupUIEvents() {
     document.getElementById("btn-menu-daily")?.addEventListener("click", openDailyChallengeModal);
     document.getElementById("btn-close-daily-modal")?.addEventListener("click", () => {
         document.getElementById("daily-challenge-modal")?.classList.add("hidden");
+    });
+
+    // Creator-Driven Live-Service Mod Tools & Community Challenges Modal
+    function openCommunityChallengesModal() {
+        closeActiveHUDModals("community-challenge-modal");
+        const modal = document.getElementById("community-challenge-modal");
+        const mount = document.getElementById("community-challenge-content-mount");
+        if (!modal || !mount) return;
+
+        modal.classList.remove("hidden");
+
+        const client = window.NeuroCustomChallengeClient || (typeof CustomChallengeClient !== "undefined" ? new CustomChallengeClient() : null);
+        if (client) {
+            client.render(mount, (challenge) => {
+                if (!challenge) return;
+                modal.classList.add("hidden");
+                document.getElementById("main-menu")?.classList.add("hidden");
+
+                const biomeIdx = challenge.functionFamily === "LINEAR_REGRESSION" ? 0 :
+                                 challenge.functionFamily === "LOGISTIC_CLASSIFICATION" ? 1 :
+                                 challenge.functionFamily === "POLYNOMIAL_REGRESSION" ? 2 : 3;
+
+                GameState.activeCustomChallenge = challenge;
+                initializePlaythroughSeed(challenge.seed || "COMMUNITY-CHALLENGE-SEED");
+                resetGameSave();
+                startBiomeLoadingSequence(biomeIdx, () => {
+                    if (challenge.dataset && challenge.dataset.length > 0) {
+                        currentDataset = challenge.dataset.map(p => ({
+                            x: p.x !== undefined ? p.x : p.x1,
+                            y: p.y !== undefined ? p.y : (p.classLabel || 0),
+                            collected: true,
+                            isOutlier: p.isOutlier || false
+                        }));
+                    }
+                    spawnSeededCollectibles();
+                    updateHUD();
+                });
+            });
+        }
+    }
+
+    document.getElementById("btn-community-challenges")?.addEventListener("click", openCommunityChallengesModal);
+    document.getElementById("btn-menu-community")?.addEventListener("click", openCommunityChallengesModal);
+    document.getElementById("btn-close-community-modal")?.addEventListener("click", () => {
+        document.getElementById("community-challenge-modal")?.classList.add("hidden");
     });
 
     // Cosmetic Skins
