@@ -8,10 +8,13 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@400;600;800;900&family=Inter:wght@400;500;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700;800&family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@400;600;800;900&family=Inter:wght@400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="design-system.css">
     <link rel="stylesheet" href="style.css">
+    <!-- Mathematical Iconography Library -->
+    <script src="src/ui/MathIconLibrary.js"></script>
     <!-- Three.js for 3D WebGL Rendering -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <!-- GSAP for High-Performance UI Motion Layer -->
@@ -220,6 +223,7 @@
                 <button id="btn-leaderboard" class="hud-icon-btn glow-green" title="Leaderboards">🏆</button>
                 <button id="btn-hud-recenter" class="hud-icon-btn" title="Recenter Camera">🎯</button>
                 <button id="btn-open-settings" class="hud-icon-btn" title="Settings">⚙️</button>
+                <button id="btn-open-design-system" class="hud-icon-btn glow-cyan" title="Unified Design System & Style Guide" onclick="window.open('style-guide.html', '_blank')">📐</button>
             </div>
 
             <!-- 3. EXPANDABLE INVENTORY DRAWER WITH LIVE DATASET STATS -->
