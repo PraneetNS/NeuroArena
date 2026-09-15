@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NeuroArena — Unified Design System & Mathematical Style Guide</title>
+  <meta name="description" content="Cross-platform design token system and mathematical iconography specification for NeuroArena (Unity USS & Web CSS).">
+  
+  <!-- Modern Typography: Space Grotesk (Display), JetBrains Mono (Numeral/Code), Outfit & Inter (Body) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700;800&family=JetBrains+Mono:wght@400;600;700;800&family=Outfit:wght@400;600;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Token System Stylesheet -->
+  <link rel="stylesheet" href="design-system.css">
+  
+  <!-- Mathematical Iconography Library -->
+  <script src="src/ui/MathIconLibrary.js"></script>
+
+  <style>
+    /* ==========================================================================
+       Style Guide Showcase Specific Styles
+       Built purely on --na-* Design Tokens & Chamfer Aesthetics
+       ========================================================================== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--na-color-bg-void);
+      color: var(--na-color-text-primary);
+      font-family: var(--na-font-family-body);
+      min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.5;
+      background-image: 
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(56, 189, 248, 0.12), transparent),
+        radial-gradient(circle at 100% 100%, rgba(168, 85, 247, 0.08), transparent 40%),
+        linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 48px 48px, 48px 48px;
+    }
+
+    /* Top Navigation HUD */
+    .sg-navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--na-space-md) var(--na-space-xl);
+      border-bottom: 1px solid var(--na-color-border-subtle);
+      background: rgba(5, 8, 14, 0.85);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .sg-brand {
+      display: flex;
+      align-items: center;
+      gap: var(--na-space-sm);
+    }
+
+    .sg-brand-logo {
+      width: 34px;
+      height: 34px;
+      background: linear-gradient(135deg, var(--na-color-border-glow), var(--na-biome-citadel-accent));
+      clip-path: polygon(8px 0%, 100% 0%, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0% 100%, 0% 8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #05080e;
+      font-weight: 800;
+      font-family: var(--na-font-family-numeral);
+      font-size: 16px;
+    }
+
+    .sg-brand-title {
+      font-family: var(--na-font-family-display);
+      font-weight: 800;
+      font-size: 18px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      background: linear-gradient(90deg, #f1f5f9, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .sg-nav-links {
+      display: flex;
+      gap: var(--na-space-sm);
+    }
+
+    .sg-nav-link {
+      color: var(--na-color-text-secondary);
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 600;
+      padding: var(--na-space-xs) var(--na-space-sm);
+      border-radius: var(--na-radius-sharp);
+      transition: color 0.15s, background 0.15s;
+    }
+
+    .sg-nav-link:hover {
+      color: var(--na-color-text-primary);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    /* Main Container */
+    .sg-container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: var(--na-space-2xl) var(--na-space-lg);
+    }
+
+    /* Hero Section */
+    .sg-hero {
+      margin-bottom: var(--na-space-3xl);
+      text-align: left;
+      position: relative;
+    }
+
+    .sg-hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--na-space-xs);
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid var(--na-color-border-glow);
+      padding: 4px 10px;
+      margin-bottom: var(--na-space-md);
+      font-family: var(--na-font-family-numeral);
+      font-size: 11px;
+      color: var(--na-biome-tundra-accent);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .sg-hero-title {
+      font-family: var(--na-font-family-display);
+      font-size: clamp(32px, 5vw, 56px);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      margin-bottom: var(--na-space-md);
+      max-width: 900px;
+    }
+
+    .sg-hero-desc {
+      font-size: 16px;
+      color: var(--na-color-text-secondary);
+      max-width: 760px;
+      line-height: 1.6;
+    }
+
+    /* Section Cards */
+    .sg-section {
+      margin-bottom: var(--na-space-3xl);
+    }
+
+    .sg-section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: var(--na-space-lg);
+      padding-bottom: var(--na-space-sm);
+      border-bottom: 1px solid var(--na-color-border-subtle);
+    }
+
+    .sg-section-title {
+      font-family: var(--na-font-family-display);
+      font-size: 22px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      display: flex;
+      align-items: center;
+      gap: var(--na-space-sm);
+    }
+
+    .sg-section-sub {
+      font-size: 13px;
+      color: var(--na-color-text-tertiary);
+      font-family: var(--na-font-family-numeral);
+    }
+
+    /* Grid Layouts */
+    .sg-grid-6 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: var(--na-space-lg);
+    }
+
+    .sg-grid-swatches {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: var(--na-space-md);
+    }
+
+    /* Biome Theme Card */
+    .sg-biome-card {
+      background: var(--na-color-bg-surface);
+      border: 1px solid var(--na-color-border-subtle);
+      border-radius: var(--na-radius-md);
+      position: relative;
+      overflow: hidden;
+      transition: transform var(--na-motion-panel-open-duration) var(--na-motion-panel-open-easing),
+                  border-color 0.2s ease;
+    }
+
+    .sg-biome-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--na-color-border-strong);
+    }
+
+    .sg-biome-banner {
+      height: 8px;
+      width: 100%;
+    }
+
+    .sg-biome-body {
+      padding: var(--na-space-lg);
+    }
+
+    .sg-biome-title {
+      font-family: var(--na-font-family-display);
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    .sg-biome-paradigm {
+      font-size: 11px;
+      color: var(--na-color-text-tertiary);
+      font-family: var(--na-font-family-numeral);
+      text-transform: uppercase;
+      margin-bottom: var(--na-space-md);
+    }
+
+    .sg-color-chips {
+      display: flex;
+      gap: var(--na-space-xs);
+      margin-top: var(--na-space-sm);
+    }
+
+    .sg-color-chip {
+      flex: 1;
+      height: 38px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 4px;
+      border-radius: var(--na-radius-sharp);
+      font-size: 9px;
+      font-family: var(--na-font-family-numeral);
+      font-weight: 700;
+      color: #fff;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .sg-color-chip:hover {
+      opacity: 0.85;
+    }
+
+    /* Typography Scale Table */
+    .sg-type-specimen-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--na-color-bg-surface);
+      border: 1px solid var(--na-color-border-subtle);
+      border-radius: var(--na-radius-md);
+      overflow: hidden;
+    }
+
+    .sg-type-specimen-table th {
+      background: var(--na-color-bg-elevated);
+      padding: var(--na-space-md);
+      text-align: left;
+      font-family: var(--na-font-family-numeral);
+      font-size: 11px;
+      color: var(--na-color-text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--na-color-border-subtle);
+    }
+
+    .sg-type-specimen-table td {
+      padding: var(--na-space-md);
+      border-bottom: 1px solid var(--na-color-border-subtle);
+      vertical-align: middle;
+    }
+
+    .sg-type-specimen-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Math Iconography Gallery */
+    .sg-icon-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: var(--na-space-md);
+    }
+
+    .sg-icon-card {
+      background: var(--na-color-bg-surface);
+      border: 1px solid var(--na-color-border-subtle);
+      border-radius: var(--na-radius-md);
+      padding: var(--na-space-lg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      position: relative;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s, transform 0.2s;
+    }
+
+    .sg-icon-card:hover {
+      border-color: var(--na-color-border-glow);
+      background: var(--na-color-bg-elevated);
+      transform: translateY(-2px);
+    }
+
+    .sg-icon-stage {
+      width: 64px;
+      height: 64px;
+      background: rgba(5, 8, 14, 0.7);
+      border: 1px solid var(--na-color-border-subtle);
+      border-radius: var(--na-radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: var(--na-space-md);
+      color: var(--na-biome-tundra-accent);
+      transition: color 0.2s;
+    }
+
+    .sg-icon-card:hover .sg-icon-stage {
+      color: #ffffff;
+      border-color: var(--na-color-border-glow);
+    }
+
+    .sg-icon-name {
+      font-family: var(--na-font-family-display);
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    .sg-icon-formula {
+      font-family: var(--na-font-family-numeral);
+      font-size: 11px;
+      color: var(--na-color-text-tertiary);
+      margin-bottom: var(--na-space-sm);
+    }
+
+    .sg-icon-desc {
+      font-size: 11px;
+      color: var(--na-color-text-secondary);
+      line-height: 1.4;
+      flex-grow: 1;
+    }
+
+    .sg-icon-copy-badge {
+      font-family: var(--na-font-family-numeral);
+      font-size: 9px;
+      color: var(--na-biome-tundra-accent);
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      padding: 3px 8px;
+      border-radius: var(--na-radius-sharp);
+      margin-top: var(--na-space-sm);
+      text-transform: uppercase;
+      opacity: 0.7;
+    }
+
+    .sg-icon-card:hover .sg-icon-copy-badge {
+      opacity: 1;
+      background: var(--na-biome-tundra-accent);
+      color: #05080e;
+      font-weight: 700;
+    }
+
+    /* Motion Playground */
+    .sg-motion-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: var(--na-space-lg);
+    }
+
+    .sg-motion-card {
+      background: var(--na-color-bg-surface);
+      border: 1px solid var(--na-color-border-subtle);
+      border-radius: var(--na-radius-md);
+      padding: var(--na-space-lg);
+    }
+
+    .sg-motion-visualizer {
+      height: 100px;
+      background: var(--na-color-bg-void);
+      border: 1px solid var(--na-color-border-subtle);
+      border-radius: var(--na-radius-sm);
+      margin: var(--na-space-md) 0;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .sg-motion-target {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--na-biome-tundra-accent), var(--na-biome-marshlands-accent));
+      border-radius: var(--na-radius-sharp);
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+    }
+
+    /* Code Specimens */
+    .sg-code-box {
+      background: #05080e;
+      border: 1px solid var(--na-color-border-subtle);
+      border-radius: var(--na-radius-md);
+      padding: var(--na-space-md);
+      font-family: var(--na-font-family-numeral);
+      font-size: 11.5px;
+      color: #a7f3d0;
+      overflow-x: auto;
+      line-height: 1.6;
+    }
+
+    /* Toast Notification for Copy */
+    #sg-toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: rgba(11, 17, 27, 0.95);
+      border: 1px solid var(--na-biome-tundra-accent);
+      color: var(--na-color-text-primary);
+      padding: var(--na-space-sm) var(--na-space-lg);
+      border-radius: var(--na-radius-sm);
+      font-family: var(--na-font-family-numeral);
+      font-size: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 12px rgba(56, 189, 248, 0.3);
+      transform: translateY(100px);
+      opacity: 0;
+      transition: transform 0.25s var(--na-motion-panel-open-easing), opacity 0.25s ease;
+      z-index: 1000;
+    }
+
+    #sg-toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation HUD -->
+  <nav class="sg-navbar">
+    <div class="sg-brand">
+      <div class="sg-brand-logo">∇</div>
+      <div class="sg-brand-title">NeuroArena Design System</div>
+    </div>
+    <div class="sg-nav-links">
+      <a href="#colors" class="sg-nav-link">Colors</a>
+      <a href="#typography" class="sg-nav-link">Typography</a>
+      <a href="#spacing" class="sg-nav-link">8px Grid</a>
+      <a href="#icons" class="sg-nav-link">Math Glyphs</a>
+      <a href="#motion" class="sg-nav-link">Motion Timing</a>
+      <a href="#parity" class="sg-nav-link">Unity Parity</a>
+      <a href="index.html" class="sg-nav-link" style="color:var(--na-biome-tundra-accent);">← Back to Arena</a>
+    </div>
+  </nav>
+
+  <div class="sg-container">
+    
+    <!-- Hero Section -->
+    <header class="sg-hero">
+      <div class="sg-hero-badge">Single Source of Truth · Cross-Platform Spec v2.0</div>
+      <h1 class="sg-hero-title">Mathematical Precision & Cybernetic Clarity.</h1>
+      <p class="sg-hero-desc">
+        A unified design-token system consumed identically by both the <b>Unity Client</b> (via UI Toolkit USS) and the <b>Web Client</b> (via CSS Custom Properties). Zero SaaS clich&eacute;s: angular chamfered edges, dark obsidian voids, 6 algorithmic biome palettes, and a mathematical vector glyph language.
+      </p>
+    </header>
+
+    <!-- SECTION 1: PALETTES & BIOMES -->
+    <section id="colors" class="sg-section">
+      <div class="sg-section-header">
+        <h2 class="sg-section-title"><span>🎨</span> Biome Color Schemes</h2>
+        <span class="sg-section-sub">6 Algorithmic Paradigms · WCAG AA Contrast</span>
+      </div>
+
+      <div class="sg-grid-6">
+        
+        <!-- Biome 0: Steppes -->
+        <div class="sg-biome-card">
+          <div class="sg-biome-banner" style="background: linear-gradient(90deg, var(--na-biome-steppes-accent), var(--na-biome-steppes-secondary));"></div>
+          <div class="sg-biome-body">
+            <h3 class="sg-biome-title">The Linear Steppes</h3>
+            <div class="sg-biome-paradigm">1D Continuous Linear Regression (SGD)</div>
+            <p style="font-size:12px; color:var(--na-color-text-secondary); margin-bottom:12px;">
+              Solar amber tones representing steepest gradient descent vectors traversing undulating empirical loss slopes.
+            </p>
+            <div class="sg-color-chips">
+              <div class="sg-color-chip" style="background:#f59e0b;" onclick="copyColor('#f59e0b', 'Steppes Accent')">#f59e0b</div>
+              <div class="sg-color-chip" style="background:#d97706;" onclick="copyColor('#d97706', 'Steppes Secondary')">#d97706</div>
+              <div class="sg-color-chip" style="background:#78350f;" onclick="copyColor('#78350f', 'Steppes Surface')">#78350f</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Biome 1: Marshlands -->
+        <div class="sg-biome-card">
+          <div class="sg-biome-banner" style="background: linear-gradient(90deg, var(--na-biome-marshlands-accent), var(--na-biome-marshlands-secondary));"></div>
+          <div class="sg-biome-body">
+            <h3 class="sg-biome-title">The Binary Marshlands</h3>
+            <div class="sg-biome-paradigm">2D Logistic Classification (Hyperplane)</div>
+            <p style="font-size:12px; color:var(--na-color-text-secondary); margin-bottom:12px;">
+              Toxic emerald and cyan separating binary classes along an optimal maximum-margin decision hyperplane.
+            </p>
+            <div class="sg-color-chips">
+              <div class="sg-color-chip" style="background:#10b981;" onclick="copyColor('#10b981', 'Marshlands Accent')">#10b981</div>
+              <div class="sg-color-chip" style="background:#06b6d4;" onclick="copyColor('#06b6d4', 'Marshlands Secondary')">#06b6d4</div>
+              <div class="sg-color-chip" style="background:#064e3b;" onclick="copyColor('#064e3b', 'Marshlands Surface')">#064e3b</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Biome 2: Tundra -->
+        <div class="sg-biome-card">
+          <div class="sg-biome-banner" style="background: linear-gradient(90deg, var(--na-biome-tundra-accent), var(--na-biome-tundra-secondary));"></div>
+          <div class="sg-biome-body">
+            <h3 class="sg-biome-title">The Variance Tundra</h3>
+            <div class="sg-biome-paradigm">Polynomial & Regularization (L1/L2)</div>
+            <p style="font-size:12px; color:var(--na-color-text-secondary); margin-bottom:12px;">
+              Glacial frost cyan and indigo penalizing model complexity and shrinking weights toward sparse lasso vertices.
+            </p>
+            <div class="sg-color-chips">
+              <div class="sg-color-chip" style="background:#38bdf8;" onclick="copyColor('#38bdf8', 'Tundra Accent')">#38bdf8</div>
+              <div class="sg-color-chip" style="background:#6366f1;" onclick="copyColor('#6366f1', 'Tundra Secondary')">#6366f1</div>
+              <div class="sg-color-chip" style="background:#0c4a6e;" onclick="copyColor('#0c4a6e', 'Tundra Surface')">#0c4a6e</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Biome 3: Canopy -->
+        <div class="sg-biome-card">
+          <div class="sg-biome-banner" style="background: linear-gradient(90deg, var(--na-biome-canopy-accent), var(--na-biome-canopy-secondary));"></div>
+          <div class="sg-biome-body">
+            <h3 class="sg-biome-title">The Branching Canopy</h3>
+            <div class="sg-biome-paradigm">Tree Ensembles & Gini Impurity</div>
+            <p style="font-size:12px; color:var(--na-color-text-secondary); margin-bottom:12px;">
+              Chlorophyll lime and bagging gold partitioning multidimensional feature space into pure homogeneous leaves.
+            </p>
+            <div class="sg-color-chips">
+              <div class="sg-color-chip" style="background:#84cc16;" onclick="copyColor('#84cc16', 'Canopy Accent')">#84cc16</div>
+              <div class="sg-color-chip" style="background:#eab308;" onclick="copyColor('#eab308', 'Canopy Secondary')">#eab308</div>
+              <div class="sg-color-chip" style="background:#365314;" onclick="copyColor('#365314', 'Canopy Surface')">#365314</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Biome 4: Citadel -->
+        <div class="sg-biome-card">
+          <div class="sg-biome-banner" style="background: linear-gradient(90deg, var(--na-biome-citadel-accent), var(--na-biome-citadel-secondary));"></div>
+          <div class="sg-biome-body">
+            <h3 class="sg-biome-title">The Deep Synapse Citadel</h3>
+            <div class="sg-biome-paradigm">Deep Neural Networks & Backprop</div>
+            <p style="font-size:12px; color:var(--na-color-text-secondary); margin-bottom:12px;">
+              High-voltage violet and XOR magenta propagating chain-rule gradient signals through interconnected layers.
+            </p>
+            <div class="sg-color-chips">
+              <div class="sg-color-chip" style="background:#a855f7;" onclick="copyColor('#a855f7', 'Citadel Accent')">#a855f7</div>
+              <div class="sg-color-chip" style="background:#ec4899;" onclick="copyColor('#ec4899', 'Citadel Secondary')">#ec4899</div>
+              <div class="sg-color-chip" style="background:#581c87;" onclick="copyColor('#581c87', 'Citadel Surface')">#581c87</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Biome 5: Semantic -->
+        <div class="sg-biome-card">
+          <div class="sg-biome-banner" style="background: linear-gradient(90deg, var(--na-biome-semantic-accent), var(--na-biome-semantic-secondary));"></div>
+          <div class="sg-biome-body">
+            <h3 class="sg-biome-title">The Semantic Expanse</h3>
+            <div class="sg-biome-paradigm">Embeddings & Cosine Singularity</div>
+            <p style="font-size:12px; color:var(--na-color-text-secondary); margin-bottom:12px;">
+              Cosine resonance teal and latent coral measuring angle similarity across 768-dimensional transformer manifolds.
+            </p>
+            <div class="sg-color-chips">
+              <div class="sg-color-chip" style="background:#14b8a6;" onclick="copyColor('#14b8a6', 'Semantic Accent')">#14b8a6</div>
+              <div class="sg-color-chip" style="background:#f43f5e;" onclick="copyColor('#f43f5e', 'Semantic Secondary')">#f43f5e</div>
+              <div class="sg-color-chip" style="background:#134e4a;" onclick="copyColor('#134e4a', 'Semantic Surface')">#134e4a</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Base & Status Swatches -->
+      <div style="margin-top: var(--na-space-xl);">
+        <h3 style="font-size: 14px; font-family: var(--na-font-family-numeral); color: var(--na-color-text-secondary); margin-bottom: var(--na-space-sm); text-transform: uppercase;">
+          Obsidian Base & Universal Status Tokens
+        </h3>
+        <div class="sg-grid-swatches">
+          <div class="sg-biome-card" style="padding:12px;">
+            <div style="height:32px; background:#05080e; border:1px solid #334155; border-radius:4px; margin-bottom:8px;"></div>
+            <div style="font-size:11px; font-weight:700;">Base Void</div>
+            <div style="font-family:var(--na-font-family-numeral); font-size:10px; color:#94a3b8;">#05080e</div>
+          </div>
+          <div class="sg-biome-card" style="padding:12px;">
+            <div style="height:32px; background:#0b111b; border:1px solid #334155; border-radius:4px; margin-bottom:8px;"></div>
+            <div style="font-size:11px; font-weight:700;">Surface Obsidian</div>
+            <div style="font-family:var(--na-font-family-numeral); font-size:10px; color:#94a3b8;">#0b111b</div>
+          </div>
+          <div class="sg-biome-card" style="padding:12px;">
+            <div style="height:32px; background:#121b2a; border:1px solid #334155; border-radius:4px; margin-bottom:8px;"></div>
+            <div style="font-size:11px; font-weight:700;">Elevated Panel</div>
+            <div style="font-family:var(--na-font-family-numeral); font-size:10px; color:#94a3b8;">#121b2a</div>
+          </div>
+          <div class="sg-biome-card" style="padding:12px;">
+            <div style="height:32px; background:#ff2a55; border-radius:4px; margin-bottom:8px; box-shadow:0 0 10px rgba(255,42,85,0.4);"></div>
+            <div style="font-size:11px; font-weight:700; color:#ff2a55;">Alert / Hazard</div>
+            <div style="font-family:var(--na-font-family-numeral); font-size:10px; color:#94a3b8;">#ff2a55</div>
+          </div>
+          <div class="sg-biome-card" style="padding:12px;">
+            <div style="height:32px; background:#00f59b; border-radius:4px; margin-bottom:8px; box-shadow:0 0 10px rgba(0,245,155,0.4);"></div>
+            <div style="font-size:11px; font-weight:700; color:#00f59b;">Success / Convergence</div>
+            <div style="font-family:var(--na-font-family-numeral); font-size:10px; color:#94a3b8;">#00f59b</div>
+          </div>
+          <div class="sg-biome-card" style="padding:12px;">
+            <div style="height:32px; background:#ffb800; border-radius:4px; margin-bottom:8px; box-shadow:0 0 10px rgba(255,184,0,0.4);"></div>
+            <div style="font-size:11px; font-weight:700; color:#ffb800;">Warning / Overfit</div>
+            <div style="font-family:var(--na-font-family-numeral); font-size:10px; color:#94a3b8;">#ffb800</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 2: TYPOGRAPHY SCALE -->
+    <section id="typography" class="sg-section">
+      <div class="sg-section-header">
+        <h2 class="sg-section-title"><span>🔤</span> Typography Scale</h2>
+        <span class="sg-section-sub">Space Grotesk · JetBrains Mono · Outfit</span>
+      </div>
+
+      <table class="sg-type-specimen-table">
+        <thead>
+          <tr>
+            <th style="width: 180px;">Scale Tier</th>
+            <th style="width: 220px;">Specs (Size / Weight / Track)</th>
+            <th>Visual Rendering</th>
+            <th style="width: 240px;">Game Context</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="font-family:var(--na-font-family-numeral); font-size:11px; font-weight:700;">displayNumeral</td>
+            <td style="font-family:var(--na-font-family-numeral); font-size:11px; color:var(--na-color-text-secondary);">40px / 800 / -0.02em</td>
+            <td><div class="na-type-display-numeral" style="color:var(--na-biome-tundra-accent);">2,450.85</div></td>
+            <td style="font-size:12px; color:var(--na-color-text-secondary);">HUD MMR, Boss Countdown, Metric Values</td>
+          </tr>
+          <tr>
+            <td style="font-family:var(--na-font-family-numeral); font-size:11px; font-weight:700;">headlineH1</td>
+            <td style="font-family:var(--na-font-family-numeral); font-size:11px; color:var(--na-color-text-secondary);">28px / 700 / +0.02em</td>
+            <td><div class="na-type-headline-h1">HYPERPLANE CLEAVAGE</div></td>
+            <td style="font-size:12px; color:var(--na-color-text-secondary);">Modal headers, major game state banners</td>
+          </tr>
+          <tr>
+            <td style="font-family:var(--na-font-family-numeral); font-size:11px; font-weight:700;">panelHeader</td>
+            <td style="font-family:var(--na-font-family-numeral); font-size:11px; color:var(--na-color-text-secondary);">18px / 700 / +0.03em</td>
+            <td><div class="na-type-panel-header">SGD OPTIMIZER PARAMETERS</div></td>
+            <td style="font-size:12px; color:var(--na-color-text-secondary);">Subpanel titles, codex chapters</td>
+          </tr>
+          <tr>
+            <td style="font-family:var(--na-font-family-numeral); font-size:11px; font-weight:700;">subhead</td>
+            <td style="font-family:var(--na-font-family-numeral); font-size:11px; color:var(--na-color-text-secondary);">14px / 600 / +0.01em</td>
+            <td><div class="na-type-subhead">Regularization Penalty Weight (λ)</div></td>
+            <td style="font-size:12px; color:var(--na-color-text-secondary);">Input labels, author ciphers, item cards</td>
+          </tr>
+          <tr>
+            <td style="font-family:var(--na-font-family-numeral); font-size:11px; font-weight:700;">bodyDefault</td>
+            <td style="font-family:var(--na-font-family-numeral); font-size:11px; color:var(--na-color-text-secondary);">13px / 400 / 0.00em</td>
+            <td><div class="na-type-body-default">Calculates the Euclidean distance from each sample point to the separating decision hyperplane.</div></td>
+            <td style="font-size:12px; color:var(--na-color-text-secondary);">Narrative text, codex entries, dialog</td>
+          </tr>
+          <tr>
+            <td style="font-family:var(--na-font-family-numeral); font-size:11px; font-weight:700;">codeTabular</td>
+            <td style="font-family:var(--na-font-family-numeral); font-size:11px; color:var(--na-color-text-secondary);">12px / 600 / 0.00em</td>
+            <td><div class="na-type-code-tabular" style="color:var(--na-color-success);">w ← w - η · (1/m) ∑ (h_θ(x) - y)x</div></td>
+            <td style="font-size:12px; color:var(--na-color-text-secondary);">Mathematical formulas, weight matrices</td>
+          </tr>
+          <tr>
+            <td style="font-family:var(--na-font-family-numeral); font-size:11px; font-weight:700;">captionMicro</td>
+            <td style="font-family:var(--na-font-family-numeral); font-size:11px; color:var(--na-color-text-secondary);">10px / 700 / +0.06em</td>
+            <td><div class="na-type-caption-micro" style="background:rgba(255,42,85,0.15); color:var(--na-color-alert); display:inline-block; padding:2px 6px; border:1px solid rgba(255,42,85,0.4);">CONVERGENCE HAZARD 3σ</div></td>
+            <td style="font-size:12px; color:var(--na-color-text-secondary);">Status tags, anti-cheat chips, badges</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- SECTION 3: 8PX SPACING & CORNER RADII -->
+    <section id="spacing" class="sg-section">
+      <div class="sg-section-header">
+        <h2 class="sg-section-title"><span>📐</span> 8px Spacing Grid & Chamfer Geometry</h2>
+        <span class="sg-section-sub">Zero Rounded Pill Blobs · Angular Sci-Fi Engineering</span>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--na-space-lg);">
+        
+        <!-- Spacing Scale Visualizer -->
+        <div class="na-panel-chamfer">
+          <div class="na-type-panel-header" style="margin-bottom: var(--na-space-md);">8px Modular Spacing Scale</div>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span style="width: 48px; font-family:var(--na-font-family-numeral); font-size:11px;">xxs (2px)</span>
+              <div style="height: 12px; width: 2px; background: var(--na-biome-tundra-accent);"></div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span style="width: 48px; font-family:var(--na-font-family-numeral); font-size:11px;">xs (4px)</span>
+              <div style="height: 12px; width: 4px; background: var(--na-biome-tundra-accent);"></div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span style="width: 48px; font-family:var(--na-font-family-numeral); font-size:11px;">sm (8px)</span>
+              <div style="height: 12px; width: 8px; background: var(--na-biome-tundra-accent);"></div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span style="width: 48px; font-family:var(--na-font-family-numeral); font-size:11px;">md (16px)</span>
+              <div style="height: 12px; width: 16px; background: var(--na-biome-tundra-accent);"></div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span style="width: 48px; font-family:var(--na-font-family-numeral); font-size:11px;">lg (24px)</span>
+              <div style="height: 12px; width: 24px; background: var(--na-biome-tundra-accent);"></div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span style="width: 48px; font-family:var(--na-font-family-numeral); font-size:11px;">xl (32px)</span>
+              <div style="height: 12px; width: 32px; background: var(--na-biome-tundra-accent);"></div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span style="width: 48px; font-family:var(--na-font-family-numeral); font-size:11px;">2xl (48px)</span>
+              <div style="height: 12px; width: 48px; background: var(--na-biome-tundra-accent);"></div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span style="width: 48px; font-family:var(--na-font-family-numeral); font-size:11px;">3xl (64px)</span>
+              <div style="height: 12px; width: 64px; background: var(--na-biome-tundra-accent);"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chamfered Panel Anatomy -->
+        <div class="na-panel-chamfer" style="border-left-color: var(--na-biome-marshlands-accent);">
+          <div class="na-type-panel-header" style="margin-bottom: var(--na-space-sm);">Precision Chamfer Geometry</div>
+          <p style="font-size: 13px; color: var(--na-color-text-secondary); margin-bottom: var(--na-space-md);">
+            Rejecting generic SaaS rounded cards (uniform 16px radius with grey shadows). Panels feature clipped 45-degree cybernetic corners and asymmetrical illuminated left border accents.
+          </p>
+          <div style="display:flex; gap:12px;">
+            <button class="na-btn-tactical">TACTICAL BUTTON</button>
+            <button class="na-btn-alert">HAZARD TRIGGER</button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECTION 4: MATHEMATICAL ICONOGRAPHY -->
+    <section id="icons" class="sg-section">
+      <div class="sg-section-header">
+        <h2 class="sg-section-title"><span>⚡</span> Mathematical Iconography Language</h2>
+        <span class="sg-section-sub">10 Custom ML Glyphs · Click Any Card to Copy SVG</span>
+      </div>
+
+      <div class="sg-icon-grid" id="math-icons-container">
+        <!-- Rendered dynamically from MathIconLibrary.js -->
+      </div>
+    </section>
+
+    <!-- SECTION 5: MOTION TIMING TOKENS -->
+    <section id="motion" class="sg-section">
+      <div class="sg-section-header">
+        <h2 class="sg-section-title"><span>⏱️</span> Motion Timing & Spring Curves</h2>
+        <span class="sg-section-sub">Deterministic Non-Ad-Hoc Curves · Click "Test Motion"</span>
+      </div>
+
+      <div class="sg-motion-grid">
+        
+        <!-- Panel Open -->
+        <div class="sg-motion-card">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h3 class="sg-biome-title">Panel Open</h3>
+            <span style="font-family:var(--na-font-family-numeral); font-size:11px; color:var(--na-biome-tundra-accent);">240ms</span>
+          </div>
+          <div style="font-family:var(--na-font-family-numeral); font-size:10px; color:var(--na-color-text-tertiary); margin:4px 0;">
+            cubic-bezier(0.16, 1.0, 0.3, 1.0)
+          </div>
+          <div class="sg-motion-visualizer">
+            <div id="target-panel-open" class="sg-motion-target"></div>
+          </div>
+          <button class="na-btn-tactical" style="width:100%;" onclick="runMotionTest('target-panel-open', 'panelOpen')">Test Motion</button>
+        </div>
+
+        <!-- HUD Value Change -->
+        <div class="sg-motion-card">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h3 class="sg-biome-title">HUD Value Tick</h3>
+            <span style="font-family:var(--na-font-family-numeral); font-size:11px; color:var(--na-color-success);">120ms</span>
+          </div>
+          <div style="font-family:var(--na-font-family-numeral); font-size:10px; color:var(--na-color-text-tertiary); margin:4px 0;">
+            cubic-bezier(0.4, 0.0, 0.2, 1.0)
+          </div>
+          <div class="sg-motion-visualizer">
+            <div id="target-hud-value" class="sg-motion-target" style="background:var(--na-color-success);"></div>
+          </div>
+          <button class="na-btn-tactical" style="width:100%;" onclick="runMotionTest('target-hud-value', 'hudValue')">Test Motion</button>
+        </div>
+
+        <!-- Alert Flash -->
+        <div class="sg-motion-card">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h3 class="sg-biome-title">Alert Flash</h3>
+            <span style="font-family:var(--na-font-family-numeral); font-size:11px; color:var(--na-color-alert);">400ms</span>
+          </div>
+          <div style="font-family:var(--na-font-family-numeral); font-size:10px; color:var(--na-color-text-tertiary); margin:4px 0;">
+            cubic-bezier(0.25, 1.0, 0.5, 1.0)
+          </div>
+          <div class="sg-motion-visualizer">
+            <div id="target-alert-flash" class="sg-motion-target" style="background:var(--na-color-alert); box-shadow:0 0 15px rgba(255,42,85,0.6);"></div>
+          </div>
+          <button class="na-btn-alert" style="width:100%;" onclick="runMotionTest('target-alert-flash', 'alertFlash')">Test Motion</button>
+        </div>
+
+        <!-- Page Transition -->
+        <div class="sg-motion-card">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h3 class="sg-biome-title">Biome Warp</h3>
+            <span style="font-family:var(--na-font-family-numeral); font-size:11px; color:var(--na-biome-citadel-accent);">320ms</span>
+          </div>
+          <div style="font-family:var(--na-font-family-numeral); font-size:10px; color:var(--na-color-text-tertiary); margin:4px 0;">
+            cubic-bezier(0.7, 0.0, 0.84, 0.0)
+          </div>
+          <div class="sg-motion-visualizer">
+            <div id="target-page-trans" class="sg-motion-target" style="background:var(--na-biome-citadel-accent);"></div>
+          </div>
+          <button class="na-btn-tactical" style="width:100%;" onclick="runMotionTest('target-page-trans', 'pageTrans')">Test Motion</button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECTION 6: UNITY UI TOOLKIT VS WEB CSS PARITY -->
+    <section id="parity" class="sg-section">
+      <div class="sg-section-header">
+        <h2 class="sg-section-title"><span>🔗</span> Unity UI Toolkit USS vs Web CSS Parity</h2>
+        <span class="sg-section-sub">Synchronized Cross-Platform Code Spec</span>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--na-space-lg);">
+        <div>
+          <div class="na-type-subhead" style="margin-bottom:8px; color:var(--na-biome-tundra-accent);">Unity UI Toolkit (Assets/UI/Styles/DesignTokens.uss)</div>
+          <pre class="sg-code-box"><code>:root {
+  --na-color-bg-void: #05080e;
+  --na-color-bg-surface: #0b111b;
+  --na-color-border-glow: rgba(56, 189, 248, 0.35);
+  --na-duration-panel-open: 0.24s;
+}
+
+.na-panel-chamfer {
+  background-color: var(--na-color-bg-surface);
+  border-left-width: 2px;
+  border-left-color: var(--na-color-border-glow);
+  padding: var(--na-space-md);
+}
+
+.na-type-display-numeral {
+  font-size: 40px;
+  -unity-font-style: bold;
+  letter-spacing: -0.8px;
+}</code></pre>
+        </div>
+
+        <div>
+          <div class="na-type-subhead" style="margin-bottom:8px; color:var(--na-biome-marshlands-accent);">Web Client CSS (web/design-system.css)</div>
+          <pre class="sg-code-box"><code>:root {
+  --na-color-bg-void: #05080e;
+  --na-color-bg-surface: #0b111b;
+  --na-color-border-glow: rgba(56, 189, 248, 0.35);
+  --na-motion-panel-open-duration: 0.24s;
+  --na-motion-panel-open-easing: cubic-bezier(0.16, 1.0, 0.3, 1.0);
+}
+
+.na-panel-chamfer {
+  background-color: var(--na-color-bg-surface);
+  border-left: 2px solid var(--na-color-border-glow);
+  clip-path: polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px);
+}
+
+.na-type-display-numeral {
+  font-size: 40px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}</code></pre>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="sg-toast">Copied to clipboard!</div>
+
+  <script>
+    // Copy to clipboard helper
+    function showToast(msg) {
+      const toast = document.getElementById('sg-toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2200);
+    }
+
+    function copyColor(hex, label) {
+      navigator.clipboard.writeText(hex).then(() => {
+        showToast(`Copied ${label} (${hex}) to clipboard!`);
+      });
+    }
+
+    function copySvgCode(glyphName) {
+      if (window.NeuroArenaMathIcons) {
+        const svg = window.NeuroArenaMathIcons.renderSvg(glyphName, { size: 24, stroke: 'currentColor' });
+        navigator.clipboard.writeText(svg).then(() => {
+          showToast(`Copied <svg> for '${glyphName}' to clipboard!`);
+        });
+      }
+    }
+
+    // Populate Mathematical Glyphs
+    document.addEventListener('DOMContentLoaded', () => {
+      const container = document.getElementById('math-icons-container');
+      if (window.NeuroArenaMathIcons && container) {
+        const glyphNames = window.NeuroArenaMathIcons.getGlyphNames();
+        glyphNames.forEach(name => {
+          const meta = window.NeuroArenaMathIcons.getGlyphMeta(name);
+          const svg = window.NeuroArenaMathIcons.renderSvg(name, { size: 36, stroke: 'currentColor' });
+          
+          const card = document.createElement('div');
+          card.className = 'sg-icon-card';
+          card.onclick = () => copySvgCode(name);
+          card.innerHTML = `
+            <div class="sg-icon-stage">${svg}</div>
+            <div class="sg-icon-name">${meta.label.split('(')[0].trim()}</div>
+            <div class="sg-icon-formula">${meta.label.includes('(') ? meta.label.slice(meta.label.indexOf('(')) : ''}</div>
+            <div class="sg-icon-desc">${meta.description}</div>
+            <div class="sg-icon-copy-badge">Copy SVG</div>
+          `;
+          container.appendChild(card);
+        });
+      }
+    });
+
+    // Motion Testing Playground
+    function runMotionTest(targetId, type) {
+      const target = document.getElementById(targetId);
+      if (!target) return;
+
+      if (type === 'panelOpen') {
+        target.style.transition = 'none';
+        target.style.transform = 'scale(0.3) translateY(20px)';
+        target.style.opacity = '0';
+        void target.offsetWidth;
+        target.style.transition = 'transform 0.24s cubic-bezier(0.16, 1.0, 0.3, 1.0), opacity 0.24s ease';
+        target.style.transform = 'scale(1) translateY(0)';
+        target.style.opacity = '1';
+      } else if (type === 'hudValue') {
+        target.style.transition = 'none';
+        target.style.transform = 'scale(1.4)';
+        void target.offsetWidth;
+        target.style.transition = 'transform 0.12s cubic-bezier(0.4, 0.0, 0.2, 1.0)';
+        target.style.transform = 'scale(1)';
+      } else if (type === 'alertFlash') {
+        target.style.transition = 'none';
+        target.style.opacity = '0.1';
+        target.style.transform = 'scale(0.85)';
+        void target.offsetWidth;
+        target.style.transition = 'opacity 0.40s cubic-bezier(0.25, 1.0, 0.5, 1.0), transform 0.40s cubic-bezier(0.25, 1.0, 0.5, 1.0)';
+        target.style.opacity = '1';
+        target.style.transform = 'scale(1)';
+      } else if (type === 'pageTrans') {
+        target.style.transition = 'none';
+        target.style.transform = 'translateX(-50px) rotate(-15deg)';
+        target.style.opacity = '0';
+        void target.offsetWidth;
+        target.style.transition = 'transform 0.32s cubic-bezier(0.7, 0.0, 0.84, 0.0), opacity 0.32s ease';
+        target.style.transform = 'translateX(0) rotate(0deg)';
+        target.style.opacity = '1';
+      }
+    }
+  </script>
+</body>
+</html>
