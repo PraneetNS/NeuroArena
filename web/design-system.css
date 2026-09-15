@@ -1,91 +1,417 @@
 /* ==========================================================================
-   NEURO-ARENA: UNIFIED DESIGN SYSTEM TOKENS (CSS VARIABLES)
-   Defines 6 Biome Palettes, 8px Spacing Grid, Typography, Radii & Glow Rules
+   NEURO-ARENA: UNIFIED CROSS-PLATFORM DESIGN SYSTEM (CSS CUSTOM PROPERTIES)
+   Synchronized with Unity UI Toolkit (DesignTokens.uss) via tokens/design-tokens.json
    ========================================================================== */
 
 :root {
-    /* --- 1. TYPOGRAPHY TOKENS --- */
-    --font-display-mono: 'JetBrains Mono', 'Fira Code', monospace;
-    --font-ui-sans: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  /* ========================================================================
+     1. COLOR SYSTEM: BASE NEUTRALS (Obsidian Void Substrate)
+     ======================================================================== */
+  --na-color-bg-void: #05080e;
+  --na-color-bg-surface: #0b111b;
+  --na-color-bg-elevated: #121b2a;
+  --na-color-bg-overlay: rgba(5, 8, 14, 0.92);
 
-    /* --- 2. 8PX SPACING GRID SCALE --- */
-    --space-1: 8px;
-    --space-2: 16px;
-    --space-3: 24px;
-    --space-4: 32px;
-    --space-5: 40px;
-    --space-6: 48px;
-    --space-8: 64px;
+  --na-color-border-subtle: rgba(255, 255, 255, 0.08);
+  --na-color-border-strong: rgba(255, 255, 255, 0.20);
+  --na-color-border-glow: rgba(56, 189, 248, 0.35);
 
-    /* --- 3. CORNER RADII SCALE --- */
-    --radius-sm: 6px;
-    --radius-md: 12px;
-    --radius-lg: 18px;
-    --radius-full: 9999px;
+  --na-color-text-primary: #f1f5f9;
+  --na-color-text-secondary: #94a3b8;
+  --na-color-text-tertiary: #64748b;
 
-    /* --- 4. 6 PER-BIOME COLOR PALETTES --- */
-    
-    /* Biome 1: The Linear Steppes (Amber / Earth) */
-    --biome1-primary: #f59e0b;
-    --biome1-secondary: #78350f;
-    --biome1-accent: #fbbf24;
-    --biome1-bg: rgba(28, 25, 23, 0.95);
-    --biome1-border: rgba(245, 158, 11, 0.35);
-    --biome1-glow: 0 0 20px rgba(245, 158, 11, 0.5);
+  /* ========================================================================
+     2. COLOR SYSTEM: UNIVERSAL STATUS & ALERT TOKENS
+     Constant across all biomes so warnings and convergence states are distinct.
+     ======================================================================== */
+  --na-color-alert: #ff2a55;
+  --na-color-alert-glow: rgba(255, 42, 85, 0.45);
+  --na-color-alert-bg: rgba(255, 42, 85, 0.12);
+  --na-color-alert-border: rgba(255, 42, 85, 0.50);
 
-    /* Biome 2: The Binary Marshlands (Teal / Violet) */
-    --biome2-primary: #14b8a6;
-    --biome2-secondary: #8b5cf6;
-    --biome2-accent: #2dd4bf;
-    --biome2-bg: rgba(4, 47, 46, 0.95);
-    --biome2-border: rgba(20, 184, 166, 0.35);
-    --biome2-glow: 0 0 20px rgba(20, 184, 166, 0.5);
+  --na-color-success: #00f59b;
+  --na-color-success-glow: rgba(0, 245, 155, 0.45);
+  --na-color-success-bg: rgba(0, 245, 155, 0.12);
 
-    /* Biome 3: The Variance Tundra (Ice-Blue / Frost) */
-    --biome3-primary: #38bdf8;
-    --biome3-secondary: #0c4a6e;
-    --biome3-accent: #bae6fd;
-    --biome3-bg: rgba(8, 47, 73, 0.95);
-    --biome3-border: rgba(56, 189, 248, 0.35);
-    --biome3-glow: 0 0 20px rgba(56, 189, 248, 0.5);
+  --na-color-warning: #ffb800;
+  --na-color-warning-glow: rgba(255, 184, 0, 0.40);
+  --na-color-warning-bg: rgba(255, 184, 0, 0.12);
 
-    /* Biome 4: The Branching Canopy (Emerald Green / Gold) */
-    --biome4-primary: #10b981;
-    --biome4-secondary: #064e3b;
-    --biome4-accent: #fbbf24;
-    --biome4-bg: rgba(2, 44, 34, 0.95);
-    --biome4-border: rgba(16, 185, 129, 0.35);
-    --biome4-glow: 0 0 20px rgba(16, 185, 129, 0.5);
+  /* ========================================================================
+     3. COLOR SYSTEM: 6 NAMED BIOME THEMATIC ACCENTS
+     Derived from actual ML curriculum subject matter.
+     ======================================================================== */
+  /* Biome 0: The Linear Steppes (SGD Solar Gold & Vector Amber) */
+  --na-biome-steppes-accent: #f59e0b;
+  --na-biome-steppes-secondary: #d97706;
+  --na-biome-steppes-glow: rgba(245, 158, 11, 0.50);
+  --na-biome-steppes-bg: rgba(245, 158, 11, 0.08);
+  --na-biome-steppes-border: rgba(245, 158, 11, 0.35);
 
-    /* Biome 5: The Deep Synapse Citadel (Neon Purple / Cyan) */
-    --biome5-primary: #a855f7;
-    --biome5-secondary: #06b6d4;
-    --biome5-accent: #22d3ee;
-    --biome5-bg: rgba(15, 23, 42, 0.95);
-    --biome5-border: rgba(168, 85, 247, 0.35);
-    --biome5-glow: 0 0 20px rgba(168, 85, 247, 0.5);
+  /* Biome 1: The Binary Marshlands (Hyperplane Toxic Emerald & Sigmoid Cyan) */
+  --na-biome-marshlands-accent: #10b981;
+  --na-biome-marshlands-secondary: #06b6d4;
+  --na-biome-marshlands-glow: rgba(16, 185, 129, 0.50);
+  --na-biome-marshlands-bg: rgba(16, 185, 129, 0.08);
+  --na-biome-marshlands-border: rgba(16, 185, 129, 0.35);
+  --na-biome-marsh-accent: #10b981;
+  --na-biome-marsh-secondary: #06b6d4;
+  --na-biome-marsh-glow: rgba(16, 185, 129, 0.50);
+  --na-biome-marsh-bg: rgba(16, 185, 129, 0.08);
+  --na-biome-marsh-border: rgba(16, 185, 129, 0.35);
 
-    /* Biome 6: The Semantic Expanse (Starlit White / Holographic) */
-    --biome6-primary: #f8fafc;
-    --biome6-secondary: #818cf8;
-    --biome6-accent: #38bdf8;
-    --biome6-bg: rgba(2, 6, 23, 0.96);
-    --biome6-border: rgba(248, 250, 252, 0.40);
-    --biome6-glow: 0 0 24px rgba(129, 140, 248, 0.6);
+  /* Biome 2: The Variance Tundra (L2 Glacial Frost & Ridge Indigo) */
+  --na-biome-tundra-accent: #38bdf8;
+  --na-biome-tundra-secondary: #6366f1;
+  --na-biome-tundra-glow: rgba(56, 189, 248, 0.55);
+  --na-biome-tundra-bg: rgba(56, 189, 248, 0.08);
+  --na-biome-tundra-border: rgba(56, 189, 248, 0.35);
 
-    /* --- 5. GLOBAL UI & GLASSMORPHISM TOKENS --- */
-    --ui-bg-glass: rgba(7, 11, 18, 0.94);
-    --ui-border-glass: 1px solid rgba(56, 189, 248, 0.25);
-    --ui-backdrop-blur: blur(16px);
-    --text-main: #f8fafc;
-    --text-muted: #94a3b8;
-    --text-highlight: #38bdf8;
+  /* Biome 3: The Branching Canopy (Gini Chlorophyll Lime & Bagging Gold) */
+  --na-biome-canopy-accent: #84cc16;
+  --na-biome-canopy-secondary: #eab308;
+  --na-biome-canopy-glow: rgba(132, 204, 22, 0.50);
+  --na-biome-canopy-bg: rgba(132, 204, 22, 0.08);
+  --na-biome-canopy-border: rgba(132, 204, 22, 0.35);
 
-    /* --- 6. COMPETITIVE RANK LEAGUE TIER TOKENS --- */
-    --rank-bronze: #cd7f32;
-    --rank-silver: #c0c0c0;
-    --rank-gold: #ffd700;
-    --rank-platinum: #e5e4e2;
-    --rank-architect: #38bdf8;
-    --rank-architect-glow: 0 0 28px rgba(56, 189, 248, 0.75);
+  /* Biome 4: The Deep Synapse Citadel (Backprop High-Voltage Violet & XOR Magenta) */
+  --na-biome-citadel-accent: #a855f7;
+  --na-biome-citadel-secondary: #ec4899;
+  --na-biome-citadel-glow: rgba(168, 85, 247, 0.55);
+  --na-biome-citadel-bg: rgba(168, 85, 247, 0.08);
+  --na-biome-citadel-border: rgba(168, 85, 247, 0.35);
+
+  /* Biome 5: The Semantic Expanse (Cosine Resonance Teal & Latent Coral) */
+  --na-biome-semantic-accent: #14b8a6;
+  --na-biome-semantic-secondary: #f43f5e;
+  --na-biome-semantic-glow: rgba(20, 184, 166, 0.55);
+  --na-biome-semantic-bg: rgba(20, 184, 166, 0.08);
+  --na-biome-semantic-border: rgba(20, 184, 166, 0.35);
+
+  /* ========================================================================
+     4. TYPOGRAPHY SYSTEM
+     ======================================================================== */
+  --na-font-display: 'Space Grotesk', -apple-system, sans-serif;
+  --na-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --na-font-body: 'Outfit', 'Inter', -apple-system, sans-serif;
+
+  /* Scale: Display Numeral */
+  --na-type-display-size: 40px;
+  --na-type-display-weight: 800;
+  --na-type-display-lh: 1.0;
+  --na-type-display-tracking: -0.02em;
+
+  /* Scale: Headline H1 */
+  --na-type-h1-size: 28px;
+  --na-type-h1-weight: 700;
+  --na-type-h1-lh: 1.2;
+  --na-type-h1-tracking: 0.02em;
+
+  /* Scale: Panel Header */
+  --na-type-header-size: 18px;
+  --na-type-header-weight: 700;
+  --na-type-header-lh: 1.3;
+  --na-type-header-tracking: 0.03em;
+
+  /* Scale: Subhead */
+  --na-type-subhead-size: 14px;
+  --na-type-subhead-weight: 600;
+  --na-type-subhead-lh: 1.4;
+  --na-type-subhead-tracking: 0.01em;
+
+  /* Scale: Body Default */
+  --na-type-body-size: 13px;
+  --na-type-body-weight: 400;
+  --na-type-body-lh: 1.5;
+  --na-type-body-tracking: 0.00em;
+
+  /* Scale: Code & Tabular Telemetry */
+  --na-type-code-size: 12px;
+  --na-type-code-weight: 600;
+  --na-type-code-lh: 1.4;
+  --na-type-code-tracking: 0.00em;
+
+  /* Scale: Caption Micro */
+  --na-type-caption-size: 10px;
+  --na-type-caption-weight: 700;
+  --na-type-caption-lh: 1.2;
+  --na-type-caption-tracking: 0.06em;
+
+  /* ========================================================================
+     5. SPACING GRID (8px Base Grid with 4px Sub-Unit)
+     ======================================================================== */
+  --na-space-xxs: 2px;
+  --na-space-xs: 4px;
+  --na-space-sm: 8px;
+  --na-space-md: 16px;
+  --na-space-lg: 24px;
+  --na-space-xl: 32px;
+  --na-space-2xl: 48px;
+  --na-space-3xl: 64px;
+
+  /* ========================================================================
+     6. GEOMETRY & CORNER RADII (Chamfered Sci-Fi Language)
+     ======================================================================== */
+  --na-radius-sharp: 2px;
+  --na-radius-sm: 4px;
+  --na-radius-md: 8px;
+  --na-radius-lg: 14px;
+  --na-radius-pill: 9999px;
+
+  /* ========================================================================
+     7. MOTION TIMING TOKENS (One standard duration per category)
+     ======================================================================== */
+  --na-motion-panel-duration: 240ms;
+  --na-motion-panel-open-duration: 0.24s;
+  --na-motion-panel-easing: cubic-bezier(0.16, 1.0, 0.3, 1.0);
+  --na-motion-panel-open-easing: cubic-bezier(0.16, 1.0, 0.3, 1.0);
+
+  --na-motion-hud-duration: 120ms;
+  --na-motion-hud-value-duration: 0.12s;
+  --na-motion-hud-easing: cubic-bezier(0.4, 0.0, 0.2, 1.0);
+
+  --na-motion-alert-duration: 400ms;
+  --na-motion-alert-flash-duration: 0.40s;
+  --na-motion-alert-easing: cubic-bezier(0.25, 1.0, 0.5, 1.0);
+
+  --na-motion-page-duration: 320ms;
+  --na-motion-page-transition-duration: 0.32s;
+  --na-motion-page-easing: cubic-bezier(0.7, 0.0, 0.84, 0.0);
+}
+
+/* ==========================================================================
+   TYPOGRAPHY SPECIMEN UTILITIES
+   ========================================================================== */
+.na-type-display-numeral {
+  font-family: var(--na-font-mono);
+  font-size: var(--na-type-display-size);
+  font-weight: var(--na-type-display-weight);
+  line-height: var(--na-type-display-lh);
+  letter-spacing: var(--na-type-display-tracking);
+  font-feature-settings: "tnum" 1, "zero" 1;
+}
+
+.na-type-h1 {
+  font-family: var(--na-font-display);
+  font-size: var(--na-type-h1-size);
+  font-weight: var(--na-type-h1-weight);
+  line-height: var(--na-type-h1-lh);
+  letter-spacing: var(--na-type-h1-tracking);
+}
+
+.na-type-panel-header {
+  font-family: var(--na-font-display);
+  font-size: var(--na-type-header-size);
+  font-weight: var(--na-type-header-weight);
+  line-height: var(--na-type-header-lh);
+  letter-spacing: var(--na-type-header-tracking);
+  text-transform: uppercase;
+}
+
+.na-type-subhead {
+  font-family: var(--na-font-body);
+  font-size: var(--na-type-subhead-size);
+  font-weight: var(--na-type-subhead-weight);
+  line-height: var(--na-type-subhead-lh);
+  letter-spacing: var(--na-type-subhead-tracking);
+}
+
+.na-type-body {
+  font-family: var(--na-font-body);
+  font-size: var(--na-type-body-size);
+  font-weight: var(--na-type-body-weight);
+  line-height: var(--na-type-body-lh);
+  color: var(--na-color-text-secondary);
+}
+
+.na-type-code {
+  font-family: var(--na-font-mono);
+  font-size: var(--na-type-code-size);
+  font-weight: var(--na-type-code-weight);
+  line-height: var(--na-type-code-lh);
+  font-feature-settings: "tnum" 1;
+}
+
+.na-type-caption {
+  font-family: var(--na-font-mono);
+  font-size: var(--na-type-caption-size);
+  font-weight: var(--na-type-caption-weight);
+  line-height: var(--na-type-caption-lh);
+  letter-spacing: var(--na-type-caption-tracking);
+  text-transform: uppercase;
+}
+
+/* ==========================================================================
+   COMPONENT FOUNDATIONS (Anti-SaaS Chamfered Modules)
+   ========================================================================== */
+.na-panel {
+  background: var(--na-color-bg-surface);
+  border: 1px solid var(--na-color-border-strong);
+  border-radius: var(--na-radius-md);
+  padding: var(--na-space-md);
+  color: var(--na-color-text-primary);
+  position: relative;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  transition: border-color var(--na-motion-panel-duration) var(--na-motion-panel-easing),
+              box-shadow var(--na-motion-panel-duration) var(--na-motion-panel-easing);
+}
+
+/* Precision Chamfered Sci-Fi Cutout */
+.na-panel-chamfer {
+  background: var(--na-color-bg-surface);
+  border: 1px solid var(--na-color-border-strong);
+  clip-path: polygon(
+    0 8px,
+    8px 0,
+    calc(100% - 8px) 0,
+    100% 8px,
+    100% calc(100% - 8px),
+    calc(100% - 8px) 100%,
+    8px 100%,
+    0 calc(100% - 8px)
+  );
+  padding: var(--na-space-md);
+}
+
+.na-alert-banner {
+  background: var(--na-color-alert-bg);
+  border: 1px solid var(--na-color-alert-border);
+  color: var(--na-color-alert);
+  padding: var(--na-space-sm) var(--na-space-md);
+  border-radius: var(--na-radius-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--na-space-sm);
+  font-family: var(--na-font-mono);
+  font-size: var(--na-type-code-size);
+  font-weight: var(--na-type-code-weight);
+}
+
+.na-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--na-space-xs);
+  padding: var(--na-space-xxs) var(--na-space-xs);
+  border-radius: var(--na-radius-sharp);
+  font-family: var(--na-font-mono);
+  font-size: var(--na-type-caption-size);
+  font-weight: var(--na-type-caption-weight);
+  letter-spacing: var(--na-type-caption-tracking);
+  text-transform: uppercase;
+  border: 1px solid currentColor;
+}
+
+.na-btn-action {
+  font-family: var(--na-font-display);
+  font-size: var(--na-type-subhead-size);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: var(--na-space-sm) var(--na-space-md);
+  border-radius: var(--na-radius-sm);
+  border: none;
+  cursor: pointer;
+  background: var(--na-biome-steppes-accent);
+  color: var(--na-color-bg-void);
+  transition: transform var(--na-motion-hud-duration) var(--na-motion-hud-easing),
+              box-shadow var(--na-motion-hud-duration) var(--na-motion-hud-easing);
+}
+
+.na-btn-action:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 16px var(--na-biome-steppes-glow);
+}
+
+.na-btn-action:active {
+  transform: translateY(1px);
+}
+
+/* ==========================================================================
+   BIOME PALETTE THEME MODIFIERS
+   ========================================================================== */
+.na-biome-steppes {
+  --biome-accent: var(--na-biome-steppes-accent);
+  --biome-glow: var(--na-biome-steppes-glow);
+  --biome-bg: var(--na-biome-steppes-bg);
+  --biome-border: var(--na-biome-steppes-border);
+}
+
+.na-biome-marshlands {
+  --biome-accent: var(--na-biome-marsh-accent);
+  --biome-glow: var(--na-biome-marsh-glow);
+  --biome-bg: var(--na-biome-marsh-bg);
+  --biome-border: var(--na-biome-marsh-border);
+}
+
+.na-biome-tundra {
+  --biome-accent: var(--na-biome-tundra-accent);
+  --biome-glow: var(--na-biome-tundra-glow);
+  --biome-bg: var(--na-biome-tundra-bg);
+  --biome-border: var(--na-biome-tundra-border);
+}
+
+.na-biome-canopy {
+  --biome-accent: var(--na-biome-canopy-accent);
+  --biome-glow: var(--na-biome-canopy-glow);
+  --biome-bg: var(--na-biome-canopy-bg);
+  --biome-border: var(--na-biome-canopy-border);
+}
+
+.na-biome-citadel {
+  --biome-accent: var(--na-biome-citadel-accent);
+  --biome-glow: var(--na-biome-citadel-glow);
+  --biome-bg: var(--na-biome-citadel-bg);
+  --biome-border: var(--na-biome-citadel-border);
+}
+
+.na-biome-semantic {
+  --biome-accent: var(--na-biome-semantic-accent);
+  --biome-glow: var(--na-biome-semantic-glow);
+  --biome-bg: var(--na-biome-semantic-bg);
+  --biome-border: var(--na-biome-semantic-border);
+}
+
+/* ==========================================================================
+   MOTION TIMING KEYFRAMES & UTILITIES
+   ========================================================================== */
+@keyframes naPanelOpen {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.0) translateY(0);
+  }
+}
+
+@keyframes naAlertPulse {
+  0%, 100% {
+    opacity: 1;
+    border-color: var(--na-color-alert-border);
+    box-shadow: 0 0 12px var(--na-color-alert-glow);
+  }
+  50% {
+    opacity: 0.6;
+    border-color: rgba(255, 42, 85, 0.2);
+    box-shadow: none;
+  }
+}
+
+@keyframes naHudValuePunch {
+  0% { transform: scale(1.0); }
+  50% { transform: scale(1.15); color: var(--na-color-success); }
+  100% { transform: scale(1.0); }
+}
+
+.na-motion-panel {
+  animation: naPanelOpen var(--na-motion-panel-duration) var(--na-motion-panel-easing) forwards;
+}
+
+.na-motion-alert {
+  animation: naAlertPulse var(--na-motion-alert-duration) var(--na-motion-alert-easing) infinite;
+}
+
+.na-motion-hud-punch {
+  animation: naHudValuePunch var(--na-motion-hud-duration) var(--na-motion-hud-easing);
 }
