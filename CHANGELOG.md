@@ -8,6 +8,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- **Unified Cross-Platform Design Token System & Custom Mathematical Iconography (`tokens/design-tokens.json`, `web/design-system.css`, `Assets/UI/Styles/DesignTokens.uss`, `Assets/Scripts/UI/Theme/DesignTokenRegistry.cs`, `web/src/ui/MathIconLibrary.js`, `web/style-guide.html`, `docs/DESIGN_SYSTEM_SPECIFICATION.md`, `scripts/verify-design-tokens.js`)**
+  - Single source of truth token hierarchy (`tokens/design-tokens.json`) consumed simultaneously by Unity UI Toolkit (`DesignTokens.uss`) and Web CSS custom properties (`web/design-system.css`).
+  - Anti-generic SaaS aesthetic: zero uniform soft grey card shadows or pill-like rounded blobs; precision 45-degree cybernetic chamfered panel geometry (`.na-panel-chamfer`) with illuminated asymmetrical borders.
+  - 6 algorithmic biome palettes derived from ML curriculum: Linear Steppes (SGD Amber), Binary Marshlands (Toxic Emerald & Sigmoid Cyan), Variance Tundra (Glacial Frost & Ridge Indigo), Branching Canopy (Gini Lime & Bagging Gold), Deep Synapse Citadel (Backprop Violet & XOR Magenta), and Semantic Expanse (Cosine Teal & Latent Coral).
+  - 10 custom procedural vector mathematical glyphs for ML operations: Gradient Arrow ($\nabla \to$), Decision Boundary ($w \cdot x + b = 0$), Regularization Constraint ($L_1/L_2$), Dendrogram Decision Split, Sigmoid Activation Wave ($\sigma(z)$), Embedding Cosine Angle ($\cos \theta$), Loss Landscape Basin ($J(w)$), Outlier Hazard Pulse, Learning Rate Step Gauge ($\eta$), and Tensor Crystal ($X \in \mathbb{R}^{n \times d \times k}$).
+  - Standardized non-ad-hoc motion timing tokens: Panel Open (240ms, `cubic-bezier(0.16, 1.0, 0.3, 1.0)`), HUD Value Tick (120ms, `cubic-bezier(0.4, 0.0, 0.2, 1.0)`), Alert Flash (400ms, `cubic-bezier(0.25, 1.0, 0.5, 1.0)`), and Page Transition (320ms, `cubic-bezier(0.7, 0.0, 0.84, 0.0)`).
+  - Interactive web style guide showcase (`web/style-guide.html`) with live color swatches, typography specimen scale, 8px grid visualizer, 1-click SVG glyph exporter, and motion curve playground.
+  - Automated CI token linter (`scripts/verify-design-tokens.js`) performing 60+ synchronization assertions across JSON, Web CSS, Unity USS, C# registry, and math glyph generator.
+
 - **Creator-Driven Custom Biome Challenges & Mod-Tools Layer (`CustomChallengeEngine.js`, `CustomChallengeClient.js`, `customChallenge.test.js`, `MOD_TOOLS_CUSTOM_CHALLENGES.md`)**
   - Constrained authoring UI allowing advanced players to define custom biome challenges: function family (Linear, Logistic, Polynomial, Decision Tree), noise/outlier parameters, and boss stat-lines within hard mathematical envelopes.
   - Analytical solvability checks matching Prompt 9 procedural generator parity (closed-form OLS inlier fit $\text{MSE} \le 0.05$, logistic separability $\ge 90\%$, etc.), rejecting unsolvable or exploitable candidate datasets with clear, human-readable error reasons.
