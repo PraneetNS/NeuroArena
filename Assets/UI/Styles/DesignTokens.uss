@@ -1,0 +1,265 @@
+/* ==========================================================================
+   NeuroArena - Unified Design System USS (Unity UI Toolkit)
+   Source of Truth: tokens/design-tokens.json
+   Direct parity with web/design-system.css
+   ========================================================================== */
+
+:root {
+  /* --- Obsidian Void & Structural Neutral Tokens --- */
+  --na-color-bg-void: #05080e;
+  --na-color-bg-surface: #0b111b;
+  --na-color-bg-elevated: #121b2a;
+  --na-color-bg-overlay: rgba(5, 8, 14, 0.92);
+
+  --na-color-border-subtle: rgba(255, 255, 255, 0.08);
+  --na-color-border-strong: rgba(255, 255, 255, 0.20);
+  --na-color-border-glow: rgba(56, 189, 248, 0.35);
+
+  --na-color-text-primary: #f1f5f9;
+  --na-color-text-secondary: #94a3b8;
+  --na-color-text-tertiary: #64748b;
+
+  /* --- Universal Status Tokens --- */
+  --na-color-alert: #ff2a55;
+  --na-color-alert-glow: rgba(255, 42, 85, 0.45);
+  --na-color-alert-bg: rgba(255, 42, 85, 0.12);
+  --na-color-alert-border: rgba(255, 42, 85, 0.50);
+
+  --na-color-success: #00f59b;
+  --na-color-success-glow: rgba(0, 245, 155, 0.45);
+  --na-color-success-bg: rgba(0, 245, 155, 0.12);
+
+  --na-color-warning: #ffb800;
+  --na-color-warning-glow: rgba(255, 184, 0, 0.40);
+  --na-color-warning-bg: rgba(255, 184, 0, 0.12);
+
+  /* --- Biome 1: The Linear Steppes (1D Continuous Regression) --- */
+  --na-biome-steppes-accent: #f59e0b;
+  --na-biome-steppes-secondary: #d97706;
+  --na-biome-steppes-glow: rgba(245, 158, 11, 0.50);
+  --na-biome-steppes-bg-subtle: rgba(245, 158, 11, 0.08);
+  --na-biome-steppes-border: rgba(245, 158, 11, 0.35);
+
+  /* --- Biome 2: The Binary Marshlands (2D Logistic Classification) --- */
+  --na-biome-marshlands-accent: #10b981;
+  --na-biome-marshlands-secondary: #06b6d4;
+  --na-biome-marshlands-glow: rgba(16, 185, 129, 0.50);
+  --na-biome-marshlands-bg-subtle: rgba(16, 185, 129, 0.08);
+  --na-biome-marshlands-border: rgba(16, 185, 129, 0.35);
+
+  /* --- Biome 3: The Variance Tundra (Polynomial & Regularization L1/L2) --- */
+  --na-biome-tundra-accent: #38bdf8;
+  --na-biome-tundra-secondary: #6366f1;
+  --na-biome-tundra-glow: rgba(56, 189, 248, 0.55);
+  --na-biome-tundra-bg-subtle: rgba(56, 189, 248, 0.08);
+  --na-biome-tundra-border: rgba(56, 189, 248, 0.35);
+
+  /* --- Biome 4: The Branching Canopy (Tree Ensembles & Gini Impurity) --- */
+  --na-biome-canopy-accent: #84cc16;
+  --na-biome-canopy-secondary: #eab308;
+  --na-biome-canopy-glow: rgba(132, 204, 22, 0.50);
+  --na-biome-canopy-bg-subtle: rgba(132, 204, 22, 0.08);
+  --na-biome-canopy-border: rgba(132, 204, 22, 0.35);
+
+  /* --- Biome 5: The Deep Synapse Citadel (Neural Networks & Backprop) --- */
+  --na-biome-citadel-accent: #a855f7;
+  --na-biome-citadel-secondary: #ec4899;
+  --na-biome-citadel-glow: rgba(168, 85, 247, 0.55);
+  --na-biome-citadel-bg-subtle: rgba(168, 85, 247, 0.08);
+  --na-biome-citadel-border: rgba(168, 85, 247, 0.35);
+
+  /* --- Biome 6: The Semantic Expanse (Embeddings & Cosine Singularity) --- */
+  --na-biome-semantic-accent: #14b8a6;
+  --na-biome-semantic-secondary: #f43f5e;
+  --na-biome-semantic-glow: rgba(20, 184, 166, 0.55);
+  --na-biome-semantic-bg-subtle: rgba(20, 184, 166, 0.08);
+  --na-biome-semantic-border: rgba(20, 184, 166, 0.35);
+
+  /* --- Competitive Rank Tones --- */
+  --na-color-rank-bronze: #cd7f32;
+  --na-color-rank-silver: #c0c0c0;
+  --na-color-rank-gold: #ffd700;
+  --na-color-rank-platinum: #e5e4e2;
+  --na-color-rank-architect: #38bdf8;
+
+  /* --- 8px Grid Spacing Scale --- */
+  --na-space-xxs: 2px;
+  --na-space-xs: 4px;
+  --na-space-sm: 8px;
+  --na-space-md: 16px;
+  --na-space-lg: 24px;
+  --na-space-xl: 32px;
+  --na-space-2xl: 48px;
+  --na-space-3xl: 64px;
+
+  /* --- Corner Radii Tokens --- */
+  --na-radius-sharp: 2px;
+  --na-radius-sm: 4px;
+  --na-radius-md: 8px;
+  --na-radius-lg: 14px;
+  --na-radius-pill: 9999px;
+
+  /* --- Motion Timing Tokens --- */
+  --na-duration-panel-open: 0.24s;
+  --na-duration-hud-value: 0.12s;
+  --na-duration-alert-flash: 0.40s;
+  --na-duration-page-transition: 0.32s;
+}
+
+/* ==========================================================================
+   Structural Panel Utility Classes (UI Toolkit)
+   ========================================================================== */
+
+.na-panel-base {
+  background-color: var(--na-color-bg-surface);
+  border-color: var(--na-color-border-subtle);
+  border-width: 1px;
+  border-radius: var(--na-radius-md);
+  padding: var(--na-space-md);
+  color: var(--na-color-text-primary);
+}
+
+.na-panel-elevated {
+  background-color: var(--na-color-bg-elevated);
+  border-color: var(--na-color-border-strong);
+  border-width: 1px;
+  border-radius: var(--na-radius-md);
+  padding: var(--na-space-lg);
+  color: var(--na-color-text-primary);
+}
+
+/* Angular sci-fi HUD panel */
+.na-panel-chamfer {
+  background-color: var(--na-color-bg-surface);
+  border-left-width: 2px;
+  border-right-width: 1px;
+  border-top-width: 1px;
+  border-bottom-width: 1px;
+  border-left-color: var(--na-color-border-glow);
+  border-right-color: var(--na-color-border-subtle);
+  border-top-color: var(--na-color-border-subtle);
+  border-bottom-color: var(--na-color-border-subtle);
+  padding: var(--na-space-md);
+}
+
+/* ==========================================================================
+   Typography Scale Classes (UI Toolkit)
+   ========================================================================== */
+
+.na-type-display-numeral {
+  font-size: 40px;
+  -unity-font-style: bold;
+  letter-spacing: -0.8px;
+  color: var(--na-color-text-primary);
+}
+
+.na-type-headline-h1 {
+  font-size: 28px;
+  -unity-font-style: bold;
+  letter-spacing: 0.5px;
+  color: var(--na-color-text-primary);
+}
+
+.na-type-panel-header {
+  font-size: 18px;
+  -unity-font-style: bold;
+  letter-spacing: 0.5px;
+  color: var(--na-color-text-primary);
+}
+
+.na-type-subhead {
+  font-size: 14px;
+  -unity-font-style: bold;
+  letter-spacing: 0.2px;
+  color: var(--na-color-text-secondary);
+}
+
+.na-type-body-default {
+  font-size: 13px;
+  -unity-font-style: normal;
+  color: var(--na-color-text-secondary);
+}
+
+.na-type-code-tabular {
+  font-size: 12px;
+  -unity-font-style: bold;
+  color: var(--na-color-text-primary);
+}
+
+.na-type-caption-micro {
+  font-size: 10px;
+  -unity-font-style: bold;
+  letter-spacing: 0.6px;
+  color: var(--na-color-text-tertiary);
+}
+
+/* ==========================================================================
+   Interactive Tactical Buttons (UI Toolkit)
+   ========================================================================== */
+
+.na-btn-tactical {
+  background-color: var(--na-color-bg-elevated);
+  border-color: var(--na-color-border-strong);
+  border-width: 1px;
+  border-radius: var(--na-radius-sharp);
+  padding: var(--na-space-sm) var(--na-space-md);
+  color: var(--na-color-text-primary);
+  font-size: 12px;
+  -unity-font-style: bold;
+  transition-property: background-color, border-color;
+  transition-duration: 0.12s;
+}
+
+.na-btn-tactical:hover {
+  background-color: rgba(56, 189, 248, 0.15);
+  border-color: var(--na-color-border-glow);
+  color: #ffffff;
+}
+
+.na-btn-tactical:active {
+  background-color: rgba(56, 189, 248, 0.30);
+  border-color: #38bdf8;
+}
+
+/* Universal Alert Button */
+.na-btn-alert {
+  background-color: var(--na-color-alert-bg);
+  border-color: var(--na-color-alert-border);
+  border-width: 1px;
+  border-radius: var(--na-radius-sharp);
+  padding: var(--na-space-sm) var(--na-space-md);
+  color: var(--na-color-alert);
+  font-size: 12px;
+  -unity-font-style: bold;
+  transition-property: background-color, border-color;
+  transition-duration: 0.12s;
+}
+
+.na-btn-alert:hover {
+  background-color: rgba(255, 42, 85, 0.25);
+  border-color: var(--na-color-alert);
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   Active Biome Theming Modifiers (UI Toolkit)
+   ========================================================================== */
+
+.na-biome-steppes {
+  border-left-color: var(--na-biome-steppes-accent);
+}
+.na-biome-marshlands {
+  border-left-color: var(--na-biome-marshlands-accent);
+}
+.na-biome-tundra {
+  border-left-color: var(--na-biome-tundra-accent);
+}
+.na-biome-canopy {
+  border-left-color: var(--na-biome-canopy-accent);
+}
+.na-biome-citadel {
+  border-left-color: var(--na-biome-citadel-accent);
+}
+.na-biome-semantic {
+  border-left-color: var(--na-biome-semantic-accent);
+}
