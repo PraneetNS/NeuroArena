@@ -396,7 +396,33 @@ node scripts/verify-submission-checklist.js
 # 6. Network Chaos & WebSocket Stress Simulator (1,000 Concurrent Bots)
 node scripts/network-chaos-simulator.js
 node scripts/websocket-stress-test.js
+
+# 7. Design Token System & Cross-Platform Parity Linter
+node scripts/verify-design-tokens.js       # Validates tokens.json, web CSS, and Unity USS
 ```
+
+---
+
+## 🎨 Unified Cross-Platform Design Tokens & Mathematical Iconography
+
+To prevent visual drift between the **Unity Client** (UI Toolkit / USS) and the **Web Client** (CSS custom properties), NeuroArena establishes a strict, single-source-of-truth design-token system:
+
+- **Source of Truth (`tokens/design-tokens.json`):** Central token definition of base obsidian void colors (`#05080E`, `#0B111B`), universal status alerts (`#FF2A55`, `#00F59B`, `#FFB800`), 6 biome palettes, 8px modular spacing grid, corner radii, and motion timing.
+- **Anti-Generic SaaS Aesthetic:** Rejects uniform soft grey drop shadows and rounded pill cards. Panels use precision 45-degree cybernetic chamfered corners (`clip-path: polygon(...)`) with asymmetrical illuminated borders.
+- **6 Algorithmic Biome Schemes:**
+  1. *Linear Steppes:* `#F59E0B` (SGD Solar Gold) & `#D97706` (Vector Amber)
+  2. *Binary Marshlands:* `#10B981` (Toxic Emerald) & `#06B6D4` (Sigmoid Cyan)
+  3. *Variance Tundra:* `#38BDF8` (Glacial Frost) & `#6366F1` (Ridge Indigo)
+  4. *Branching Canopy:* `#84CC16` (Gini Lime) & `#EAB308` (Bagging Gold)
+  5. *Deep Synapse Citadel:* `#A855F7` (Backprop Violet) & `#EC4899` (XOR Magenta)
+  6. *Semantic Expanse:* `#14B8A6` (Cosine Teal) & `#F43F5E` (Latent Coral)
+- **10 Custom Mathematical ML Glyphs (`web/src/ui/MathIconLibrary.js`):** Procedural vector SVGs for exact machine learning operations ($\nabla J$, $w \cdot x + b = 0$, $L_1/L_2$ regularizer, decision split, sigmoid curve $\sigma(z)$, cosine angle, loss valley $J(w)$, outlier hazard, learning rate step $\eta$, tensor crystal).
+- **Motion Timing Tokens:** Standardized non-ad-hoc durations per category:
+  - `panel-open`: 240ms (`cubic-bezier(0.16, 1.0, 0.3, 1.0)`)
+  - `hud-value-change`: 120ms (`cubic-bezier(0.4, 0.0, 0.2, 1.0)`)
+  - `alert-flash`: 400ms (`cubic-bezier(0.25, 1.0, 0.5, 1.0)`)
+  - `page-transition`: 320ms (`cubic-bezier(0.7, 0.0, 0.84, 0.0)`)
+- **Interactive Style Guide (`web/style-guide.html`):** In-browser live design system showcase with interactive color swatches, typography specimens, 8px grid visualizer, 1-click SVG glyph copy, motion playground, and side-by-side Unity USS vs. Web CSS parity comparisons. Accessible via the **📐 button** in the HUD.
 
 ---
 
@@ -471,6 +497,7 @@ NeuroArena/
 │   ├── FTUE_TUTORIAL_SPECIFICATION.md # 3-minute onboarding loop & funnel metrics
 │   ├── JUICE_SYSTEM_SPECIFICATION.md # Hit-stop, camera shake & haptic feedback
 │   ├── MATHEMATICAL_SPECIFICATIONS.md # Analytical formulas and proofs
+│   ├── DESIGN_SYSTEM_SPECIFICATION.md # Cross-platform design tokens & math glyphs
 │   ├── MOBILE_OPTIMIZATION_GUIDE.md # 2GB RAM budget & profiling rules
 │   ├── NETCODE_PROTOCOL_SPEC.md   # Fast binary packet layout & sequence flow
 │   ├── OPENAPI_SPECIFICATION.yaml # REST and WebSocket API specification
@@ -486,16 +513,21 @@ NeuroArena/
 │   ├── ml-cli.js                  # Model consult and extrapolation CLI
 │   ├── network-chaos-simulator.js # Latency & packet-loss chaos test
 │   ├── neuro-cli.js               # Multi-command developer management CLI
+│   ├── verify-design-tokens.js    # Cross-platform token & parity linter
 │   ├── verify-submission-checklist.js # Hard pre-flight checklist & network isolation
 │   └── websocket-stress-test.js   # 1,000-client load test simulator
 ├── supabase/                      # Cloud Auth & Database Schema
 │   └── migrations/                # PostgreSQL schema for leaderboards, duels & ranked
+├── tokens/                        # Unified Cross-Platform Design Tokens
+│   └── design-tokens.json         # Master single source of truth (Colors, Type, Spacing, Motion)
 └── web/                           # Three.js PWA Client & Simulation
     ├── app.js                     # Core 3D engine, gameplay loop & HUD modals
+    ├── design-system.css          # Token-driven CSS custom properties & chamfer panels
     ├── index.html                 # Main web client interface
     ├── locales/                   # i18n translations (EN, ES, JA, DE, ZH)
-    ├── src/                       # WebGPU/WebGL renderers, Compute Particles, Audio DSP, WASM
-    ├── style.css                  # Cyber-formula glassmorphic UI design system
+    ├── src/                       # WebGPU/WebGL renderers, MathIconLibrary, Compute Particles
+    ├── style-guide.html           # Interactive design token & glyph reference showcase
+    ├── style.css                  # Cyber-formula glassmorphic UI layout
     └── tests/                     # Automated JavaScript ML test harness
 ```
 
