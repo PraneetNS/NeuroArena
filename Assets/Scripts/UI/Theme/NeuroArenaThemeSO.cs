@@ -25,6 +25,7 @@ namespace NeuroArena.UI.Theme
     public class NeuroArenaThemeSO : ScriptableObject
     {
         [Header("Typography Settings")]
+        public string displayFont = "Space Grotesk";
         public string displayMonospaceFont = "JetBrains Mono";
         public string cleanSansFont = "Outfit";
 
@@ -37,91 +38,91 @@ namespace NeuroArena.UI.Theme
         public float space8 = 64f;
 
         [Header("Corner Radii")]
-        public float radiusSmall = 6f;
-        public float radiusMedium = 12f;
-        public float radiusLarge = 18f;
+        public float radiusSmall = 4f;
+        public float radiusMedium = 8f;
+        public float radiusLarge = 14f;
 
         [Header("Glassmorphism & Border Rules")]
         public float borderWidth = 1.0f;
-        public float glassAlpha = 0.94f;
+        public float glassAlpha = 0.92f;
 
         [Header("6 Per-Biome Palettes")]
         public BiomePalette steppes = new BiomePalette
         {
             biomeName = "The Linear Steppes",
-            primary = new Color(0.96f, 0.62f, 0.04f),      // Amber
-            secondary = new Color(0.47f, 0.21f, 0.06f),    // Deep Earth
-            accent = new Color(1.0f, 0.78f, 0.28f),       // Bright Amber
-            background = new Color(0.08f, 0.06f, 0.04f, 0.95f),
-            border = new Color(0.96f, 0.62f, 0.04f, 0.35f),
-            textPrimary = new Color(0.99f, 0.95f, 0.78f),
-            textSecondary = new Color(0.85f, 0.75f, 0.60f),
-            glow = new Color(0.96f, 0.62f, 0.04f, 0.6f)
+            primary = new Color(0.9608f, 0.6196f, 0.0431f),      // #F59E0B Solar Gold
+            secondary = new Color(0.8510f, 0.4667f, 0.0235f),    // #D97706 Vector Amber
+            accent = new Color(0.9608f, 0.6196f, 0.0431f),       // #F59E0B
+            background = new Color(0.0196f, 0.0314f, 0.0549f, 0.94f),
+            border = new Color(0.9608f, 0.6196f, 0.0431f, 0.35f),
+            textPrimary = new Color(0.9451f, 0.9608f, 0.9765f),
+            textSecondary = new Color(0.5804f, 0.6392f, 0.7216f),
+            glow = new Color(0.9608f, 0.6196f, 0.0431f, 0.50f)
         };
 
         public BiomePalette marshlands = new BiomePalette
         {
             biomeName = "The Binary Marshlands",
-            primary = new Color(0.08f, 0.72f, 0.65f),      // Teal
-            secondary = new Color(0.55f, 0.36f, 0.96f),    // Violet
-            accent = new Color(0.20f, 0.95f, 0.85f),       // Cyan-Teal
-            background = new Color(0.02f, 0.08f, 0.08f, 0.95f),
-            border = new Color(0.08f, 0.72f, 0.65f, 0.35f),
-            textPrimary = new Color(0.85f, 0.98f, 0.95f),
-            textSecondary = new Color(0.70f, 0.75f, 0.90f),
-            glow = new Color(0.08f, 0.72f, 0.65f, 0.6f)
+            primary = new Color(0.0627f, 0.7255f, 0.5059f),      // #10B981 Toxic Emerald
+            secondary = new Color(0.0235f, 0.7137f, 0.8314f),    // #06B6D4 Sigmoid Cyan
+            accent = new Color(0.0627f, 0.7255f, 0.5059f),       // #10B981
+            background = new Color(0.0196f, 0.0314f, 0.0549f, 0.94f),
+            border = new Color(0.0627f, 0.7255f, 0.5059f, 0.35f),
+            textPrimary = new Color(0.9451f, 0.9608f, 0.9765f),
+            textSecondary = new Color(0.5804f, 0.6392f, 0.7216f),
+            glow = new Color(0.0627f, 0.7255f, 0.5059f, 0.50f)
         };
 
         public BiomePalette tundra = new BiomePalette
         {
             biomeName = "The Variance Tundra",
-            primary = new Color(0.22f, 0.74f, 0.97f),      // Ice Blue
-            secondary = new Color(0.05f, 0.29f, 0.43f),    // Glacial Deep
-            accent = new Color(0.73f, 0.90f, 0.99f),       // Frost White
-            background = new Color(0.03f, 0.07f, 0.12f, 0.95f),
-            border = new Color(0.22f, 0.74f, 0.97f, 0.35f),
-            textPrimary = new Color(0.90f, 0.96f, 1.0f),
-            textSecondary = new Color(0.65f, 0.80f, 0.92f),
-            glow = new Color(0.22f, 0.74f, 0.97f, 0.6f)
+            primary = new Color(0.2196f, 0.7412f, 0.9725f),      // #38BDF8 L2 Glacial Frost
+            secondary = new Color(0.3882f, 0.4000f, 0.9451f),    // #6366F1 Ridge Indigo
+            accent = new Color(0.2196f, 0.7412f, 0.9725f),       // #38BDF8
+            background = new Color(0.0196f, 0.0314f, 0.0549f, 0.94f),
+            border = new Color(0.2196f, 0.7412f, 0.9725f, 0.35f),
+            textPrimary = new Color(0.9451f, 0.9608f, 0.9765f),
+            textSecondary = new Color(0.5804f, 0.6392f, 0.7216f),
+            glow = new Color(0.2196f, 0.7412f, 0.9725f, 0.55f)
         };
 
         public BiomePalette canopy = new BiomePalette
         {
             biomeName = "The Branching Canopy",
-            primary = new Color(0.06f, 0.73f, 0.51f),      // Emerald Green
-            secondary = new Color(0.98f, 0.75f, 0.14f),    // Gold
-            accent = new Color(0.20f, 0.95f, 0.65f),       // Vivid Mint
-            background = new Color(0.02f, 0.09f, 0.05f, 0.95f),
-            border = new Color(0.06f, 0.73f, 0.51f, 0.35f),
-            textPrimary = new Color(0.88f, 0.98f, 0.92f),
-            textSecondary = new Color(0.75f, 0.88f, 0.70f),
-            glow = new Color(0.06f, 0.73f, 0.51f, 0.6f)
+            primary = new Color(0.5176f, 0.8000f, 0.0863f),      // #84CC16 Gini Lime
+            secondary = new Color(0.9176f, 0.7020f, 0.0314f),    // #EAB308 Bagging Gold
+            accent = new Color(0.5176f, 0.8000f, 0.0863f),       // #84CC16
+            background = new Color(0.0196f, 0.0314f, 0.0549f, 0.94f),
+            border = new Color(0.5176f, 0.8000f, 0.0863f, 0.35f),
+            textPrimary = new Color(0.9451f, 0.9608f, 0.9765f),
+            textSecondary = new Color(0.5804f, 0.6392f, 0.7216f),
+            glow = new Color(0.5176f, 0.8000f, 0.0863f, 0.50f)
         };
 
         public BiomePalette citadel = new BiomePalette
         {
             biomeName = "The Deep Synapse Citadel",
-            primary = new Color(0.66f, 0.33f, 0.97f),      // Neon Purple
-            secondary = new Color(0.02f, 0.71f, 0.83f),    // Electric Cyan
-            accent = new Color(0.85f, 0.55f, 1.0f),        // Bright Violet
-            background = new Color(0.06f, 0.04f, 0.11f, 0.95f),
-            border = new Color(0.66f, 0.33f, 0.97f, 0.35f),
-            textPrimary = new Color(0.95f, 0.90f, 1.0f),
-            textSecondary = new Color(0.75f, 0.70f, 0.90f),
-            glow = new Color(0.66f, 0.33f, 0.97f, 0.6f)
+            primary = new Color(0.6588f, 0.3333f, 0.9686f),      // #A855F7 Backprop Violet
+            secondary = new Color(0.9255f, 0.2824f, 0.6000f),    // #EC4899 XOR Magenta
+            accent = new Color(0.6588f, 0.3333f, 0.9686f),       // #A855F7
+            background = new Color(0.0196f, 0.0314f, 0.0549f, 0.94f),
+            border = new Color(0.6588f, 0.3333f, 0.9686f, 0.35f),
+            textPrimary = new Color(0.9451f, 0.9608f, 0.9765f),
+            textSecondary = new Color(0.5804f, 0.6392f, 0.7216f),
+            glow = new Color(0.6588f, 0.3333f, 0.9686f, 0.55f)
         };
 
         public BiomePalette semanticExpanse = new BiomePalette
         {
             biomeName = "The Semantic Expanse",
-            primary = new Color(0.97f, 0.98f, 0.99f),      // Starlit White
-            secondary = new Color(0.51f, 0.55f, 0.97f),    // Holographic Indigo
-            accent = new Color(0.22f, 0.74f, 0.97f),       // Cyber Sky
-            background = new Color(0.02f, 0.04f, 0.08f, 0.96f),
-            border = new Color(0.97f, 0.98f, 0.99f, 0.40f),
-            textPrimary = new Color(1.0f, 1.0f, 1.0f),
-            textSecondary = new Color(0.80f, 0.85f, 0.95f),
-            glow = new Color(0.51f, 0.55f, 0.97f, 0.7f)
+            primary = new Color(0.0784f, 0.7216f, 0.6510f),      // #14B8A6 Cosine Teal
+            secondary = new Color(0.9569f, 0.2471f, 0.3686f),    // #F43F5E Latent Coral
+            accent = new Color(0.0784f, 0.7216f, 0.6510f),       // #14B8A6
+            background = new Color(0.0196f, 0.0314f, 0.0549f, 0.94f),
+            border = new Color(0.0784f, 0.7216f, 0.6510f, 0.35f),
+            textPrimary = new Color(0.9451f, 0.9608f, 0.9765f),
+            textSecondary = new Color(0.5804f, 0.6392f, 0.7216f),
+            glow = new Color(0.0784f, 0.7216f, 0.6510f, 0.55f)
         };
 
         public BiomePalette GetPaletteForBiome(int biomeIndex)
