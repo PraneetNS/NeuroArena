@@ -2579,6 +2579,60 @@ async function testWebClientCustomChallengesAndModTools() {
     console.log("✅ Web Client Creator-Driven Mod-Tools, Custom Challenges & Solvability Prover Tests Passed!");
 }
 
+function testUnifiedDesignTokensAndMathGlyphs() {
+    const fs = require('fs');
+    const path = require('path');
+
+    // 1. Verify JSON Source of Truth
+    const tokensPath = path.resolve(__dirname, '../../tokens/design-tokens.json');
+    assert.ok(fs.existsSync(tokensPath), "design-tokens.json must exist");
+    const tokens = JSON.parse(fs.readFileSync(tokensPath, 'utf8'));
+
+    assert.strictEqual(tokens.meta.version, "2.0.0");
+    assert.strictEqual(Object.keys(tokens.color.biomes).length, 6, "Must define 6 biomes");
+    assert.strictEqual(tokens.color.biomes.steppes.accent, "#f59e0b");
+    assert.strictEqual(tokens.color.biomes.marshlands.accent, "#10b981");
+    assert.strictEqual(tokens.color.biomes.tundra.accent, "#38bdf8");
+    assert.strictEqual(tokens.color.biomes.canopy.accent, "#84cc16");
+    assert.strictEqual(tokens.color.biomes.citadel.accent, "#a855f7");
+    assert.strictEqual(tokens.color.biomes.semantic.accent, "#14b8a6");
+
+    // 2. Motion Timing Non-Ad-Hoc Tokens
+    assert.strictEqual(tokens.motion.panelOpen.durationMs, 240);
+    assert.strictEqual(tokens.motion.hudValueChange.durationMs, 120);
+    assert.strictEqual(tokens.motion.alertFlash.durationMs, 400);
+    assert.strictEqual(tokens.motion.pageTransition.durationMs, 320);
+
+    // 3. Mathematical Iconography Library
+    const mathIconLib = require('../src/ui/MathIconLibrary.js');
+    const glyphNames = mathIconLib.getGlyphNames();
+    assert.strictEqual(glyphNames.length, 10, "Must have 10 custom ML math glyphs");
+
+    glyphNames.forEach(glyph => {
+        const meta = mathIconLib.getGlyphMeta(glyph);
+        assert.ok(meta && meta.label && meta.description, `Glyph '${glyph}' must have label and description`);
+        const svg = mathIconLib.renderSvg(glyph, { size: 24, stroke: '#38bdf8' });
+        assert.ok(svg.startsWith('<svg') && svg.endsWith('</svg>'), `Glyph '${glyph}' must render valid SVG`);
+        assert.ok(svg.includes('viewBox="0 0 24 24"'), `Glyph '${glyph}' must have 24x24 viewBox`);
+    });
+
+    // 4. Parity with Unity USS and Web CSS
+    const cssPath = path.resolve(__dirname, '../design-system.css');
+    const ussPath = path.resolve(__dirname, '../../Assets/UI/Styles/DesignTokens.uss');
+    assert.ok(fs.existsSync(cssPath), "web/design-system.css must exist");
+    assert.ok(fs.existsSync(ussPath), "Assets/UI/Styles/DesignTokens.uss must exist");
+
+    const cssContent = fs.readFileSync(cssPath, 'utf8');
+    const ussContent = fs.readFileSync(ussPath, 'utf8');
+
+    // Both must define identical base void and status alert colors
+    assert.ok(cssContent.includes('#05080e') && ussContent.includes('#05080e'), "Void color parity");
+    assert.ok(cssContent.includes('#ff2a55') && ussContent.includes('#ff2a55'), "Alert color parity");
+    assert.ok(cssContent.includes('.na-panel-chamfer') && ussContent.includes('.na-panel-chamfer'), "Chamfer panel class parity");
+
+    console.log("✅ Unified Design Tokens & Mathematical Iconography Parity Tests Passed!");
+}
+
 testWebGPUBootstrapAndFallbackEngine().then(async () => {
     testVolumetricFogAndFroxelGrid();
     testRecurringEngagementAndLiveOpsRemoteConfig();
@@ -2589,6 +2643,7 @@ testWebGPUBootstrapAndFallbackEngine().then(async () => {
     await testCoopRoomClientAndSharedDatasetCollaboration();
     await testWebClientContractsAndBotArena();
     await testWebClientCustomChallengesAndModTools();
+    testUnifiedDesignTokensAndMathGlyphs();
     console.log("🎉 All Web Unit Tests Passed Cleanly!");
 });
 
