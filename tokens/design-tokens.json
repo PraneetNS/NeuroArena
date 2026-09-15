@@ -1,0 +1,285 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "meta": {
+    "name": "NeuroArena Unified Design Token System",
+    "version": "2.0.0",
+    "description": "Single source of truth consumed by Unity UI Toolkit (USS) and Web PWA (CSS) to prevent visual drift.",
+    "updatedAt": "2026-09-12"
+  },
+  "color": {
+    "base": {
+      "void": "#05080e",
+      "surface": "#0b111b",
+      "elevated": "#121b2a",
+      "overlay": "rgba(5, 8, 14, 0.92)",
+      "borderSubtle": "rgba(255, 255, 255, 0.08)",
+      "borderStrong": "rgba(255, 255, 255, 0.20)",
+      "borderGlow": "rgba(56, 189, 248, 0.35)",
+      "textPrimary": "#f1f5f9",
+      "textSecondary": "#94a3b8",
+      "textTertiary": "#64748b"
+    },
+    "status": {
+      "alert": "#ff2a55",
+      "alertGlow": "rgba(255, 42, 85, 0.45)",
+      "alertBg": "rgba(255, 42, 85, 0.12)",
+      "alertBorder": "rgba(255, 42, 85, 0.50)",
+      "success": "#00f59b",
+      "successGlow": "rgba(0, 245, 155, 0.45)",
+      "successBg": "rgba(0, 245, 155, 0.12)",
+      "warning": "#ffb800",
+      "warningGlow": "rgba(255, 184, 0, 0.40)",
+      "warningBg": "rgba(255, 184, 0, 0.12)"
+    },
+    "biomes": {
+      "steppes": {
+        "id": 0,
+        "name": "The Linear Steppes",
+        "paradigm": "1D Continuous Linear Regression",
+        "accent": "#f59e0b",
+        "secondary": "#d97706",
+        "glow": "rgba(245, 158, 11, 0.50)",
+        "bgSubtle": "rgba(245, 158, 11, 0.08)",
+        "border": "rgba(245, 158, 11, 0.35)",
+        "glyph": "glyph-gradient"
+      },
+      "marshlands": {
+        "id": 1,
+        "name": "The Binary Marshlands",
+        "paradigm": "2D Logistic Classification",
+        "accent": "#10b981",
+        "secondary": "#06b6d4",
+        "glow": "rgba(16, 185, 129, 0.50)",
+        "bgSubtle": "rgba(16, 185, 129, 0.08)",
+        "border": "rgba(16, 185, 129, 0.35)",
+        "glyph": "glyph-boundary"
+      },
+      "tundra": {
+        "id": 2,
+        "name": "The Variance Tundra",
+        "paradigm": "Polynomial & Regularization (L1/L2)",
+        "accent": "#38bdf8",
+        "secondary": "#6366f1",
+        "glow": "rgba(56, 189, 248, 0.55)",
+        "bgSubtle": "rgba(56, 189, 248, 0.08)",
+        "border": "rgba(56, 189, 248, 0.35)",
+        "glyph": "glyph-regularization"
+      },
+      "canopy": {
+        "id": 3,
+        "name": "The Branching Canopy",
+        "paradigm": "Decision Tree Ensembles & Gini Impurity",
+        "accent": "#84cc16",
+        "secondary": "#eab308",
+        "glow": "rgba(132, 204, 22, 0.50)",
+        "bgSubtle": "rgba(132, 204, 22, 0.08)",
+        "border": "rgba(132, 204, 22, 0.35)",
+        "glyph": "glyph-decision-tree"
+      },
+      "citadel": {
+        "id": 4,
+        "name": "The Deep Synapse Citadel",
+        "paradigm": "Multi-Layer Neural Networks & Backprop",
+        "accent": "#a855f7",
+        "secondary": "#ec4899",
+        "glow": "rgba(168, 85, 247, 0.55)",
+        "bgSubtle": "rgba(168, 85, 247, 0.08)",
+        "border": "rgba(168, 85, 247, 0.35)",
+        "glyph": "glyph-activation"
+      },
+      "semantic": {
+        "id": 5,
+        "name": "The Semantic Expanse",
+        "paradigm": "Word Embeddings & Cosine Singularity",
+        "accent": "#14b8a6",
+        "secondary": "#f43f5e",
+        "glow": "rgba(20, 184, 166, 0.55)",
+        "bgSubtle": "rgba(20, 184, 166, 0.08)",
+        "border": "rgba(20, 184, 166, 0.35)",
+        "glyph": "glyph-embedding"
+      }
+    },
+    "ranks": {
+      "bronze": "#cd7f32",
+      "silver": "#c0c0c0",
+      "gold": "#ffd700",
+      "platinum": "#e5e4e2",
+      "architect": "#38bdf8"
+    }
+  },
+  "typography": {
+    "fontFamily": {
+      "display": "'Space Grotesk', sans-serif",
+      "numeral": "'JetBrains Mono', monospace",
+      "body": "'Outfit', 'Inter', -apple-system, sans-serif"
+    },
+    "scale": {
+      "displayNumeral": {
+        "fontSize": "40px",
+        "fontWeight": "800",
+        "lineHeight": "1.0",
+        "letterSpacing": "-0.02em",
+        "use": "HUD metrics, Boss countdown timer, Glicko MMR values"
+      },
+      "headlineH1": {
+        "fontSize": "28px",
+        "fontWeight": "700",
+        "lineHeight": "1.2",
+        "letterSpacing": "0.02em",
+        "use": "Modal headers, major game state announcements"
+      },
+      "panelHeader": {
+        "fontSize": "18px",
+        "fontWeight": "700",
+        "lineHeight": "1.3",
+        "letterSpacing": "0.03em",
+        "use": "Window and subpanel titles (uppercase)"
+      },
+      "subhead": {
+        "fontSize": "14px",
+        "fontWeight": "600",
+        "lineHeight": "1.4",
+        "letterSpacing": "0.01em",
+        "use": "Form labels, author names, item titles"
+      },
+      "bodyDefault": {
+        "fontSize": "13px",
+        "fontWeight": "400",
+        "lineHeight": "1.5",
+        "letterSpacing": "0.00em",
+        "use": "Explanatory text, journal narratives, codex entries"
+      },
+      "codeTabular": {
+        "fontSize": "12px",
+        "fontWeight": "600",
+        "lineHeight": "1.4",
+        "letterSpacing": "0.00em",
+        "use": "Parameters (w, b, MSE, LR), formulas, code snippets"
+      },
+      "captionMicro": {
+        "fontSize": "10px",
+        "fontWeight": "700",
+        "lineHeight": "1.2",
+        "letterSpacing": "0.06em",
+        "use": "Status chips, tags, badge metadata (uppercase)"
+      }
+    }
+  },
+  "spacing": {
+    "xxs": "2px",
+    "xs": "4px",
+    "sm": "8px",
+    "md": "16px",
+    "lg": "24px",
+    "xl": "32px",
+    "2xl": "48px",
+    "3xl": "64px"
+  },
+  "radii": {
+    "sharp": "2px",
+    "sm": "4px",
+    "md": "8px",
+    "lg": "14px",
+    "pill": "9999px"
+  },
+  "motion": {
+    "panelOpen": {
+      "durationMs": 240,
+      "durationSec": "0.24s",
+      "easing": "cubic-bezier(0.16, 1.0, 0.3, 1.0)",
+      "use": "Modal open, drawer slide-out, menu reveal"
+    },
+    "hudValueChange": {
+      "durationMs": 120,
+      "durationSec": "0.12s",
+      "easing": "cubic-bezier(0.4, 0.0, 0.2, 1.0)",
+      "use": "Resource counter tick, score increment, stat delta punch"
+    },
+    "alertFlash": {
+      "durationMs": 400,
+      "durationSec": "0.40s",
+      "easing": "cubic-bezier(0.25, 1.0, 0.5, 1.0)",
+      "use": "Critical health blink, anti-cheat flag pulse, boss enrage warning"
+    },
+    "pageTransition": {
+      "durationMs": 320,
+      "durationSec": "0.32s",
+      "easing": "cubic-bezier(0.7, 0.0, 0.84, 0.0)",
+      "use": "Biome warp, arena loading fade, scene relocation"
+    }
+  },
+  "iconography": {
+    "glyphs": [
+      {
+        "id": "glyph-gradient",
+        "name": "Gradient Vector Arrow",
+        "concept": "Gradient Descent Vector (-η·∇J)",
+        "biome": "steppes",
+        "symbol": "∇→"
+      },
+      {
+        "id": "glyph-boundary",
+        "name": "Decision Boundary Cleave",
+        "concept": "Hyperplane Binary Classification Separator",
+        "biome": "marshlands",
+        "symbol": "w·x+b=0"
+      },
+      {
+        "id": "glyph-regularization",
+        "name": "Regularization Constraint Diamond",
+        "concept": "L1 Lasso Diamond & L2 Ridge Hypersphere",
+        "biome": "tundra",
+        "symbol": "λ||w||"
+      },
+      {
+        "id": "glyph-decision-tree",
+        "name": "Dendrogram Decision Split",
+        "concept": "Binary Bifurcation Tree & Gini Impurity",
+        "biome": "canopy",
+        "symbol": "xᵢ>θ"
+      },
+      {
+        "id": "glyph-activation",
+        "name": "Sigmoid Activation Wave",
+        "concept": "Nonlinear Sigmoid & Backprop Gradient",
+        "biome": "citadel",
+        "symbol": "σ(z)"
+      },
+      {
+        "id": "glyph-embedding",
+        "name": "Embedding Cosine Angle",
+        "concept": "High-Dimensional Cosine Similarity",
+        "biome": "semantic",
+        "symbol": "cos(θ)"
+      },
+      {
+        "id": "glyph-loss-contour",
+        "name": "Loss Landscape Contour",
+        "concept": "Concentric Elliptical Loss Valley & Global Minima",
+        "biome": "universal",
+        "symbol": "J(w)"
+      },
+      {
+        "id": "glyph-anomaly",
+        "name": "Outlier Hazard Pulse",
+        "concept": "Exiled Anomaly & Anti-Cheat Boundary",
+        "biome": "universal",
+        "symbol": "3σ!"
+      },
+      {
+        "id": "glyph-learning-rate",
+        "name": "Learning Rate Step Gauge",
+        "concept": "Step Size Parameter η Scaling",
+        "biome": "universal",
+        "symbol": "η"
+      },
+      {
+        "id": "glyph-tensor",
+        "name": "Tensor Matrix Satchel",
+        "concept": "Multi-Dimensional Tensor Crystal",
+        "biome": "universal",
+        "symbol": "X∈ℝⁿˣᵈ"
+      }
+    ]
+  }
+}
