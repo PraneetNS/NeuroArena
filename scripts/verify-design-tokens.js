@@ -128,6 +128,19 @@ try {
   errors.push(`Failed testing MathIconLibrary: ${e.message}`);
 }
 
+// 6. Check Token Compiler
+console.log('[6/6] Validating Token Compiler (scripts/build-design-tokens.js)...');
+try {
+  const compiler = require('./build-design-tokens.js');
+  check(typeof compiler.runBuild === 'function', 'Compiler must export runBuild');
+  const buildResult = compiler.runBuild();
+  check(buildResult.css && buildResult.css.includes('--na-color-bg-void'), 'Compiler must generate CSS void token');
+  check(buildResult.uss && buildResult.uss.includes('--na-color-bg-void'), 'Compiler must generate USS void token');
+  check(buildResult.tokens && buildResult.tokens.meta.version === '2.0.0', 'Compiler must load matching version');
+} catch (e) {
+  errors.push(`Failed testing build-design-tokens.js: ${e.message}`);
+}
+
 // Summary Report
 console.log('\n================================================================');
 console.log(`VERIFICATION RESULT: ${passCount} checks passed, ${errors.length} errors, ${warnings.length} warnings`);
