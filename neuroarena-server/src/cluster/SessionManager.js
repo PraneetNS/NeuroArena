@@ -11,20 +11,23 @@ class SessionManager {
         this.activeSessions = new Map(); // sessionId -> { playerId, roomId, reconnectToken, expiresAt }
     }
 
-    createSessionTicket(playerId, roomId, ttlSec = 300) {
+    createSessionTicket(playerId, roomId, ttlSec = 300, nodeId = "node_primary_1") {
         const sessionId = `SES-${crypto.randomBytes(8).toString("hex").toUpperCase()}`;
         const reconnectToken = crypto.randomBytes(16).toString("hex");
         const expiresAt = Date.now() + ttlSec * 1000;
 
-        const signaturePayload = `${sessionId}:${playerId}:${roomId}:${expiresAt}:${reconnectToken}`;
+        const signaturePayload = `${sessionId}:${playerId}:${roomId}:${expiresAt}:${reconnectToken}:${nodeId}`;
         const hmac = crypto.createHmac("sha256", this.secret).update(signaturePayload).digest("hex");
 
         const session = {
             sessionId,
             playerId,
             roomId,
+            nodeId,
             reconnectToken,
             expiresAt,
+            lastHeartbeat: Date.now(),
+            isDraining: false,
             signature: hmac
         };
 
@@ -45,15 +48,46 @@ class SessionManager {
             return { valid: false, reason: "INVALID_RECONNECT_TOKEN" };
         }
 
-        // Verify cryptographic integrity
-        const signaturePayload = `${sessionId}:${session.playerId}:${session.roomId}:${session.expiresAt}:${reconnectToken}`;
-        const expectedHmac = crypto.createHmac("sha256", this.secret).update(signaturePayload).digest("hex");
+        // Verify cryptographic integrity (support both legacy 5-tuple and node-aware 6-tuple payloads)
+        const nodeAwarePayload = `${sessionId}:${session.playerId}:${session.roomId}:${session.expiresAt}:${reconnectToken}:${session.nodeId}`;
+        const legacyPayload = `${sessionId}:${session.playerId}:${session.roomId}:${session.expiresAt}:${reconnectToken}`;
+        const expectedNodeHmac = crypto.createHmac("sha256", this.secret).update(nodeAwarePayload).digest("hex");
+        const expectedLegacyHmac = crypto.createHmac("sha256", this.secret).update(legacyPayload).digest("hex");
 
-        if (session.signature !== expectedHmac) {
+        if (session.signature !== expectedNodeHmac && session.signature !== expectedLegacyHmac) {
             return { valid: false, reason: "TAMPERED_SESSION_SIGNATURE" };
         }
 
+        session.lastHeartbeat = Date.now();
         return { valid: true, session };
+    }
+
+    recordHeartbeat(sessionId) {
+        const session = this.activeSessions.get(sessionId);
+        if (!session) return false;
+        session.lastHeartbeat = Date.now();
+        return true;
+    }
+
+    renewSessionTicket(sessionId, additionalSec = 300) {
+        const session = this.activeSessions.get(sessionId);
+        if (!session) return null;
+
+        session.expiresAt = Math.max(session.expiresAt, Date.now()) + additionalSec * 1000;
+        const payload = `${session.sessionId}:${session.playerId}:${session.roomId}:${session.expiresAt}:${session.reconnectToken}:${session.nodeId}`;
+        session.signature = crypto.createHmac("sha256", this.secret).update(payload).digest("hex");
+        return session;
+    }
+
+    drainNodeSessions(targetNodeId) {
+        const drained = [];
+        for (const [sessionId, session] of this.activeSessions.entries()) {
+            if (session.nodeId === targetNodeId) {
+                session.isDraining = true;
+                drained.push(sessionId);
+            }
+        }
+        return drained;
     }
 
     invalidateSession(sessionId) {
