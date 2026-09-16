@@ -239,6 +239,48 @@
         <line x1="12" y1="11" x2="12" y2="20" opacity="0.6" />
         <circle cx="12" cy="2" r="1.2" fill="${opts?.stroke || 'currentColor'}" />
       `, opts)
+    },
+
+    /**
+     * 11. Attention Matrix: Scaled Dot-Product Softmax(Q·Kᵀ / √d)·V
+     */
+    'attention-matrix': {
+      label: 'Attention Matrix (Softmax(QKᵀ/√d))',
+      description: 'Cross-attention heat-weight matrix lattice with query-key alignment vectors',
+      category: 'architecture',
+      render: (opts) => wrapSvg(`
+        <!-- 3x3 Attention Grid Frame -->
+        <rect x="4" y="4" width="16" height="16" rx="2" />
+        <!-- Softmax Heat Weights (Cells) -->
+        <rect x="5.5" y="5.5" width="4" height="4" fill="${opts?.stroke || 'currentColor'}" opacity="0.8" />
+        <rect x="10" y="5.5" width="4" height="4" fill="${opts?.stroke || 'currentColor'}" opacity="0.2" />
+        <rect x="14.5" y="5.5" width="4" height="4" fill="${opts?.stroke || 'currentColor'}" opacity="0.4" />
+        <rect x="5.5" y="10" width="4" height="4" fill="${opts?.stroke || 'currentColor'}" opacity="0.3" />
+        <rect x="10" y="10" width="4" height="4" fill="${opts?.stroke || 'currentColor'}" opacity="0.9" />
+        <rect x="14.5" y="10" width="4" height="4" fill="${opts?.stroke || 'currentColor'}" opacity="0.2" />
+        <rect x="5.5" y="14.5" width="4" height="4" fill="${opts?.stroke || 'currentColor'}" opacity="0.1" />
+        <rect x="10" y="14.5" width="4" height="4" fill="${opts?.stroke || 'currentColor'}" opacity="0.3" />
+        <rect x="14.5" y="14.5" width="4" height="4" fill="${opts?.stroke || 'currentColor'}" opacity="0.75" />
+      `, opts)
+    },
+
+    /**
+     * 12. Convolution Kernel: Spatial feature sliding filter (I * K)
+     */
+    'convolution-kernel': {
+      label: 'Convolution Kernel (I * K)',
+      description: '2D sliding receptive field kernel with feature map projection',
+      category: 'architecture',
+      render: (opts) => wrapSvg(`
+        <!-- Input Image Feature Map Canvas -->
+        <rect x="3" y="3" width="13" height="13" rx="1.5" stroke-dasharray="2 2" opacity="0.6" />
+        <!-- Sliding 3x3 Kernel Focus Box -->
+        <rect x="8" y="8" width="13" height="13" rx="1.5" stroke-width="${(opts?.strokeWidth || 1.75) * 1.1}" />
+        <!-- Kernel Center Stride Crosshair -->
+        <circle cx="14.5" cy="14.5" r="2" fill="${opts?.stroke || 'currentColor'}" />
+        <!-- Projection Vector -->
+        <line x1="16" y1="8" x2="20" y2="4" stroke-dasharray="1.5 1.5" opacity="0.8" />
+      `, opts)
     }
   };
 
