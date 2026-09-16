@@ -12,12 +12,43 @@ namespace NeuroArena.Environment
         AstralVectorWisp     // Biome 6: The Semantic Expanse (Levitating Astral)
     }
 
+    public struct WildlifeBehaviorProfile
+    {
+        public float MovementSpeed;
+        public float FleeDistance;
+        public float FlockRadius;
+        public float PerchAltitude;
+        public float AnimationCycleRate;
+        public bool CanFly;
+        public bool IsNocturnal;
+    }
+
     /// <summary>
     /// Builds ultra-lightweight, low-poly (15-35 tris) stylized ambient creatures
     /// configured for procedural micro-animations (wing flapping, hopping, leg skittering, wisp orbits).
     /// </summary>
     public static class AmbientWildlifeFactory
     {
+        public static WildlifeBehaviorProfile GetBehaviorProfile(WildlifeArchetype archetype)
+        {
+            switch (archetype)
+            {
+                case WildlifeArchetype.DuneStriderFinch:
+                    return new WildlifeBehaviorProfile { MovementSpeed = 4.2f, FleeDistance = 6.0f, FlockRadius = 8.0f, PerchAltitude = 0.8f, AnimationCycleRate = 5.5f, CanFly = true, IsNocturnal = false };
+                case WildlifeArchetype.LuminescentSporeToad:
+                    return new WildlifeBehaviorProfile { MovementSpeed = 1.8f, FleeDistance = 4.5f, FlockRadius = 3.5f, PerchAltitude = 0.2f, AnimationCycleRate = 1.8f, CanFly = false, IsNocturnal = true };
+                case WildlifeArchetype.FrostScarabBeetle:
+                    return new WildlifeBehaviorProfile { MovementSpeed = 2.4f, FleeDistance = 3.0f, FlockRadius = 5.0f, PerchAltitude = 0.1f, AnimationCycleRate = 4.0f, CanFly = false, IsNocturnal = false };
+                case WildlifeArchetype.CanopyGlider:
+                    return new WildlifeBehaviorProfile { MovementSpeed = 5.0f, FleeDistance = 8.0f, FlockRadius = 12.0f, PerchAltitude = 4.5f, AnimationCycleRate = 3.2f, CanFly = true, IsNocturnal = false };
+                case WildlifeArchetype.CyberPulseManta:
+                    return new WildlifeBehaviorProfile { MovementSpeed = 3.6f, FleeDistance = 7.0f, FlockRadius = 10.0f, PerchAltitude = 3.0f, AnimationCycleRate = 2.0f, CanFly = true, IsNocturnal = true };
+                case WildlifeArchetype.AstralVectorWisp:
+                default:
+                    return new WildlifeBehaviorProfile { MovementSpeed = 2.8f, FleeDistance = 5.0f, FlockRadius = 6.0f, PerchAltitude = 1.5f, AnimationCycleRate = 2.5f, CanFly = true, IsNocturnal = true };
+            }
+        }
+
         public static WildlifeArchetype GetArchetypeForBiome(int biomeIndex)
         {
             switch (biomeIndex)
