@@ -2606,7 +2606,7 @@ function testUnifiedDesignTokensAndMathGlyphs() {
     // 3. Mathematical Iconography Library
     const mathIconLib = require('../src/ui/MathIconLibrary.js');
     const glyphNames = mathIconLib.getGlyphNames();
-    assert.strictEqual(glyphNames.length, 10, "Must have 10 custom ML math glyphs");
+    assert.strictEqual(glyphNames.length, 12, "Must have 12 custom ML math glyphs");
 
     glyphNames.forEach(glyph => {
         const meta = mathIconLib.getGlyphMeta(glyph);
