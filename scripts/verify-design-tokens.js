@@ -45,7 +45,7 @@ try {
   check(tokens.motion && tokens.motion.panelOpen, 'tokens.motion.panelOpen must be defined');
   check(tokens.spacing && tokens.spacing.md === '16px', 'tokens.spacing.md must be 16px (8px grid)');
   check(tokens.iconography && Array.isArray(tokens.iconography.glyphs), 'tokens.iconography.glyphs must be an array');
-  check(tokens.iconography.glyphs.length === 10, 'Must have exactly 10 mathematical ML glyphs defined');
+  check(tokens.iconography.glyphs.length === 12, 'Must have exactly 12 mathematical ML glyphs defined');
 } catch (e) {
   errors.push(`Failed to parse design-tokens.json: ${e.message}`);
 }
@@ -103,9 +103,9 @@ check(fs.existsSync(MATH_ICONS_PATH), `Missing ${MATH_ICONS_PATH}`);
 try {
   const iconLib = require(MATH_ICONS_PATH);
   const glyphNames = iconLib.getGlyphNames();
-  check(glyphNames.length === 10, `Expected 10 math glyphs in library, found ${glyphNames.length}`);
+  check(glyphNames.length === 12, `Expected 12 math glyphs in library, found ${glyphNames.length}`);
   
-  // Verify all 10 glyphs render valid SVG strings
+  // Verify all 12 glyphs render valid SVG strings
   const requiredGlyphs = [
     'gradient-arrow',
     'decision-boundary',
@@ -116,7 +116,9 @@ try {
     'loss-contour',
     'anomaly-hazard',
     'learning-rate-step',
-    'tensor-crystal'
+    'tensor-crystal',
+    'attention-matrix',
+    'convolution-kernel'
   ];
 
   requiredGlyphs.forEach(id => {
