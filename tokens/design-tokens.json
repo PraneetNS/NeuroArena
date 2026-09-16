@@ -279,6 +279,20 @@
         "concept": "Multi-Dimensional Tensor Crystal",
         "biome": "universal",
         "symbol": "X∈ℝⁿˣᵈ"
+      },
+      {
+        "id": "glyph-attention",
+        "name": "Scaled Dot-Product Attention",
+        "concept": "Self-Attention Softmax(Q·Kᵀ / √dₖ)·V",
+        "biome": "universal",
+        "symbol": "Attn(Q,K)"
+      },
+      {
+        "id": "glyph-convolution",
+        "name": "Spatial Convolution Kernel",
+        "concept": "Discrete 2D Cross-Correlation Feature Map (I * K)",
+        "biome": "universal",
+        "symbol": "I*K"
       }
     ]
   }
