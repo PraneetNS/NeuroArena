@@ -20,6 +20,10 @@ namespace NeuroArena.Audio
         private double audioPhase = 0;
         private float stepEnvelope = 0f;
         private int currentSurfaceType = 0; // 0: Grass, 1: Wet, 2: Snow, 3: Wood, 4: Metal, 5: Crystal
+        private float currentPitchMultiplier = 1.0f;
+        private float stereoPanOffset = 0f;
+        private float currentSpeed = 4.0f;
+        private bool isSprinting = false;
 
         private void Awake()
         {
@@ -41,13 +45,24 @@ namespace NeuroArena.Audio
         }
 
         /// <summary>
+        /// Updates the movement velocity context from player character motor.
+        /// </summary>
+        public void SetMovementState(float horizontalSpeed, bool sprinting)
+        {
+            currentSpeed = horizontalSpeed;
+            isSprinting = sprinting;
+            currentPitchMultiplier = isSprinting ? 1.15f : Mathf.Clamp(0.85f + (currentSpeed / 8.0f) * 0.3f, 0.8f, 1.25f);
+        }
+
+        /// <summary>
         /// Called directly by Animation Events on the exact frame the foot touches ground.
         /// </summary>
         /// <param name="footIndex">0 = Left Foot, 1 = Right Foot</param>
         public void OnFootstep(int footIndex)
         {
             DetectSurfaceUnderfoot();
-            stepEnvelope = 1.0f;
+            stereoPanOffset = (footIndex == 0) ? -0.15f : 0.15f;
+            stepEnvelope = isSprinting ? 1.25f : 1.0f;
         }
 
         private void DetectSurfaceUnderfoot()
@@ -88,7 +103,7 @@ namespace NeuroArena.Audio
         private void OnAudioFilterRead(float[] data, int channels)
         {
             if (stepEnvelope <= 0.0001f) return;
-            double dt = 1.0 / AudioSettings.outputSampleRate;
+            double dt = (1.0 / AudioSettings.outputSampleRate) * currentPitchMultiplier;
 
             for (int i = 0; i < data.Length; i += channels)
             {
@@ -142,9 +157,20 @@ namespace NeuroArena.Audio
 
                 sample *= (stepEnvelope * stepVolume);
 
-                for (int c = 0; c < channels; c++)
+                if (channels >= 2)
                 {
-                    data[i + c] += sample;
+                    float leftGain = Mathf.Clamp01(1.0f - stereoPanOffset);
+                    float rightGain = Mathf.Clamp01(1.0f + stereoPanOffset);
+                    data[i] += sample * leftGain;
+                    data[i + 1] += sample * rightGain;
+                    for (int c = 2; c < channels; c++)
+                    {
+                        data[i + c] += sample;
+                    }
+                }
+                else
+                {
+                    data[i] += sample;
                 }
             }
         }
