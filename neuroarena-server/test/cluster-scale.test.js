@@ -72,7 +72,37 @@ function testStatelessSessionTicketsAndTamperDetection() {
     console.log("✅ Stateless Session Tickets & Cryptographic Reconnect Test Passed!");
 }
 
+function testClusterDrainageAndRenewal() {
+    console.log("▶ Testing Multi-Node Drainage, Heartbeats & Dynamic Session Renewal...");
+
+    const sm = new SessionManager("SECRET_KEY_PROD");
+    const ticket1 = sm.createSessionTicket("player_alpha", "duel_room_1", 100, "node_worker_1");
+    const ticket2 = sm.createSessionTicket("player_beta", "duel_room_2", 100, "node_worker_2");
+    const ticket3 = sm.createSessionTicket("player_gamma", "duel_room_3", 100, "node_worker_2");
+
+    // Test heartbeat
+    assert.strictEqual(sm.recordHeartbeat(ticket1.sessionId), true, "Heartbeat must be recorded for active session");
+    assert.strictEqual(sm.recordHeartbeat("SES-NONEXISTENT"), false, "Heartbeat for non-existent session must return false");
+
+    // Test graceful node drainage
+    const drained = sm.drainNodeSessions("node_worker_2");
+    assert.strictEqual(drained.length, 2, "Both sessions on node_worker_2 must be marked as draining");
+    assert(drained.includes(ticket2.sessionId) && drained.includes(ticket3.sessionId));
+
+    // Test ticket renewal
+    const initialExpiry = ticket1.expiresAt;
+    const renewed = sm.renewSessionTicket(ticket1.sessionId, 600);
+    assert(renewed.expiresAt > initialExpiry, "Renewed session expiration must be extended");
+
+    // Validate renewed session signature integrity
+    const recheck = sm.validateReconnectTicket(renewed.sessionId, renewed.reconnectToken);
+    assert.strictEqual(recheck.valid, true, "Renewed session signature must validate cleanly");
+
+    console.log("✅ Multi-Node Drainage, Heartbeats & Dynamic Session Renewal Passed!");
+}
+
 testTokenBucketRateLimiting();
 testRedisDistributedLeaderboardZSet();
 testStatelessSessionTicketsAndTamperDetection();
+testClusterDrainageAndRenewal();
 console.log("🎉 All 1M Scale Cluster & Session Tests Passed Cleanly!");
