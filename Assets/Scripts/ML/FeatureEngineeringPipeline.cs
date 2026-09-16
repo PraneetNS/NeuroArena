@@ -130,5 +130,100 @@ namespace NeuroArena.ML
 
             return (cleanX, cleanY);
         }
+
+        /// <summary>
+        /// Scales features linearly into a specified target range [targetMin, targetMax] (default [0, 1]).
+        /// </summary>
+        public static float[][] ApplyMinMaxScaling(float[][] X, out float[] mins, out float[] maxs, float targetMin = 0f, float targetMax = 1f)
+        {
+            int N = X.Length;
+            int D = X[0].Length;
+            mins = new float[D];
+            maxs = new float[D];
+
+            for (int j = 0; j < D; j++)
+            {
+                mins[j] = float.MaxValue;
+                maxs[j] = float.MinValue;
+                for (int i = 0; i < N; i++)
+                {
+                    if (X[i][j] < mins[j]) mins[j] = X[i][j];
+                    if (X[i][j] > maxs[j]) maxs[j] = X[i][j];
+                }
+                if (Mathf.Abs(maxs[j] - mins[j]) < 1e-7f)
+                {
+                    maxs[j] = mins[j] + 1.0f; // Prevent division by zero
+                }
+            }
+
+            float[][] XScaled = new float[N][];
+            float rangeSpan = targetMax - targetMin;
+            for (int i = 0; i < N; i++)
+            {
+                XScaled[i] = new float[D];
+                for (int j = 0; j < D; j++)
+                {
+                    float normalized = (X[i][j] - mins[j]) / (maxs[j] - mins[j]);
+                    XScaled[i][j] = targetMin + normalized * rangeSpan;
+                }
+            }
+
+            return XScaled;
+        }
+
+        /// <summary>
+        /// Applies log1p non-linear transformation ln(1 + |x|) * sign(x) to compress heavy-tailed feature distributions.
+        /// </summary>
+        public static float[][] ApplyLog1pTransform(float[][] X)
+        {
+            int N = X.Length;
+            int D = X[0].Length;
+            float[][] XTransformed = new float[N][];
+
+            for (int i = 0; i < N; i++)
+            {
+                XTransformed[i] = new float[D];
+                for (int j = 0; j < D; j++)
+                {
+                    float val = X[i][j];
+                    float sign = Mathf.Sign(val);
+                    XTransformed[i][j] = sign * Mathf.Log(1f + Mathf.Abs(val));
+                }
+            }
+
+            return XTransformed;
+        }
+
+        /// <summary>
+        /// Computes Pearson correlation matrix between feature columns to detect multicollinearity.
+        /// </summary>
+        public static float[,] CalculateFeatureCorrelations(float[][] X)
+        {
+            int N = X.Length;
+            int D = X[0].Length;
+            float[,] correlationMatrix = new float[D, D];
+
+            float[] means = new float[D];
+            float[] stds = new float[D];
+            ApplyStandardization(X, out means, out stds);
+
+            for (int a = 0; a < D; a++)
+            {
+                correlationMatrix[a, a] = 1f;
+                for (int b = a + 1; b < D; b++)
+                {
+                    float cov = 0f;
+                    for (int i = 0; i < N; i++)
+                    {
+                        cov += (X[i][a] - means[a]) * (X[i][b] - means[b]);
+                    }
+                    float r = cov / (N * stds[a] * stds[b]);
+                    correlationMatrix[a, b] = Mathf.Clamp(r, -1f, 1f);
+                    correlationMatrix[b, a] = correlationMatrix[a, b];
+                }
+            }
+
+            return correlationMatrix;
+        }
     }
 }
