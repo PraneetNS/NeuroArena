@@ -8,6 +8,32 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- **Feature Engineering Pipeline Studio Enhancements (`Assets/Scripts/ML/FeatureEngineeringPipeline.cs`)**
+  - Linear Min-Max Normalization (`ApplyMinMaxScaling`) mapping feature sets into arbitrary ranges $[targetMin, targetMax]$ with zero-variance safeguards.
+  - Non-linear Log1p Power Transformation (`ApplyLog1pTransform`) with signed symmetry $\operatorname{sgn}(x) \ln(1 + |x|)$ to tame heavy-tailed continuous feature distributions.
+  - Pearson Cross-Feature Correlation Matrix calculation (`CalculateFeatureCorrelations`) to analyze and prune multicollinear feature dimensions.
+
+- **Audio Settings Persistence & Smooth Bus Fade Transitions (`Assets/Scripts/Audio/AudioMixerManager.cs`)**
+  - Unity `PlayerPrefs` persistent volume serialization (`SaveAudioSettings()`, `LoadAudioSettings()`) across Master, Ambient, SFX, UI, and Music audio buses.
+  - Coroutine-driven logarithmic bus crossfading (`FadeMixerGroup`) for cinematic ambient and music track transitions.
+
+- **Velocity-Adaptive Acoustic Footstep DSP & Alternating Stereo Panning (`Assets/Scripts/Audio/TerrainFootstepAudio.cs`)**
+  - Movement velocity and sprint state integration (`SetMovementState`) dynamically adjusting footstep envelope and frequency playback rates.
+  - Alternating left/right foot stereo panning offsets providing precise spatial audio feedback synced to player gait.
+
+- **Ambient Wildlife Behavioral Profiles & Flocking Dynamics (`Assets/Scripts/Environment/AmbientWildlifeFactory.cs`)**
+  - Introduced `WildlifeBehaviorProfile` struct parameterizing movement speed, flee distance, flocking cohesion radius, perch altitude, and nocturnal habits.
+  - Biome-tailored archetype mapping (`GetBehaviorProfile`) configuring DuneStriderFinch, LuminescentSporeToad, FrostScarabBeetle, CanopyGlider, CyberPulseManta, and AstralVectorWisp.
+
+- **Cluster Node Drainage, Session Heartbeats & Dynamic Ticket Renewal (`neuroarena-server/src/cluster/SessionManager.js`, `cluster-scale.test.js`)**
+  - Node affinity tracking and graceful multi-node server drainage (`drainNodeSessions`) enabling zero-downtime rolling deploys and seamless failover.
+  - Real-time session heartbeat tracking (`recordHeartbeat`) and cryptographically signed ticket renewal (`renewSessionTicket`) preventing tab-suspension disconnects.
+
+- **Expanded Mathematical ML Iconography Language (`tokens/design-tokens.json`, `web/src/ui/MathIconLibrary.js`, `web/style-guide.html`, `scripts/verify-design-tokens.js`, `web/tests/ml-engine.test.js`)**
+  - Added Scaled Dot-Product Attention matrix glyph (`glyph-attention` / `attention-matrix`) representing $\operatorname{Softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V$ with query-key alignment weights.
+  - Added Spatial Convolution Kernel glyph (`glyph-convolution` / `convolution-kernel`) representing 2D sliding receptive field cross-correlation $(I * K)$ with feature map projection.
+  - Updated design token source of truth, cross-platform parity linter, unit test suites, and interactive style guide showcase to 12 custom ML glyphs.
+
 - **Unified Cross-Platform Design Token System & Custom Mathematical Iconography (`tokens/design-tokens.json`, `web/design-system.css`, `Assets/UI/Styles/DesignTokens.uss`, `Assets/Scripts/UI/Theme/DesignTokenRegistry.cs`, `web/src/ui/MathIconLibrary.js`, `web/style-guide.html`, `docs/DESIGN_SYSTEM_SPECIFICATION.md`, `scripts/verify-design-tokens.js`)**
   - Single source of truth token hierarchy (`tokens/design-tokens.json`) consumed simultaneously by Unity UI Toolkit (`DesignTokens.uss`) and Web CSS custom properties (`web/design-system.css`).
   - Anti-generic SaaS aesthetic: zero uniform soft grey card shadows or pill-like rounded blobs; precision 45-degree cybernetic chamfered panel geometry (`.na-panel-chamfer`) with illuminated asymmetrical borders.

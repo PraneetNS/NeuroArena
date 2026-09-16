@@ -416,7 +416,7 @@ To prevent visual drift between the **Unity Client** (UI Toolkit / USS) and the 
   4. *Branching Canopy:* `#84CC16` (Gini Lime) & `#EAB308` (Bagging Gold)
   5. *Deep Synapse Citadel:* `#A855F7` (Backprop Violet) & `#EC4899` (XOR Magenta)
   6. *Semantic Expanse:* `#14B8A6` (Cosine Teal) & `#F43F5E` (Latent Coral)
-- **10 Custom Mathematical ML Glyphs (`web/src/ui/MathIconLibrary.js`):** Procedural vector SVGs for exact machine learning operations ($\nabla J$, $w \cdot x + b = 0$, $L_1/L_2$ regularizer, decision split, sigmoid curve $\sigma(z)$, cosine angle, loss valley $J(w)$, outlier hazard, learning rate step $\eta$, tensor crystal).
+- **12 Custom Mathematical ML Glyphs (`web/src/ui/MathIconLibrary.js`):** Procedural vector SVGs for exact machine learning operations ($\nabla J$, $w \cdot x + b = 0$, $L_1/L_2$ regularizer, decision split, sigmoid curve $\sigma(z)$, cosine angle, loss valley $J(w)$, outlier hazard, learning rate step $\eta$, tensor crystal, attention matrix $\operatorname{Softmax}(QK^T/\sqrt{d})V$, and convolution kernel $I * K$).
 - **Motion Timing Tokens:** Standardized non-ad-hoc durations per category:
   - `panel-open`: 240ms (`cubic-bezier(0.16, 1.0, 0.3, 1.0)`)
   - `hud-value-change`: 120ms (`cubic-bezier(0.4, 0.0, 0.2, 1.0)`)
