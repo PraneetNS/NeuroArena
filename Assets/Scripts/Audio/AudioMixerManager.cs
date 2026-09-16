@@ -50,43 +50,92 @@ namespace NeuroArena.Audio
 
         private void Start()
         {
+            LoadAudioSettings();
             ApplyAllVolumes();
+        }
+
+        public void SaveAudioSettings()
+        {
+            PlayerPrefs.SetFloat("Audio_MasterVolume", currentMaster);
+            PlayerPrefs.SetFloat("Audio_AmbientVolume", currentAmbient);
+            PlayerPrefs.SetFloat("Audio_SFXVolume", currentSFX);
+            PlayerPrefs.SetFloat("Audio_UIVolume", currentUI);
+            PlayerPrefs.SetFloat("Audio_MusicVolume", currentMusic);
+            PlayerPrefs.SetInt("Audio_IsMuted", isMuted ? 1 : 0);
+            PlayerPrefs.Save();
+        }
+
+        public void LoadAudioSettings()
+        {
+            currentMaster = PlayerPrefs.GetFloat("Audio_MasterVolume", 85f);
+            currentAmbient = PlayerPrefs.GetFloat("Audio_AmbientVolume", 80f);
+            currentSFX = PlayerPrefs.GetFloat("Audio_SFXVolume", 90f);
+            currentUI = PlayerPrefs.GetFloat("Audio_UIVolume", 85f);
+            currentMusic = PlayerPrefs.GetFloat("Audio_MusicVolume", 75f);
+            isMuted = PlayerPrefs.GetInt("Audio_IsMuted", 0) == 1;
         }
 
         public void SetMasterVolume(float linearPercent)
         {
             currentMaster = Mathf.Clamp(linearPercent, 0f, 100f);
             SetMixerParam(masterVolParam, isMuted ? 0f : currentMaster);
+            SaveAudioSettings();
         }
 
         public void SetAmbientVolume(float linearPercent)
         {
             currentAmbient = Mathf.Clamp(linearPercent, 0f, 100f);
             SetMixerParam(ambientVolParam, currentAmbient);
+            SaveAudioSettings();
         }
 
         public void SetSFXVolume(float linearPercent)
         {
             currentSFX = Mathf.Clamp(linearPercent, 0f, 100f);
             SetMixerParam(sfxVolParam, currentSFX);
+            SaveAudioSettings();
         }
 
         public void SetUIVolume(float linearPercent)
         {
             currentUI = Mathf.Clamp(linearPercent, 0f, 100f);
             SetMixerParam(uiVolParam, currentUI);
+            SaveAudioSettings();
         }
 
         public void SetMusicVolume(float linearPercent)
         {
             currentMusic = Mathf.Clamp(linearPercent, 0f, 100f);
             SetMixerParam(musicVolParam, currentMusic);
+            SaveAudioSettings();
         }
 
         public void ToggleMute()
         {
             isMuted = !isMuted;
             SetMasterVolume(currentMaster);
+            SaveAudioSettings();
+        }
+
+        public System.Collections.IEnumerator FadeMixerGroup(string paramName, float targetLinear, float duration)
+        {
+            if (mainAudioMixer == null || duration <= 0f) yield break;
+
+            float startLinear = currentMusic;
+            if (paramName == ambientVolParam) startLinear = currentAmbient;
+            else if (paramName == sfxVolParam) startLinear = currentSFX;
+            else if (paramName == masterVolParam) startLinear = currentMaster;
+
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float t = Mathf.Clamp01(elapsed / duration);
+                float curr = Mathf.Lerp(startLinear, targetLinear, t);
+                SetMixerParam(paramName, curr);
+                yield return null;
+            }
+            SetMixerParam(paramName, targetLinear);
         }
 
         private void SetMixerParam(string paramName, float linearPercent)
