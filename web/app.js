@@ -5330,6 +5330,9 @@ function updateGame(deltaTime) {
         mascotMesh.position.lerp(mascotTarget, deltaTime * 5.0);
         mascotMesh.rotation.y += deltaTime * 1.2;
     }
+    if (typeof HolographicTelemetryManager !== "undefined") {
+        HolographicTelemetryManager.update(deltaTime);
+    }
 
     camera.position.set(playerPos.x + Math.sin(cameraOrbit.yaw) * Math.cos(cameraOrbit.pitch) * cameraOrbit.distance, playerPos.y + Math.sin(cameraOrbit.pitch) * cameraOrbit.distance + 1.2, playerPos.z + Math.cos(cameraOrbit.yaw) * Math.cos(cameraOrbit.pitch) * cameraOrbit.distance);
     camera.lookAt(playerPos.x, playerPos.y + 1.2, playerPos.z);
