@@ -2947,4 +2947,386 @@
     <div id="meta-ui-overlay" class="meta-ui-overlay pointer-events-none"></div>
 </body>
 
+</html                <!-- 1v1 LIVE DUEL MATCHMAKING MODAL (DUAL-COCKPIT HANDSHAKE RADAR) -->
+                <div id="duel-matchmaking-modal" class="modal-overlay hidden" style="z-index: 9500;">
+                    <div class="glass-modal na-panel-chamfer duel-cockpit-modal" style="max-width: 780px; width:92%; border: 1.5px solid #f43f5e; box-shadow: 0 0 45px rgba(244,63,94,0.35);">
+                        <div class="modal-header" style="justify-content: space-between; border-bottom:1px solid rgba(244,63,94,0.3);">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <span style="color: #f43f5e; font-size:1.3rem;">⚔️</span>
+                                <h2 style="color: #f43f5e; font-size:1.15rem; margin:0;">1v1 ADVERSARIAL DUEL :: NEURAL HANDSHAKE</h2>
+                            </div>
+                            <button id="btn-close-duel-modal" class="close-btn">✕</button>
+                        </div>
+                        <div style="padding: 20px;">
+                            <!-- Dual Cockpit Radar Layout -->
+                            <div class="duel-cockpit-layout">
+                                <!-- Left Wing: Player Model Rig -->
+                                <div class="cockpit-wing player-wing">
+                                    <div class="wing-tag">LOCAL ARCHITECT</div>
+                                    <div class="wing-avatar">🤖</div>
+                                    <div id="duel-local-name" class="wing-name">Ada-Architect</div>
+                                    <div class="wing-sub">[EXPLORER RIG]</div>
+                                    <div class="wing-stat-list">
+                                        <div class="wing-stat-row"><span>Glicko-2 MMR:</span><b style="color:#facc15;">1420</b></div>
+                                        <div class="wing-stat-row"><span>Loss Model:</span><b style="color:#38bdf8;">Ridge / SGD</b></div>
+                                        <div class="wing-stat-row"><span>Local State:</span><b class="text-green">ENGAGED</b></div>
+                                    </div>
+                                </div>
+
+                                <!-- Center: Latent Matchmaking Radar -->
+                                <div class="cockpit-center-radar">
+                                    <div id="duel-queue-spinner" class="radar-circle-display">
+                                        <div class="radar-sweep-beam"></div>
+                                        <div class="radar-crosshair"></div>
+                                        <div class="radar-blip" style="top:32%; left:68%;"></div>
+                                    </div>
+                                    <div id="duel-queue-status-text" class="radar-status-text">SEARCHING ADVERSARY...</div>
+                                    <div id="duel-queue-subtext" style="font-size: 0.78rem; color: #94a3b8; line-height: 1.35; margin-bottom: 10px; text-align:center;">
+                                        Pairing via FIFO queue. Both architects have 90s to harvest & calibrate before server evaluation against 50 hidden test samples.
+                                    </div>
+                                    <div id="duel-countdown-box" class="hidden" style="margin-bottom: 12px; font-size: 1.6rem; font-weight: 900; color: #facc15; font-family: var(--font-display-mono); text-align:center;">
+                                        SYNCHRONIZING IN <span id="duel-countdown-num">3</span>...
+                                    </div>
+                                </div>
+
+                                <!-- Right Wing: Adversarial Opponent Silhouette -->
+                                <div class="cockpit-wing opponent-wing">
+                                    <div class="wing-tag">OPPONENT TELEMETRY</div>
+                                    <div class="wing-avatar opponent-avatar">👤</div>
+                                    <div id="duel-opponent-name" class="wing-name">Scanning...</div>
+                                    <div class="wing-sub">[ADVERSARIAL POOL]</div>
+                                    <div class="wing-stat-list">
+                                        <div class="wing-stat-row"><span>Target Tier:</span><b style="color:#facc15;">Gold / Tier 3</b></div>
+                                        <div class="wing-stat-row"><span>Test Metric:</span><b style="color:#38bdf8;">50 Hidden Set</b></div>
+                                        <div class="wing-stat-row"><span>Network RTT:</span><b id="duel-ping-indicator" class="text-green">&lt;35ms</b></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Footer Actions -->
+                            <div style="display:flex; justify-content:center; gap:14px; margin-top:16px;">
+                                <button id="btn-engage-duel-queue" class="primary-btn glow-purple" style="min-width:180px; padding:10px 20px; font-weight:800;">
+                                    ⚔️ Engage Duel
+                                </button>
+                                <button id="btn-cancel-duel-queue" class="action-btn" style="background: rgba(225,29,72,0.2); border-color: #f43f5e; color: #f43f5e; padding:10px 18px;">
+                                    ✕ Abort Handshake
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 1v1 LIVE DUEL RESULTS MODAL (HIDDEN TEST SET EVALUATION) -->
+                <div id="duel-results-modal" class="modal-overlay hidden" style="z-index: 9600;">
+                    <div class="glass-modal" style="max-width: 580px; border: 2px solid #38bdf8; box-shadow: 0 0 50px rgba(56,189,248,0.4);">
+                        <div class="modal-header" style="justify-content: center; background: rgba(15,23,42,0.95);">
+                            <h2 id="duel-results-title" style="font-size: 1.4rem; color: #facc15;">🏆 1v1 DUEL COMPLETE</h2>
+                        </div>
+                        <div style="padding: 20px;">
+                            <div id="duel-outcome-banner" style="text-align: center; font-size: 1.8rem; font-weight: 900; letter-spacing: 1px; margin-bottom: 16px; color: #4ade80;">
+                                VICTORY!
+                            </div>
+                            <div style="font-size: 0.82rem; color: #94a3b8; text-align: center; margin-bottom: 18px; font-family: var(--font-display-mono);">
+                                Authoritative Server Evaluation against 50 Hidden Test Samples
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px;">
+                                <!-- Player 1 Card (You) -->
+                                <div id="duel-card-player" class="stat-card" style="border: 1.5px solid #38bdf8; background: rgba(14,165,233,0.1); padding: 14px;">
+                                    <div style="font-size: 0.75rem; color: #38bdf8; font-weight: bold;">👤 YOU (ARCHITECT)</div>
+                                    <div id="duel-res-player-name" style="font-weight: 800; font-size: 1.1rem; color: #fff; margin-bottom: 8px;">Ada-Architect</div>
+                                    <div style="font-family: var(--font-display-mono); font-size: 0.82rem; color: #cbd5e1; line-height: 1.5;">
+                                        Weights: <b id="duel-res-player-weights" style="color: #facc15;">w=2.45, b=1.15</b><br>
+                                        Test MSE: <b id="duel-res-player-mse" style="color: #4ade80;">0.0021</b><br>
+                                        Accuracy: <b id="duel-res-player-acc" style="color: #38bdf8; font-size: 1.15rem;">98.4%</b>
+                                    </div>
+                                </div>
+
+                                <!-- Player 2 Card (Opponent) -->
+                                <div id="duel-card-opponent" class="stat-card" style="border: 1.5px solid #f43f5e; background: rgba(244,63,94,0.1); padding: 14px;">
+                                    <div style="font-size: 0.75rem; color: #f43f5e; font-weight: bold;">👤 OPPONENT</div>
+                                    <div id="duel-res-opp-name" style="font-weight: 800; font-size: 1.1rem; color: #fff; margin-bottom: 8px;">Challenger</div>
+                                    <div style="font-family: var(--font-display-mono); font-size: 0.82rem; color: #cbd5e1; line-height: 1.5;">
+                                        Weights: <b id="duel-res-opp-weights" style="color: #facc15;">w=1.80, b=0.60</b><br>
+                                        Test MSE: <b id="duel-res-opp-mse" style="color: #f87171;">0.4215</b><br>
+                                        Accuracy: <b id="duel-res-opp-acc" style="color: #f43f5e; font-size: 1.15rem;">74.2%</b>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button id="btn-close-duel-results" class="primary-btn glow-cyan" style="width: 100%; padding: 12px 0; font-size: 1rem; font-weight: 800;">
+                                ⚔️ RETURN TO BIOME HUB
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 🌟 SUPABASE AUTH: SAVE YOUR PROGRESS ACCOUNT UPGRADE MODAL -->
+                <div id="auth-upgrade-modal" class="modal-overlay hidden" style="z-index: 9700;">
+                    <div class="glass-modal" style="max-width: 480px; text-align: center; border: 2px solid #38bdf8; box-shadow: 0 0 50px rgba(56,189,248,0.35);">
+                        <div class="modal-header" style="justify-content: center; background: rgba(15,23,42,0.95);">
+                            <h2 style="color: #38bdf8; font-size: 1.35rem;">☁️ SAVE YOUR PROGRESS</h2>
+                        </div>
+                        <div style="padding: 22px 20px;">
+                            <div style="font-size: 2.8rem; margin-bottom: 8px;">🛡️</div>
+                            <div id="auth-upgrade-headline" style="font-family: var(--font-display-mono); font-size: 1.15rem; font-weight: 800; color: #f8fafc; margin-bottom: 8px;">
+                                SECURE YOUR ARENA PROGRESSION
+                            </div>
+                            <p id="auth-upgrade-bodytext" style="font-size: 0.85rem; color: #94a3b8; line-height: 1.45; margin-bottom: 20px;">
+                                You are currently playing as an <b>Anonymous Guest</b>. Link your session to a real account to enable cross-device cloud saves, preserve your trained models, and lock in your duel win streaks!
+                            </p>
+
+                            <!-- OAuth Login Buttons -->
+                            <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px;">
+                                <button id="btn-auth-oauth-google" class="action-btn" style="background: rgba(234,67,53,0.15); border: 1.5px solid #ea4335; color: #fff; padding: 11px; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                                    <span style="font-size: 1.2rem;">🔴</span> Continue with Google
+                                </button>
+                                <button id="btn-auth-oauth-github" class="action-btn" style="background: rgba(255,255,255,0.08); border: 1.5px solid #94a3b8; color: #fff; padding: 11px; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                                    <span style="font-size: 1.2rem;">🐙</span> Continue with GitHub
+                                </button>
+                                <button id="btn-auth-oauth-discord" class="action-btn" style="background: rgba(88,101,242,0.15); border: 1.5px solid #5865f2; color: #fff; padding: 11px; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                                    <span style="font-size: 1.2rem;">💬</span> Continue with Discord
+                                </button>
+                            </div>
+
+                            <button id="btn-dismiss-auth-upgrade" class="menu-sublabel" style="background: none; border: none; color: #64748b; font-size: 0.8rem; cursor: pointer; text-decoration: underline;">
+                                Maybe later (continue playing as guest)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Menu Overlay -->
+                <div id="main-menu" class="modal-overlay">
+                    <div class="menu-container glass-card">
+                        <h1 class="game-logo">⚡ NEURO-ARENA</h1>
+                        <div class="game-sublogo">GRADIENTS OF THE WILD | 3D ML SIMULATOR</div>
+
+                        <div class="seed-input-container">
+                            <label>🎲 PLAYTHROUGH SEED:</label>
+                            <div class="seed-input-row">
+                                <input type="text" id="menu-seed-input" value="NEURO-8842" spellcheck="false"
+                                    class="cyber-seed-input">
+                                <button id="btn-random-seed" class="seed-btn glow-cyan">🎲 Random</button>
+                            </div>
+                        </div>
+
+                        <div class="menu-actions">
+                            <button id="btn-continue-game" class="menu-btn primary glow-green disabled">⚔️ CONTINUE
+                                GAME</button>
+                            <div id="save-info-label" class="menu-sublabel">No local save found</div>
+                            <button id="btn-new-game" class="menu-btn glow-cyan">🌟 NEW GAME (APPLY SEED)</button>
+                            <button id="btn-menu-daily" class="menu-btn glow-amber">📅 PLAY DAILY CHALLENGE</button>
+                            <button id="btn-menu-community" class="menu-btn glow-amber">🛠️ COMMUNITY CHALLENGES & MOD-TOOLS</button>
+                            <button id="btn-menu-models" class="menu-btn glow-cyan">💾 MY MODELS (VAULT)</button>
+                            <button id="btn-menu-profile" class="menu-btn">👤 ARCHITECT PROFILE</button>
+                            <button id="btn-menu-codex" class="menu-btn">📖 CODEX & ML JOURNAL</button>
+                            <button id="btn-menu-settings" class="menu-btn">⚙️ SETTINGS & AUDIO</button>
+                            <button id="btn-biome-map" class="menu-btn">🗺️ BIOME PROGRESSION MAP</button>
+                            <button id="btn-menu-analytics" class="menu-btn glow-cyan">📊 LIVE ANALYTICS DASHBOARD</button>
+                            <button id="btn-reset-save" class="menu-btn danger">🗑️ Reset Local Save</button>
+                            <button id="btn-quit-game" class="menu-btn">🚪 QUIT GAME</button>
+                        </div>
+
+                        <!-- 4. LIVE INTERNAL ANALYTICS DASHBOARD MODAL -->
+                        <div id="modal-analytics-dashboard" class="modal-overlay hidden" style="z-index: 10000;">
+                            <div class="glass-modal analytics-dashboard-card" style="max-width: 900px; width: 95vw; max-height: 90vh; overflow-y: auto;">
+                                <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(56, 189, 248, 0.2); padding-bottom: 12px;">
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <h2 style="margin: 0; color: #38bdf8; font-family: 'Outfit', sans-serif; font-size: 1.25rem;">📊 PRIVACY-CONSCIOUS EVENT ANALYTICS DASHBOARD</h2>
+                                        <span class="live-pill" style="background: rgba(34, 197, 94, 0.2); color: #4ade80; padding: 2px 8px; border-radius: 9999px; font-size: 11px; font-weight: 600; border: 1px solid rgba(74, 222, 128, 0.4);">LIVE</span>
+                                    </div>
+                                    <div style="display: flex; gap: 8px;">
+                                        <button id="btn-refresh-analytics" class="pill-btn" style="padding: 4px 12px; font-size: 11px; background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 4px; cursor: pointer;">🔄 Refresh</button>
+                                        <button id="btn-close-analytics" class="close-btn" style="background: none; border: none; color: #94a3b8; font-size: 18px; cursor: pointer;">✕</button>
+                                    </div>
+                                </div>
+                                
+                                <div class="analytics-body" style="padding: 16px 4px; display: flex; flex-direction: column; gap: 20px;">
+                                    <!-- Top Row: Core KPIs -->
+                                    <div class="analytics-kpi-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px;">
+                                        <div class="kpi-card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 12px; text-align: center;">
+                                            <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase;">D1 Retention</div>
+                                            <div id="kpi-d1-retention" style="font-size: 22px; font-weight: 700; color: #38bdf8; margin: 4px 0;">--%</div>
+                                            <div id="kpi-d1-sub" style="font-size: 10px; color: #64748b;">0 / 0 players</div>
+                                        </div>
+                                        <div class="kpi-card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 12px; text-align: center;">
+                                            <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase;">D7 Retention</div>
+                                            <div id="kpi-d7-retention" style="font-size: 22px; font-weight: 700; color: #818cf8; margin: 4px 0;">--%</div>
+                                            <div id="kpi-d7-sub" style="font-size: 10px; color: #64748b;">0 / 0 players</div>
+                                        </div>
+                                        <div class="kpi-card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 12px; text-align: center;">
+                                            <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase;">D30 Retention</div>
+                                            <div id="kpi-d30-retention" style="font-size: 22px; font-weight: 700; color: #c084fc; margin: 4px 0;">--%</div>
+                                            <div id="kpi-d30-sub" style="font-size: 10px; color: #64748b;">0 / 0 players</div>
+                                        </div>
+                                        <div class="kpi-card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 8px; padding: 12px; text-align: center;">
+                                            <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase;">Tutorial Complete</div>
+                                            <div id="kpi-tutorial-rate" style="font-size: 22px; font-weight: 700; color: #4ade80; margin: 4px 0;">--%</div>
+                                            <div id="kpi-tutorial-sub" style="font-size: 10px; color: #64748b;">FTUE conversion</div>
+                                        </div>
+                                        <div class="kpi-card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 12px; text-align: center;">
+                                            <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase;">Tracked Players</div>
+                                            <div id="kpi-total-players" style="font-size: 22px; font-weight: 700; color: #fbbf24; margin: 4px 0;">0</div>
+                                            <div id="kpi-total-events" style="font-size: 10px; color: #64748b;">0 events ingested</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Middle Section: FTUE Funnel Drop-Off -->
+                                    <div class="funnel-container" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 8px; padding: 14px;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                            <h3 style="margin: 0; font-size: 14px; color: #f1f5f9; display: flex; align-items: center; gap: 6px;">🎯 FTUE TUTORIAL STEP CONVERSION & DROP-OFF FUNNEL</h3>
+                                            <span id="funnel-starters-badge" style="font-size: 11px; color: #94a3b8;">0 Total Starters</span>
+                                        </div>
+                                        <div id="funnel-step-list" style="display: flex; flex-direction: column; gap: 10px;">
+                                            <!-- Dynamically populated -->
+                                        </div>
+                                    </div>
+
+                                    <!-- Lower Section: Biome-by-Biome Progression -->
+                                    <div class="biomes-container" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 8px; padding: 14px;">
+                                        <h3 style="margin: 0 0 12px 0; font-size: 14px; color: #f1f5f9;">🗺️ BIOME-BY-BIOME PROGRESSION & BOSS WIN RATES</h3>
+                                        <div id="biome-analytics-list" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px;">
+                                            <!-- Dynamically populated -->
+                                        </div>
+                                    </div>
+
+                                    <!-- Crash / Error Telemetry Logs -->
+                                    <div class="errors-container" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 8px; padding: 14px;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                            <h3 style="margin: 0; font-size: 13px; color: #f87171;">⚠️ CLIENT ERROR & CRASH TELEMETRY</h3>
+                                            <span id="error-count-badge" style="font-size: 11px; color: #94a3b8;">0 errors logged</span>
+                                        </div>
+                                        <div id="analytics-error-logs" style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #cbd5e1; max-height: 120px; overflow-y: auto; background: rgba(2, 6, 23, 0.8); padding: 8px; border-radius: 4px; border: 1px solid rgba(239, 68, 68, 0.1);">
+                                            No errors reported. System health nominal.
+                                        </div>
+                                    </div>
+
+                                    <!-- ⚙️ REMOTE CONFIG & LIVE-OPS BALANCE TUNING PANEL (DESIGNER/PM) -->
+                                    <div class="remote-config-admin-container" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 14px;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid rgba(245, 158, 11, 0.2); padding-bottom: 8px;">
+                                            <div>
+                                                <h3 style="margin: 0; font-size: 14px; color: #fbbf24; display: flex; align-items: center; gap: 6px;">⚙️ LIVE REMOTE CONFIG & BALANCE TUNING</h3>
+                                                <div style="font-size: 11px; color: #94a3b8;">Active Version: <b id="rc-active-version" style="color: #38bdf8;">v1</b> | Schema v3 Save Validated | 5-Min TTL Caching</div>
+                                            </div>
+                                            <button id="btn-rc-refresh" class="pill-btn" style="padding: 4px 10px; font-size: 11px; background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 4px; cursor: pointer;">🔄 Sync Config</button>
+                                        </div>
+
+                                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 14px;">
+                                            <!-- Harvest Multiplier -->
+                                            <div style="background: rgba(2, 6, 23, 0.6); padding: 10px; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.15);">
+                                                <label style="font-size: 11px; color: #94a3b8; display: block; margin-bottom: 4px;">🌾 Base Harvest Yield Multiplier:</label>
+                                                <div style="display: flex; align-items: center; gap: 8px;">
+                                                    <input type="number" id="input-rc-harvest-yield" min="0.1" max="10.0" step="0.1" value="1.0" class="cyber-input" style="width: 80px; padding: 4px 8px; font-size: 12px;">
+                                                    <span style="font-size: 11px; color: #64748b;">(0.1x - 10.0x)</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Boss HP Tuning -->
+                                            <div style="background: rgba(2, 6, 23, 0.6); padding: 10px; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.15);">
+                                                <label style="font-size: 11px; color: #94a3b8; display: block; margin-bottom: 4px;">🐉 Overfit Hydra Max HP:</label>
+                                                <div style="display: flex; align-items: center; gap: 8px;">
+                                                    <input type="number" id="input-rc-boss-hp" min="100" max="50000" step="50" value="500" class="cyber-input" style="width: 90px; padding: 4px 8px; font-size: 12px;">
+                                                    <span style="font-size: 11px; color: #64748b;">HP</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Daily Challenge Reward -->
+                                            <div style="background: rgba(2, 6, 23, 0.6); padding: 10px; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.15);">
+                                                <label style="font-size: 11px; color: #94a3b8; display: block; margin-bottom: 4px;">📅 Daily Challenge Reward (Crystals):</label>
+                                                <div style="display: flex; align-items: center; gap: 8px;">
+                                                    <input type="number" id="input-rc-daily-reward" min="50" max="5000" step="25" value="150" class="cyber-input" style="width: 90px; padding: 4px 8px; font-size: 12px;">
+                                                    <span style="font-size: 11px; color: #64748b;">crystals</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Modifier Weekend Toggle -->
+                                            <div style="background: rgba(2, 6, 23, 0.6); padding: 10px; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.15);">
+                                                <label style="font-size: 11px; color: #94a3b8; display: block; margin-bottom: 4px;">⚡ 2x Live-Ops Modifier Weekend:</label>
+                                                <div style="display: flex; align-items: center; gap: 8px;">
+                                                    <input type="checkbox" id="input-rc-modifier-active" style="cursor: pointer;">
+                                                    <span id="rc-modifier-status-label" style="font-size: 11px; color: #f87171;">Inactive</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 12px;">
+                                            <button id="btn-rc-publish" class="action-btn glow-amber" style="padding: 6px 16px; font-size: 12px;">🚀 Publish Balance Update (Zero Downtime)</button>
+                                            
+                                            <!-- One-Click Rollback -->
+                                            <div style="display: flex; align-items: center; gap: 8px;">
+                                                <span style="font-size: 11px; color: #94a3b8;">Rollback to:</span>
+                                                <select id="select-rc-rollback-version" style="background: #0f172a; color: #f1f5f9; border: 1px solid rgba(239, 68, 68, 0.4); padding: 4px 8px; border-radius: 4px; font-size: 11px;">
+                                                    <option value="1">v1 (Initial)</option>
+                                                </select>
+                                                <button id="btn-rc-rollback" class="action-btn danger" style="padding: 4px 12px; font-size: 11px;">⏪ 1-Click Rollback</button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Status notification -->
+                                        <div id="rc-status-msg" style="font-size: 11px; color: #4ade80; display: none;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="biome-map-subpanel" class="hidden">
+                            <h3>🗺️ 6-BIOME PROGRESSION</h3>
+                            <ul class="biome-list" id="biome-list-element">
+                                <li><b>1. The Linear Steppes (Linear Regression)</b> <span
+                                        class="unlocked">UNLOCKED</span></li>
+                                <li><b>2. The Binary Marshlands (Logistic Classification)</b> <span
+                                        class="locked">LOCKED</span></li>
+                                <li><b>3. The Variance Tundra (Regularization)</b> <span class="locked">LOCKED</span>
+                                </li>
+                                <li><b>4. The Branching Canopy (Decision Trees)</b> <span class="locked">LOCKED</span>
+                                </li>
+                                <li><b>5. The Deep Synapse Citadel (Neural Networks)</b> <span
+                                        class="locked">LOCKED</span></li>
+                                <li><b>6. The Semantic Expanse (Embeddings & Cosine Sim)</b> <span
+                                        class="locked">LOCKED</span></li>
+                            </ul>
+                            <button id="btn-close-biome-map" class="menu-btn small">Back</button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Explicit Diagnostics Consent Modal -->
+                <div id="modal-diagnostics-consent" class="modal-overlay hidden">
+                    <div class="glass-modal consent-modal-card">
+                        <div class="modal-header">
+                            <h2>🔒 LOCAL DIAGNOSTICS & BUG REPORTING CONSENT</h2>
+                            <button id="btn-cancel-consent-x" class="close-btn">✕</button>
+                        </div>
+                        <div class="consent-body" style="padding: 14px 18px;">
+                            <p style="font-size:12px; color:#cbd5e1; line-height:1.5; margin-bottom:12px;">
+                                Enable opt-in local diagnostics to help diagnose crashes and frame-time spikes when
+                                reporting bugs.
+                            </p>
+                            <div class="coach-advice-box" style="margin-bottom:12px;">
+                                <div class="advice-heading">🛡️ 100% OFFLINE & PRIVACY-FIRST GUARANTEE</div>
+                                <p>All logs are written exclusively to your local device memory. <b>Zero network calls,
+                                        zero automatic uploads, and zero third-party telemetry.</b></p>
+                            </div>
+                            <div class="coach-principle-badge" style="margin-bottom:14px;">
+                                📋 <b>What gets logged locally:</b> Session elapsed duration, active screen/biome
+                                context, frame-time spikes (>50ms), and error traces.
+                            </div>
+                            <div style="display:flex; gap:10px;">
+                                <button id="btn-confirm-consent" class="action-btn glow-green" style="flex:1;">✅ I
+                                    Consent (Enable Local Logging)</button>
+                                <button id="btn-cancel-consent" class="pill-btn" style="min-width:90px;">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Community Challenges & Mod-Tools Client -->
+    <script type="module" src="src/community/CustomChallengeClient.js"></script>
+    <!-- Main Game Script -->
+    <script src="app.js"></script>
+</body>
+
 </html>

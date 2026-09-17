@@ -3324,3 +3324,128 @@ button:active {
 .bios-stat-lbl { font-size: 9px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
 .bios-stat-val { font-size: 11px; font-weight: 700; color: #cbd5e1; }
 .bios-settings-deck { flex: 1; display: flex; flex-direction: column; }
+
+/* 4. DUAL-COCKPIT HANDSHAKE RADAR (MATCHMAKING) */
+.duel-cockpit-layout {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 320px;
+}
+@media (max-width: 768px) { .duel-cockpit-layout { flex-direction: column; } }
+.cockpit-wing {
+    flex: 1;
+    background: rgba(11, 17, 27, 0.88);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+.cockpit-wing.player-wing {
+    border-color: rgba(0, 240, 255, 0.4);
+    box-shadow: 0 0 20px rgba(0, 240, 255, 0.15);
+}
+.cockpit-wing.opponent-wing {
+    border-color: rgba(244, 63, 94, 0.4);
+    box-shadow: 0 0 20px rgba(244, 63, 94, 0.15);
+}
+.wing-tag {
+    font-family: var(--font-display-mono);
+    font-size: 9.5px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: #94a3b8;
+    margin-bottom: 8px;
+}
+.player-wing .wing-tag { color: #00F0FF; }
+.opponent-wing .wing-tag { color: #f43f5e; }
+.wing-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: rgba(15, 23, 42, 0.9);
+    border: 2px solid #00F0FF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    margin-bottom: 8px;
+}
+.opponent-avatar { border-color: #f43f5e; color: #f43f5e; }
+.wing-name { font-size: 14px; font-weight: 800; color: #f8fafc; }
+.wing-sub { font-family: var(--font-display-mono); font-size: 10px; color: #facc15; margin-bottom: 12px; }
+.wing-stat-list {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-family: var(--font-display-mono);
+    font-size: 10.5px;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 8px 10px;
+    border-radius: 4px;
+}
+.wing-stat-row { display: flex; justify-content: space-between; color: #94a3b8; }
+.cockpit-center-radar { width: 220px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; }
+.radar-circle-display {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    border: 2px solid rgba(244, 63, 94, 0.6);
+    background: radial-gradient(circle, rgba(244, 63, 94, 0.1) 0%, rgba(10, 15, 26, 0.9) 75%);
+    position: relative;
+    box-shadow: 0 0 25px rgba(244, 63, 94, 0.25), inset 0 0 15px rgba(244, 63, 94, 0.15);
+    margin-bottom: 12px;
+    overflow: hidden;
+}
+.radar-sweep-beam {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: conic-gradient(from 0deg, transparent 70%, rgba(244, 63, 94, 0.5) 100%);
+    animation: radarSweep 2.2s linear infinite;
+}
+.radar-crosshair {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: rgba(244, 63, 94, 0.3);
+}
+.radar-crosshair::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: -70px;
+    bottom: -70px;
+    width: 1px;
+    background: rgba(244, 63, 94, 0.3);
+}
+.radar-blip {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #facc15;
+    box-shadow: 0 0 8px #facc15;
+    animation: blipPulse 1.2s infinite alternate;
+}
+@keyframes blipPulse {
+    0% { transform: scale(0.8); opacity: 0.4; }
+    100% { transform: scale(1.3); opacity: 1.0; }
+}
+.radar-status-text {
+    font-family: var(--font-display-mono);
+    font-size: 11px;
+    font-weight: 800;
+    color: #f43f5e;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    text-align: center;
+}

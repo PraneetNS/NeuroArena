@@ -4956,6 +4956,23 @@ const LiveDuelManager = {
     duelSeed: null,
     submitted: false,
 
+    openCockpitModal() {
+        closeActiveHUDModals("duel-matchmaking-modal");
+        const modal = document.getElementById("duel-matchmaking-modal");
+        if (!modal) return;
+        modal.classList.remove("hidden");
+
+        const profile = (typeof ProfileSlots !== "undefined" && ProfileSlots[activeSaveSlot]) ? ProfileSlots[activeSaveSlot] : {};
+        const localName = document.getElementById("duel-local-name");
+        if (localName) localName.innerText = profile.name || "Ada-Architect";
+
+        const statusTxt = document.getElementById("duel-queue-status-text");
+        if (statusTxt) statusTxt.innerText = "RADAR STANDBY: READY TO ENGAGE";
+
+        const countdownBox = document.getElementById("duel-countdown-box");
+        if (countdownBox) countdownBox.classList.add("hidden");
+    },
+
     startMatchmaking() {
         if (this.status !== "idle") return;
         this.status = "queueing";
@@ -6661,11 +6678,27 @@ function setupUIEvents() {
         RawParametersManager.toggle();
     });
 
-    // 1v1 Live Multiplayer Duel Matchmaking Events
-    document.getElementById("btn-open-duel-hud")?.addEventListener("click", () => {
-        closeActiveHUDModals("duel-matchmaking-modal");
+    // 1v1 Live Multiplayer Duel Matchmaking Events (Dual Cockpit Handshake Radar)
+    function orchestrateDuelEngagement() {
+        const radar = document.querySelector(".cockpit-center-radar .radar-circle-display");
+        if (radar) {
+            radar.classList.add("transitioning-duel-lock");
+            setTimeout(() => radar.classList.remove("transitioning-duel-lock"), 600);
+        }
+        showInGameActionToast("Duel Engaged: Synchronizing Opponent...");
         LiveDuelManager.startMatchmaking();
+    }
+
+    document.getElementById("btn-open-duel-hud")?.addEventListener("click", () => {
+        LiveDuelManager.openCockpitModal();
     });
+    document.getElementById("btn-close-duel-modal")?.addEventListener("click", () => {
+        LiveDuelManager.cancelMatchmaking();
+    });
+    document.getElementById("btn-engage-duel-queue")?.addEventListener("click", () => {
+        orchestrateDuelEngagement();
+    });
+
     document.getElementById("btn-cancel-duel-queue")?.addEventListener("click", () => LiveDuelManager.cancelMatchmaking());
     document.getElementById("btn-close-duel-results")?.addEventListener("click", () => {
         document.getElementById("duel-results-modal")?.classList.add("hidden");
