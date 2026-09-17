@@ -2770,6 +2770,107 @@ function testInSessionDiegeticHUDAndGlanceHierarchy() {
     console.log("✅ In-Session Diegetic HUD, 200ms Glance Hierarchy & Meta-UI Shader Tests Passed!");
 }
 
+function testOutOfGameplayThemedMenuFlowAndCopyAudit() {
+    const fs = require('fs');
+    const path = require('path');
+    const htmlPath = path.resolve(__dirname, '../index.html');
+    const cssPath = path.resolve(__dirname, '../style.css');
+    const appPath = path.resolve(__dirname, '../app.js');
+    const htmlContent = fs.readFileSync(htmlPath, 'utf8');
+    const cssContent = fs.readFileSync(cssPath, 'utf8');
+    const appContent = fs.readFileSync(appPath, 'utf8');
+
+    // 1. Structural Diversity Across 5 Distinct Menu Archetypes
+    // Archetype 1: Topological Expedition Board (Biome Select)
+    assert.ok(htmlContent.includes('class="expedition-board-layout"'), "Biome Select must use .expedition-board-layout");
+    assert.ok(htmlContent.includes('id="expedition-trail-nodes"'), "Expedition Board must include #expedition-trail-nodes curriculum trail");
+    assert.ok(htmlContent.includes('id="expedition-dossier-panel"'), "Expedition Board must mount #expedition-dossier-panel side dispatch deck");
+    assert.ok(cssContent.includes('.expedition-trail-nodes::before'), "CSS must define linear-gradient trail connector path");
+    assert.ok(cssContent.includes('.expedition-node.active-station'), "CSS must highlight active trail station");
+
+    // Archetype 2: Specimen Vault & Distribution Matrix (Inventory Satchel)
+    assert.ok(htmlContent.includes('id="inventory-drawer"'), "Satchel drawer must exist");
+    assert.ok(htmlContent.includes('id="satchel-empty-state"'), "Satchel must include in-voice #satchel-empty-state");
+    assert.ok(htmlContent.includes('stats-mean-std-x'), "Satchel must display distribution dispersion (μ ± σ)");
+    assert.ok(htmlContent.includes('stats-pearson-row'), "Satchel must display Pearson correlation r(X, Y)");
+
+    // Archetype 3: Neural Syndicate Command Console (Guild Hall)
+    assert.ok(htmlContent.includes('id="guild-hall-modal"'), "Guild Hall modal must exist");
+    assert.ok(htmlContent.includes('id="syndicate-meta-header"'), "Guild Hall must display #syndicate-meta-header FLOPs & influence stat cards");
+    assert.ok(htmlContent.includes('id="guild-territory-map-container"'), "Guild Hall must mount territory control matrix container");
+    assert.ok(htmlContent.includes('id="guild-member-roster"'), "Guild Hall must display active division roster");
+    assert.ok(htmlContent.includes('id="guild-unaligned-empty-state"'), "Guild Hall must feature in-voice unaligned empty state");
+
+    // Archetype 4: Terminal BIOS & Hardware Telemetry Console (Settings)
+    assert.ok(htmlContent.includes('class="bios-console-layout"'), "Settings must use dual-pane .bios-console-layout");
+    assert.ok(htmlContent.includes('id="bios-telemetry-sidebar"'), "Settings must mount #bios-telemetry-sidebar diagnostics console");
+    assert.ok(htmlContent.includes('id="bios-diag-cores"'), "Sidebar must report live hardware CPU cores");
+    assert.ok(htmlContent.includes('id="bios-diag-ram"'), "Sidebar must report physical memory headroom");
+    assert.ok(htmlContent.includes('id="bios-diag-gpu"'), "Sidebar must report GPU pipeline backend");
+    assert.ok(htmlContent.includes('id="bios-diag-voices"'), "Sidebar must report audio synthesis budget");
+
+    // Archetype 5: Dual-Cockpit Handshake Radar (Matchmaking)
+    assert.ok(htmlContent.includes('class="duel-cockpit-layout"'), "Matchmaking must use .duel-cockpit-layout");
+    assert.ok(htmlContent.includes('class="cockpit-wing player-wing"'), "Cockpit must include left player model wing");
+    assert.ok(htmlContent.includes('class="cockpit-wing opponent-wing"'), "Cockpit must include right opponent telemetry wing");
+    assert.ok(htmlContent.includes('class="cockpit-center-radar"'), "Cockpit must mount center latent radar display");
+    assert.ok(htmlContent.includes('class="radar-sweep-beam"'), "Cockpit radar must include sweeping beam element");
+
+    // 2. Strict Verb-Noun Copy Audit & Terminology System
+    // Action Intent 1: Biome Entry -> Deploy Expedition
+    assert.ok(htmlContent.includes('🚀 Deploy Expedition'), "Primary biome button must read '🚀 Deploy Expedition'");
+    assert.ok(appContent.includes('Expedition Deployed:'), "Toast must confirm with canonical 'Expedition Deployed:'");
+
+    // Action Intent 2: Model Training -> Calibrate Model
+    assert.ok(htmlContent.includes('🧠 Calibrate Model'), "Satchel action button must read '🧠 Calibrate Model'");
+
+    // Action Intent 3: PvP Queue -> Engage Duel
+    assert.ok(htmlContent.includes('⚔️ Engage Duel'), "Matchmaking button must read '⚔️ Engage Duel'");
+    assert.ok(appContent.includes('Duel Engaged:'), "Toast must confirm with canonical 'Duel Engaged:'");
+
+    // Action Intent 4: Guild Affiliation -> Enlist Syndicate
+    assert.ok(htmlContent.includes('🛡️ Enlist Syndicate'), "Guild action button must read '🛡️ Enlist Syndicate'");
+    assert.ok(appContent.includes('Syndicate Enlisted:'), "Toast must confirm with canonical 'Syndicate Enlisted:'");
+
+    // Action Intent 5: Settings Config -> Save Calibration
+    assert.ok(htmlContent.includes('💾 Save Calibration'), "Settings action button must read '💾 Save Calibration'");
+    assert.ok(appContent.includes('Calibration Saved:'), "Toast must confirm with canonical 'Calibration Saved:'");
+
+    // Action Intent 6: Coordinates -> Harvest Crystals
+    assert.ok(htmlContent.includes('💎 Harvest Crystals'), "Empty state recovery button must read '💎 Harvest Crystals'");
+    assert.ok(appContent.includes('Crystals Harvested:'), "Toast must confirm with canonical 'Crystals Harvested:'");
+
+    // Action Intent 7: Purge -> Purge Artifacts
+    assert.ok(htmlContent.includes('⚠️ Purge Artifacts'), "Drawer purge button must read '⚠️ Purge Artifacts'");
+    assert.ok(appContent.includes('Artifacts Purged:'), "Toast must confirm with canonical 'Artifacts Purged:'");
+
+    // Verify absence of prohibited generic synonyms on action triggers
+    assert.ok(!htmlContent.includes('>Travel to Biome<'), "Prohibited synonym 'Travel' must not be used on buttons");
+    assert.ok(!htmlContent.includes('>Save Settings<'), "Prohibited synonym 'Save Settings' must not be used on buttons");
+    assert.ok(!htmlContent.includes('>Apply Settings<'), "Prohibited synonym 'Apply Settings' must not be used on buttons");
+
+    // 3. Designed In-Voice Empty & Failure States
+    assert.ok(htmlContent.includes('[SYNDICATE_STATUS: UNALIGNED_ARCHITECT]'), "Guild empty state must display [SYNDICATE_STATUS: UNALIGNED_ARCHITECT]");
+    assert.ok(htmlContent.includes('Your neural weights operate unaligned'), "Guild empty state must contain in-voice lore explanation");
+    assert.ok(htmlContent.includes('[SPECIMEN_VAULT: VACANT_MANIFEST]'), "Satchel empty state must display [SPECIMEN_VAULT: VACANT_MANIFEST]");
+    assert.ok(htmlContent.includes('Your empirical dataset contains zero sampled coordinates'), "Satchel empty state must contain in-voice lore explanation");
+
+    // 4. Orchestrated Major Transitions
+    assert.ok(cssContent.includes('@keyframes expeditionDeployWarp'), "CSS must define @keyframes expeditionDeployWarp");
+    assert.ok(cssContent.includes('.transitioning-expedition-warp'), "CSS must provide .transitioning-expedition-warp trigger class");
+    assert.ok(cssContent.includes('@keyframes duelRadarLock'), "CSS must define @keyframes duelRadarLock");
+    assert.ok(cssContent.includes('.transitioning-duel-lock'), "CSS must provide .transitioning-duel-lock trigger class");
+    assert.ok(cssContent.includes('@keyframes guildSealReveal'), "CSS must define @keyframes guildSealReveal");
+    assert.ok(cssContent.includes('.transitioning-guild-reveal'), "CSS must provide .transitioning-guild-reveal trigger class");
+
+    // Code orchestration hooks
+    assert.ok(appContent.includes('orchestrateBiomeDeployment'), "app.js must define orchestrateBiomeDeployment");
+    assert.ok(appContent.includes('orchestrateDuelEngagement'), "app.js must define orchestrateDuelEngagement");
+    assert.ok(appContent.includes('GuildHallManager'), "app.js must export GuildHallManager");
+
+    console.log("✅ Out-of-Gameplay Themed Menu Flow, 5-Archetype Diversity & Copy Audit Tests Passed!");
+}
+
 testWebGPUBootstrapAndFallbackEngine().then(async () => {
     testVolumetricFogAndFroxelGrid();
     testRecurringEngagementAndLiveOpsRemoteConfig();
@@ -2782,8 +2883,10 @@ testWebGPUBootstrapAndFallbackEngine().then(async () => {
     await testWebClientCustomChallengesAndModTools();
     testUnifiedDesignTokensAndMathGlyphs();
     testInSessionDiegeticHUDAndGlanceHierarchy();
+    testOutOfGameplayThemedMenuFlowAndCopyAudit();
     console.log("🎉 All Web Unit Tests Passed Cleanly!");
 });
+
 
 
 
