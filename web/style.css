@@ -3051,3 +3051,168 @@ button:active {
     .vitality-bar-outer { width: 140px; height: 12px; }
     .boss-meter-container { top: 10px; width: 88vw; padding: 6px 12px; }
 }
+
+/* ==========================================================================
+   OUT-OF-GAMEPLAY THEMED MENU REDESIGN (5 DISTINCT CONTENT ARCHETYPES)
+   ========================================================================== */
+/* 1. TOPOLOGICAL EXPEDITION BOARD (BIOME SELECT) */
+.expedition-board-layout {
+    display: flex;
+    gap: 20px;
+    min-height: 480px;
+}
+@media (max-width: 880px) {
+    .expedition-board-layout { flex-direction: column; }
+}
+.expedition-trail-deck {
+    flex: 1.3;
+    display: flex;
+    flex-direction: column;
+    background: rgba(8, 14, 24, 0.7);
+    border: 1px solid rgba(0, 240, 255, 0.25);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    position: relative;
+    overflow: hidden;
+}
+.trail-header-title .trail-sub {
+    font-family: var(--font-display-mono);
+    font-size: 10px;
+    font-weight: 800;
+    color: #00F0FF;
+    letter-spacing: 1px;
+}
+.expedition-trail-nodes {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    position: relative;
+    margin-top: 10px;
+    max-height: 420px;
+    overflow-y: auto;
+    padding-right: 6px;
+}
+.expedition-trail-nodes::before {
+    content: "";
+    position: absolute;
+    top: 24px;
+    bottom: 24px;
+    left: 27px;
+    width: 2px;
+    background: linear-gradient(180deg, #00F0FF 0%, #38bdf8 40%, #c084fc 70%, #f43f5e 100%);
+    opacity: 0.35;
+    z-index: 1;
+}
+.expedition-node {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 14px;
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    position: relative;
+    z-index: 2;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.expedition-node:hover {
+    border-color: rgba(0, 240, 255, 0.5);
+    background: rgba(14, 165, 233, 0.15);
+    transform: translateX(4px);
+}
+.expedition-node.active-station {
+    border: 1.5px solid #00F0FF;
+    background: rgba(0, 240, 255, 0.12);
+    box-shadow: 0 0 20px rgba(0, 240, 255, 0.25), inset 0 0 10px rgba(0, 240, 255, 0.1);
+}
+.expedition-node.locked {
+    opacity: 0.55;
+    cursor: not-allowed;
+    filter: grayscale(0.6);
+}
+.node-station-pip {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #0b111b;
+    border: 2px solid #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display-mono);
+    font-size: 11px;
+    font-weight: 800;
+    color: #94a3b8;
+    flex-shrink: 0;
+}
+.expedition-node.active-station .node-station-pip {
+    border-color: #00F0FF;
+    color: #00F0FF;
+    box-shadow: 0 0 12px #00F0FF;
+    background: rgba(0, 240, 255, 0.2);
+}
+.expedition-node.unlocked .node-station-pip {
+    border-color: #4ade80;
+    color: #4ade80;
+}
+.node-meta-body { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.node-title-row { display: flex; align-items: center; justify-content: space-between; }
+.node-biome-name { font-size: 13px; font-weight: 800; color: #f8fafc; }
+.node-curriculum-pill {
+    font-family: var(--font-display-mono);
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(0, 240, 255, 0.12);
+    border: 1px solid rgba(0, 240, 255, 0.3);
+    color: #38bdf8;
+    text-transform: uppercase;
+}
+.node-desc-line { font-size: 11px; color: #94a3b8; line-height: 1.3; }
+.expedition-dossier-panel {
+    flex: 1;
+    background: rgba(11, 17, 27, 0.9);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    position: relative;
+}
+.dossier-badge {
+    align-self: flex-start;
+    font-family: var(--font-display-mono);
+    font-size: 10px;
+    font-weight: 800;
+    color: #00F0FF;
+    letter-spacing: 1.2px;
+    background: rgba(0, 240, 255, 0.15);
+    border: 1px solid rgba(0, 240, 255, 0.4);
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin-bottom: 8px;
+}
+.dossier-title { font-size: 18px; font-weight: 800; color: #ffffff; margin: 0 0 4px 0; }
+.dossier-paradigm { font-family: var(--font-display-mono); font-size: 11px; color: #facc15; margin-bottom: 12px; }
+.dossier-desc { font-size: 12px; color: #cbd5e1; line-height: 1.5; margin: 0 0 16px 0; }
+.dossier-specs-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+}
+.dossier-spec-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11.5px;
+    color: #94a3b8;
+    font-family: var(--font-display-mono);
+}
+.dossier-spec-row b { color: #e2e8f0; }
