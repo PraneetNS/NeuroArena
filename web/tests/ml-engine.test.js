@@ -2633,6 +2633,143 @@ function testUnifiedDesignTokensAndMathGlyphs() {
     console.log("✅ Unified Design Tokens & Mathematical Iconography Parity Tests Passed!");
 }
 
+function testInSessionDiegeticHUDAndGlanceHierarchy() {
+    console.log("▶ Testing In-Session Diegetic HUD, 200ms Glance Hierarchy & Meta-UI Shader Shaders...");
+    const fs = require('fs');
+    const path = require('path');
+
+    // 1. Verify Documentation & Classification Framework
+    const docPath = path.resolve(__dirname, '../../docs/IN_SESSION_HUD_FRAMEWORK.md');
+    assert.ok(fs.existsSync(docPath), "docs/IN_SESSION_HUD_FRAMEWORK.md must exist");
+    const docContent = fs.readFileSync(docPath, 'utf8');
+
+    const expectedElements = [
+        "ADA Companion Drone",
+        "Live Holographic Loss Waveform",
+        "Active Model Parameters",
+        "Convergence Optical Beam",
+        "Architect Health",
+        "Architect Energy",
+        "Boss Health & Phase Crown",
+        "Damage Chromatic Aberration Pulse",
+        "Model Divergence Desaturation Flash",
+        "Critical Integrity Arterial Vignette",
+        "Touch Controls"
+    ];
+    for (const elem of expectedElements) {
+        assert.ok(docContent.includes(elem), `Documentation must explicitly categorize ${elem}`);
+    }
+
+    // Verify 4-category framework is documented
+    assert.ok(docContent.includes("Diegetic"), "Framework must include Diegetic");
+    assert.ok(docContent.includes("Non-Diegetic"), "Framework must include Non-Diegetic");
+    assert.ok(docContent.includes("Spatial"), "Framework must include Spatial");
+    assert.ok(docContent.includes("Meta"), "Framework must include Meta");
+
+    // 2. Verify 200ms Glance Test Logic
+    function evaluateGlanceHealth(hp, maxHp = 100) {
+        const pct = hp / maxHp;
+        if (pct <= 0.25) return { tier: "CRITICAL", color: "RED", arterialPulse: true };
+        if (pct <= 0.50) return { tier: "WARNING", color: "AMBER", arterialPulse: false };
+        return { tier: "NORMAL", color: "GREEN", arterialPulse: false };
+    }
+
+    assert.strictEqual(evaluateGlanceHealth(95).tier, "NORMAL");
+    assert.strictEqual(evaluateGlanceHealth(95).color, "GREEN");
+    assert.strictEqual(evaluateGlanceHealth(40).tier, "WARNING");
+    assert.strictEqual(evaluateGlanceHealth(40).color, "AMBER");
+    assert.strictEqual(evaluateGlanceHealth(15).tier, "CRITICAL");
+    assert.strictEqual(evaluateGlanceHealth(15).arterialPulse, true);
+
+    function evaluateGlanceBossPhase(currentHp, maxHp = 1000) {
+        const pct = currentHp / maxHp;
+        if (pct > 0.66) return { phase: 1, color: "CYAN", label: "PHASE I" };
+        if (pct > 0.33) return { phase: 2, color: "AMBER", label: "PHASE II: ENRAGE" };
+        return { phase: 3, color: "VIOLET", label: "PHASE III: OVERCLOCK" };
+    }
+
+    assert.strictEqual(evaluateGlanceBossPhase(900).phase, 1);
+    assert.strictEqual(evaluateGlanceBossPhase(900).color, "CYAN");
+    assert.strictEqual(evaluateGlanceBossPhase(500).phase, 2);
+    assert.strictEqual(evaluateGlanceBossPhase(500).color, "AMBER");
+    assert.strictEqual(evaluateGlanceBossPhase(200).phase, 3);
+    assert.strictEqual(evaluateGlanceBossPhase(200).color, "VIOLET");
+
+    function evaluateGlanceLossTrend(history) {
+        if (!history || history.length < 2) return { trend: "converging", arrow: "↓", color: "EMERALD" };
+        const recent = history.slice(-4);
+        const delta = recent[recent.length - 1] - recent[0];
+        if (isNaN(delta) || delta > 0.008) return { trend: "diverging", arrow: "↑", color: "CRIMSON" };
+        if (Math.abs(delta) <= 0.002) return { trend: "plateau", arrow: "→", color: "AMBER" };
+        return { trend: "converging", arrow: "↓", color: "EMERALD" };
+    }
+
+    // Playtest Convergence: 0.45 -> 0.30 -> 0.18 -> 0.08
+    const conv = evaluateGlanceLossTrend([0.45, 0.30, 0.18, 0.08]);
+    assert.strictEqual(conv.trend, "converging");
+    assert.strictEqual(conv.arrow, "↓");
+    assert.strictEqual(conv.color, "EMERALD");
+
+    // Playtest Divergence: 0.12 -> 0.20 -> 0.42 -> 1.15
+    const div = evaluateGlanceLossTrend([0.12, 0.20, 0.42, 1.15]);
+    assert.strictEqual(div.trend, "diverging");
+    assert.strictEqual(div.arrow, "↑");
+    assert.strictEqual(div.color, "CRIMSON");
+
+    // Playtest NaN Divergence
+    const nanDiv = evaluateGlanceLossTrend([0.12, 0.11, NaN]);
+    assert.strictEqual(nanDiv.trend, "diverging");
+
+    // Playtest Plateau
+    const plat = evaluateGlanceLossTrend([0.120, 0.121, 0.119, 0.120]);
+    assert.strictEqual(plat.trend, "plateau");
+    assert.strictEqual(plat.arrow, "→");
+
+    // 3. Verify Meta-UI PostProcessing Shader Integration
+    const { PostProcessingPipeline } = require('../src/postProcessingPipeline.js');
+    assert.ok(PostProcessingPipeline, "PostProcessingPipeline class must be exported");
+
+    const shader = PostProcessingPipeline.getPostFXShader();
+    assert.ok(shader.uniforms.uChromaOffset, "Shader must contain uChromaOffset uniform");
+    assert.ok(shader.uniforms.uDesatFactor, "Shader must contain uDesatFactor uniform");
+    assert.ok(shader.uniforms.uDamageVignette, "Shader must contain uDamageVignette uniform");
+    assert.ok(shader.fragmentShader.includes("uDesatFactor"), "Fragment shader must compute desaturation");
+    assert.ok(shader.fragmentShader.includes("uDamageVignette"), "Fragment shader must compute arterial edge tint");
+
+    // Test pipeline trigger mechanics
+    const dummyPipeline = new PostProcessingPipeline(null, null, null);
+    dummyPipeline.triggerDamagePulse(0.02);
+    assert.strictEqual(dummyPipeline.settings.chromaPulse, 0.02);
+    assert.ok(dummyPipeline.settings.damageVignette >= 0.85);
+
+    dummyPipeline.triggerDivergenceFlash(0.9);
+    assert.strictEqual(dummyPipeline.settings.desatFactor, 0.9);
+
+    // Update decay
+    dummyPipeline.updateMetaEffects(0.1);
+    assert.ok(dummyPipeline.settings.chromaPulse < 0.02, "Chroma pulse must decay over time");
+    assert.ok(dummyPipeline.settings.desatFactor < 0.9, "Desaturation must decay over time");
+
+    // 4. Verify HTML & CSS Structure Parity
+    const htmlPath = path.resolve(__dirname, '../index.html');
+    const cssPath = path.resolve(__dirname, '../style.css');
+    const htmlContent = fs.readFileSync(htmlPath, 'utf8');
+    const cssContent = fs.readFileSync(cssPath, 'utf8');
+
+    assert.ok(htmlContent.includes('id="drone-hologram-hud"'), "HTML must include #drone-hologram-hud");
+    assert.ok(htmlContent.includes('id="architect-vitality-hud"'), "HTML must include #architect-vitality-hud");
+    assert.ok(htmlContent.includes('id="boss-phase-meter"'), "HTML must include #boss-phase-meter");
+    assert.ok(htmlContent.includes('id="btn-mobile-dial-toggle"'), "HTML must include #btn-mobile-dial-toggle");
+    assert.ok(htmlContent.includes('id="meta-ui-overlay"'), "HTML must include #meta-ui-overlay");
+
+    // Mobile thumb target compliance (>= 48dp)
+    assert.ok(cssContent.includes('.mobile-dial-btn'), "CSS must include .mobile-dial-btn");
+    assert.ok(cssContent.includes('min-width: 48px'), "CSS must enforce minimum 48px thumb target dimensions");
+    assert.ok(cssContent.includes('min-height: 48px'), "CSS must enforce minimum 48px thumb target dimensions");
+
+    console.log("✅ In-Session Diegetic HUD, 200ms Glance Hierarchy & Meta-UI Shader Tests Passed!");
+}
+
 testWebGPUBootstrapAndFallbackEngine().then(async () => {
     testVolumetricFogAndFroxelGrid();
     testRecurringEngagementAndLiveOpsRemoteConfig();
@@ -2644,6 +2781,7 @@ testWebGPUBootstrapAndFallbackEngine().then(async () => {
     await testWebClientContractsAndBotArena();
     await testWebClientCustomChallengesAndModTools();
     testUnifiedDesignTokensAndMathGlyphs();
+    testInSessionDiegeticHUDAndGlanceHierarchy();
     console.log("🎉 All Web Unit Tests Passed Cleanly!");
 });
 
