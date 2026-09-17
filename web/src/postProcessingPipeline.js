@@ -17,6 +17,11 @@ export class PostProcessingPipeline {
       bloomRadius: 0.4,
       bloomThreshold: 0.85,
       chromaticAberrationOffset: 0.0025,
+      baseChromaOffset: 0.0025,
+      chromaPulse: 0.0,
+      desatFactor: 0.0,
+      damageVignette: 0.0,
+      isCriticalHealth: false,
       vignetteDarkness: 0.95,
       vignetteOffset: 1.1,
       scanlinesEnabled: false,
@@ -92,6 +97,8 @@ export class PostProcessingPipeline {
         tBloom: { value: null },
         uBloomIntensity: { value: 0.65 },
         uChromaOffset: { value: 0.0025 },
+        uDesatFactor: { value: 0.0 },
+        uDamageVignette: { value: 0.0 },
         uVignetteDarkness: { value: 0.95 },
         uVignetteOffset: { value: 1.1 },
         uScanlineIntensity: { value: 0.0 },
@@ -109,6 +116,8 @@ export class PostProcessingPipeline {
         uniform sampler2D tBloom;
         uniform float uBloomIntensity;
         uniform float uChromaOffset;
+        uniform float uDesatFactor;
+        uniform float uDamageVignette;
         uniform float uVignetteDarkness;
         uniform float uVignetteOffset;
         uniform float uScanlineIntensity;
@@ -134,6 +143,20 @@ export class PostProcessingPipeline {
           float vignette = clamp(1.0 - dot(uvDist, uvDist) * uVignetteDarkness, 0.0, 1.0);
           color.rgb *= vignette;
 
+          // Meta-UI: Desaturation on model divergence / training failure
+          if (uDesatFactor > 0.001) {
+            float lum = dot(color.rgb, vec3(0.299, 0.587, 0.114));
+            color.rgb = mix(color.rgb, vec3(lum), clamp(uDesatFactor, 0.0, 1.0));
+          }
+
+          // Meta-UI: Damage arterial edge tint
+          if (uDamageVignette > 0.001) {
+            vec2 vDist = (vUv - 0.5) * 1.5;
+            float edgeDist = dot(vDist, vDist);
+            vec3 arterialRed = vec3(0.9, 0.04, 0.04);
+            color.rgb = mix(color.rgb, arterialRed, clamp(edgeDist * uDamageVignette * 0.75, 0.0, 0.7));
+          }
+
           // Optional Cyber Scanlines
           if (uScanlineIntensity > 0.01) {
             float scanline = sin(vUv.y * 800.0 + uTime * 5.0) * 0.5 + 0.5;
@@ -149,7 +172,60 @@ export class PostProcessingPipeline {
     };
   }
 
+  /**
+   * Triggers a screen-edge chromatic aberration pulse on taking damage
+   * @param {number} intensity
+   */
+  triggerDamagePulse(intensity = 0.018) {
+    this.settings.chromaPulse = intensity;
+    this.settings.damageVignette = Math.max(this.settings.damageVignette, 0.85);
+  }
+
+  /**
+   * Triggers full-screen desaturation / glitch flash on model divergence or failure
+   * @param {number} factor
+   */
+  triggerDivergenceFlash(factor = 0.85) {
+    this.settings.desatFactor = factor;
+  }
+
+  /**
+   * Sets low-health arterial state
+   * @param {boolean} active
+   */
+  setCriticalHealthVignette(active = true) {
+    this.settings.isCriticalHealth = !!active;
+  }
+
+  /**
+   * Updates dynamic Meta-UI pulses per frame
+   * @param {number} deltaTime
+   */
+  updateMetaEffects(deltaTime = 0.016) {
+    // Decay chromatic pulse
+    if (this.settings.chromaPulse > 0) {
+      this.settings.chromaPulse = Math.max(0, this.settings.chromaPulse - deltaTime * 0.04);
+    }
+    this.settings.chromaticAberrationOffset = this.settings.baseChromaOffset + this.settings.chromaPulse;
+
+    // Decay damage vignette
+    if (this.settings.damageVignette > 0 && !this.settings.isCriticalHealth) {
+      this.settings.damageVignette = Math.max(0, this.settings.damageVignette - deltaTime * 2.2);
+    } else if (this.settings.isCriticalHealth) {
+      // Pulsate arterial vignette
+      const pulse = Math.sin(performance.now() * 0.007) * 0.25 + 0.55;
+      this.settings.damageVignette = pulse;
+    }
+
+    // Decay desaturation flash
+    if (this.settings.desatFactor > 0) {
+      this.settings.desatFactor = Math.max(0, this.settings.desatFactor - deltaTime * 1.8);
+    }
+  }
+
   render(deltaTime) {
+    this.updateMetaEffects(deltaTime || 0.016);
+
     if (!this.enabled || !this.renderer) {
       this.renderer.render(this.scene, this.camera);
       return;
