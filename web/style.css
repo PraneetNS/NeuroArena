@@ -2729,163 +2729,284 @@ button:active {
     font-size: 0.9rem;
 }
 
+/* =========================================================
+   IN-SESSION HUD: DIEGETIC / SPATIAL HOLOGRAPHIC INSTRUMENTATION
+   & META-UI FULL-SCREEN STATE SYSTEM
+   ========================================================= */
 
+/* 1. Meta-UI Full-Screen State Feedback Overlays */
+.meta-fx-overlay {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 920;
+    overflow: hidden;
+}
 
+.meta-arterial-vignette {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    background: radial-gradient(circle at center, transparent 55%, rgba(239, 68, 68, 0.45) 85%, rgba(185, 28, 28, 0.85) 100%);
+    mix-blend-mode: hard-light;
+    transition: opacity 0.15s ease-out;
+}
 
-/* ==========================================================================
-   IN-SESSION DIEGETIC HUD & 200MS GLANCE HIERARCHY STYLES
-   ========================================================================== */
+.meta-arterial-vignette.active-pulse {
+    animation: arterialHeartbeat 0.85s infinite ease-in-out;
+}
+
+@keyframes arterialHeartbeat {
+    0%, 100% { opacity: 0.35; transform: scale(1.0); }
+    50% { opacity: 0.75; transform: scale(1.02); }
+}
+
+.meta-desat-flash {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    backdrop-filter: grayscale(100%) contrast(120%);
+    -webkit-backdrop-filter: grayscale(100%) contrast(120%);
+    transition: opacity 0.08s ease-out;
+}
+
+.meta-chroma-pulse {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    box-shadow: inset 0 0 40px rgba(0, 240, 255, 0.5), inset 0 0 80px rgba(244, 63, 94, 0.4);
+    transition: opacity 0.12s ease-out;
+}
+
+/* 2. In-Fiction Holographic Drone Telemetry Instrument */
 .drone-holo-instrument {
     position: absolute;
-    top: 20px;
-    left: 20px;
-    width: 250px;
-    background: rgba(10, 16, 30, 0.88);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1.5px solid rgba(0, 240, 255, 0.45);
-    border-radius: 8px;
-    padding: 10px 12px;
+    top: 84px;
+    left: 24px;
     z-index: 850;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 240, 255, 0.2);
+    pointer-events: none;
     user-select: none;
-    pointer-events: auto;
+    filter: drop-shadow(0 0 16px rgba(0, 240, 255, 0.35));
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
 }
+
+.holo-emitter-anchor {
+    position: relative;
+    background: rgba(6, 15, 30, 0.82);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1.5px solid rgba(0, 240, 255, 0.45);
+    border-radius: 10px;
+    padding: 10px 12px;
+    width: 196px;
+    box-shadow: inset 0 0 15px rgba(0, 240, 255, 0.15), 0 8px 32px rgba(0, 0, 0, 0.6);
+    overflow: hidden;
+}
+
+.holo-emitter-anchor::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #00F0FF, #38bdf8, transparent);
+    animation: holoBeamSweep 2.5s infinite linear;
+}
+
+@keyframes holoBeamSweep {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
 .holo-header {
     display: flex;
-    align-items: center;
     justify-content: space-between;
-    margin-bottom: 8px;
-    border-bottom: 1px solid rgba(0, 240, 255, 0.2);
-    padding-bottom: 4px;
+    align-items: center;
+    margin-bottom: 6px;
 }
-.drone-sigil {
+
+.holo-drone-tag {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.holo-glyph {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
     font-weight: 900;
-    color: #00F0FF;
-    background: rgba(0, 240, 255, 0.15);
-    padding: 2px 6px;
+    font-size: 11px;
+    color: #050b14;
+    background: #00F0FF;
     border-radius: 4px;
-    border: 1px solid #00F0FF;
+    padding: 1px 4px;
 }
-.drone-id {
+
+.holo-title {
     font-family: 'JetBrains Mono', monospace;
     font-size: 9px;
     font-weight: 800;
-    color: #94a3b8;
+    color: #38bdf8;
     letter-spacing: 0.8px;
+    text-transform: uppercase;
 }
-.holo-pill {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 9px;
-    font-weight: 800;
+
+.holo-badge {
+    display: flex;
+    align-items: center;
+    gap: 3px;
     padding: 2px 6px;
     border-radius: 4px;
-}
-.holo-pill.converging { background: rgba(0, 255, 102, 0.2); color: #00FF66; border: 1px solid #00FF66; }
-.holo-pill.diverging { background: rgba(244, 63, 94, 0.25); color: #f43f5e; border: 1px solid #f43f5e; }
-.holo-pill.plateau { background: rgba(245, 158, 11, 0.2); color: #facc15; border: 1px solid #f59e0b; }
-.sparkline-title {
-    display: flex;
-    justify-content: space-between;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 8px;
-    color: #64748b;
-    margin-bottom: 4px;
+    font-size: 9.5px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
 }
-.trend-arrow { font-size: 12px; font-weight: 900; }
-.sparkline-footer {
-    display: flex;
-    justify-content: space-between;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 9px;
-    color: #00F0FF;
-    margin-top: 4px;
+
+.holo-badge.converging {
+    background: rgba(16, 185, 129, 0.2);
+    border: 1px solid #10b981;
+    color: #34d399;
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
 }
-.holo-param-strip {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 4px;
-    margin-top: 8px;
-    padding-top: 6px;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+
+.holo-badge.diverging {
+    background: rgba(244, 63, 94, 0.25);
+    border: 1px solid #f43f5e;
+    color: #fb7185;
+    box-shadow: 0 0 10px rgba(244, 63, 94, 0.5);
+    animation: divergingFlicker 0.6s infinite alternate;
 }
-.param-ring-badge {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background: rgba(0, 0, 0, 0.35);
-    padding: 3px 2px;
-    border-radius: 4px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+
+.holo-badge.plateau {
+    background: rgba(245, 158, 11, 0.2);
+    border: 1px solid #f59e0b;
+    color: #fbbf24;
 }
-.param-lbl { font-family: 'JetBrains Mono', monospace; font-size: 8px; color: #64748b; }
-.param-val { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 800; color: #f1f5f9; }
-.vitality-hud-container {
+
+@keyframes divergingFlicker {
+    0% { opacity: 0.7; }
+    100% { opacity: 1.0; }
+}
+
+.holo-graph-container {
+    position: relative;
+    background: rgba(2, 6, 16, 0.75);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    border-radius: 6px;
+    height: 56px;
+    overflow: hidden;
+}
+
+#holo-sparkline-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.holo-scanlines {
     position: absolute;
-    bottom: 24px;
-    left: 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    z-index: 850;
-    user-select: none;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 240, 255, 0.05) 3px, rgba(0, 240, 255, 0.05) 4px);
     pointer-events: none;
 }
+
+.holo-params-strip {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    padding-top: 4px;
+    border-top: 1px solid rgba(56, 189, 248, 0.2);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+}
+
+.param-pip {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    color: #94a3b8;
+}
+
+.param-pip b {
+    color: #f1f5f9;
+}
+
+/* 3. Non-Diegetic Vitality Arcs (Peripheral Health & Energy) */
+.vitality-hud-container {
+    position: absolute;
+    bottom: 96px;
+    left: 24px;
+    z-index: 850;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+    user-select: none;
+}
+
 .vitality-meter-wrap {
     display: flex;
     align-items: center;
     gap: 8px;
 }
+
 .vitality-icon-badge {
     width: 28px;
     height: 28px;
-    border-radius: 50%;
-    background: rgba(10, 16, 30, 0.9);
-    border: 1.5px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 13px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
+
 .vitality-bar-outer {
     position: relative;
     width: 170px;
     height: 14px;
     background: rgba(10, 16, 30, 0.85);
+    border-radius: 7px;
     border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 6px;
     overflow: hidden;
-    backdrop-filter: blur(8px);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
 }
+
 .vitality-fill {
     height: 100%;
-    transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    border-radius: 4px;
+    border-radius: 6px;
+    transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease;
 }
+
 .vitality-fill.health-fill {
-    background: linear-gradient(90deg, #10b981, #00FF66);
-    box-shadow: 0 0 10px rgba(0, 255, 102, 0.5);
+    background: linear-gradient(90deg, #10b981, #22c55e);
+    box-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
 }
+
 .vitality-fill.health-fill.warning {
-    background: linear-gradient(90deg, #f59e0b, #facc15);
-    box-shadow: 0 0 10px rgba(250, 204, 21, 0.5);
+    background: linear-gradient(90deg, #f59e0b, #eab308);
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.6);
 }
+
 .vitality-fill.health-fill.critical {
-    background: linear-gradient(90deg, #ef4444, #f43f5e);
-    box-shadow: 0 0 12px rgba(244, 63, 94, 0.7);
-    animation: healthCriticalPulse 0.6s infinite alternate;
+    background: linear-gradient(90deg, #ef4444, #dc2626);
+    box-shadow: 0 0 14px rgba(239, 68, 68, 0.8);
+    animation: healthCriticalPulse 0.75s infinite alternate;
 }
+
 @keyframes healthCriticalPulse {
     0% { filter: brightness(1); }
     100% { filter: brightness(1.4); }
 }
+
 .vitality-fill.energy-fill {
     background: linear-gradient(90deg, #0284c7, #38bdf8);
     box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
 }
+
 .vitality-glance-pip {
     position: absolute;
     right: 8px;
@@ -2898,6 +3019,8 @@ button:active {
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
     letter-spacing: 0.5px;
 }
+
+/* 4. Boss Phase Crown & Health Meter */
 .boss-meter-container {
     position: absolute;
     top: 14px;
@@ -2915,12 +3038,14 @@ button:active {
     user-select: none;
     transition: opacity 0.3s ease, transform 0.3s ease;
 }
+
 .boss-meter-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 6px;
 }
+
 .boss-name-text {
     font-family: 'JetBrains Mono', monospace;
     font-size: 12px;
@@ -2929,7 +3054,12 @@ button:active {
     letter-spacing: 0.8px;
     text-transform: uppercase;
 }
-.boss-phase-pips { display: flex; gap: 6px; }
+
+.boss-phase-pips {
+    display: flex;
+    gap: 6px;
+}
+
 .phase-pip {
     font-family: 'JetBrains Mono', monospace;
     font-size: 9px;
@@ -2941,12 +3071,14 @@ button:active {
     border: 1px solid rgba(255, 255, 255, 0.1);
     transition: all 0.25s ease;
 }
+
 .phase-pip.active[data-phase="1"] {
     background: rgba(0, 240, 255, 0.2);
     color: #00F0FF;
     border-color: #00F0FF;
     box-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
 }
+
 .phase-pip.active[data-phase="2"] {
     background: rgba(245, 158, 11, 0.25);
     color: #facc15;
@@ -2954,6 +3086,7 @@ button:active {
     box-shadow: 0 0 12px rgba(245, 158, 11, 0.5);
     animation: phaseEnragePulse 0.9s infinite alternate;
 }
+
 .phase-pip.active[data-phase="3"] {
     background: rgba(192, 132, 252, 0.3);
     color: #c084fc;
@@ -2961,14 +3094,17 @@ button:active {
     box-shadow: 0 0 16px rgba(189, 0, 255, 0.6);
     animation: phaseOverclockPulse 0.6s infinite alternate;
 }
+
 @keyframes phaseEnragePulse {
     0% { opacity: 0.8; }
     100% { opacity: 1.0; }
 }
+
 @keyframes phaseOverclockPulse {
     0% { transform: scale(1.0); filter: brightness(1.0); }
     100% { transform: scale(1.05); filter: brightness(1.3); }
 }
+
 .boss-hp-track {
     position: relative;
     width: 100%;
@@ -2978,6 +3114,7 @@ button:active {
     overflow: hidden;
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
+
 .boss-hp-fill {
     height: 100%;
     background: linear-gradient(90deg, #f43f5e, #e11d48);
@@ -3010,12 +3147,19 @@ button:active {
     cursor: pointer;
     touch-action: manipulation;
 }
+
 .mobile-dial-btn:active {
     transform: scale(0.92);
     background: rgba(0, 240, 255, 0.25);
 }
+
+/* 6. Mobile Responsive Thumb-Zone Pass */
 @media (max-width: 768px) {
-    .mobile-dial-btn { display: flex; }
+    .mobile-dial-btn {
+        display: flex;
+    }
+
+    /* Collapse desktop 17-button strip into thumb drawer */
     #top-right-hud {
         display: none;
         position: absolute;
@@ -3033,7 +3177,11 @@ button:active {
         z-index: 895;
         box-shadow: 0 12px 36px rgba(0, 0, 0, 0.7);
     }
-    #top-right-hud.mobile-open { display: flex; }
+
+    #top-right-hud.mobile-open {
+        display: flex;
+    }
+
     .hud-icon-btn {
         min-width: 48px !important;
         min-height: 48px !important;
@@ -3041,29 +3189,50 @@ button:active {
         height: 48px !important;
         font-size: 18px !important;
     }
+
     .drone-holo-instrument {
         top: 14px;
         left: 14px;
         transform: scale(0.9);
         transform-origin: top left;
     }
-    .vitality-hud-container { bottom: 140px; left: 14px; }
-    .vitality-bar-outer { width: 140px; height: 12px; }
-    .boss-meter-container { top: 10px; width: 88vw; padding: 6px 12px; }
+
+    .vitality-hud-container {
+        bottom: 140px;
+        left: 14px;
+    }
+
+    .vitality-bar-outer {
+        width: 140px;
+        height: 12px;
+    }
+
+    .boss-meter-container {
+        top: 10px;
+        width: 88vw;
+        padding: 6px 12px;
+    }
 }
 
 /* ==========================================================================
    OUT-OF-GAMEPLAY THEMED MENU REDESIGN (5 DISTINCT CONTENT ARCHETYPES)
    ========================================================================== */
-/* 1. TOPOLOGICAL EXPEDITION BOARD (BIOME SELECT) */
+
+/* --------------------------------------------------------------------------
+   1. TOPOLOGICAL EXPEDITION BOARD (BIOME SELECT)
+   -------------------------------------------------------------------------- */
 .expedition-board-layout {
     display: flex;
     gap: 20px;
     min-height: 480px;
 }
+
 @media (max-width: 880px) {
-    .expedition-board-layout { flex-direction: column; }
+    .expedition-board-layout {
+        flex-direction: column;
+    }
 }
+
 .expedition-trail-deck {
     flex: 1.3;
     display: flex;
@@ -3075,6 +3244,7 @@ button:active {
     position: relative;
     overflow: hidden;
 }
+
 .trail-header-title .trail-sub {
     font-family: var(--font-display-mono);
     font-size: 10px;
@@ -3082,6 +3252,7 @@ button:active {
     color: #00F0FF;
     letter-spacing: 1px;
 }
+
 .expedition-trail-nodes {
     display: flex;
     flex-direction: column;
@@ -3092,6 +3263,8 @@ button:active {
     overflow-y: auto;
     padding-right: 6px;
 }
+
+/* Progression connector trail */
 .expedition-trail-nodes::before {
     content: "";
     position: absolute;
@@ -3103,6 +3276,7 @@ button:active {
     opacity: 0.35;
     z-index: 1;
 }
+
 .expedition-node {
     display: flex;
     align-items: center;
@@ -3116,21 +3290,31 @@ button:active {
     z-index: 2;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
 .expedition-node:hover {
     border-color: rgba(0, 240, 255, 0.5);
     background: rgba(14, 165, 233, 0.15);
     transform: translateX(4px);
 }
+
 .expedition-node.active-station {
     border: 1.5px solid #00F0FF;
     background: rgba(0, 240, 255, 0.12);
     box-shadow: 0 0 20px rgba(0, 240, 255, 0.25), inset 0 0 10px rgba(0, 240, 255, 0.1);
 }
+
 .expedition-node.locked {
     opacity: 0.55;
     cursor: not-allowed;
     filter: grayscale(0.6);
 }
+
+.expedition-node.locked:hover {
+    transform: none;
+    border-color: rgba(255, 255, 255, 0.08);
+    background: rgba(15, 23, 42, 0.85);
+}
+
 .node-station-pip {
     width: 28px;
     height: 28px;
@@ -3145,20 +3329,41 @@ button:active {
     font-weight: 800;
     color: #94a3b8;
     flex-shrink: 0;
+    transition: all 0.25s ease;
 }
+
 .expedition-node.active-station .node-station-pip {
     border-color: #00F0FF;
     color: #00F0FF;
     box-shadow: 0 0 12px #00F0FF;
     background: rgba(0, 240, 255, 0.2);
 }
+
 .expedition-node.unlocked .node-station-pip {
     border-color: #4ade80;
     color: #4ade80;
 }
-.node-meta-body { flex: 1; display: flex; flex-direction: column; gap: 2px; }
-.node-title-row { display: flex; align-items: center; justify-content: space-between; }
-.node-biome-name { font-size: 13px; font-weight: 800; color: #f8fafc; }
+
+.node-meta-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.node-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.node-biome-name {
+    font-size: 13px;
+    font-weight: 800;
+    color: #f8fafc;
+    font-family: var(--font-display, sans-serif);
+}
+
 .node-curriculum-pill {
     font-family: var(--font-display-mono);
     font-size: 9px;
@@ -3170,7 +3375,14 @@ button:active {
     color: #38bdf8;
     text-transform: uppercase;
 }
-.node-desc-line { font-size: 11px; color: #94a3b8; line-height: 1.3; }
+
+.node-desc-line {
+    font-size: 11px;
+    color: #94a3b8;
+    line-height: 1.3;
+}
+
+/* Right: Expedition Dispatch Dossier */
 .expedition-dossier-panel {
     flex: 1;
     background: rgba(11, 17, 27, 0.9);
@@ -3183,6 +3395,7 @@ button:active {
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     position: relative;
 }
+
 .dossier-badge {
     align-self: flex-start;
     font-family: var(--font-display-mono);
@@ -3196,9 +3409,28 @@ button:active {
     border-radius: 4px;
     margin-bottom: 8px;
 }
-.dossier-title { font-size: 18px; font-weight: 800; color: #ffffff; margin: 0 0 4px 0; }
-.dossier-paradigm { font-family: var(--font-display-mono); font-size: 11px; color: #facc15; margin-bottom: 12px; }
-.dossier-desc { font-size: 12px; color: #cbd5e1; line-height: 1.5; margin: 0 0 16px 0; }
+
+.dossier-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: #ffffff;
+    margin: 0 0 4px 0;
+}
+
+.dossier-paradigm {
+    font-family: var(--font-display-mono);
+    font-size: 11px;
+    color: #facc15;
+    margin-bottom: 12px;
+}
+
+.dossier-desc {
+    font-size: 12px;
+    color: #cbd5e1;
+    line-height: 1.5;
+    margin: 0 0 16px 0;
+}
+
 .dossier-specs-grid {
     display: flex;
     flex-direction: column;
@@ -3208,6 +3440,7 @@ button:active {
     border-radius: var(--radius-sm);
     padding: 12px;
 }
+
 .dossier-spec-row {
     display: flex;
     justify-content: space-between;
@@ -3215,91 +3448,27 @@ button:active {
     color: #94a3b8;
     font-family: var(--font-display-mono);
 }
-.dossier-spec-row b { color: #e2e8f0; }
 
-/* 3. NEURAL SYNDICATE COMMAND CONSOLE (GUILD HALL) */
-.syndicate-meta-header {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 10px;
-    margin-bottom: 16px;
+.dossier-spec-row b {
+    color: #e2e8f0;
 }
-.syndicate-stat-card {
-    background: rgba(15, 23, 42, 0.8);
-    border: 1px solid rgba(192, 132, 252, 0.25);
-    border-radius: var(--radius-sm);
-    padding: 10px 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    font-family: var(--font-display-mono);
-}
-.syn-lbl { font-size: 9px; color: #94a3b8; letter-spacing: 0.8px; text-transform: uppercase; }
-.syn-val { font-size: 13px; font-weight: 800; }
-.guild-hall-layout { display: flex; gap: 18px; min-height: 380px; }
-@media (max-width: 860px) { .guild-hall-layout { flex-direction: column; } }
-.guild-territory-section { flex: 1.3; display: flex; flex-direction: column; }
-.section-title-tag {
-    font-family: var(--font-display-mono);
-    font-size: 10.5px;
-    font-weight: 800;
-    color: #c084fc;
-    letter-spacing: 0.8px;
-    margin-bottom: 8px;
-}
-.territory-map-wrapper {
-    flex: 1;
-    min-height: 280px;
-    background: rgba(8, 14, 26, 0.9);
-    border: 1px solid rgba(192, 132, 252, 0.3);
-    border-radius: var(--radius-md);
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.guild-roster-section { flex: 1; display: flex; flex-direction: column; }
-.guild-member-roster {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    max-height: 280px;
-    overflow-y: auto;
-    background: rgba(11, 17, 27, 0.7);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: var(--radius-sm);
-    padding: 8px;
-}
-.roster-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 10px;
-    background: rgba(15, 23, 42, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 4px;
-    font-family: var(--font-display-mono);
-    font-size: 11px;
-}
-.roster-row.leader {
-    border-color: rgba(250, 204, 21, 0.4);
-    background: rgba(250, 204, 21, 0.08);
-}
-.member-badge { font-size: 14px; }
-.member-name { flex: 1; font-weight: 700; color: #f1f5f9; }
-.member-role { font-size: 9.5px; color: #94a3b8; }
-.member-flops { font-size: 10px; font-weight: 800; color: #4ade80; }
 
-/* 2. TERMINAL BIOS & TELEMETRY CONSOLE (SETTINGS) */
+/* --------------------------------------------------------------------------
+   2. TERMINAL BIOS & TELEMETRY CONSOLE (SETTINGS)
+   -------------------------------------------------------------------------- */
 .bios-console-layout {
     display: flex;
     gap: 18px;
     min-height: 440px;
     padding: 14px 20px;
 }
-@media (max-width: 820px) { .bios-console-layout { flex-direction: column; } }
+
+@media (max-width: 820px) {
+    .bios-console-layout {
+        flex-direction: column;
+    }
+}
+
 .bios-telemetry-sidebar {
     width: 220px;
     flex-shrink: 0;
@@ -3312,6 +3481,7 @@ button:active {
     gap: 12px;
     font-family: var(--font-display-mono);
 }
+
 .bios-side-tag {
     font-size: 9.5px;
     font-weight: 800;
@@ -3320,12 +3490,165 @@ button:active {
     border-bottom: 1px solid rgba(56, 189, 248, 0.2);
     padding-bottom: 6px;
 }
-.bios-stat-group { display: flex; flex-direction: column; gap: 2px; }
-.bios-stat-lbl { font-size: 9px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
-.bios-stat-val { font-size: 11px; font-weight: 700; color: #cbd5e1; }
-.bios-settings-deck { flex: 1; display: flex; flex-direction: column; }
 
-/* 4. DUAL-COCKPIT HANDSHAKE RADAR (MATCHMAKING) */
+.bios-stat-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.bios-stat-lbl {
+    font-size: 9px;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.bios-stat-val {
+    font-size: 11px;
+    font-weight: 700;
+    color: #cbd5e1;
+}
+
+.bios-settings-deck {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* --------------------------------------------------------------------------
+   3. NEURAL SYNDICATE COMMAND CONSOLE (GUILD HALL)
+   -------------------------------------------------------------------------- */
+.syndicate-meta-header {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.syndicate-stat-card {
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(192, 132, 252, 0.25);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    font-family: var(--font-display-mono);
+}
+
+.syn-lbl {
+    font-size: 9px;
+    color: #94a3b8;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+}
+
+.syn-val {
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.guild-hall-layout {
+    display: flex;
+    gap: 18px;
+    min-height: 380px;
+}
+
+@media (max-width: 860px) {
+    .guild-hall-layout {
+        flex-direction: column;
+    }
+}
+
+.guild-territory-section {
+    flex: 1.3;
+    display: flex;
+    flex-direction: column;
+}
+
+.section-title-tag {
+    font-family: var(--font-display-mono);
+    font-size: 10.5px;
+    font-weight: 800;
+    color: #c084fc;
+    letter-spacing: 0.8px;
+    margin-bottom: 8px;
+}
+
+.territory-map-wrapper {
+    flex: 1;
+    min-height: 280px;
+    background: rgba(8, 14, 26, 0.9);
+    border: 1px solid rgba(192, 132, 252, 0.3);
+    border-radius: var(--radius-md);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.guild-roster-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.guild-member-roster {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 280px;
+    overflow-y: auto;
+    background: rgba(11, 17, 27, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-sm);
+    padding: 8px;
+}
+
+.roster-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 4px;
+    font-family: var(--font-display-mono);
+    font-size: 11px;
+}
+
+.roster-row.leader {
+    border-color: rgba(250, 204, 21, 0.4);
+    background: rgba(250, 204, 21, 0.08);
+}
+
+.member-badge {
+    font-size: 14px;
+}
+
+.member-name {
+    flex: 1;
+    font-weight: 700;
+    color: #f1f5f9;
+}
+
+.member-role {
+    font-size: 9.5px;
+    color: #94a3b8;
+}
+
+.member-flops {
+    font-size: 10px;
+    font-weight: 800;
+    color: #4ade80;
+}
+
+/* --------------------------------------------------------------------------
+   4. DUAL-COCKPIT HANDSHAKE RADAR (MATCHMAKING)
+   -------------------------------------------------------------------------- */
 .duel-cockpit-layout {
     display: flex;
     align-items: center;
@@ -3333,7 +3656,13 @@ button:active {
     gap: 16px;
     min-height: 320px;
 }
-@media (max-width: 768px) { .duel-cockpit-layout { flex-direction: column; } }
+
+@media (max-width: 768px) {
+    .duel-cockpit-layout {
+        flex-direction: column;
+    }
+}
+
 .cockpit-wing {
     flex: 1;
     background: rgba(11, 17, 27, 0.88);
@@ -3345,14 +3674,17 @@ button:active {
     align-items: center;
     text-align: center;
 }
+
 .cockpit-wing.player-wing {
     border-color: rgba(0, 240, 255, 0.4);
     box-shadow: 0 0 20px rgba(0, 240, 255, 0.15);
 }
+
 .cockpit-wing.opponent-wing {
     border-color: rgba(244, 63, 94, 0.4);
     box-shadow: 0 0 20px rgba(244, 63, 94, 0.15);
 }
+
 .wing-tag {
     font-family: var(--font-display-mono);
     font-size: 9.5px;
@@ -3361,8 +3693,10 @@ button:active {
     color: #94a3b8;
     margin-bottom: 8px;
 }
+
 .player-wing .wing-tag { color: #00F0FF; }
 .opponent-wing .wing-tag { color: #f43f5e; }
+
 .wing-avatar {
     width: 64px;
     height: 64px;
@@ -3375,9 +3709,25 @@ button:active {
     font-size: 28px;
     margin-bottom: 8px;
 }
-.opponent-avatar { border-color: #f43f5e; color: #f43f5e; }
-.wing-name { font-size: 14px; font-weight: 800; color: #f8fafc; }
-.wing-sub { font-family: var(--font-display-mono); font-size: 10px; color: #facc15; margin-bottom: 12px; }
+
+.opponent-avatar {
+    border-color: #f43f5e;
+    color: #f43f5e;
+}
+
+.wing-name {
+    font-size: 14px;
+    font-weight: 800;
+    color: #f8fafc;
+}
+
+.wing-sub {
+    font-family: var(--font-display-mono);
+    font-size: 10px;
+    color: #facc15;
+    margin-bottom: 12px;
+}
+
 .wing-stat-list {
     width: 100%;
     display: flex;
@@ -3389,8 +3739,21 @@ button:active {
     padding: 8px 10px;
     border-radius: 4px;
 }
-.wing-stat-row { display: flex; justify-content: space-between; color: #94a3b8; }
-.cockpit-center-radar { width: 220px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; }
+
+.wing-stat-row {
+    display: flex;
+    justify-content: space-between;
+    color: #94a3b8;
+}
+
+.cockpit-center-radar {
+    width: 220px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
 .radar-circle-display {
     width: 140px;
     height: 140px;
@@ -3402,6 +3765,7 @@ button:active {
     margin-bottom: 12px;
     overflow: hidden;
 }
+
 .radar-sweep-beam {
     position: absolute;
     width: 100%;
@@ -3410,6 +3774,7 @@ button:active {
     background: conic-gradient(from 0deg, transparent 70%, rgba(244, 63, 94, 0.5) 100%);
     animation: radarSweep 2.2s linear infinite;
 }
+
 .radar-crosshair {
     position: absolute;
     top: 50%;
@@ -3418,6 +3783,7 @@ button:active {
     height: 1px;
     background: rgba(244, 63, 94, 0.3);
 }
+
 .radar-crosshair::after {
     content: "";
     position: absolute;
@@ -3427,6 +3793,7 @@ button:active {
     width: 1px;
     background: rgba(244, 63, 94, 0.3);
 }
+
 .radar-blip {
     position: absolute;
     width: 8px;
@@ -3436,10 +3803,12 @@ button:active {
     box-shadow: 0 0 8px #facc15;
     animation: blipPulse 1.2s infinite alternate;
 }
+
 @keyframes blipPulse {
     0% { transform: scale(0.8); opacity: 0.4; }
     100% { transform: scale(1.3); opacity: 1.0; }
 }
+
 .radar-status-text {
     font-family: var(--font-display-mono);
     font-size: 11px;
@@ -3450,7 +3819,9 @@ button:active {
     text-align: center;
 }
 
-/* 5. IN-VOICE EMPTY & FAILURE STATE CARDS */
+/* --------------------------------------------------------------------------
+   5. IN-VOICE EMPTY & FAILURE STATE CARDS
+   -------------------------------------------------------------------------- */
 .in-voice-empty-card {
     background: rgba(15, 23, 42, 0.9);
     border: 1.5px dashed rgba(192, 132, 252, 0.4);
@@ -3463,6 +3834,7 @@ button:active {
     gap: 10px;
     margin: 12px 0;
 }
+
 .empty-status-tag {
     font-family: var(--font-display-mono);
     font-size: 10px;
@@ -3474,32 +3846,88 @@ button:active {
     padding: 3px 8px;
     border-radius: 4px;
 }
-.empty-title { font-size: 15px; font-weight: 800; color: #f8fafc; margin: 0; }
-.empty-lore-text { font-size: 12px; color: #94a3b8; line-height: 1.45; max-width: 480px; margin: 0; }
-.empty-actions-row { display: flex; gap: 10px; margin-top: 8px; }
 
-/* 6. ORCHESTRATED MAJOR TRANSITIONS */
-@keyframes expeditionDeployWarp {
-    0% { transform: scale(1); filter: blur(0px) brightness(1); opacity: 1; }
-    40% { transform: scale(1.08); filter: blur(2px) brightness(1.6); box-shadow: 0 0 80px rgba(0, 240, 255, 0.8); }
-    100% { transform: scale(0.92); filter: blur(10px) brightness(2.5); opacity: 0; }
+.empty-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: #f8fafc;
+    margin: 0;
 }
+
+.empty-lore-text {
+    font-size: 12px;
+    color: #94a3b8;
+    line-height: 1.45;
+    max-width: 480px;
+    margin: 0;
+}
+
+.empty-actions-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+/* --------------------------------------------------------------------------
+   6. ORCHESTRATED MAJOR TRANSITIONS
+   -------------------------------------------------------------------------- */
+@keyframes expeditionDeployWarp {
+    0% {
+        transform: scale(1);
+        filter: blur(0px) brightness(1);
+        opacity: 1;
+    }
+    40% {
+        transform: scale(1.08);
+        filter: blur(2px) brightness(1.6);
+        box-shadow: 0 0 80px rgba(0, 240, 255, 0.8);
+    }
+    100% {
+        transform: scale(0.92);
+        filter: blur(10px) brightness(2.5);
+        opacity: 0;
+    }
+}
+
 .transitioning-expedition-warp {
     animation: expeditionDeployWarp 0.85s cubic-bezier(0.2, 0.8, 0.2, 1) forwards !important;
     pointer-events: none;
 }
+
 @keyframes duelRadarLock {
-    0% { filter: hue-rotate(0deg); transform: scale(1); }
-    50% { filter: hue-rotate(90deg) brightness(1.4); transform: scale(1.03); box-shadow: 0 0 40px rgba(244, 63, 94, 0.6); }
-    100% { filter: hue-rotate(0deg); transform: scale(1); }
+    0% {
+        filter: hue-rotate(0deg);
+        transform: scale(1);
+    }
+    50% {
+        filter: hue-rotate(90deg) brightness(1.4);
+        transform: scale(1.03);
+        box-shadow: 0 0 40px rgba(244, 63, 94, 0.6);
+    }
+    100% {
+        filter: hue-rotate(0deg);
+        transform: scale(1);
+    }
 }
+
 .transitioning-duel-lock {
     animation: duelRadarLock 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
+
 @keyframes guildSealReveal {
-    0% { opacity: 0; transform: scale(0.9) rotate(-3deg); filter: blur(6px); }
-    100% { opacity: 1; transform: scale(1) rotate(0deg); filter: blur(0px); }
+    0% {
+        opacity: 0;
+        transform: scale(0.9) rotate(-3deg);
+        filter: blur(6px);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+        filter: blur(0px);
+    }
 }
+
 .transitioning-guild-reveal {
     animation: guildSealReveal 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+

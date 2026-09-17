@@ -3285,6 +3285,9 @@ async function init3DWorld() {
 
     window.addEventListener("resize", onWindowResize);
     setupInputListeners();
+    if (typeof HolographicTelemetryManager !== "undefined") {
+        HolographicTelemetryManager.init();
+    }
 }
 
 let currentTerrainMesh = null;
@@ -3657,6 +3660,291 @@ function updateCharacterAnimation(dt, speed) {
     }
 }
 
+// =========================================================
+// IN-FICTION DIEGETIC HOLOGRAPHIC TELEMETRY INSTRUMENT & META-UI MANAGER
+// Emitted from the Architect's ADA Companion Drone (∇θ)
+// =========================================================
+const HolographicTelemetryManager = {
+    playerHp: 100,
+    playerMaxHp: 100,
+    playerEnergy: 100,
+    playerMaxEnergy: 100,
+    isCombatActive: false,
+    
+    // Model parameters
+    paramW: 1.42,
+    paramB: -0.35,
+    currentLoss: 0.042,
+    lossHistory: [0.45, 0.38, 0.29, 0.22, 0.18, 0.12, 0.09, 0.065, 0.051, 0.042],
+    trend: "converging", // "converging" | "diverging" | "plateau"
+
+    // Boss state
+    activeBoss: {
+        name: "OUTLIER TITAN",
+        hp: 1000,
+        maxHp: 1000,
+        phase: 1 // 1: Normal (Cyan), 2: Enrage (Amber), 3: Overclock (Violet)
+    },
+
+    // 3D Visual References
+    holoConeMesh: null,
+
+    init() {
+        this.setupMobileDial();
+        this.renderVitality();
+        this.renderSparkline();
+        this.renderParams();
+    },
+
+    setupMobileDial() {
+        const btn = document.getElementById("btn-mobile-dial-toggle");
+        const panel = document.getElementById("top-right-hud");
+        if (btn && panel) {
+            btn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                panel.classList.toggle("mobile-open");
+                btn.innerText = panel.classList.contains("mobile-open") ? "✕" : "⚡";
+            });
+        }
+    },
+
+    computeLossTrend(history) {
+        if (!history || history.length < 2) return "converging";
+        const n = history.length;
+        const recent = history.slice(Math.max(0, n - 4));
+        const delta = recent[recent.length - 1] - recent[0];
+        
+        // Divergence: sharp increase or NaN / Infinity
+        if (isNaN(delta) || delta > 0.008) {
+            return "diverging";
+        }
+        // Plateau: change is negligible
+        if (Math.abs(delta) <= 0.002) {
+            return "plateau";
+        }
+        // Decreasing: converging
+        return "converging";
+    },
+
+    recordLossSample(newLoss, newW = null, newB = null) {
+        if (isNaN(newLoss) || newLoss > 5.0) {
+            this.trend = "diverging";
+            this.triggerMetaDivergence();
+        }
+        this.currentLoss = newLoss;
+        if (newW !== null) this.paramW = newW;
+        if (newB !== null) this.paramB = newB;
+
+        this.lossHistory.push(newLoss);
+        if (this.lossHistory.length > 20) this.lossHistory.shift();
+
+        this.trend = this.computeLossTrend(this.lossHistory);
+        this.renderHoloHUD();
+    },
+
+    takeDamage(amount = 15) {
+        this.playerHp = Math.max(0, this.playerHp - amount);
+        this.triggerMetaDamage();
+        this.renderVitality();
+        if (this.playerHp <= 25) {
+            this.setCriticalHealthState(true);
+        }
+    },
+
+    heal(amount = 20) {
+        this.playerHp = Math.min(this.playerMaxHp, this.playerHp + amount);
+        this.renderVitality();
+        if (this.playerHp > 25) {
+            this.setCriticalHealthState(false);
+        }
+    },
+
+    setBossPhase(phaseNumber) {
+        this.activeBoss.phase = Math.min(3, Math.max(1, phaseNumber));
+        const pips = document.querySelectorAll(".phase-pip");
+        pips.forEach(p => {
+            const pNum = parseInt(p.getAttribute("data-phase") || "1", 10);
+            p.classList.toggle("active", pNum === this.activeBoss.phase);
+        });
+
+        // Suppress decorative info during boss combat
+        this.setCombatPressure(true);
+    },
+
+    updateBossHp(current, max = 1000) {
+        this.activeBoss.hp = current;
+        this.activeBoss.maxHp = max;
+        const pct = Math.max(0, Math.min(100, (current / max) * 100));
+        const fill = document.getElementById("boss-hp-fill");
+        if (fill) fill.style.width = pct + "%";
+
+        // Auto-phase transitions
+        if (pct > 66) this.setBossPhase(1);
+        else if (pct > 33) this.setBossPhase(2);
+        else this.setBossPhase(3);
+
+        const meter = document.getElementById("boss-phase-meter");
+        if (meter) meter.classList.remove("hidden");
+    },
+
+    setCombatPressure(active) {
+        this.isCombatActive = !!active;
+        const objBanner = document.getElementById("objective-banner");
+        if (objBanner) {
+            objBanner.style.opacity = active ? "0.35" : "1.0";
+            objBanner.style.pointerEvents = active ? "none" : "auto";
+        }
+    },
+
+    triggerMetaDamage() {
+        // 1. Three.js PostProcessingPipeline
+        if (typeof postProcessingPipeline !== "undefined" && postProcessingPipeline && postProcessingPipeline.triggerDamagePulse) {
+            postProcessingPipeline.triggerDamagePulse(0.018);
+        }
+        // 2. CSS Overlay fallback
+        const pulse = document.getElementById("meta-chroma-edge");
+        if (pulse) {
+            pulse.style.opacity = "1";
+            setTimeout(() => { pulse.style.opacity = "0"; }, 220);
+        }
+    },
+
+    triggerMetaDivergence() {
+        if (typeof postProcessingPipeline !== "undefined" && postProcessingPipeline && postProcessingPipeline.triggerDivergenceFlash) {
+            postProcessingPipeline.triggerDivergenceFlash(0.85);
+        }
+        const flash = document.getElementById("meta-divergence-flash");
+        if (flash) {
+            flash.style.opacity = "1";
+            setTimeout(() => { flash.style.opacity = "0"; }, 380);
+        }
+    },
+
+    setCriticalHealthState(active) {
+        if (typeof postProcessingPipeline !== "undefined" && postProcessingPipeline && postProcessingPipeline.setCriticalHealthVignette) {
+            postProcessingPipeline.setCriticalHealthVignette(active);
+        }
+        const art = document.getElementById("meta-arterial-pulse");
+        if (art) {
+            art.classList.toggle("active-pulse", active);
+            art.style.opacity = active ? "0.6" : "0";
+        }
+    },
+
+    renderVitality() {
+        const hpPct = Math.max(0, Math.min(100, (this.playerHp / this.playerMaxHp) * 100));
+        const epPct = Math.max(0, Math.min(100, (this.playerEnergy / this.playerMaxEnergy) * 100));
+
+        const hpFill = document.getElementById("vitality-health-fill");
+        const hpState = document.getElementById("vitality-hp-state");
+        const epFill = document.getElementById("vitality-energy-fill");
+
+        if (hpFill) {
+            hpFill.style.width = hpPct + "%";
+            hpFill.classList.remove("warning", "critical");
+            if (hpPct <= 25) hpFill.classList.add("critical");
+            else if (hpPct <= 50) hpFill.classList.add("warning");
+        }
+        if (hpState) hpState.innerText = Math.round(hpPct) + "%";
+        if (epFill) epFill.style.width = epPct + "%";
+    },
+
+    renderParams() {
+        const elW = document.getElementById("holo-param-w");
+        const elB = document.getElementById("holo-param-b");
+        const elLoss = document.getElementById("holo-param-loss");
+        if (elW) elW.innerText = (this.paramW >= 0 ? "+" : "") + this.paramW.toFixed(2);
+        if (elB) elB.innerText = (this.paramB >= 0 ? "+" : "") + this.paramB.toFixed(2);
+        if (elLoss) elLoss.innerText = this.currentLoss.toFixed(3);
+    },
+
+    renderSparkline() {
+        const canvas = document.getElementById("holo-sparkline-canvas");
+        if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+
+        const w = canvas.width, h = canvas.height;
+        ctx.clearRect(0, 0, w, h);
+
+        const data = this.lossHistory;
+        if (!data || data.length < 2) return;
+
+        let maxVal = 0.5;
+        for (let i = 0; i < data.length; i++) {
+            if (data[i] > maxVal && !isNaN(data[i])) maxVal = data[i];
+        }
+
+        // Draw sparkline curve
+        ctx.beginPath();
+        const strokeColor = this.trend === "converging" ? "#10b981" : (this.trend === "diverging" ? "#f43f5e" : "#f59e0b");
+        ctx.strokeStyle = strokeColor;
+        ctx.lineWidth = 2.4;
+        ctx.lineJoin = "round";
+
+        const step = w / (data.length - 1);
+        for (let i = 0; i < data.length; i++) {
+            const val = Math.min(maxVal, Math.max(0, data[i]));
+            const x = i * step;
+            const y = h - 6 - (val / maxVal) * (h - 12);
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+
+        // Subtle gradient fill under sparkline
+        ctx.lineTo(w, h);
+        ctx.lineTo(0, h);
+        ctx.closePath();
+        const grad = ctx.createLinearGradient(0, 0, 0, h);
+        const fillAlpha = this.trend === "converging" ? "rgba(16,185,129,0.25)" : (this.trend === "diverging" ? "rgba(244,63,94,0.3)" : "rgba(245,158,11,0.2)");
+        grad.addColorStop(0, fillAlpha);
+        grad.addColorStop(1, "transparent");
+        ctx.fillStyle = grad;
+        ctx.fill();
+    },
+
+    renderHoloHUD() {
+        const badge = document.getElementById("holo-trend-badge");
+        const arrow = document.getElementById("holo-trend-arrow");
+        const text = document.getElementById("holo-trend-text");
+
+        if (badge && arrow && text) {
+            badge.classList.remove("converging", "diverging", "plateau");
+            badge.classList.add(this.trend);
+
+            if (this.trend === "converging") {
+                arrow.innerText = "↓";
+                text.innerText = "CONVERGING";
+            } else if (this.trend === "diverging") {
+                arrow.innerText = "↑";
+                text.innerText = "DIVERGING";
+            } else {
+                arrow.innerText = "→";
+                text.innerText = "PLATEAU";
+            }
+        }
+
+        this.renderParams();
+        this.renderSparkline();
+
+        // Update 3D Holographic Cone color if attached
+        if (this.holoConeMesh && this.holoConeMesh.material) {
+            const hex = this.trend === "converging" ? 0x10b981 : (this.trend === "diverging" ? 0xf43f5e : 0xf59e0b);
+            this.holoConeMesh.material.color.setHex(hex);
+        }
+    },
+
+    update(deltaTime) {
+        // Animate 3D holographic projection cone bobbing/pulsing
+        if (this.holoConeMesh) {
+            this.holoConeMesh.rotation.y += deltaTime * 1.5;
+            const pulse = Math.sin(performance.now() * 0.005) * 0.06 + 1.0;
+            this.holoConeMesh.scale.set(pulse, 1.0, pulse);
+        }
+    }
+};
+
 function createMascotCompanion() {
     mascotMesh = new THREE.Group();
     const sphere = new THREE.Mesh(new THREE.SphereGeometry(0.28, 16, 16), new THREE.MeshStandardMaterial({ color: 0x0284c7, emissive: 0x38bdf8 }));
@@ -3665,6 +3953,31 @@ function createMascotCompanion() {
     const halo = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.04, 8, 24), new THREE.MeshStandardMaterial({ color: 0xfacc15, emissive: 0xfacc15 }));
     halo.rotateX(Math.PI / 2);
     mascotMesh.add(halo);
+
+    // In-fiction Optical Holographic Emitter Aperture
+    if (typeof THREE !== "undefined") {
+        const apertureGeo = new THREE.CylinderGeometry(0.06, 0.12, 0.14, 16);
+        const apertureMat = new THREE.MeshStandardMaterial({ color: 0x00F0FF, emissive: 0x00F0FF, emissiveIntensity: 2.0 });
+        const aperture = new THREE.Mesh(apertureGeo, apertureMat);
+        aperture.rotation.x = Math.PI / 2;
+        aperture.position.set(0, -0.05, 0.28);
+        mascotMesh.add(aperture);
+
+        // 3D Volumetric Holographic Beam Cone
+        const coneGeo = new THREE.ConeGeometry(0.35, 0.9, 16, 1, true);
+        const coneMat = new THREE.MeshBasicMaterial({
+            color: 0x00F0FF,
+            transparent: true,
+            opacity: 0.35,
+            wireframe: true,
+            side: THREE.DoubleSide
+        });
+        const holoCone = new THREE.Mesh(coneGeo, coneMat);
+        holoCone.rotation.x = -Math.PI / 2;
+        holoCone.position.set(0, -0.15, 0.75);
+        mascotMesh.add(holoCone);
+        HolographicTelemetryManager.holoConeMesh = holoCone;
+    }
 
     mascotMesh.position.set(playerPos.x + 1.2, playerPos.y + 1.2, playerPos.z - 0.8);
     scene.add(mascotMesh);
@@ -6622,7 +6935,6 @@ function setupUIEvents() {
         showInGameActionToast("Artifacts Purged: Buffer Zeroed");
     });
 
-
     document.getElementById("btn-open-terminal").addEventListener("click", openFormulaTerminal);
     document.getElementById("btn-close-terminal").addEventListener("click", closeFormulaTerminal);
     document.getElementById("btn-return-world").addEventListener("click", closeFormulaTerminal);
@@ -6653,6 +6965,11 @@ function setupUIEvents() {
         openMyModelsGallery();
     });
 
+    // Raw Parameters Matrix Live View Toggle
+    document.getElementById("btn-toggle-raw-params")?.addEventListener("click", () => {
+        RawParametersManager.toggle();
+    });
+
     // Guild Hall HUD & Syndicate Command Listeners
     document.getElementById("btn-open-guild-hud")?.addEventListener("click", () => {
         GuildHallManager.open();
@@ -6671,11 +6988,6 @@ function setupUIEvents() {
     });
     document.getElementById("btn-empty-charter")?.addEventListener("click", () => {
         showInGameActionToast("Syndicate Chartered: New Alliance Registered");
-    });
-
-    // Raw Parameters Matrix Live View Toggle
-    document.getElementById("btn-toggle-raw-params")?.addEventListener("click", () => {
-        RawParametersManager.toggle();
     });
 
     // 1v1 Live Multiplayer Duel Matchmaking Events (Dual Cockpit Handshake Radar)
@@ -6698,7 +7010,6 @@ function setupUIEvents() {
     document.getElementById("btn-engage-duel-queue")?.addEventListener("click", () => {
         orchestrateDuelEngagement();
     });
-
     document.getElementById("btn-cancel-duel-queue")?.addEventListener("click", () => LiveDuelManager.cancelMatchmaking());
     document.getElementById("btn-close-duel-results")?.addEventListener("click", () => {
         document.getElementById("duel-results-modal")?.classList.add("hidden");
@@ -8685,5 +8996,20 @@ window.addEventListener("DOMContentLoaded", () => {
     updateHUD();
     requestAnimationFrame(animate);
 });
+
+if (typeof window !== "undefined") {
+    window.HolographicTelemetryManager = HolographicTelemetryManager;
+    window.GuildHallManager = GuildHallManager;
+    window.LiveDuelManager = LiveDuelManager;
+    window.orchestrateBiomeDeployment = orchestrateBiomeDeployment;
+    window.showInGameActionToast = showInGameActionToast;
+}
+if (typeof module !== "undefined" && module.exports) {
+    module.exports.HolographicTelemetryManager = HolographicTelemetryManager;
+    module.exports.GuildHallManager = GuildHallManager;
+    module.exports.LiveDuelManager = LiveDuelManager;
+    module.exports.orchestrateBiomeDeployment = orchestrateBiomeDeployment;
+    module.exports.showInGameActionToast = showInGameActionToast;
+}
 
 

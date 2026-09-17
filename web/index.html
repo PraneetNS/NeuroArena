@@ -158,9 +158,74 @@
         <!-- 3D Canvas Container -->
         <canvas id="three-canvas"></canvas>
 
-        <!-- In-Game HUD Layer (Optimized for Motion Clarity) -->
+        <!-- In-Game HUD Layer (Optimized for In-Fiction Holographic Instrumentation & Motion Clarity) -->
         <div id="hud-layer" class="ui-layer">
-            <!-- 0. KERNEL TELEMETRY COPILOT & REAL-TIME ML DIAGNOSTICS OS -->
+            <!-- META-UI FULL-SCREEN STATE FEEDBACK OVERLAY (CHROMATIC ABERRATION, DESATURATION, ARTERIAL PULSE) -->
+            <div id="meta-ui-overlay" class="meta-fx-overlay pointer-events-none">
+                <div id="meta-arterial-pulse" class="meta-arterial-vignette"></div>
+                <div id="meta-divergence-flash" class="meta-desat-flash"></div>
+                <div id="meta-chroma-edge" class="meta-chroma-pulse"></div>
+            </div>
+
+            <!-- 0. IN-FICTION DIEGETIC / SPATIAL HOLOGRAPHIC INSTRUMENT (ADA COMPANION DRONE ∇θ) -->
+            <div id="drone-hologram-hud" class="drone-holo-instrument">
+                <div class="holo-emitter-anchor">
+                    <div class="holo-header">
+                        <div class="holo-drone-tag">
+                            <span class="holo-glyph">∇θ</span>
+                            <span class="holo-title">ADA TELEMETRY PROBE</span>
+                        </div>
+                        <div id="holo-trend-badge" class="holo-badge converging">
+                            <span id="holo-trend-arrow">↓</span>
+                            <span id="holo-trend-text">CONVERGING</span>
+                        </div>
+                    </div>
+                    <div class="holo-graph-container">
+                        <canvas id="holo-sparkline-canvas" width="168" height="56"></canvas>
+                        <div class="holo-scanlines"></div>
+                    </div>
+                    <div class="holo-params-strip" id="holo-params-strip">
+                        <div class="param-pip"><span>w:</span><b id="holo-param-w">+1.42</b></div>
+                        <div class="param-pip"><span>b:</span><b id="holo-param-b">-0.35</b></div>
+                        <div class="param-pip"><span>J(θ):</span><b id="holo-param-loss">0.042</b></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 0.1 BOSS PHASE & ENRAGE CROWN (GLANCE TEST: PHASE 1 CYAN / PHASE 2 AMBER / PHASE 3 VIOLET) -->
+            <div id="boss-phase-meter" class="boss-meter-container hidden">
+                <div class="boss-meter-header">
+                    <span id="boss-meter-name" class="boss-name-text">BOSS PHANTOM</span>
+                    <div class="boss-phase-pips" id="boss-phase-pips-group">
+                        <span class="phase-pip active" data-phase="1" title="Phase 1: Convergence">PHASE I</span>
+                        <span class="phase-pip" data-phase="2" title="Phase 2: Enrage">PHASE II</span>
+                        <span class="phase-pip" data-phase="3" title="Phase 3: Overclock">PHASE III</span>
+                    </div>
+                </div>
+                <div class="boss-hp-track">
+                    <div id="boss-hp-fill" class="boss-hp-fill" style="width: 100%;"></div>
+                </div>
+            </div>
+
+            <!-- 0.2 NON-DIEGETIC VITALITY ARCS (GLANCE TEST: HEALTH & ENERGY IN PERIPHERAL VISION) -->
+            <div id="architect-vitality-hud" class="vitality-hud-container">
+                <div class="vitality-meter-wrap health-wrap">
+                    <div class="vitality-icon-badge" id="vitality-hp-badge">❤️</div>
+                    <div class="vitality-bar-outer">
+                        <div id="vitality-health-fill" class="vitality-fill health-fill" style="width: 100%;"></div>
+                        <div class="vitality-glance-pip" id="vitality-hp-state">100%</div>
+                    </div>
+                </div>
+                <div class="vitality-meter-wrap energy-wrap">
+                    <div class="vitality-icon-badge">⚡</div>
+                    <div class="vitality-bar-outer">
+                        <div id="vitality-energy-fill" class="vitality-fill energy-fill" style="width: 100%;"></div>
+                        <div class="vitality-glance-pip" id="vitality-ep-state">COMPUTE</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 0.3 KERNEL TELEMETRY COPILOT & REAL-TIME ML DIAGNOSTICS OS -->
             <div id="mascot-bubble" class="glass-mascot-bubble hidden" style="border:1.5px solid #00F0FF; background:rgba(10,15,30,0.92); box-shadow:0 0 25px rgba(0,240,255,0.25);">
                 <div class="mascot-avatar" style="background:#00F0FF; color:#050b14; font-weight:900; font-family:'JetBrains Mono', monospace; font-size:13px; display:flex; align-items:center; justify-content:center; border-radius:6px; width:34px; height:34px;">∇θ</div>
                 <div class="mascot-content">
@@ -172,7 +237,7 @@
                 </div>
             </div>
 
-            <!-- 0.1 LIVE-OPS EVENT MODIFIER BANNER (CONFIG-DRIVEN 2X HARVEST / BOSS SURGE) -->
+            <!-- 0.4 LIVE-OPS EVENT MODIFIER BANNER (CONFIG-DRIVEN 2X HARVEST / BOSS SURGE) -->
             <div id="live-ops-banner-container" class="hidden"></div>
 
             <!-- 1. TOP-CENTER PRIMARY OBJECTIVE & THRESHOLD BANNER -->
@@ -202,7 +267,10 @@
                 </div>
             </div>
 
-            <!-- 2. TOP-RIGHT CONTROLS (MINIMUM 44x44dp TOUCH TARGETS) -->
+            <!-- MOBILE QUICK-DIAL TRIGGER (THUMB ZONE >=48dp) -->
+            <button id="btn-mobile-dial-toggle" class="mobile-dial-btn" title="Open Instrument Menu">⚡</button>
+
+            <!-- 2. TOP-RIGHT CONTROLS (MINIMUM 44x44dp TOUCH TARGETS, COLLAPSIBLE ON MOBILE) -->
             <div id="top-right-hud" class="hud-controls-group">
                 <button id="btn-open-contracts-hud" class="hud-icon-btn glow-amber" title="Freelance Client Contracts (while True: learn())" style="border-color:#f59e0b; color:#facc15; font-weight:bold;">💼</button>
                 <button id="btn-open-experiments-hud" class="hud-icon-btn glow-purple" title="Experiment Tracker & Model Registry (W&B)" style="border-color:#BD00FF; color:#c084fc;">📈</button>
@@ -227,15 +295,16 @@
                 <button id="btn-open-design-system" class="hud-icon-btn glow-cyan" title="Unified Design System & Style Guide" onclick="window.open('style-guide.html', '_blank')">📐</button>
             </div>
 
-            <!-- 3. EXPANDABLE INVENTORY DRAWER WITH LIVE DATASET STATS -->
+            <!-- 3. EXPANDABLE INVENTORY DRAWER WITH LIVE DATASET STATS & SPECIMEN ARCHIVE -->
             <div id="inventory-drawer" class="glass-drawer hidden">
-                <div class="drawer-header">🎒 COLLECTED RESOURCES</div>
+                <div class="drawer-header">🎒 SPECIMEN VAULT & MANIFEST</div>
                 <div class="drawer-row"><span class="icon cyan">◆</span> Feature Crystals (X): <b
                         id="drawer-x-count">0</b></div>
                 <div class="drawer-row"><span class="icon amber">▲</span> Target Shards (Y): <b
                         id="drawer-y-count">0</b></div>
                 <div class="drawer-row"><span class="icon green">●</span> Paired Datasets (N): <b
                         id="drawer-n-count">0</b></div>
+
                 <!-- In-Voice Empty State when No Crystals Collected -->
                 <div id="satchel-empty-state" class="in-voice-empty-card hidden" style="margin-top:8px; padding:10px;">
                     <div class="empty-status-tag">[SPECIMEN_VAULT: VACANT_MANIFEST]</div>
@@ -246,7 +315,6 @@
                         💎 Harvest Crystals
                     </button>
                 </div>
-
 
                 <div class="drawer-divider"></div>
                 <div class="drawer-header cyan-text">📊 LIVE DATASET STATS</div>
@@ -308,6 +376,7 @@
                         ✓ Clean & balanced dataset
                     </div>
                 </div>
+
                 <div style="margin-top:10px; display:flex; gap:6px;">
                     <button id="btn-satchel-calibrate" class="primary-btn glow-cyan" style="flex:1; font-size:0.75rem; padding:8px 0;">
                         🧠 Calibrate Model
@@ -955,18 +1024,61 @@
             </div>
         </div>
 
-        <!-- 🗺️ BIOME WORLD FAST-TRAVEL MAP MODAL -->
+        <!-- 🗺️ BIOME WORLD FAST-TRAVEL EXPEDITION BOARD -->
         <div id="biome-travel-modal" class="modal-overlay hidden">
-            <div class="glass-modal biome-travel-container" style="max-width:820px; width:92%;">
+            <div class="glass-modal biome-travel-container na-panel-chamfer" style="max-width:980px; width:94%;">
                 <div class="modal-header">
-                    <h2>🗺️ 6-BIOME WORLD TRAVEL MAP & PROGRESSION</h2>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span style="font-size:1.3rem;">🗺️</span>
+                        <div>
+                            <h2 style="margin:0; font-size:1.15rem;">EXPEDITION DISPATCH BOARD :: CURRICULUM TOPOLOGY</h2>
+                            <div style="font-size:0.75rem; color:#94a3b8; font-family:var(--font-display-mono);">MATHEMATICAL PROGRESSION MAP (STEPPES ➔ EXPANSE)</div>
+                        </div>
+                    </div>
                     <button id="btn-close-travel-map" class="close-btn">✕</button>
                 </div>
                 <div class="travel-map-body" style="padding:16px 20px;">
-                    <p style="font-size:0.85rem; color:#94a3b8; margin:0 0 14px 0;">
-                        Select an unlocked biome destination to fast-travel. Each realm features distinct terrain topology, flora ecosystems, mathematical paradigms, and towering beacon skybeams.
-                    </p>
-                    <div id="travel-biome-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:12px; margin-bottom:14px;"></div>
+                    <div class="expedition-board-layout">
+                        <!-- Left: Topological Curriculum Path -->
+                        <div class="expedition-trail-deck">
+                            <div class="trail-header-title">
+                                <span class="trail-sub">SPATIAL PROGRESSION PATHWAY</span>
+                                <h3 style="margin:2px 0 10px 0; font-size:0.95rem; color:#f1f5f9;">Curriculum Trail (Linear Steppes ➔ Semantic Expanse)</h3>
+                            </div>
+                            <div id="expedition-trail-nodes" class="expedition-trail-nodes">
+                                <!-- Nodes 0-5 rendered dynamically with progression connectors -->
+                            </div>
+                            <!-- Backwards-compatibility anchor for legacy tests/queries if any -->
+                            <div id="travel-biome-grid" class="hidden"></div>
+                        </div>
+
+                        <!-- Right: Expedition Dispatch Dossier -->
+                        <div id="expedition-dossier-panel" class="expedition-dossier-panel">
+                            <div class="dossier-badge" id="dossier-biome-tier">BIOME DESTINATION #1</div>
+                            <h3 id="dossier-biome-name" class="dossier-title">The Linear Steppes</h3>
+                            <div id="dossier-paradigm" class="dossier-paradigm">1D Continuous Linear Regression (SGD)</div>
+                            <p id="dossier-desc" class="dossier-desc">
+                                Vast dunes of empirical scatter points. Learn to steer weights along the gradient vector to minimize residual error.
+                            </p>
+                            <div class="dossier-specs-grid">
+                                <div class="dossier-spec-row">
+                                    <span>Target Metric:</span><b id="dossier-metric">MSE ≤ 0.10</b>
+                                </div>
+                                <div class="dossier-spec-row">
+                                    <span>Beacon Skybeam:</span><b id="dossier-beacon">520nm Solar Amber</b>
+                                </div>
+                                <div class="dossier-spec-row">
+                                    <span>Boss Anomaly:</span><b id="dossier-boss" style="color:#f43f5e;">The Outlier Titan</b>
+                                </div>
+                                <div class="dossier-spec-row">
+                                    <span>Field Status:</span><b id="dossier-status" class="text-green">UNLOCKED / AVAILABLE</b>
+                                </div>
+                            </div>
+                            <button id="btn-deploy-expedition" class="primary-btn glow-cyan" style="width:100%; margin-top:14px; padding:12px 0; font-weight:800; font-size:0.95rem;">
+                                🚀 Deploy Expedition
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1667,1287 +1779,7 @@
                     </div>
                 </div>
 
-                <!-- 1v1 LIVE DUEL MATCHMAKING MODAL -->
-                <div id="duel-matchmaking-modal" class="modal-overlay hidden" style="z-index: 9500;">
-                    <div class="glass-modal" style="max-width: 480px; text-align: center; border: 1.5px solid #f43f5e; box-shadow: 0 0 40px rgba(244,63,94,0.4);">
-                        <div class="modal-header" style="justify-content: center;">
-                            <h2 style="color: #f43f5e;">⚔️ 1v1 LIVE MULTIPLAYER DUEL</h2>
-                        </div>
-                        <div style="padding: 24px 20px;">
-                            <div id="duel-queue-spinner" style="font-size: 3.5rem; margin-bottom: 12px; animation: spin 2s linear infinite;">⏳</div>
-                            <div id="duel-queue-status-text" style="font-family: var(--font-display-mono); font-size: 1.15rem; font-weight: bold; color: #f8fafc; margin-bottom: 8px;">
-                                SEARCHING FOR OPPONENT...
-                            </div>
-                            <p id="duel-queue-subtext" style="font-size: 0.85rem; color: #94a3b8; line-height: 1.4; margin-bottom: 20px;">
-                                Pairing via FIFO matchmaking queue into a private synchronized room instance. Both architects will have 90s to harvest and train locally before submitting weights to the server's hidden test set.
-                            </p>
-                            <div id="duel-countdown-box" class="hidden" style="margin-bottom: 18px; font-size: 2.2rem; font-weight: 900; color: #facc15; font-family: var(--font-display-mono);">
-                                MATCH STARTING IN <span id="duel-countdown-num">3</span>...
-                            </div>
-                            <button id="btn-cancel-duel-queue" class="action-btn" style="background: rgba(225,29,72,0.2); border-color: #f43f5e; color: #f43f5e;">
-                                ✕ Cancel Matchmaking
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 1v1 LIVE DUEL RESULTS MODAL (HIDDEN TEST SET EVALUATION) -->
-                <div id="duel-results-modal" class="modal-overlay hidden" style="z-index: 9600;">
-                    <div class="glass-modal" style="max-width: 580px; border: 2px solid #38bdf8; box-shadow: 0 0 50px rgba(56,189,248,0.4);">
-                        <div class="modal-header" style="justify-content: center; background: rgba(15,23,42,0.95);">
-                            <h2 id="duel-results-title" style="font-size: 1.4rem; color: #facc15;">🏆 1v1 DUEL COMPLETE</h2>
-                        </div>
-                        <div style="padding: 20px;">
-                            <div id="duel-outcome-banner" style="text-align: center; font-size: 1.8rem; font-weight: 900; letter-spacing: 1px; margin-bottom: 16px; color: #4ade80;">
-                                VICTORY!
-                            </div>
-                            <div style="font-size: 0.82rem; color: #94a3b8; text-align: center; margin-bottom: 18px; font-family: var(--font-display-mono);">
-                                Authoritative Server Evaluation against 50 Hidden Test Samples
-                            </div>
-
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px;">
-                                <!-- Player 1 Card (You) -->
-                                <div id="duel-card-player" class="stat-card" style="border: 1.5px solid #38bdf8; background: rgba(14,165,233,0.1); padding: 14px;">
-                                    <div style="font-size: 0.75rem; color: #38bdf8; font-weight: bold;">👤 YOU (ARCHITECT)</div>
-                                    <div id="duel-res-player-name" style="font-weight: 800; font-size: 1.1rem; color: #fff; margin-bottom: 8px;">Ada-Architect</div>
-                                    <div style="font-family: var(--font-display-mono); font-size: 0.82rem; color: #cbd5e1; line-height: 1.5;">
-                                        Weights: <b id="duel-res-player-weights" style="color: #facc15;">w=2.45, b=1.15</b><br>
-                                        Test MSE: <b id="duel-res-player-mse" style="color: #4ade80;">0.0021</b><br>
-                                        Accuracy: <b id="duel-res-player-acc" style="color: #38bdf8; font-size: 1.15rem;">98.4%</b>
-                                    </div>
-                                </div>
-
-                                <!-- Player 2 Card (Opponent) -->
-                                <div id="duel-card-opponent" class="stat-card" style="border: 1.5px solid #f43f5e; background: rgba(244,63,94,0.1); padding: 14px;">
-                                    <div style="font-size: 0.75rem; color: #f43f5e; font-weight: bold;">👤 OPPONENT</div>
-                                    <div id="duel-res-opp-name" style="font-weight: 800; font-size: 1.1rem; color: #fff; margin-bottom: 8px;">Challenger</div>
-                                    <div style="font-family: var(--font-display-mono); font-size: 0.82rem; color: #cbd5e1; line-height: 1.5;">
-                                        Weights: <b id="duel-res-opp-weights" style="color: #facc15;">w=1.80, b=0.60</b><br>
-                                        Test MSE: <b id="duel-res-opp-mse" style="color: #f87171;">0.4215</b><br>
-                                        Accuracy: <b id="duel-res-opp-acc" style="color: #f43f5e; font-size: 1.15rem;">74.2%</b>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <button id="btn-close-duel-results" class="primary-btn glow-cyan" style="width: 100%; padding: 12px 0; font-size: 1rem; font-weight: 800;">
-                                ⚔️ RETURN TO BIOME HUB
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 🌟 SUPABASE AUTH: SAVE YOUR PROGRESS ACCOUNT UPGRADE MODAL -->
-                <div id="auth-upgrade-modal" class="modal-overlay hidden" style="z-index: 9700;">
-                    <div class="glass-modal" style="max-width: 480px; text-align: center; border: 2px solid #38bdf8; box-shadow: 0 0 50px rgba(56,189,248,0.35);">
-                        <div class="modal-header" style="justify-content: center; background: rgba(15,23,42,0.95);">
-                            <h2 style="color: #38bdf8; font-size: 1.35rem;">☁️ SAVE YOUR PROGRESS</h2>
-                        </div>
-                        <div style="padding: 22px 20px;">
-                            <div style="font-size: 2.8rem; margin-bottom: 8px;">🛡️</div>
-                            <div id="auth-upgrade-headline" style="font-family: var(--font-display-mono); font-size: 1.15rem; font-weight: 800; color: #f8fafc; margin-bottom: 8px;">
-                                SECURE YOUR ARENA PROGRESSION
-                            </div>
-                            <p id="auth-upgrade-bodytext" style="font-size: 0.85rem; color: #94a3b8; line-height: 1.45; margin-bottom: 20px;">
-                                You are currently playing as an <b>Anonymous Guest</b>. Link your session to a real account to enable cross-device cloud saves, preserve your trained models, and lock in your duel win streaks!
-                            </p>
-
-                            <!-- OAuth Login Buttons -->
-                            <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px;">
-                                <button id="btn-auth-oauth-google" class="action-btn" style="background: rgba(234,67,53,0.15); border: 1.5px solid #ea4335; color: #fff; padding: 11px; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 10px;">
-                                    <span style="font-size: 1.2rem;">🔴</span> Continue with Google
-                                </button>
-                                <button id="btn-auth-oauth-github" class="action-btn" style="background: rgba(255,255,255,0.08); border: 1.5px solid #94a3b8; color: #fff; padding: 11px; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 10px;">
-                                    <span style="font-size: 1.2rem;">🐙</span> Continue with GitHub
-                                </button>
-                                <button id="btn-auth-oauth-discord" class="action-btn" style="background: rgba(88,101,242,0.15); border: 1.5px solid #5865f2; color: #fff; padding: 11px; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 10px;">
-                                    <span style="font-size: 1.2rem;">💬</span> Continue with Discord
-                                </button>
-                            </div>
-
-                            <button id="btn-dismiss-auth-upgrade" class="menu-sublabel" style="background: none; border: none; color: #64748b; font-size: 0.8rem; cursor: pointer; text-decoration: underline;">
-                                Maybe later (continue playing as guest)
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Main Menu Overlay -->
-                <div id="main-menu" class="modal-overlay">
-                    <div class="menu-container glass-card">
-                        <h1 class="game-logo">⚡ NEURO-ARENA</h1>
-                        <div class="game-sublogo">GRADIENTS OF THE WILD | 3D ML SIMULATOR</div>
-
-                        <div class="seed-input-container">
-                            <label>🎲 PLAYTHROUGH SEED:</label>
-                            <div class="seed-input-row">
-                                <input type="text" id="menu-seed-input" value="NEURO-8842" spellcheck="false"
-                                    class="cyber-seed-input">
-                                <button id="btn-random-seed" class="seed-btn glow-cyan">🎲 Random</button>
-                            </div>
-                        </div>
-
-                        <div class="menu-actions">
-                            <button id="btn-continue-game" class="menu-btn primary glow-green disabled">⚔️ CONTINUE
-                                GAME</button>
-                            <div id="save-info-label" class="menu-sublabel">No local save found</div>
-                            <button id="btn-new-game" class="menu-btn glow-cyan">🌟 NEW GAME (APPLY SEED)</button>
-                            <button id="btn-menu-daily" class="menu-btn glow-amber">📅 PLAY DAILY CHALLENGE</button>
-                            <button id="btn-menu-community" class="menu-btn glow-amber">🛠️ COMMUNITY CHALLENGES & MOD-TOOLS</button>
-                            <button id="btn-menu-models" class="menu-btn glow-cyan">💾 MY MODELS (VAULT)</button>
-                            <button id="btn-menu-profile" class="menu-btn">👤 ARCHITECT PROFILE</button>
-                            <button id="btn-menu-codex" class="menu-btn">📖 CODEX & ML JOURNAL</button>
-                            <button id="btn-menu-settings" class="menu-btn">⚙️ SETTINGS & AUDIO</button>
-                            <button id="btn-biome-map" class="menu-btn">🗺️ BIOME PROGRESSION MAP</button>
-                            <button id="btn-menu-analytics" class="menu-btn glow-cyan">📊 LIVE ANALYTICS DASHBOARD</button>
-                            <button id="btn-reset-save" class="menu-btn danger">🗑️ Reset Local Save</button>
-                            <button id="btn-quit-game" class="menu-btn">🚪 QUIT GAME</button>
-                        </div>
-
-                        <!-- 4. LIVE INTERNAL ANALYTICS DASHBOARD MODAL -->
-                        <div id="modal-analytics-dashboard" class="modal-overlay hidden" style="z-index: 10000;">
-                            <div class="glass-modal analytics-dashboard-card" style="max-width: 900px; width: 95vw; max-height: 90vh; overflow-y: auto;">
-                                <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(56, 189, 248, 0.2); padding-bottom: 12px;">
-                                    <div style="display: flex; align-items: center; gap: 10px;">
-                                        <h2 style="margin: 0; color: #38bdf8; font-family: 'Outfit', sans-serif; font-size: 1.25rem;">📊 PRIVACY-CONSCIOUS EVENT ANALYTICS DASHBOARD</h2>
-                                        <span class="live-pill" style="background: rgba(34, 197, 94, 0.2); color: #4ade80; padding: 2px 8px; border-radius: 9999px; font-size: 11px; font-weight: 600; border: 1px solid rgba(74, 222, 128, 0.4);">LIVE</span>
-                                    </div>
-                                    <div style="display: flex; gap: 8px;">
-                                        <button id="btn-refresh-analytics" class="pill-btn" style="padding: 4px 12px; font-size: 11px; background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 4px; cursor: pointer;">🔄 Refresh</button>
-                                        <button id="btn-close-analytics" class="close-btn" style="background: none; border: none; color: #94a3b8; font-size: 18px; cursor: pointer;">✕</button>
-                                    </div>
-                                </div>
-                                
-                                <div class="analytics-body" style="padding: 16px 4px; display: flex; flex-direction: column; gap: 20px;">
-                                    <!-- Top Row: Core KPIs -->
-                                    <div class="analytics-kpi-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px;">
-                                        <div class="kpi-card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 12px; text-align: center;">
-                                            <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase;">D1 Retention</div>
-                                            <div id="kpi-d1-retention" style="font-size: 22px; font-weight: 700; color: #38bdf8; margin: 4px 0;">--%</div>
-                                            <div id="kpi-d1-sub" style="font-size: 10px; color: #64748b;">0 / 0 players</div>
-                                        </div>
-                                        <div class="kpi-card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 12px; text-align: center;">
-                                            <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase;">D7 Retention</div>
-                                            <div id="kpi-d7-retention" style="font-size: 22px; font-weight: 700; color: #818cf8; margin: 4px 0;">--%</div>
-                                            <div id="kpi-d7-sub" style="font-size: 10px; color: #64748b;">0 / 0 players</div>
-                                        </div>
-                                        <div class="kpi-card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 12px; text-align: center;">
-                                            <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase;">D30 Retention</div>
-                                            <div id="kpi-d30-retention" style="font-size: 22px; font-weight: 700; color: #c084fc; margin: 4px 0;">--%</div>
-                                            <div id="kpi-d30-sub" style="font-size: 10px; color: #64748b;">0 / 0 players</div>
-                                        </div>
-                                        <div class="kpi-card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 8px; padding: 12px; text-align: center;">
-                                            <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase;">Tutorial Complete</div>
-                                            <div id="kpi-tutorial-rate" style="font-size: 22px; font-weight: 700; color: #4ade80; margin: 4px 0;">--%</div>
-                                            <div id="kpi-tutorial-sub" style="font-size: 10px; color: #64748b;">FTUE conversion</div>
-                                        </div>
-                                        <div class="kpi-card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 12px; text-align: center;">
-                                            <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase;">Tracked Players</div>
-                                            <div id="kpi-total-players" style="font-size: 22px; font-weight: 700; color: #fbbf24; margin: 4px 0;">0</div>
-                                            <div id="kpi-total-events" style="font-size: 10px; color: #64748b;">0 events ingested</div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Middle Section: FTUE Funnel Drop-Off -->
-                                    <div class="funnel-container" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 8px; padding: 14px;">
-                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                                            <h3 style="margin: 0; font-size: 14px; color: #f1f5f9; display: flex; align-items: center; gap: 6px;">🎯 FTUE TUTORIAL STEP CONVERSION & DROP-OFF FUNNEL</h3>
-                                            <span id="funnel-starters-badge" style="font-size: 11px; color: #94a3b8;">0 Total Starters</span>
-                                        </div>
-                                        <div id="funnel-step-list" style="display: flex; flex-direction: column; gap: 10px;">
-                                            <!-- Dynamically populated -->
-                                        </div>
-                                    </div>
-
-                                    <!-- Lower Section: Biome-by-Biome Progression -->
-                                    <div class="biomes-container" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 8px; padding: 14px;">
-                                        <h3 style="margin: 0 0 12px 0; font-size: 14px; color: #f1f5f9;">🗺️ BIOME-BY-BIOME PROGRESSION & BOSS WIN RATES</h3>
-                                        <div id="biome-analytics-list" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px;">
-                                            <!-- Dynamically populated -->
-                                        </div>
-                                    </div>
-
-                                    <!-- Crash / Error Telemetry Logs -->
-                                    <div class="errors-container" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 8px; padding: 14px;">
-                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                            <h3 style="margin: 0; font-size: 13px; color: #f87171;">⚠️ CLIENT ERROR & CRASH TELEMETRY</h3>
-                                            <span id="error-count-badge" style="font-size: 11px; color: #94a3b8;">0 errors logged</span>
-                                        </div>
-                                        <div id="analytics-error-logs" style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #cbd5e1; max-height: 120px; overflow-y: auto; background: rgba(2, 6, 23, 0.8); padding: 8px; border-radius: 4px; border: 1px solid rgba(239, 68, 68, 0.1);">
-                                            No errors reported. System health nominal.
-                                        </div>
-                                    </div>
-
-                                    <!-- ⚙️ REMOTE CONFIG & LIVE-OPS BALANCE TUNING PANEL (DESIGNER/PM) -->
-                                    <div class="remote-config-admin-container" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 14px;">
-                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid rgba(245, 158, 11, 0.2); padding-bottom: 8px;">
-                                            <div>
-                                                <h3 style="margin: 0; font-size: 14px; color: #fbbf24; display: flex; align-items: center; gap: 6px;">⚙️ LIVE REMOTE CONFIG & BALANCE TUNING</h3>
-                                                <div style="font-size: 11px; color: #94a3b8;">Active Version: <b id="rc-active-version" style="color: #38bdf8;">v1</b> | Schema v3 Save Validated | 5-Min TTL Caching</div>
-                                            </div>
-                                            <button id="btn-rc-refresh" class="pill-btn" style="padding: 4px 10px; font-size: 11px; background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 4px; cursor: pointer;">🔄 Sync Config</button>
-                                        </div>
-
-                                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 14px;">
-                                            <!-- Harvest Multiplier -->
-                                            <div style="background: rgba(2, 6, 23, 0.6); padding: 10px; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.15);">
-                                                <label style="font-size: 11px; color: #94a3b8; display: block; margin-bottom: 4px;">🌾 Base Harvest Yield Multiplier:</label>
-                                                <div style="display: flex; align-items: center; gap: 8px;">
-                                                    <input type="number" id="input-rc-harvest-yield" min="0.1" max="10.0" step="0.1" value="1.0" class="cyber-input" style="width: 80px; padding: 4px 8px; font-size: 12px;">
-                                                    <span style="font-size: 11px; color: #64748b;">(0.1x - 10.0x)</span>
-                                                </div>
-                                            </div>
-
-                                            <!-- Boss HP Tuning -->
-                                            <div style="background: rgba(2, 6, 23, 0.6); padding: 10px; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.15);">
-                                                <label style="font-size: 11px; color: #94a3b8; display: block; margin-bottom: 4px;">🐉 Overfit Hydra Max HP:</label>
-                                                <div style="display: flex; align-items: center; gap: 8px;">
-                                                    <input type="number" id="input-rc-boss-hp" min="100" max="50000" step="50" value="500" class="cyber-input" style="width: 90px; padding: 4px 8px; font-size: 12px;">
-                                                    <span style="font-size: 11px; color: #64748b;">HP</span>
-                                                </div>
-                                            </div>
-
-                                            <!-- Daily Challenge Reward -->
-                                            <div style="background: rgba(2, 6, 23, 0.6); padding: 10px; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.15);">
-                                                <label style="font-size: 11px; color: #94a3b8; display: block; margin-bottom: 4px;">📅 Daily Challenge Reward (Crystals):</label>
-                                                <div style="display: flex; align-items: center; gap: 8px;">
-                                                    <input type="number" id="input-rc-daily-reward" min="50" max="5000" step="25" value="150" class="cyber-input" style="width: 90px; padding: 4px 8px; font-size: 12px;">
-                                                    <span style="font-size: 11px; color: #64748b;">crystals</span>
-                                                </div>
-                                            </div>
-
-                                            <!-- Modifier Weekend Toggle -->
-                                            <div style="background: rgba(2, 6, 23, 0.6); padding: 10px; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.15);">
-                                                <label style="font-size: 11px; color: #94a3b8; display: block; margin-bottom: 4px;">⚡ 2x Live-Ops Modifier Weekend:</label>
-                                                <div style="display: flex; align-items: center; gap: 8px;">
-                                                    <input type="checkbox" id="input-rc-modifier-active" style="cursor: pointer;">
-                                                    <span id="rc-modifier-status-label" style="font-size: 11px; color: #f87171;">Inactive</span>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 12px;">
-                                            <button id="btn-rc-publish" class="action-btn glow-amber" style="padding: 6px 16px; font-size: 12px;">🚀 Publish Balance Update (Zero Downtime)</button>
-                                            
-                                            <!-- One-Click Rollback -->
-                                            <div style="display: flex; align-items: center; gap: 8px;">
-                                                <span style="font-size: 11px; color: #94a3b8;">Rollback to:</span>
-                                                <select id="select-rc-rollback-version" style="background: #0f172a; color: #f1f5f9; border: 1px solid rgba(239, 68, 68, 0.4); padding: 4px 8px; border-radius: 4px; font-size: 11px;">
-                                                    <option value="1">v1 (Initial)</option>
-                                                </select>
-                                                <button id="btn-rc-rollback" class="action-btn danger" style="padding: 4px 12px; font-size: 11px;">⏪ 1-Click Rollback</button>
-                                            </div>
-                                        </div>
-
-                                        <!-- Status notification -->
-                                        <div id="rc-status-msg" style="font-size: 11px; color: #4ade80; display: none;"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div id="biome-map-subpanel" class="hidden">
-                            <h3>🗺️ 6-BIOME PROGRESSION</h3>
-                            <ul class="biome-list" id="biome-list-element">
-                                <li><b>1. The Linear Steppes (Linear Regression)</b> <span
-                                        class="unlocked">UNLOCKED</span></li>
-                                <li><b>2. The Binary Marshlands (Logistic Classification)</b> <span
-                                        class="locked">LOCKED</span></li>
-                                <li><b>3. The Variance Tundra (Regularization)</b> <span class="locked">LOCKED</span>
-                                </li>
-                                <li><b>4. The Branching Canopy (Decision Trees)</b> <span class="locked">LOCKED</span>
-                                </li>
-                                <li><b>5. The Deep Synapse Citadel (Neural Networks)</b> <span
-                                        class="locked">LOCKED</span></li>
-                                <li><b>6. The Semantic Expanse (Embeddings & Cosine Sim)</b> <span
-                                        class="locked">LOCKED</span></li>
-                            </ul>
-                            <button id="btn-close-biome-map" class="menu-btn small">Back</button>
-                        </div>
-                    </div>
-                </div>
-                <!-- Explicit Diagnostics Consent Modal -->
-                <div id="modal-diagnostics-consent" class="modal-overlay hidden">
-                    <div class="glass-modal consent-modal-card">
-                        <div class="modal-header">
-                            <h2>🔒 LOCAL DIAGNOSTICS & BUG REPORTING CONSENT</h2>
-                            <button id="btn-cancel-consent-x" class="close-btn">✕</button>
-                        </div>
-                        <div class="consent-body" style="padding: 14px 18px;">
-                            <p style="font-size:12px; color:#cbd5e1; line-height:1.5; margin-bottom:12px;">
-                                Enable opt-in local diagnostics to help diagnose crashes and frame-time spikes when
-                                reporting bugs.
-                            </p>
-                            <div class="coach-advice-box" style="margin-bottom:12px;">
-                                <div class="advice-heading">🛡️ 100% OFFLINE & PRIVACY-FIRST GUARANTEE</div>
-                                <p>All logs are written exclusively to your local device memory. <b>Zero network calls,
-                                        zero automatic uploads, and zero third-party telemetry.</b></p>
-                            </div>
-                            <div class="coach-principle-badge" style="margin-bottom:14px;">
-                                📋 <b>What gets logged locally:</b> Session elapsed duration, active screen/biome
-                                context, frame-time spikes (>50ms), and error traces.
-                            </div>
-                            <div style="display:flex; gap:10px;">
-                                <button id="btn-confirm-consent" class="action-btn glow-green" style="flex:1;">✅ I
-                                    Consent (Enable Local Logging)</button>
-                                <button id="btn-cancel-consent" class="pill-btn" style="min-width:90px;">Cancel</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Community Challenges & Mod-Tools Client -->
-    <script type="module" src="src/community/CustomChallengeClient.js"></script>
-    <!-- Main Game Script -->
-    <script src="app.js"></script>
-    <!-- META-UI POST-PROCESSING FULL-SCREEN SHADER OVERLAY -->
-    <div id="meta-ui-overlay" class="meta-ui-overlay pointer-events-none"></div>
-</body>
-
-</html        <!-- Ranked Global Leaderboard Modal (Supabase PostgreSQL Keyed) -->
-        <div id="leaderboard-modal" class="modal-overlay hidden">
-            <div class="glass-modal" style="max-width:840px; width:92%;">
-                <div class="modal-header">
-                    <h2>🏆 GLOBAL RANKED LEADERBOARDS (TOP 100)</h2>
-                    <button id="btn-close-leaderboard" class="close-btn">✕</button>
-                </div>
-
-                <!-- Leaderboard Mode Tabs -->
-                <div style="display:flex; gap:8px; padding:12px 20px 0 20px; border-bottom:1px solid rgba(255,255,255,0.08);">
-                    <button id="tab-lb-duels" class="slot-btn active" style="font-weight:700; font-size:0.85rem;">⚔️ 1v1 Ranked Duels</button>
-                    <button id="tab-lb-daily" class="slot-btn" style="font-weight:700; font-size:0.85rem;">📅 Daily Seed Challenge</button>
-                </div>
-
-                <!-- Sticky "YOUR RANK" Highlight Banner -->
-                <div style="padding:12px 20px 6px 20px;">
-                    <div id="leaderboard-your-rank-card" class="stat-card" style="border:1.5px solid #38bdf8; background:rgba(14,165,233,0.12); display:flex; justify-content:space-between; align-items:center; padding:10px 16px;">
-                        <div style="display:flex; align-items:center; gap:12px;">
-                            <div style="font-size:1.6rem;">🎯</div>
-                            <div>
-                                <div style="font-size:0.75rem; color:#38bdf8; font-weight:800;">YOUR CURRENT STANDING</div>
-                                <div id="lb-your-name" style="font-size:1.05rem; font-weight:800; color:#fff;">Ada-Architect <span id="lb-your-build" style="font-size:0.75rem; color:#94a3b8;">[EXPLORER]</span></div>
-                            </div>
-                        </div>
-                        <div style="display:flex; gap:18px; text-align:right; font-family:var(--font-display-mono);">
-                            <div>
-                                <div style="font-size:0.72rem; color:#94a3b8;">GLOBAL RANK</div>
-                                <div id="lb-your-rank-num" style="font-size:1.25rem; font-weight:900; color:#facc15;">#14</div>
-                            </div>
-                            <div>
-                                <div style="font-size:0.72rem; color:#94a3b8;">SCORE / RATING</div>
-                                <div id="lb-your-score" style="font-size:1.25rem; font-weight:900; color:#38bdf8;">1420</div>
-                            </div>
-                            <div>
-                                <div style="font-size:0.72rem; color:#94a3b8;">RECORD / ACC</div>
-                                <div id="lb-your-acc" style="font-size:1.25rem; font-weight:900; color:#4ade80;">98.4%</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Scrollable Top 100 Leaderboard Table -->
-                <div class="table-container" style="max-height:360px; overflow-y:auto; padding:0 20px 16px 20px;">
-                    <table class="tree-split-table" style="width:100%;">
-                        <thead>
-                            <tr>
-                                <th style="width:10%;">Rank</th>
-                                <th style="width:35%;">Architect / Model</th>
-                                <th style="width:15%;">Build</th>
-                                <th style="width:15%;">Rating / Score</th>
-                                <th style="width:15%;">Test Accuracy</th>
-                                <th style="width:10%;">W / L</th>
-                            </tr>
-                        </thead>
-                        <tbody id="leaderboard-rows">
-                            <!-- Populated dynamically via LeaderboardManager -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- 💼 CLIENT FREELANCE CONTRACT BOARD (while True: learn() style) -->
-        <div id="contracts-modal" class="modal-overlay hidden">
-            <div class="glass-modal" style="max-width:860px; width:92%;">
-                <div class="modal-header">
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <span style="font-size:1.4rem;">💼</span>
-                        <div>
-                            <h2 style="font-size:1.15rem; color:#facc15; margin:0;">CORPORATE FREELANCE CONTRACT BOARD</h2>
-                            <div style="font-size:0.75rem; color:#94a3b8;">Real-world Industry ML Contracts with Accuracy & Latency SLAs</div>
-                        </div>
-                    </div>
-                    <button id="btn-close-contracts" class="close-btn">✕</button>
-                </div>
-                <div style="padding:16px 20px;">
-                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:12px;" id="contracts-grid-container">
-                        <!-- Contract 1 -->
-                        <div class="stat-card" style="border:1.5px solid #f59e0b; background:rgba(15,23,42,0.9); padding:14px;">
-                            <div style="display:flex; justify-content:space-between; align-items:center;">
-                                <span style="color:#facc15; font-weight:800; font-size:11px;">SOLARIS DYNAMICS</span>
-                                <span style="font-size:9px; background:rgba(245,158,11,0.2); color:#facc15; padding:2px 6px; border-radius:4px;">Tier 1 Startup</span>
-                            </div>
-                            <h4 style="color:#fff; margin:6px 0; font-size:13px;">Photovoltaic Power Output Estimator</h4>
-                            <p style="font-size:11px; color:#cbd5e1; line-height:1.4; margin:0 0 10px 0;">Fit continuous polynomial regression model to predict solar panel energy output.</p>
-                            <div style="font-family:'JetBrains Mono', monospace; font-size:10px; color:#38bdf8; margin-bottom:8px;">
-                                <div>🎯 REQUIREMENT: MSE ≤ 0.040</div>
-                                <div>⏱️ LATENCY SLA: &lt; 25.0 ms</div>
-                            </div>
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; border-top:1px solid rgba(255,255,255,0.08); padding-top:8px;">
-                                <span style="color:#00FF66; font-weight:bold; font-size:11px;">+300 Credits | +15 Shards</span>
-                                <button class="primary-btn btn-submit-contract" data-contract="contract_greenenergy_01" style="padding:4px 12px; font-size:10px;">Submit Active Model</button>
-                            </div>
-                        </div>
-
-                        <!-- Contract 2 -->
-                        <div class="stat-card" style="border:1.5px solid #00F0FF; background:rgba(15,23,42,0.9); padding:14px;">
-                            <div style="display:flex; justify-content:space-between; align-items:center;">
-                                <span style="color:#00F0FF; font-weight:800; font-size:11px;">BIOGEN CELLULAR</span>
-                                <span style="font-size:9px; background:rgba(0,240,255,0.2); color:#00F0FF; padding:2px 6px; border-radius:4px;">Tier 2 Biotech</span>
-                            </div>
-                            <h4 style="color:#fff; margin:6px 0; font-size:13px;">Malignant Pathology Boundary Classifier</h4>
-                            <p style="font-size:11px; color:#cbd5e1; line-height:1.4; margin:0 0 10px 0;">Train a high-precision Decision Tree model with zero false negatives.</p>
-                            <div style="font-family:'JetBrains Mono', monospace; font-size:10px; color:#38bdf8; margin-bottom:8px;">
-                                <div>🎯 REQUIREMENT: Accuracy ≥ 92.0%</div>
-                                <div>⏱️ LATENCY SLA: &lt; 12.0 ms</div>
-                            </div>
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; border-top:1px solid rgba(255,255,255,0.08); padding-top:8px;">
-                                <span style="color:#00FF66; font-weight:bold; font-size:11px;">+550 Credits | +30 Shards</span>
-                                <button class="primary-btn btn-submit-contract" data-contract="contract_biogen_02" style="padding:4px 12px; font-size:10px;">Submit Active Model</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 📈 EXPERIMENT TRACKER & MODEL RUN REGISTRY (Weights & Biases style) -->
-        <div id="experiment-tracker-modal" class="modal-overlay hidden">
-            <div class="glass-modal" style="max-width:880px; width:94%;">
-                <div class="modal-header">
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <span style="font-size:1.4rem;">📈</span>
-                        <div>
-                            <h2 style="font-size:1.15rem; color:#c084fc; margin:0;">EXPERIMENT TRACKER & MODEL RUN REGISTRY (W&amp;B)</h2>
-                            <div style="font-size:0.75rem; color:#94a3b8;">Multi-Run Loss Curve Overlay, Hyperparameter Diffs &amp; Champion Registry</div>
-                        </div>
-                    </div>
-                    <button id="btn-close-experiments" class="close-btn">✕</button>
-                </div>
-                <div style="padding:16px 20px;">
-                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:12px;">
-                        <!-- Left: Loss Curve Overlay Canvas -->
-                        <div class="stat-card" style="padding:12px; background:rgba(15,23,42,0.9); border:1px solid #c084fc;">
-                            <div style="color:#c084fc; font-size:11px; font-weight:800; margin-bottom:6px;">📉 RUN LOSS CURVE OVERLAYS</div>
-                            <canvas id="canvas-experiment-overlay" width="360" height="180" style="background:#050b14; border-radius:4px; width:100%;"></canvas>
-                        </div>
-                        <!-- Right: Registry Runs Table -->
-                        <div class="stat-card" style="padding:12px; background:rgba(15,23,42,0.9); border:1px solid #38bdf8;">
-                            <div style="color:#38bdf8; font-size:11px; font-weight:800; margin-bottom:6px;">🏷️ REGISTERED MODEL CHECKPOINTS</div>
-                            <div style="max-height:180px; overflow-y:auto;">
-                                <table style="width:100%; font-family:'JetBrains Mono', monospace; font-size:10px; border-collapse:collapse;">
-                                    <thead><tr style="color:#94a3b8; border-bottom:1px solid rgba(255,255,255,0.1);"><th style="text-align:left;">Run ID</th><th>Arch</th><th>Loss</th><th>F1</th><th>Tag</th></tr></thead>
-                                    <tbody id="experiment-runs-tbody">
-                                        <tr><td style="color:#facc15;">RUN-88A2</td><td>MLP</td><td>0.024</td><td>0.952</td><td><span style="background:rgba(0,255,102,0.2); color:#4ade80; padding:1px 4px; border-radius:3px;">CHAMPION</span></td></tr>
-                                        <tr><td style="color:#94a3b8;">RUN-74B1</td><td>Tree</td><td>0.048</td><td>0.910</td><td><span style="background:rgba(56,189,248,0.2); color:#38bdf8; padding:1px 4px; border-radius:3px;">STAGING</span></td></tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 🎲 5-FOLD CROSS VALIDATION ARENA (Kaggle style) -->
-        <div id="cross-validation-modal" class="modal-overlay hidden">
-            <div class="glass-modal" style="max-width:820px; width:92%;">
-                <div class="modal-header">
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <span style="font-size:1.4rem;">🎲</span>
-                        <div>
-                            <h2 style="font-size:1.15rem; color:#4ade80; margin:0;">5-FOLD STRATIFIED CROSS-VALIDATION ARENA</h2>
-                            <div style="font-size:0.75rem; color:#94a3b8;">Out-of-Fold Evaluation, Variance Bounds (μ ± σ) &amp; Generalization Index</div>
-                        </div>
-                    </div>
-                    <button id="btn-close-kfold" class="close-btn">✕</button>
-                </div>
-                <div style="padding:16px 20px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; background:rgba(0,255,102,0.1); border:1px solid #00FF66; padding:10px 16px; border-radius:8px;">
-                        <div>
-                            <div style="font-size:11px; color:#94a3b8;">GENERALIZATION CONFIDENCE INDEX</div>
-                            <div style="font-size:1.4rem; font-weight:900; color:#00FF66;" id="kfold-confidence-val">96.8% [HIGH STABILITY]</div>
-                        </div>
-                        <button id="btn-run-kfold-eval" class="action-btn glow-green" style="padding:6px 16px; font-size:11px;">▶ Execute 5-Fold Partition</button>
-                    </div>
-                    <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:8px; text-align:center; font-family:'JetBrains Mono', monospace;" id="kfold-cards-row">
-                        <div class="stat-card" style="padding:8px 4px; border:1px solid #38bdf8;"><span style="color:#94a3b8; font-size:9px;">FOLD #1</span><div style="color:#4ade80; font-weight:bold; font-size:11px;">Acc: 95.2%</div><div style="color:#facc15; font-size:9px;">Loss: 0.028</div></div>
-                        <div class="stat-card" style="padding:8px 4px; border:1px solid #38bdf8;"><span style="color:#94a3b8; font-size:9px;">FOLD #2</span><div style="color:#4ade80; font-weight:bold; font-size:11px;">Acc: 94.8%</div><div style="color:#facc15; font-size:9px;">Loss: 0.031</div></div>
-                        <div class="stat-card" style="padding:8px 4px; border:1px solid #38bdf8;"><span style="color:#94a3b8; font-size:9px;">FOLD #3</span><div style="color:#4ade80; font-weight:bold; font-size:11px;">Acc: 96.0%</div><div style="color:#facc15; font-size:9px;">Loss: 0.024</div></div>
-                        <div class="stat-card" style="padding:8px 4px; border:1px solid #38bdf8;"><span style="color:#94a3b8; font-size:9px;">FOLD #4</span><div style="color:#4ade80; font-weight:bold; font-size:11px;">Acc: 93.9%</div><div style="color:#facc15; font-size:9px;">Loss: 0.035</div></div>
-                        <div class="stat-card" style="padding:8px 4px; border:1px solid #38bdf8;"><span style="color:#94a3b8; font-size:9px;">FOLD #5</span><div style="color:#4ade80; font-weight:bold; font-size:11px;">Acc: 95.5%</div><div style="color:#facc15; font-size:9px;">Loss: 0.026</div></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Dataset Inspector 2.0 Modal -->
-        <div id="dataset-modal" class="modal-overlay hidden">
-            <div class="glass-modal dataset-inspector-modal">
-                <div class="modal-header">
-                    <h2>📊 DATASET INSPECTOR 2.0 :: MODEL INTERPRETABILITY</h2>
-                    <button id="btn-close-data-modal" class="close-btn">✕</button>
-                </div>
-                <div class="stats-summary" id="dataset-stats-summary">
-                    🧬 Pearson r(X, Y) = <b>+0.892</b> | Samples: <b>36</b> | Seed: <b>#NEURO-8842</b>
-                </div>
-
-                <div class="inspector-scroll-area">
-                    <div class="inspector-section">
-                        <div class="inspector-section-title">1. PERMUTATION FEATURE IMPORTANCE (SHUFFLE ACCURACY DROP)
-                        </div>
-                        <div id="importance-bars-container" class="importance-bars-list"></div>
-                    </div>
-                    <div class="inspector-section">
-                        <div class="inspector-section-title">2. DECISION TREE PER-SPLIT READOUT (MEAN DECREASE IN
-                            IMPURITY - MDI)</div>
-                        <table class="tree-split-table">
-                            <thead>
-                                <tr>
-                                    <th>Node</th>
-                                    <th>Split Condition</th>
-                                    <th>Impurity Δ</th>
-                                    <th>Contribution</th>
-                                    <th>Samples</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>#1 (Root)</td>
-                                    <td class="cyan-text">x₁ ≤ 1.25</td>
-                                    <td>0.48 ➔ 0.18</td>
-                                    <td class="green-text"><b>48.2%</b></td>
-                                    <td>N = 36</td>
-                                </tr>
-                                <tr>
-                                    <td>#2 (Left)</td>
-                                    <td class="cyan-text">x₂ ≤ -0.80</td>
-                                    <td>0.32 ➔ 0.08</td>
-                                    <td class="green-text"><b>31.5%</b></td>
-                                    <td>N = 18</td>
-                                </tr>
-                                <tr>
-                                    <td>#3 (Right)</td>
-                                    <td class="cyan-text">x₁ ≤ 3.10</td>
-                                    <td>0.24 ➔ 0.04</td>
-                                    <td class="green-text"><b>20.3%</b></td>
-                                    <td>N = 18</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Full-Screen Formula Terminal Modal -->
-        <div id="terminal-modal" class="modal-overlay hidden">
-            <div class="terminal-container glass-terminal" id="terminal-window-container">
-                <div class="terminal-header">
-                    <div class="terminal-title">⚡ <span id="terminal-mode-title">OPTIMIZER, ENSEMBLE & VECTOR
-                            FORGE</span></div>
-                    <div class="skin-swatches-row">
-                        <span class="skin-label">Skin:</span>
-                        <button class="skin-btn active" data-skin="obsidian" title="Obsidian Gradient"
-                            style="background:#f59e0b;"></button>
-                        <button class="skin-btn" data-skin="biolum" title="Bioluminescent Neon"
-                            style="background:#14b8a6;"></button>
-                        <button class="skin-btn" data-skin="glacial" title="Glacial Crystal"
-                            style="background:#38bdf8;"></button>
-                        <button class="skin-btn" data-skin="canopy" title="Living Canopy"
-                            style="background:#10b981;"></button>
-                        <button class="skin-btn" data-skin="citadel" title="Cyber Citadel"
-                            style="background:#a855f7;"></button>
-                        <button class="skin-btn" data-skin="astral" title="Astral Hologram"
-                            style="background:#e0e7ff;"></button>
-                    </div>
-                    <button id="btn-close-terminal" class="close-btn">✕ Exit</button>
-                </div>
-                <div class="terminal-telemetry-bar" id="terminal-seed-telemetry">
-                    🧬 SEED: #NEURO-8842 | Noise σ=0.28 | Outliers=5% | Overlap ρ=0.15 | Scale=(1.4x, 1.2x)
-                </div>
-                <div class="terminal-status" id="terminal-status-bar">
-                    <span class="status-indicator live">● READY</span> | Train model, summon Bagging Party, or query
-                    Vector Retrieval!
-                </div>
-
-                <div class="terminal-scroll-area">
-                    <div class="terminal-section">
-                        <div class="section-title">1. MODEL EXPRESSION BUILDER</div>
-                        <input type="text" id="terminal-formula-input" value="y = 2.45x + 1.15" spellcheck="false"
-                            class="cyber-input">
-                        <div class="preset-row">
-                            <button id="preset-linear" class="preset-btn">⚡ Linear</button>
-                            <button id="preset-logistic" class="preset-btn">⚡ Logistic</button>
-                            <button id="preset-polynomial" class="preset-btn">❄️ Poly Ridge</button>
-                            <button id="preset-tree" class="preset-btn">🌿 Decision Tree</button>
-                            <button id="preset-mlp" class="preset-btn">🧠 2-Layer MLP</button>
-                            <button id="preset-embeddings" class="preset-btn glow-cyan">🌌 Biome 6 Embeddings</button>
-                            <button id="btn-toggle-raw-params" class="preset-btn glow-amber" style="margin-left:auto; border-color:#f59e0b; color:#facc15; font-weight:bold;">🔬 Raw Parameters (Live View)</button>
-                        </div>
-                        <!-- Live Numeric Parameter Token Strip (Turn-by-Turn Numerical Update) -->
-                        <div class="live-token-strip" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;">
-                            <div id="token-w-badge" class="stat-card" style="padding:6px 12px; font-family:'JetBrains Mono', monospace; font-size:12px; border:1px solid #38bdf8; background:rgba(14,165,233,0.12); flex:1; min-width:110px; text-align:center;">
-                                <span style="color:#94a3b8; font-size:10px; display:block;">WEIGHT (SLOPE)</span>
-                                <b id="token-w-val" class="text-cyan">w: 2.45</b>
-                            </div>
-                            <div id="token-b-badge" class="stat-card" style="padding:6px 12px; font-family:'JetBrains Mono', monospace; font-size:12px; border:1px solid #f59e0b; background:rgba(245,158,11,0.12); flex:1; min-width:110px; text-align:center;">
-                                <span style="color:#94a3b8; font-size:10px; display:block;">BIAS (INTERCEPT)</span>
-                                <b id="token-b-val" class="text-amber">b: 1.15</b>
-                            </div>
-                            <div id="token-epoch-badge" class="stat-card" style="padding:6px 12px; font-family:'JetBrains Mono', monospace; font-size:12px; border:1px solid #4ade80; background:rgba(34,197,94,0.12); flex:1; min-width:140px; text-align:center;">
-                                <span style="color:#94a3b8; font-size:10px; display:block;">TRAINING ITERATION</span>
-                                <b id="token-epoch-val" class="text-green">Epoch: 0 / Loss: 0.000</b>
-                            </div>
-                            <div id="token-word-step-badge" class="stat-card hidden" style="padding:6px 12px; font-family:'JetBrains Mono', monospace; font-size:12px; border:1px solid #c084fc; background:rgba(168,85,247,0.15); width:100%; text-align:left;">
-                                <span style="color:#c084fc; font-weight:700; font-size:10px; display:block;">🔤 FINE-TUNING STEP (WORD PAIR RELAXATION):</span>
-                                <b id="token-word-step-text" style="color:#f8fafc;">Now adjusting: "fire" ↔ "heat" (PPMI: 1.84 | Pulling closer)</b>
-                            </div>
-
-                            <!-- Visible Vocabulary Tokenization & Real Initial Vector Stream -->
-                            <div id="token-tokenization-stream" class="stat-card hidden" style="padding:10px 14px; font-family:'JetBrains Mono', monospace; font-size:11px; border:1.5px solid #818cf8; background:rgba(15,23,42,0.95); width:100%; text-align:left; margin-top:6px;">
-                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                                    <span style="color:#818cf8; font-weight:800; font-size:10.5px;">🔤 STEP 1: VOCABULARY TOKENIZATION & INITIAL RANDOM VECTOR PROJECTION</span>
-                                    <span id="tokenization-progress-tag" style="font-size:10px; color:#facc15; font-weight:bold;">Tokens: 0/12</span>
-                                </div>
-                                <div id="tokenization-lines-box" style="max-height:125px; overflow-y:auto; line-height:1.6; color:#cbd5e1; font-size:11px; border-left:2px solid #818cf8; padding-left:8px;">
-                                    <!-- Real Initial Random Vectors stream here before PPMI convergence -->
-                                </div>
-                            </div>
-
-                            <!-- Togglable Live Raw Parameter & Weight Matrix Inspection Table -->
-                            <div id="terminal-raw-params-panel" class="stat-card hidden" style="padding:10px 14px; font-family:'JetBrains Mono', monospace; font-size:11px; border:1.5px solid #f59e0b; background:rgba(15,23,42,0.95); width:100%; text-align:left; margin-top:6px;">
-                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                                    <span style="color:#facc15; font-weight:800; font-size:11px;">🔬 LIVE MODEL PARAMETERS & WEIGHT MATRICES (RAW EPOCH VIEW)</span>
-                                    <span id="raw-params-type-tag" style="font-size:10px; color:#38bdf8; background:rgba(14,165,233,0.2); padding:2px 8px; border-radius:4px;">OLS Linear</span>
-                                </div>
-                                <div id="raw-params-content" style="max-height:160px; overflow-y:auto; overflow-x:auto;">
-                                    <!-- Populated in real-time during training -->
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 1.1 DEEP LEARNING HYPERPARAMETER & OPTIMIZER DECK -->
-                    <div class="terminal-section" style="border:1.5px solid #00F0FF; background:rgba(10,20,40,0.65); padding:12px 14px; border-radius:8px; margin-top:8px;">
-                        <div class="section-title" style="color:#00F0FF; font-size:11px; display:flex; justify-content:space-between; align-items:center;">
-                            <span>⚙️ HYPERPARAMETER & OPTIMIZER CONFIGURATION</span>
-                            <span id="opt-formula-badge" style="font-size:10px; color:#facc15; font-family:'JetBrains Mono', monospace;">θ_{t+1} = θ_t - η · m̂_t / (√v̂_t + ε)</span>
-                        </div>
-                        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:10px; margin-top:8px; font-family:'JetBrains Mono', monospace; font-size:11px;">
-                            <div>
-                                <label style="color:#94a3b8; display:block; font-size:10px;">OPTIMIZER ALGORITHM:</label>
-                                <select id="hyper-optimizer-select" class="cyber-select" style="width:100%; padding:4px 8px; font-size:11px;">
-                                    <option value="adam" selected>Adam (β₁=0.9, β₂=0.999)</option>
-                                    <option value="rmsprop">RMSprop (γ=0.99, ε=1e-8)</option>
-                                    <option value="momentum">SGD + Nesterov Momentum</option>
-                                    <option value="sgd">Vanilla SGD (Batch)</option>
-                                </select>
-                            </div>
-                            <div>
-                                <div style="display:flex; justify-content:space-between;">
-                                    <label style="color:#94a3b8; font-size:10px;">LEARNING RATE (η):</label>
-                                    <b id="hyper-lr-val" class="text-cyan">0.050</b>
-                                </div>
-                                <input type="range" id="hyper-lr-slider" min="1" max="100" value="50" style="width:100%;">
-                            </div>
-                            <div>
-                                <div style="display:flex; justify-content:space-between;">
-                                    <label style="color:#94a3b8; font-size:10px;">L2 WEIGHT DECAY (λ):</label>
-                                    <b id="hyper-decay-val" class="text-amber">1e-4</b>
-                                </div>
-                                <input type="range" id="hyper-decay-slider" min="0" max="50" value="10" style="width:100%;">
-                            </div>
-                            <div>
-                                <label style="color:#94a3b8; display:block; font-size:10px;">ACTIVATION FUNCTION (σ):</label>
-                                <select id="hyper-activation-select" class="cyber-select" style="width:100%; padding:4px 8px; font-size:11px;">
-                                    <option value="relu" selected>ReLU (max(0, z))</option>
-                                    <option value="gelu">GELU (Gaussian Error Linear)</option>
-                                    <option value="leaky">LeakyReLU (α=0.01)</option>
-                                    <option value="tanh">Tanh (Hyperbolic Tangent)</option>
-                                    <option value="sigmoid">Sigmoid (1 / (1 + e^-z))</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 1.2 TENSOR & WEIGHT MATRIX HEATMAP STUDIO -->
-                    <div id="tensor-studio-section" class="terminal-section" style="border:1.5px solid #BD00FF; background:rgba(20,10,35,0.75); padding:12px 14px; border-radius:8px; margin-top:8px;">
-                        <div class="section-title" style="color:#BD00FF; font-size:11px; display:flex; justify-content:space-between; align-items:center;">
-                            <span>🔬 TENSOR & WEIGHT MATRIX INSPECTOR (W ∈ ℝ^{m×n}, b ∈ ℝ^n)</span>
-                            <span id="tensor-dim-badge" style="font-size:10px; color:#c084fc; font-family:'JetBrains Mono', monospace;">Rank-2 Tensor | ‖W‖_F: 1.482</span>
-                        </div>
-                        <div id="tensor-matrix-grid-container" style="display:flex; flex-wrap:wrap; gap:12px; margin-top:8px; font-family:'JetBrains Mono', monospace; font-size:10.5px;">
-                            <!-- Populated dynamically via renderTensorWeightHeatmap -->
-                            <div class="stat-card" style="flex:1; min-width:240px; padding:8px 12px; background:rgba(15,23,42,0.9); border:1px solid #c084fc;">
-                                <div style="color:#c084fc; font-weight:800; margin-bottom:4px; font-size:10px;">WEIGHT MATRIX W⁽¹⁾ (HIDDEN LAYER)</div>
-                                <div id="tensor-w1-table" style="max-height:110px; overflow-y:auto;"></div>
-                            </div>
-                            <div class="stat-card" style="flex:1; min-width:180px; padding:8px 12px; background:rgba(15,23,42,0.9); border:1px solid #00F0FF;">
-                                <div style="color:#00F0FF; font-weight:800; margin-bottom:4px; font-size:10px;">BIAS VECTOR b⁽¹⁾ & GRADIENT NORM</div>
-                                <div id="tensor-b1-table" style="max-height:110px; overflow-y:auto;"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 1.3 CLASSIFICATION METRICS, CONFUSION MATRIX & ROC-AUC BOARD -->
-                    <div id="confusion-matrix-section" class="terminal-section" style="border:1.5px solid #00FF66; background:rgba(10,30,20,0.75); padding:12px 14px; border-radius:8px; margin-top:8px;">
-                        <div class="section-title" style="color:#00FF66; font-size:11px; display:flex; justify-content:space-between; align-items:center;">
-                            <span>📊 CLASSIFICATION METRICS & 2×2 CONFUSION MATRIX</span>
-                            <span id="metric-f1-badge" style="font-size:10px; color:#4ade80; font-family:'JetBrains Mono', monospace;">F₁-Score: 0.952 | ROC-AUC: 0.984</span>
-                        </div>
-                        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px; margin-top:8px; font-family:'JetBrains Mono', monospace;">
-                            <!-- 2x2 Matrix -->
-                            <div style="background:rgba(15,23,42,0.9); padding:10px; border-radius:6px; border:1px solid rgba(0,255,102,0.3);">
-                                <div style="font-size:10px; color:#94a3b8; text-align:center; margin-bottom:6px;">EMPIRICAL CONFUSION MATRIX</div>
-                                <table style="width:100%; border-collapse:collapse; text-align:center; font-size:11px;">
-                                    <tr>
-                                        <td></td>
-                                        <td style="color:#38bdf8; font-size:9px; padding:2px;">Pred Pos</td>
-                                        <td style="color:#38bdf8; font-size:9px; padding:2px;">Pred Neg</td>
-                                    </tr>
-                                    <tr>
-                                        <td style="color:#f59e0b; font-size:9px; padding:2px;">Act Pos</td>
-                                        <td id="cm-tp" style="background:rgba(34,197,94,0.25); border:1px solid #22c55e; color:#4ade80; font-weight:bold; padding:6px;">TP: 18</td>
-                                        <td id="cm-fn" style="background:rgba(239,68,68,0.2); border:1px solid #ef4444; color:#f87171; font-weight:bold; padding:6px;">FN: 1</td>
-                                    </tr>
-                                    <tr>
-                                        <td style="color:#f59e0b; font-size:9px; padding:2px;">Act Neg</td>
-                                        <td id="cm-fp" style="background:rgba(239,68,68,0.2); border:1px solid #ef4444; color:#f87171; font-weight:bold; padding:6px;">FP: 1</td>
-                                        <td id="cm-tn" style="background:rgba(34,197,94,0.25); border:1px solid #22c55e; color:#4ade80; font-weight:bold; padding:6px;">TN: 16</td>
-                                    </tr>
-                                </table>
-                            </div>
-
-                            <!-- Diagnostic Gauges -->
-                            <div style="background:rgba(15,23,42,0.9); padding:10px; border-radius:6px; border:1px solid rgba(0,255,102,0.3); font-size:11px;">
-                                <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-                                    <span style="color:#94a3b8;">Precision:</span>
-                                    <b id="cm-prec-val" class="text-cyan">94.7%</b>
-                                </div>
-                                <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-                                    <span style="color:#94a3b8;">Recall (Sensitivity):</span>
-                                    <b id="cm-rec-val" class="text-green">94.7%</b>
-                                </div>
-                                <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-                                    <span style="color:#94a3b8;">Specificity (TNR):</span>
-                                    <b id="cm-spec-val" class="text-amber">94.1%</b>
-                                </div>
-                                <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-                                    <span style="color:#94a3b8;">Balanced Accuracy:</span>
-                                    <b id="cm-bal-acc-val" class="text-green">94.4%</b>
-                                </div>
-                            </div>
-
-                            <!-- Live ROC Curve Canvas -->
-                            <div style="background:rgba(15,23,42,0.9); padding:10px; border-radius:6px; border:1px solid rgba(0,255,102,0.3); text-align:center;">
-                                <div style="font-size:10px; color:#94a3b8; margin-bottom:4px;">ROC CURVE (TPR vs FPR)</div>
-                                <canvas id="canvas-roc-curve" width="180" height="95" style="background:#050b14; border-radius:4px; border:1px solid #1e293b;"></canvas>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 1.4 INTERACTIVE NEURAL SYNAPSE GRAPH & ATTENTION MATRIX -->
-                    <div class="terminal-section" style="border:1.5px solid #38bdf8; background:rgba(15,23,42,0.75); padding:12px 14px; border-radius:8px; margin-top:8px;">
-                        <div class="section-title" style="color:#38bdf8; font-size:11px; display:flex; justify-content:space-between; align-items:center;">
-                            <span>🧠 SYNAPTIC ARCHITECTURE GRAPH & ATTENTION HEADS</span>
-                            <span id="synapse-info-badge" style="font-size:10px; color:#38bdf8; font-family:'JetBrains Mono', monospace;">Feedforward Flow Active</span>
-                        </div>
-                        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:12px; margin-top:8px;">
-                            <div style="background:#050b14; border:1px solid #1e293b; border-radius:6px; padding:8px; text-align:center;">
-                                <div style="font-size:10px; color:#38bdf8; font-family:'JetBrains Mono', monospace; margin-bottom:4px;">FEEDFORWARD SYNAPTIC ACTIVATION GRAPH</div>
-                                <canvas id="canvas-synapse-graph" width="340" height="140" style="width:100%; border-radius:4px;"></canvas>
-                            </div>
-                            <div style="background:#050b14; border:1px solid #1e293b; border-radius:6px; padding:8px; text-align:center;">
-                                <div style="font-size:10px; color:#c084fc; font-family:'JetBrains Mono', monospace; margin-bottom:4px;">TRANSFORMER ATTENTION MATRIX Softmax(QKᵀ / √dₖ)</div>
-                                <canvas id="canvas-attention-heatmap" width="340" height="140" style="width:100%; border-radius:4px;"></canvas>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="terminal-section" id="terminal-health-section">
-                        <div class="section-title">⚡ PRE-TRAINING DATASET HEALTH SCORE & FORECAST</div>
-                        <div class="terminal-health-card" id="terminal-health-card">
-                            <div class="health-main-row">
-                                <span class="health-score-badge" id="term-health-badge">🩺 HEALTH: 100%
-                                    [EXCELLENT]</span>
-                                <span class="health-sub-breakdown" id="term-health-breakdown">⚖️ Bal: 100% | 🧹 Clean:
-                                    100% | 🌐 Cover: 100%</span>
-                            </div>
-                            <div class="health-gauge-track" style="margin: 6px 0;">
-                                <div id="term-health-gauge-fill" class="health-gauge-fill"
-                                    style="width: 100%; background: #4ade80;"></div>
-                            </div>
-                            <div class="health-forecast-row">
-                                <span>🔮 <b>Held-Out Test Forecast:</b> <span id="term-health-forecast"
-                                        class="text-green">High Generalization (>90% test acc expected)</span></span>
-                            </div>
-                            <div class="terminal-section" id="terminal-shift-sandbox-section">
-                                <div class="section-title"
-                                    style="display:flex; justify-content:space-between; align-items:center;">
-                                    <span>🧪 DATASET SHIFT SANDBOX (CONCEPT DRIFT)</span>
-                                    <button id="btn-toggle-shift-sandbox" class="preset-btn"
-                                        style="min-height:30px; font-size:10px;">⚡ Toggle Sandbox</button>
-                                </div>
-                                <div id="shift-sandbox-controls" class="shift-sandbox-box hidden">
-                                    <div class="shift-row-flex">
-                                        <div class="shift-select-col">
-                                            <label style="font-size:10px; color:#38bdf8;">Distribution A:</label>
-                                            <select id="shift-select-a" class="cyber-select">
-                                                <option value="steppes">Biome 1: Linear Steppes (y = 2.45x + 1.15)
-                                                </option>
-                                                <option value="marshlands">Biome 2: Marshlands (Logistic)</option>
-                                            </select>
-                                        </div>
-                                        <div class="shift-select-col">
-                                            <label style="font-size:10px; color:#fb923c;">Distribution B:</label>
-                                            <select id="shift-select-b" class="cyber-select">
-                                                <option value="tundra_shifted">Biome 3: Shifted Tundra (y = -1.80x +
-                                                    6.20)</option>
-                                                <option value="tundra_poly">Biome 3: Oscillatory Polynomial</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="shift-slider-row" style="margin-top:6px;">
-                                        <div style="display:flex; justify-content:space-between; font-size:11px;">
-                                            <span>Blend Mixture:</span>
-                                            <b id="shift-ratio-label" class="text-cyan">50% A / 50% B</b>
-                                        </div>
-                                        <input type="range" id="shift-mix-slider" min="5" max="95" value="50"
-                                            style="width:100%; margin-top:4px;">
-                                    </div>
-                                    <div style="margin-top:8px;">
-                                        <button id="btn-run-shift-sim" class="action-btn glow-amber"
-                                            style="width:100%; min-height:44px;">💥 TRAIN ON CONFLICTING MIXTURE &
-                                            OBSERVE STRUGGLE</button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div id="benchmark-banner" class="hidden"></div>
-                        </div>
-
-                        <div class="terminal-footer">
-                            <button id="btn-train-weapon" class="action-btn glow-cyan">🧠 TRAIN / RETRIEVE</button>
-                            <button id="btn-grand-prix" class="action-btn glow-amber">🏁 4-WAY OPTIMIZER GRAND PRIX</button>
-                            <button id="btn-view-before-after" class="action-btn glow-amber">⚖️ Before / After</button>
-                            <button id="btn-view-replay-card" class="action-btn">🎴 Stat Card</button>
-                            <button id="btn-return-world" class="action-btn">✕ Return</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 👤 CHARACTER ARCHETYPE SELECT MODAL (NEW GAME / PROFILE) -->
-                <div id="character-select-modal" class="modal-overlay hidden" style="z-index:9999;">
-                    <div class="glass-modal character-select-container" style="max-width:780px; width:92%;">
-                        <div class="modal-header">
-                            <h2>👤 SELECT YOUR ARCHITECT SILHOUETTE</h2>
-                            <button id="btn-close-char-select" class="close-btn">✕</button>
-                        </div>
-                        <div style="padding:16px 20px;">
-                            <p style="font-size:0.85rem; color:#94a3b8; margin:0 0 14px 0;">
-                                Choose your character's procedural low-poly rig build. All archetypes share the same fluid Mixamo-compatible animation blend tree while possessing distinct silhouettes, proportions, and passive bonuses.
-                            </p>
-                            <div id="character-build-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px; margin-bottom:18px;">
-                                <!-- Option 1: Explorer -->
-                                <div class="stat-card char-card active" data-build="explorer" style="border:2px solid #38bdf8; background:rgba(14,165,233,0.12); cursor:pointer; padding:14px; text-align:center;">
-                                    <div style="font-size:2.4rem; margin-bottom:6px;">🧭</div>
-                                    <div style="font-weight:800; font-size:1.1rem; color:#38bdf8;">THE EXPLORER</div>
-                                    <div style="font-size:0.75rem; color:#facc15; margin-bottom:8px; font-weight:600;">Stout / Reinforced Field Plating</div>
-                                    <div style="font-size:0.78rem; color:#cbd5e1; line-height:1.35; margin-bottom:10px;">
-                                        Broad chest armor, rounded dome helm, heavy insulated boots built for rough biome terrain traversal.
-                                    </div>
-                                    <div style="font-size:0.72rem; color:#34d399; background:rgba(6,95,70,0.4); padding:4px 8px; border-radius:4px;">
-                                        ⚡ +10% Crystal Magnetism Radius
-                                    </div>
-                                </div>
-
-                                <!-- Option 2: Scholar -->
-                                <div class="stat-card char-card" data-build="scholar" style="border:1px solid rgba(255,255,255,0.1); background:rgba(15,23,42,0.75); cursor:pointer; padding:14px; text-align:center;">
-                                    <div style="font-size:2.4rem; margin-bottom:6px;">📜</div>
-                                    <div style="font-weight:800; font-size:1.1rem; color:#c084fc;">THE SCHOLAR</div>
-                                    <div style="font-size:0.75rem; color:#facc15; margin-bottom:8px; font-weight:600;">Tall / Slender Geometric Robes</div>
-                                    <div style="font-size:0.78rem; color:#cbd5e1; line-height:1.35; margin-bottom:10px;">
-                                        Elongated torso plates, crown visor, slender limbs designed for high-altitude theoretical analysis.
-                                    </div>
-                                    <div style="font-size:0.72rem; color:#c084fc; background:rgba(88,28,135,0.4); padding:4px 8px; border-radius:4px;">
-                                        🧠 +15% Extrapolation Insight Gauge
-                                    </div>
-                                </div>
-
-                                <!-- Option 3: Engineer -->
-                                <div class="stat-card char-card" data-build="engineer" style="border:1px solid rgba(255,255,255,0.1); background:rgba(15,23,42,0.75); cursor:pointer; padding:14px; text-align:center;">
-                                    <div style="font-size:2.4rem; margin-bottom:6px;">⚙️</div>
-                                    <div style="font-weight:800; font-size:1.1rem; color:#10b981;">THE ENGINEER</div>
-                                    <div style="font-size:0.75rem; color:#facc15; margin-bottom:8px; font-weight:600;">Compact / Agile Tech Mechanist</div>
-                                    <div style="font-size:0.78rem; color:#cbd5e1; line-height:1.35; margin-bottom:10px;">
-                                        Low center of gravity, dual power conduits, wide optic goggles built for rapid optimizer calibration.
-                                    </div>
-                                    <div style="font-size:0.72rem; color:#10b981; background:rgba(5,150,105,0.4); padding:4px 8px; border-radius:4px;">
-                                        🏃 +8% Locomotion Movement Speed
-                                    </div>
-                                </div>
-                            </div>
-
-                            <button id="btn-confirm-character" class="primary-btn glow-cyan" style="width:100%; padding:12px 0; font-size:1rem; font-weight:800;">
-                                ⚔️ CONFIRM ARCHITECT & ENTER ARENA
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 1v1 LIVE DUEL MATCHMAKING MODAL -->
-                <div id="duel-matchmaking-modal" class="modal-overlay hidden" style="z-index: 9500;">
-                    <div class="glass-modal" style="max-width: 480px; text-align: center; border: 1.5px solid #f43f5e; box-shadow: 0 0 40px rgba(244,63,94,0.4);">
-                        <div class="modal-header" style="justify-content: center;">
-                            <h2 style="color: #f43f5e;">⚔️ 1v1 LIVE MULTIPLAYER DUEL</h2>
-                        </div>
-                        <div style="padding: 24px 20px;">
-                            <div id="duel-queue-spinner" style="font-size: 3.5rem; margin-bottom: 12px; animation: spin 2s linear infinite;">⏳</div>
-                            <div id="duel-queue-status-text" style="font-family: var(--font-display-mono); font-size: 1.15rem; font-weight: bold; color: #f8fafc; margin-bottom: 8px;">
-                                SEARCHING FOR OPPONENT...
-                            </div>
-                            <p id="duel-queue-subtext" style="font-size: 0.85rem; color: #94a3b8; line-height: 1.4; margin-bottom: 20px;">
-                                Pairing via FIFO matchmaking queue into a private synchronized room instance. Both architects will have 90s to harvest and train locally before submitting weights to the server's hidden test set.
-                            </p>
-                            <div id="duel-countdown-box" class="hidden" style="margin-bottom: 18px; font-size: 2.2rem; font-weight: 900; color: #facc15; font-family: var(--font-display-mono);">
-                                MATCH STARTING IN <span id="duel-countdown-num">3</span>...
-                            </div>
-                            <button id="btn-cancel-duel-queue" class="action-btn" style="background: rgba(225,29,72,0.2); border-color: #f43f5e; color: #f43f5e;">
-                                ✕ Cancel Matchmaking
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 1v1 LIVE DUEL RESULTS MODAL (HIDDEN TEST SET EVALUATION) -->
-                <div id="duel-results-modal" class="modal-overlay hidden" style="z-index: 9600;">
-                    <div class="glass-modal" style="max-width: 580px; border: 2px solid #38bdf8; box-shadow: 0 0 50px rgba(56,189,248,0.4);">
-                        <div class="modal-header" style="justify-content: center; background: rgba(15,23,42,0.95);">
-                            <h2 id="duel-results-title" style="font-size: 1.4rem; color: #facc15;">🏆 1v1 DUEL COMPLETE</h2>
-                        </div>
-                        <div style="padding: 20px;">
-                            <div id="duel-outcome-banner" style="text-align: center; font-size: 1.8rem; font-weight: 900; letter-spacing: 1px; margin-bottom: 16px; color: #4ade80;">
-                                VICTORY!
-                            </div>
-                            <div style="font-size: 0.82rem; color: #94a3b8; text-align: center; margin-bottom: 18px; font-family: var(--font-display-mono);">
-                                Authoritative Server Evaluation against 50 Hidden Test Samples
-                            </div>
-
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px;">
-                                <!-- Player 1 Card (You) -->
-                                <div id="duel-card-player" class="stat-card" style="border: 1.5px solid #38bdf8; background: rgba(14,165,233,0.1); padding: 14px;">
-                                    <div style="font-size: 0.75rem; color: #38bdf8; font-weight: bold;">👤 YOU (ARCHITECT)</div>
-                                    <div id="duel-res-player-name" style="font-weight: 800; font-size: 1.1rem; color: #fff; margin-bottom: 8px;">Ada-Architect</div>
-                                    <div style="font-family: var(--font-display-mono); font-size: 0.82rem; color: #cbd5e1; line-height: 1.5;">
-                                        Weights: <b id="duel-res-player-weights" style="color: #facc15;">w=2.45, b=1.15</b><br>
-                                        Test MSE: <b id="duel-res-player-mse" style="color: #4ade80;">0.0021</b><br>
-                                        Accuracy: <b id="duel-res-player-acc" style="color: #38bdf8; font-size: 1.15rem;">98.4%</b>
-                                    </div>
-                                </div>
-
-                                <!-- Player 2 Card (Opponent) -->
-                                <div id="duel-card-opponent" class="stat-card" style="border: 1.5px solid #f43f5e; background: rgba(244,63,94,0.1); padding: 14px;">
-                                    <div style="font-size: 0.75rem; color: #f43f5e; font-weight: bold;">👤 OPPONENT</div>
-                                    <div id="duel-res-opp-name" style="font-weight: 800; font-size: 1.1rem; color: #fff; margin-bottom: 8px;">Challenger</div>
-                                    <div style="font-family: var(--font-display-mono); font-size: 0.82rem; color: #cbd5e1; line-height: 1.5;">
-                                        Weights: <b id="duel-res-opp-weights" style="color: #facc15;">w=1.80, b=0.60</b><br>
-                                        Test MSE: <b id="duel-res-opp-mse" style="color: #f87171;">0.4215</b><br>
-                                        Accuracy: <b id="duel-res-opp-acc" style="color: #f43f5e; font-size: 1.15rem;">74.2%</b>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <button id="btn-close-duel-results" class="primary-btn glow-cyan" style="width: 100%; padding: 12px 0; font-size: 1rem; font-weight: 800;">
-                                ⚔️ RETURN TO BIOME HUB
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 🌟 SUPABASE AUTH: SAVE YOUR PROGRESS ACCOUNT UPGRADE MODAL -->
-                <div id="auth-upgrade-modal" class="modal-overlay hidden" style="z-index: 9700;">
-                    <div class="glass-modal" style="max-width: 480px; text-align: center; border: 2px solid #38bdf8; box-shadow: 0 0 50px rgba(56,189,248,0.35);">
-                        <div class="modal-header" style="justify-content: center; background: rgba(15,23,42,0.95);">
-                            <h2 style="color: #38bdf8; font-size: 1.35rem;">☁️ SAVE YOUR PROGRESS</h2>
-                        </div>
-                        <div style="padding: 22px 20px;">
-                            <div style="font-size: 2.8rem; margin-bottom: 8px;">🛡️</div>
-                            <div id="auth-upgrade-headline" style="font-family: var(--font-display-mono); font-size: 1.15rem; font-weight: 800; color: #f8fafc; margin-bottom: 8px;">
-                                SECURE YOUR ARENA PROGRESSION
-                            </div>
-                            <p id="auth-upgrade-bodytext" style="font-size: 0.85rem; color: #94a3b8; line-height: 1.45; margin-bottom: 20px;">
-                                You are currently playing as an <b>Anonymous Guest</b>. Link your session to a real account to enable cross-device cloud saves, preserve your trained models, and lock in your duel win streaks!
-                            </p>
-
-                            <!-- OAuth Login Buttons -->
-                            <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px;">
-                                <button id="btn-auth-oauth-google" class="action-btn" style="background: rgba(234,67,53,0.15); border: 1.5px solid #ea4335; color: #fff; padding: 11px; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 10px;">
-                                    <span style="font-size: 1.2rem;">🔴</span> Continue with Google
-                                </button>
-                                <button id="btn-auth-oauth-github" class="action-btn" style="background: rgba(255,255,255,0.08); border: 1.5px solid #94a3b8; color: #fff; padding: 11px; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 10px;">
-                                    <span style="font-size: 1.2rem;">🐙</span> Continue with GitHub
-                                </button>
-                                <button id="btn-auth-oauth-discord" class="action-btn" style="background: rgba(88,101,242,0.15); border: 1.5px solid #5865f2; color: #fff; padding: 11px; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 10px;">
-                                    <span style="font-size: 1.2rem;">💬</span> Continue with Discord
-                                </button>
-                            </div>
-
-                            <button id="btn-dismiss-auth-upgrade" class="menu-sublabel" style="background: none; border: none; color: #64748b; font-size: 0.8rem; cursor: pointer; text-decoration: underline;">
-                                Maybe later (continue playing as guest)
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Main Menu Overlay -->
-                <div id="main-menu" class="modal-overlay">
-                    <div class="menu-container glass-card">
-                        <h1 class="game-logo">⚡ NEURO-ARENA</h1>
-                        <div class="game-sublogo">GRADIENTS OF THE WILD | 3D ML SIMULATOR</div>
-
-                        <div class="seed-input-container">
-                            <label>🎲 PLAYTHROUGH SEED:</label>
-                            <div class="seed-input-row">
-                                <input type="text" id="menu-seed-input" value="NEURO-8842" spellcheck="false"
-                                    class="cyber-seed-input">
-                                <button id="btn-random-seed" class="seed-btn glow-cyan">🎲 Random</button>
-                            </div>
-                        </div>
-
-                        <div class="menu-actions">
-                            <button id="btn-continue-game" class="menu-btn primary glow-green disabled">⚔️ CONTINUE
-                                GAME</button>
-                            <div id="save-info-label" class="menu-sublabel">No local save found</div>
-                            <button id="btn-new-game" class="menu-btn glow-cyan">🌟 NEW GAME (APPLY SEED)</button>
-                            <button id="btn-menu-daily" class="menu-btn glow-amber">📅 PLAY DAILY CHALLENGE</button>
-                            <button id="btn-menu-community" class="menu-btn glow-amber">🛠️ COMMUNITY CHALLENGES & MOD-TOOLS</button>
-                            <button id="btn-menu-models" class="menu-btn glow-cyan">💾 MY MODELS (VAULT)</button>
-                            <button id="btn-menu-profile" class="menu-btn">👤 ARCHITECT PROFILE</button>
-                            <button id="btn-menu-codex" class="menu-btn">📖 CODEX & ML JOURNAL</button>
-                            <button id="btn-menu-settings" class="menu-btn">⚙️ SETTINGS & AUDIO</button>
-                            <button id="btn-biome-map" class="menu-btn">🗺️ BIOME PROGRESSION MAP</button>
-                            <button id="btn-menu-analytics" class="menu-btn glow-cyan">📊 LIVE ANALYTICS DASHBOARD</button>
-                            <button id="btn-reset-save" class="menu-btn danger">🗑️ Reset Local Save</button>
-                            <button id="btn-quit-game" class="menu-btn">🚪 QUIT GAME</button>
-                        </div>
-
-                        <!-- 4. LIVE INTERNAL ANALYTICS DASHBOARD MODAL -->
-                        <div id="modal-analytics-dashboard" class="modal-overlay hidden" style="z-index: 10000;">
-                            <div class="glass-modal analytics-dashboard-card" style="max-width: 900px; width: 95vw; max-height: 90vh; overflow-y: auto;">
-                                <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(56, 189, 248, 0.2); padding-bottom: 12px;">
-                                    <div style="display: flex; align-items: center; gap: 10px;">
-                                        <h2 style="margin: 0; color: #38bdf8; font-family: 'Outfit', sans-serif; font-size: 1.25rem;">📊 PRIVACY-CONSCIOUS EVENT ANALYTICS DASHBOARD</h2>
-                                        <span class="live-pill" style="background: rgba(34, 197, 94, 0.2); color: #4ade80; padding: 2px 8px; border-radius: 9999px; font-size: 11px; font-weight: 600; border: 1px solid rgba(74, 222, 128, 0.4);">LIVE</span>
-                                    </div>
-                                    <div style="display: flex; gap: 8px;">
-                                        <button id="btn-refresh-analytics" class="pill-btn" style="padding: 4px 12px; font-size: 11px; background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 4px; cursor: pointer;">🔄 Refresh</button>
-                                        <button id="btn-close-analytics" class="close-btn" style="background: none; border: none; color: #94a3b8; font-size: 18px; cursor: pointer;">✕</button>
-                                    </div>
-                                </div>
-                                
-                                <div class="analytics-body" style="padding: 16px 4px; display: flex; flex-direction: column; gap: 20px;">
-                                    <!-- Top Row: Core KPIs -->
-                                    <div class="analytics-kpi-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px;">
-                                        <div class="kpi-card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 12px; text-align: center;">
-                                            <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase;">D1 Retention</div>
-                                            <div id="kpi-d1-retention" style="font-size: 22px; font-weight: 700; color: #38bdf8; margin: 4px 0;">--%</div>
-                                            <div id="kpi-d1-sub" style="font-size: 10px; color: #64748b;">0 / 0 players</div>
-                                        </div>
-                                        <div class="kpi-card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 12px; text-align: center;">
-                                            <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase;">D7 Retention</div>
-                                            <div id="kpi-d7-retention" style="font-size: 22px; font-weight: 700; color: #818cf8; margin: 4px 0;">--%</div>
-                                            <div id="kpi-d7-sub" style="font-size: 10px; color: #64748b;">0 / 0 players</div>
-                                        </div>
-                                        <div class="kpi-card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 12px; text-align: center;">
-                                            <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase;">D30 Retention</div>
-                                            <div id="kpi-d30-retention" style="font-size: 22px; font-weight: 700; color: #c084fc; margin: 4px 0;">--%</div>
-                                            <div id="kpi-d30-sub" style="font-size: 10px; color: #64748b;">0 / 0 players</div>
-                                        </div>
-                                        <div class="kpi-card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 8px; padding: 12px; text-align: center;">
-                                            <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase;">Tutorial Complete</div>
-                                            <div id="kpi-tutorial-rate" style="font-size: 22px; font-weight: 700; color: #4ade80; margin: 4px 0;">--%</div>
-                                            <div id="kpi-tutorial-sub" style="font-size: 10px; color: #64748b;">FTUE conversion</div>
-                                        </div>
-                                        <div class="kpi-card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 12px; text-align: center;">
-                                            <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase;">Tracked Players</div>
-                                            <div id="kpi-total-players" style="font-size: 22px; font-weight: 700; color: #fbbf24; margin: 4px 0;">0</div>
-                                            <div id="kpi-total-events" style="font-size: 10px; color: #64748b;">0 events ingested</div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Middle Section: FTUE Funnel Drop-Off -->
-                                    <div class="funnel-container" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 8px; padding: 14px;">
-                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                                            <h3 style="margin: 0; font-size: 14px; color: #f1f5f9; display: flex; align-items: center; gap: 6px;">🎯 FTUE TUTORIAL STEP CONVERSION & DROP-OFF FUNNEL</h3>
-                                            <span id="funnel-starters-badge" style="font-size: 11px; color: #94a3b8;">0 Total Starters</span>
-                                        </div>
-                                        <div id="funnel-step-list" style="display: flex; flex-direction: column; gap: 10px;">
-                                            <!-- Dynamically populated -->
-                                        </div>
-                                    </div>
-
-                                    <!-- Lower Section: Biome-by-Biome Progression -->
-                                    <div class="biomes-container" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 8px; padding: 14px;">
-                                        <h3 style="margin: 0 0 12px 0; font-size: 14px; color: #f1f5f9;">🗺️ BIOME-BY-BIOME PROGRESSION & BOSS WIN RATES</h3>
-                                        <div id="biome-analytics-list" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px;">
-                                            <!-- Dynamically populated -->
-                                        </div>
-                                    </div>
-
-                                    <!-- Crash / Error Telemetry Logs -->
-                                    <div class="errors-container" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 8px; padding: 14px;">
-                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                            <h3 style="margin: 0; font-size: 13px; color: #f87171;">⚠️ CLIENT ERROR & CRASH TELEMETRY</h3>
-                                            <span id="error-count-badge" style="font-size: 11px; color: #94a3b8;">0 errors logged</span>
-                                        </div>
-                                        <div id="analytics-error-logs" style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #cbd5e1; max-height: 120px; overflow-y: auto; background: rgba(2, 6, 23, 0.8); padding: 8px; border-radius: 4px; border: 1px solid rgba(239, 68, 68, 0.1);">
-                                            No errors reported. System health nominal.
-                                        </div>
-                                    </div>
-
-                                    <!-- ⚙️ REMOTE CONFIG & LIVE-OPS BALANCE TUNING PANEL (DESIGNER/PM) -->
-                                    <div class="remote-config-admin-container" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 14px;">
-                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid rgba(245, 158, 11, 0.2); padding-bottom: 8px;">
-                                            <div>
-                                                <h3 style="margin: 0; font-size: 14px; color: #fbbf24; display: flex; align-items: center; gap: 6px;">⚙️ LIVE REMOTE CONFIG & BALANCE TUNING</h3>
-                                                <div style="font-size: 11px; color: #94a3b8;">Active Version: <b id="rc-active-version" style="color: #38bdf8;">v1</b> | Schema v3 Save Validated | 5-Min TTL Caching</div>
-                                            </div>
-                                            <button id="btn-rc-refresh" class="pill-btn" style="padding: 4px 10px; font-size: 11px; background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 4px; cursor: pointer;">🔄 Sync Config</button>
-                                        </div>
-
-                                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 14px;">
-                                            <!-- Harvest Multiplier -->
-                                            <div style="background: rgba(2, 6, 23, 0.6); padding: 10px; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.15);">
-                                                <label style="font-size: 11px; color: #94a3b8; display: block; margin-bottom: 4px;">🌾 Base Harvest Yield Multiplier:</label>
-                                                <div style="display: flex; align-items: center; gap: 8px;">
-                                                    <input type="number" id="input-rc-harvest-yield" min="0.1" max="10.0" step="0.1" value="1.0" class="cyber-input" style="width: 80px; padding: 4px 8px; font-size: 12px;">
-                                                    <span style="font-size: 11px; color: #64748b;">(0.1x - 10.0x)</span>
-                                                </div>
-                                            </div>
-
-                                            <!-- Boss HP Tuning -->
-                                            <div style="background: rgba(2, 6, 23, 0.6); padding: 10px; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.15);">
-                                                <label style="font-size: 11px; color: #94a3b8; display: block; margin-bottom: 4px;">🐉 Overfit Hydra Max HP:</label>
-                                                <div style="display: flex; align-items: center; gap: 8px;">
-                                                    <input type="number" id="input-rc-boss-hp" min="100" max="50000" step="50" value="500" class="cyber-input" style="width: 90px; padding: 4px 8px; font-size: 12px;">
-                                                    <span style="font-size: 11px; color: #64748b;">HP</span>
-                                                </div>
-                                            </div>
-
-                                            <!-- Daily Challenge Reward -->
-                                            <div style="background: rgba(2, 6, 23, 0.6); padding: 10px; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.15);">
-                                                <label style="font-size: 11px; color: #94a3b8; display: block; margin-bottom: 4px;">📅 Daily Challenge Reward (Crystals):</label>
-                                                <div style="display: flex; align-items: center; gap: 8px;">
-                                                    <input type="number" id="input-rc-daily-reward" min="50" max="5000" step="25" value="150" class="cyber-input" style="width: 90px; padding: 4px 8px; font-size: 12px;">
-                                                    <span style="font-size: 11px; color: #64748b;">crystals</span>
-                                                </div>
-                                            </div>
-
-                                            <!-- Modifier Weekend Toggle -->
-                                            <div style="background: rgba(2, 6, 23, 0.6); padding: 10px; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.15);">
-                                                <label style="font-size: 11px; color: #94a3b8; display: block; margin-bottom: 4px;">⚡ 2x Live-Ops Modifier Weekend:</label>
-                                                <div style="display: flex; align-items: center; gap: 8px;">
-                                                    <input type="checkbox" id="input-rc-modifier-active" style="cursor: pointer;">
-                                                    <span id="rc-modifier-status-label" style="font-size: 11px; color: #f87171;">Inactive</span>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 12px;">
-                                            <button id="btn-rc-publish" class="action-btn glow-amber" style="padding: 6px 16px; font-size: 12px;">🚀 Publish Balance Update (Zero Downtime)</button>
-                                            
-                                            <!-- One-Click Rollback -->
-                                            <div style="display: flex; align-items: center; gap: 8px;">
-                                                <span style="font-size: 11px; color: #94a3b8;">Rollback to:</span>
-                                                <select id="select-rc-rollback-version" style="background: #0f172a; color: #f1f5f9; border: 1px solid rgba(239, 68, 68, 0.4); padding: 4px 8px; border-radius: 4px; font-size: 11px;">
-                                                    <option value="1">v1 (Initial)</option>
-                                                </select>
-                                                <button id="btn-rc-rollback" class="action-btn danger" style="padding: 4px 12px; font-size: 11px;">⏪ 1-Click Rollback</button>
-                                            </div>
-                                        </div>
-
-                                        <!-- Status notification -->
-                                        <div id="rc-status-msg" style="font-size: 11px; color: #4ade80; display: none;"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div id="biome-map-subpanel" class="hidden">
-                            <h3>🗺️ 6-BIOME PROGRESSION</h3>
-                            <ul class="biome-list" id="biome-list-element">
-                                <li><b>1. The Linear Steppes (Linear Regression)</b> <span
-                                        class="unlocked">UNLOCKED</span></li>
-                                <li><b>2. The Binary Marshlands (Logistic Classification)</b> <span
-                                        class="locked">LOCKED</span></li>
-                                <li><b>3. The Variance Tundra (Regularization)</b> <span class="locked">LOCKED</span>
-                                </li>
-                                <li><b>4. The Branching Canopy (Decision Trees)</b> <span class="locked">LOCKED</span>
-                                </li>
-                                <li><b>5. The Deep Synapse Citadel (Neural Networks)</b> <span
-                                        class="locked">LOCKED</span></li>
-                                <li><b>6. The Semantic Expanse (Embeddings & Cosine Sim)</b> <span
-                                        class="locked">LOCKED</span></li>
-                            </ul>
-                            <button id="btn-close-biome-map" class="menu-btn small">Back</button>
-                        </div>
-                    </div>
-                </div>
-                <!-- Explicit Diagnostics Consent Modal -->
-                <div id="modal-diagnostics-consent" class="modal-overlay hidden">
-                    <div class="glass-modal consent-modal-card">
-                        <div class="modal-header">
-                            <h2>🔒 LOCAL DIAGNOSTICS & BUG REPORTING CONSENT</h2>
-                            <button id="btn-cancel-consent-x" class="close-btn">✕</button>
-                        </div>
-                        <div class="consent-body" style="padding: 14px 18px;">
-                            <p style="font-size:12px; color:#cbd5e1; line-height:1.5; margin-bottom:12px;">
-                                Enable opt-in local diagnostics to help diagnose crashes and frame-time spikes when
-                                reporting bugs.
-                            </p>
-                            <div class="coach-advice-box" style="margin-bottom:12px;">
-                                <div class="advice-heading">🛡️ 100% OFFLINE & PRIVACY-FIRST GUARANTEE</div>
-                                <p>All logs are written exclusively to your local device memory. <b>Zero network calls,
-                                        zero automatic uploads, and zero third-party telemetry.</b></p>
-                            </div>
-                            <div class="coach-principle-badge" style="margin-bottom:14px;">
-                                📋 <b>What gets logged locally:</b> Session elapsed duration, active screen/biome
-                                context, frame-time spikes (>50ms), and error traces.
-                            </div>
-                            <div style="display:flex; gap:10px;">
-                                <button id="btn-confirm-consent" class="action-btn glow-green" style="flex:1;">✅ I
-                                    Consent (Enable Local Logging)</button>
-                                <button id="btn-cancel-consent" class="pill-btn" style="min-width:90px;">Cancel</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Community Challenges & Mod-Tools Client -->
-    <script type="module" src="src/community/CustomChallengeClient.js"></script>
-    <!-- Main Game Script -->
-    <script src="app.js"></script>
-    <!-- META-UI POST-PROCESSING FULL-SCREEN SHADER OVERLAY -->
-    <div id="meta-ui-overlay" class="meta-ui-overlay pointer-events-none"></div>
-</body>
-
-</html                <!-- 1v1 LIVE DUEL MATCHMAKING MODAL (DUAL-COCKPIT HANDSHAKE RADAR) -->
+                <!-- 1v1 LIVE DUEL MATCHMAKING MODAL (DUAL-COCKPIT HANDSHAKE RADAR) -->
                 <div id="duel-matchmaking-modal" class="modal-overlay hidden" style="z-index: 9500;">
                     <div class="glass-modal na-panel-chamfer duel-cockpit-modal" style="max-width: 780px; width:92%; border: 1.5px solid #f43f5e; box-shadow: 0 0 45px rgba(244,63,94,0.35);">
                         <div class="modal-header" style="justify-content: space-between; border-bottom:1px solid rgba(244,63,94,0.3);">
