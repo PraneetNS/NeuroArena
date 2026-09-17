@@ -207,6 +207,7 @@
                 <button id="btn-open-contracts-hud" class="hud-icon-btn glow-amber" title="Freelance Client Contracts (while True: learn())" style="border-color:#f59e0b; color:#facc15; font-weight:bold;">💼</button>
                 <button id="btn-open-experiments-hud" class="hud-icon-btn glow-purple" title="Experiment Tracker & Model Registry (W&B)" style="border-color:#BD00FF; color:#c084fc;">📈</button>
                 <button id="btn-open-kfold-hud" class="hud-icon-btn glow-green" title="5-Fold Cross Validation Arena (Kaggle)" style="border-color:#00FF66; color:#4ade80;">🎲</button>
+                <button id="btn-open-guild-hud" class="hud-icon-btn glow-purple" title="Research Syndicate Command & Biome Territories" style="border-color:#a855f7; color:#c084fc; font-weight:bold;">🛡️</button>
                 <button id="btn-open-duel-hud" class="hud-icon-btn glow-purple" title="1v1 Live Duel Matchmaking" style="border-color:#f43f5e; color:#f43f5e; font-weight:bold;">⚔️</button>
                 <button id="btn-open-models-hud" class="hud-icon-btn glow-cyan" title="My Models Archive">💾</button>
                 <button id="btn-open-consult-hud" class="hud-icon-btn glow-purple" title="Live Inference Consult">🔮</button>
@@ -931,6 +932,100 @@
                         Select an unlocked biome destination to fast-travel. Each realm features distinct terrain topology, flora ecosystems, mathematical paradigms, and towering beacon skybeams.
                     </p>
                     <div id="travel-biome-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:12px; margin-bottom:14px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🛡️ RESEARCH SYNDICATE & TERRITORY COMMAND (GUILD HALL) -->
+        <div id="guild-hall-modal" class="modal-overlay hidden" style="z-index:9400;">
+            <div class="glass-modal guild-hall-container na-panel-chamfer" style="max-width:960px; width:94%;">
+                <div class="modal-header">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span style="font-size:1.4rem;">🛡️</span>
+                        <div>
+                            <h2 style="margin:0; font-size:1.2rem; color:#c084fc;">RESEARCH SYNDICATE & BIOME TERRITORY COMMAND</h2>
+                            <div style="font-size:0.75rem; color:#94a3b8; font-family:var(--font-display-mono);">DECENTRALIZED ALLIANCE COMPUTE & SECTOR SINK</div>
+                        </div>
+                    </div>
+                    <button id="btn-close-guild-hall" class="close-btn">✕</button>
+                </div>
+                <div class="guild-hall-body" style="padding:16px 20px;">
+                    <!-- Active Syndicate Meta Header -->
+                    <div class="syndicate-meta-header" id="syndicate-meta-header">
+                        <div class="syndicate-stat-card">
+                            <span class="syn-lbl">AFFILIATION</span>
+                            <b id="syn-name" class="syn-val text-purple">Tensor Vanguard [TVG]</b>
+                        </div>
+                        <div class="syndicate-stat-card">
+                            <span class="syn-lbl">TERRITORY INFLUENCE</span>
+                            <b id="syn-territory-pct" class="syn-val text-cyan">42.5% Dominance</b>
+                        </div>
+                        <div class="syndicate-stat-card">
+                            <span class="syn-lbl">HARVEST SIPHON</span>
+                            <b id="syn-flop-yield" class="syn-val text-green">+1,840 FLOPs/hr</b>
+                        </div>
+                        <div class="syndicate-stat-card">
+                            <span class="syn-lbl">ROSTER TIER</span>
+                            <b id="syn-tier" class="syn-val text-amber">Tier 4 Syndicate</b>
+                        </div>
+                    </div>
+
+                    <!-- Guild Hall Dual Deck -->
+                    <div class="guild-hall-layout" id="guild-hall-content-grid">
+                        <!-- Left: Biome Territory Control Matrix -->
+                        <div class="guild-territory-section">
+                            <div class="section-title-tag">🌐 BIOME TERRITORY CONTROL MATRIX</div>
+                            <div id="guild-territory-map-container" class="territory-map-wrapper">
+                                <!-- TerritoryMapUI nodes render here -->
+                            </div>
+                        </div>
+
+                        <!-- Right: Division Roster & Syndicate Dispatch -->
+                        <div class="guild-roster-section">
+                            <div class="section-title-tag">👥 ACTIVE SYNDICATE ROSTER</div>
+                            <div id="guild-member-roster" class="guild-member-roster">
+                                <div class="roster-row leader">
+                                    <span class="member-badge">👑</span>
+                                    <span class="member-name">Grand-Architect-Ada</span>
+                                    <span class="member-role">Syndicate Lead</span>
+                                    <span class="member-flops">14.2M FLOPs</span>
+                                </div>
+                                <div class="roster-row">
+                                    <span class="member-badge">⚡</span>
+                                    <span class="member-name">Gradient-Knight-07</span>
+                                    <span class="member-role">Optimizer Vanguard</span>
+                                    <span class="member-flops">8.6M FLOPs</span>
+                                </div>
+                                <div class="roster-row">
+                                    <span class="member-badge">🌲</span>
+                                    <span class="member-name">Dendrite-Wanderer</span>
+                                    <span class="member-role">Tree Specialist</span>
+                                    <span class="member-flops">5.1M FLOPs</span>
+                                </div>
+                            </div>
+                            <div style="margin-top:14px; display:flex; gap:10px;">
+                                <button id="btn-enlist-syndicate-action" class="primary-btn glow-purple" style="flex:1; padding:10px 0; font-weight:800;">
+                                    🛡️ Enlist Syndicate
+                                </button>
+                                <button id="btn-charter-syndicate" class="action-btn" style="flex:1; padding:10px 0;">
+                                    📜 Charter Syndicate
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- In-Voice Empty State for Unaligned Architects -->
+                    <div id="guild-unaligned-empty-state" class="in-voice-empty-card hidden">
+                        <div class="empty-status-tag">[SYNDICATE_STATUS: UNALIGNED_ARCHITECT]</div>
+                        <h3 class="empty-title">Unassigned Neural Architect</h3>
+                        <p class="empty-lore-text">
+                            Your neural weights operate unaligned. Enlist in a recognized Research Syndicate or charter a new faction to harvest passive FLOPs from contested biomes.
+                        </p>
+                        <div class="empty-actions-row">
+                            <button id="btn-empty-enlist" class="primary-btn glow-purple">🛡️ Enlist Syndicate</button>
+                            <button id="btn-empty-charter" class="action-btn">📜 Charter Syndicate</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
