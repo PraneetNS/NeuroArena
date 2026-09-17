@@ -3449,3 +3449,57 @@ button:active {
     margin-bottom: 6px;
     text-align: center;
 }
+
+/* 5. IN-VOICE EMPTY & FAILURE STATE CARDS */
+.in-voice-empty-card {
+    background: rgba(15, 23, 42, 0.9);
+    border: 1.5px dashed rgba(192, 132, 252, 0.4);
+    border-radius: var(--radius-md);
+    padding: 24px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 10px;
+    margin: 12px 0;
+}
+.empty-status-tag {
+    font-family: var(--font-display-mono);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.2px;
+    color: #c084fc;
+    background: rgba(192, 132, 252, 0.15);
+    border: 1px solid rgba(192, 132, 252, 0.4);
+    padding: 3px 8px;
+    border-radius: 4px;
+}
+.empty-title { font-size: 15px; font-weight: 800; color: #f8fafc; margin: 0; }
+.empty-lore-text { font-size: 12px; color: #94a3b8; line-height: 1.45; max-width: 480px; margin: 0; }
+.empty-actions-row { display: flex; gap: 10px; margin-top: 8px; }
+
+/* 6. ORCHESTRATED MAJOR TRANSITIONS */
+@keyframes expeditionDeployWarp {
+    0% { transform: scale(1); filter: blur(0px) brightness(1); opacity: 1; }
+    40% { transform: scale(1.08); filter: blur(2px) brightness(1.6); box-shadow: 0 0 80px rgba(0, 240, 255, 0.8); }
+    100% { transform: scale(0.92); filter: blur(10px) brightness(2.5); opacity: 0; }
+}
+.transitioning-expedition-warp {
+    animation: expeditionDeployWarp 0.85s cubic-bezier(0.2, 0.8, 0.2, 1) forwards !important;
+    pointer-events: none;
+}
+@keyframes duelRadarLock {
+    0% { filter: hue-rotate(0deg); transform: scale(1); }
+    50% { filter: hue-rotate(90deg) brightness(1.4); transform: scale(1.03); box-shadow: 0 0 40px rgba(244, 63, 94, 0.6); }
+    100% { filter: hue-rotate(0deg); transform: scale(1); }
+}
+.transitioning-duel-lock {
+    animation: duelRadarLock 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+@keyframes guildSealReveal {
+    0% { opacity: 0; transform: scale(0.9) rotate(-3deg); filter: blur(6px); }
+    100% { opacity: 1; transform: scale(1) rotate(0deg); filter: blur(0px); }
+}
+.transitioning-guild-reveal {
+    animation: guildSealReveal 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
