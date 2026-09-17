@@ -6625,6 +6625,53 @@ function setupUIEvents() {
         }
     ];
 
+    let selectedExpeditionBiomeId = 0;
+
+    function showInGameActionToast(msg, isSuccess = true) {
+        let toast = document.getElementById("canonical-action-toast");
+        if (!toast) {
+            toast = document.createElement("div");
+            toast.id = "canonical-action-toast";
+            toast.className = "network-rejection-toast";
+            document.body.appendChild(toast);
+        }
+        toast.style.background = isSuccess ? "rgba(6, 95, 70, 0.95)" : "rgba(225, 29, 72, 0.95)";
+        toast.style.borderColor = isSuccess ? "#34d399" : "#f43f5e";
+        toast.innerHTML = `<span>${msg}</span>`;
+        toast.classList.remove("hidden");
+        if (typeof gsap !== "undefined") {
+            gsap.fromTo(toast, { opacity: 0, y: -20 }, { opacity: 1, y: 0, duration: 0.3 });
+            setTimeout(() => {
+                gsap.to(toast, { opacity: 0, y: -20, duration: 0.3, onComplete: () => toast.classList.add("hidden") });
+            }, 3200);
+        } else {
+            setTimeout(() => toast.classList.add("hidden"), 3200);
+        }
+    }
+
+    function orchestrateBiomeDeployment(biomeIndex) {
+        const modal = document.getElementById("biome-travel-modal");
+        const b = BiomeWorldCatalog[biomeIndex];
+        if (!b) return;
+
+        playVictoryPassSFX();
+        triggerParticleShockwave(playerPos, biomeIndex === 0 ? 0xf59e0b : (biomeIndex === 1 ? 0x10b981 : 0x38bdf8));
+
+        if (modal) {
+            modal.classList.add("transitioning-expedition-warp");
+        }
+
+        setTimeout(() => {
+            if (modal) {
+                modal.classList.remove("transitioning-expedition-warp");
+                modal.classList.add("hidden");
+            }
+            startBiomeLoadingSequence(biomeIndex, () => {
+                showInGameActionToast(`Expedition Deployed: Calibrating Biome #${biomeIndex + 1}: ${b.name}`);
+            });
+        }, 650);
+    }
+
     function openBiomeTravelMap() {
         closeActiveHUDModals("biome-travel-modal");
         renderBiomeTravelMap();
@@ -6638,56 +6685,129 @@ function setupUIEvents() {
     }
 
     function renderBiomeTravelMap() {
-        const grid = document.getElementById("travel-biome-grid");
-        if (!grid) return;
-        grid.innerHTML = "";
-
+        selectedExpeditionBiomeId = GameState.currentBiome || 0;
+        const trailContainer = document.getElementById("expedition-trail-nodes");
+        const legacyGrid = document.getElementById("travel-biome-grid");
         const p = ProfileSlots[activeSaveSlot];
         const unlockedCount = p ? p.biomes : 1;
 
-        BiomeWorldCatalog.forEach(b => {
+        const bossNames = [
+            "The Outlier Titan",
+            "The Hyperplane Hydra",
+            "The Variance Wendigo",
+            "The Greedy Arborist",
+            "The Overfit Gorgon",
+            "The Orthogonal Leviathan"
+        ];
+
+        const curriculumTags = [
+            "1D Continuous Regression (SGD)",
+            "2D Binary Classification (BCE)",
+            "L2 Ridge / Regularization",
+            "Decision Trees & Bagging Ensembles",
+            "Multi-Layer Perceptrons & Backprop",
+            "PPMI Word Embeddings & Vector Space"
+        ];
+
+        function updateDossier(idx) {
+            const b = BiomeWorldCatalog[idx];
+            if (!b) return;
             const isUnlocked = b.id <= unlockedCount;
             const isCurrent = GameState.currentBiome === b.id;
 
-            const card = document.createElement("div");
-            card.className = "stat-card";
-            card.style.border = isCurrent ? "2px solid #38bdf8" : "1px solid rgba(255,255,255,0.1)";
-            card.style.background = isCurrent ? "rgba(14,165,233,0.15)" : "rgba(15,23,42,0.75)";
-            card.style.display = "flex";
-            card.style.flexDirection = "column";
-            card.style.justifyContent = "space-between";
-            card.style.padding = "14px";
+            const tierEl = document.getElementById("dossier-biome-tier");
+            const nameEl = document.getElementById("dossier-biome-name");
+            const paraEl = document.getElementById("dossier-paradigm");
+            const descEl = document.getElementById("dossier-desc");
+            const metricEl = document.getElementById("dossier-metric");
+            const beaconEl = document.getElementById("dossier-beacon");
+            const bossEl = document.getElementById("dossier-boss");
+            const statusEl = document.getElementById("dossier-status");
+            const deployBtn = document.getElementById("btn-deploy-expedition");
 
-            card.innerHTML = `
-                <div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                        <span style="font-weight:800; font-size:1.05rem; color:${b.color};">#${b.id + 1} ${b.name}</span>
-                        <span style="font-size:0.75rem; padding:2px 8px; border-radius:4px; ${isUnlocked ? 'background:#065f46; color:#34d399;' : 'background:#451a03; color:#f97316;'}">
-                            ${isUnlocked ? '✅ UNLOCKED' : '🔒 LOCKED'}
-                        </span>
-                    </div>
-                    <div style="font-size:0.8rem; color:#38bdf8; margin-bottom:4px; font-weight:600;">${b.subtitle}</div>
-                    <div style="font-size:0.78rem; color:#94a3b8; line-height:1.35; margin-bottom:8px;">${b.desc}</div>
-                    <div style="font-size:0.75rem; color:#cbd5e1; background:rgba(0,0,0,0.3); padding:4px 8px; border-radius:4px; margin-bottom:10px;">
-                        📊 <b>Target:</b> ${b.metric} | 🗼 <b>Beacon:</b> ${b.beacon}
-                    </div>
-                </div>
-                <button class="primary-btn travel-btn" data-biome="${b.id}" style="width:100%; padding:8px 0; ${!isUnlocked ? 'opacity:0.4; cursor:not-allowed;' : ''} ${isCurrent ? 'background:#0284c7;' : ''}" ${!isUnlocked ? 'disabled' : ''}>
-                    ${isCurrent ? '📍 CURRENT LOCATION' : (isUnlocked ? '🚀 TRAVEL TO BIOME' : '🔒 CONQUER PREVIOUS BIOME')}
-                </button>
-            `;
-
-            if (isUnlocked && !isCurrent) {
-                card.querySelector(".travel-btn").addEventListener("click", () => {
-                    document.getElementById("biome-travel-modal")?.classList.add("hidden");
-                    startBiomeLoadingSequence(b.id, () => {
-                        alert(`🚀 FAST-TRAVELED TO BIOME #${b.id + 1}: ${b.name}!\nTerrain topology, ambient lighting, and skybeam updated.`);
-                    });
-                });
+            if (tierEl) tierEl.innerText = `BIOME DESTINATION #${b.id + 1}`;
+            if (nameEl) {
+                nameEl.innerText = b.name;
+                nameEl.style.color = b.color;
+            }
+            if (paraEl) paraEl.innerText = b.paradigm;
+            if (descEl) descEl.innerText = b.desc;
+            if (metricEl) metricEl.innerText = b.metric;
+            if (beaconEl) beaconEl.innerText = b.beacon;
+            if (bossEl) bossEl.innerText = bossNames[b.id] || "Unknown Entity";
+            if (statusEl) {
+                statusEl.innerText = isCurrent ? "📍 ACTIVE REALM LOCATION" : (isUnlocked ? "UNLOCKED / DISPATCH READY" : "LOCKED / UNCHARTED");
+                statusEl.style.color = isCurrent ? "#38bdf8" : (isUnlocked ? "#4ade80" : "#f43f5e");
             }
 
-            grid.appendChild(card);
-        });
+            if (deployBtn) {
+                deployBtn.disabled = !isUnlocked || isCurrent;
+                deployBtn.innerText = isCurrent ? "📍 Current Realm Station" : (isUnlocked ? "🚀 Deploy Expedition" : "🔒 Expedition Locked");
+                deployBtn.onclick = () => {
+                    if (isUnlocked && !isCurrent) {
+                        orchestrateBiomeDeployment(idx);
+                    }
+                };
+            }
+        }
+
+        if (trailContainer) {
+            trailContainer.innerHTML = "";
+            BiomeWorldCatalog.forEach(b => {
+                const isUnlocked = b.id <= unlockedCount;
+                const isCurrent = GameState.currentBiome === b.id;
+                const isSelected = selectedExpeditionBiomeId === b.id;
+
+                const node = document.createElement("div");
+                node.className = `expedition-node ${isSelected ? "active-station" : ""} ${isUnlocked ? "unlocked" : "locked"}`;
+                node.setAttribute("data-biome", b.id);
+
+                node.innerHTML = `
+                    <div class="node-station-pip">${b.id + 1}</div>
+                    <div class="node-meta-body">
+                        <div class="node-title-row">
+                            <span class="node-biome-name">${b.name}</span>
+                            <span class="node-curriculum-pill" style="border-color:${b.color}; color:${b.color};">${curriculumTags[b.id]}</span>
+                        </div>
+                        <div class="node-desc-line">${b.subtitle} • Target: ${b.metric}</div>
+                    </div>
+                `;
+
+                node.addEventListener("click", () => {
+                    selectedExpeditionBiomeId = b.id;
+                    trailContainer.querySelectorAll(".expedition-node").forEach(n => n.classList.remove("active-station"));
+                    node.classList.add("active-station");
+                    updateDossier(b.id);
+                });
+
+                node.addEventListener("dblclick", () => {
+                    if (isUnlocked && !isCurrent) {
+                        orchestrateBiomeDeployment(b.id);
+                    }
+                });
+
+                trailContainer.appendChild(node);
+            });
+        }
+
+        updateDossier(selectedExpeditionBiomeId);
+
+        // Populates legacy grid for backward compatibility with existing querySelectors / tests
+        if (legacyGrid) {
+            legacyGrid.innerHTML = "";
+            BiomeWorldCatalog.forEach(b => {
+                const isUnlocked = b.id <= unlockedCount;
+                const isCurrent = GameState.currentBiome === b.id;
+                const btn = document.createElement("button");
+                btn.className = "primary-btn travel-btn";
+                btn.setAttribute("data-biome", b.id);
+                btn.innerText = isCurrent ? "📍 CURRENT LOCATION" : (isUnlocked ? "🚀 Deploy Expedition" : "🔒 LOCKED");
+                if (isUnlocked && !isCurrent) {
+                    btn.addEventListener("click", () => orchestrateBiomeDeployment(b.id));
+                }
+                legacyGrid.appendChild(btn);
+            });
+        }
     }
 
     function showBiomeTransitionToast(biomeIndex) {
