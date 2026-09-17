@@ -8,6 +8,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- **Out-of-Gameplay Themed Menu Flow Redesign (`web/index.html`, `web/style.css`, `web/app.js`, `web/tests/ml-engine.test.js`)**
+  - Rebuilt out-of-gameplay navigation across 5 content-specific menu archetypes: Topological Expedition Board (`#biome-travel-modal`), Specimen Satchel & Distribution Matrix (`#inventory-drawer`), Neural Syndicate Command Console (`#guild-hall-modal`), Terminal BIOS Hardware Telemetry Console (`#settings-modal`), and Dual-Cockpit Handshake Radar (`#duel-matchmaking-modal`).
+  - Implemented strict verb-noun copy consistency across all action triggers and toasts ("Deploy Expedition", "Calibrate Model", "Engage Duel", "Enlist Syndicate", "Save Calibration", "Harvest Crystals", "Purge Artifacts").
+  - Added in-voice, actionable empty and failure states (`[SYNDICATE_STATUS: UNALIGNED_ARCHITECT]`, `[SPECIMEN_VAULT: VACANT_MANIFEST]`).
+  - Added orchestrated major transitions: Expedition Warp (`@keyframes expeditionDeployWarp`), Duel Radar Lock (`@keyframes duelRadarLock`), and Guild Seal Reveal (`@keyframes guildSealReveal`).
+
+- **In-Session Diegetic HUD & 200ms Glance Hierarchy Redesign (`docs/IN_SESSION_HUD_FRAMEWORK.md`, `web/src/postProcessingPipeline.js`, `web/index.html`, `web/style.css`, `web/app.js`, `Assets/Scripts/UI/ArchitectHolographicHUD.cs`)**
+  - Committed to ADA Companion Telemetry Drone (`∇θ`) as the persistent in-world equipment casting a 3D volumetric optical cone and live parameter/loss sparkline readout.
+  - Classified every in-session element under the Diegetic, Non-Diegetic, Spatial, and Meta UI framework, auto-suppressing decorative titles during active combat.
+  - Integrated full-screen Meta-UI post-processing shaders: arterial damage vignette, chromatic hit pulse, and mathematical divergence desaturation.
+  - Enforced a 200ms glance test hierarchy across Vessel Health, Compute Energy, Boss Phase Crown, and Loss Trend geometry.
+  - Completed a mobile thumb-zone layout pass enforcing $\ge 48\text{dp}$ touch targets with a collapsible thumb dial trigger (`#btn-mobile-dial-toggle`).
+
 - **Feature Engineering Pipeline Studio Enhancements (`Assets/Scripts/ML/FeatureEngineeringPipeline.cs`)**
   - Linear Min-Max Normalization (`ApplyMinMaxScaling`) mapping feature sets into arbitrary ranges $[targetMin, targetMax]$ with zero-variance safeguards.
   - Non-linear Log1p Power Transformation (`ApplyLog1pTransform`) with signed symmetry $\operatorname{sgn}(x) \ln(1 + |x|)$ to tame heavy-tailed continuous feature distributions.
