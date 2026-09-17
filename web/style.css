@@ -2985,3 +2985,69 @@ button:active {
     border-radius: 3px;
     transition: width 0.2s ease-out;
 }
+
+/* 5. Mobile Thumb-Zone Quick Dial Trigger */
+.mobile-dial-btn {
+    display: none;
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    min-height: 48px;
+    border-radius: 50%;
+    background: rgba(15, 23, 42, 0.92);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1.5px solid #00F0FF;
+    color: #00F0FF;
+    font-size: 20px;
+    align-items: center;
+    justify-content: center;
+    z-index: 890;
+    box-shadow: 0 0 15px rgba(0, 240, 255, 0.35);
+    cursor: pointer;
+    touch-action: manipulation;
+}
+.mobile-dial-btn:active {
+    transform: scale(0.92);
+    background: rgba(0, 240, 255, 0.25);
+}
+@media (max-width: 768px) {
+    .mobile-dial-btn { display: flex; }
+    #top-right-hud {
+        display: none;
+        position: absolute;
+        top: 70px;
+        right: 14px;
+        flex-direction: column;
+        background: rgba(10, 16, 30, 0.95);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border: 1.5px solid rgba(0, 240, 255, 0.4);
+        border-radius: 12px;
+        padding: 10px;
+        max-height: 70vh;
+        overflow-y: auto;
+        z-index: 895;
+        box-shadow: 0 12px 36px rgba(0, 0, 0, 0.7);
+    }
+    #top-right-hud.mobile-open { display: flex; }
+    .hud-icon-btn {
+        min-width: 48px !important;
+        min-height: 48px !important;
+        width: 48px !important;
+        height: 48px !important;
+        font-size: 18px !important;
+    }
+    .drone-holo-instrument {
+        top: 14px;
+        left: 14px;
+        transform: scale(0.9);
+        transform-origin: top left;
+    }
+    .vitality-hud-container { bottom: 140px; left: 14px; }
+    .vitality-bar-outer { width: 140px; height: 12px; }
+    .boss-meter-container { top: 10px; width: 88vw; padding: 6px 12px; }
+}
