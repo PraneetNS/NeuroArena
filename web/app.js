@@ -6450,6 +6450,7 @@ function closeActiveHUDModals(excludeId = null) {
         "dataset-modal",
         "leaderboard-modal",
         "biome-travel-modal",
+        "guild-hall-modal",
         "objective-modal",
         "duel-matchmaking-modal",
         "duel-results-modal",
@@ -6463,6 +6464,125 @@ function closeActiveHUDModals(excludeId = null) {
         }
     });
 }
+
+const GuildHallManager = {
+    isAligned: true,
+    currentSyndicate: "Tensor Vanguard [TVG]",
+    territoryPct: 42.5,
+    flopYield: 1840,
+    tier: 4,
+
+    open() {
+        closeActiveHUDModals("guild-hall-modal");
+        const modal = document.getElementById("guild-hall-modal");
+        if (!modal) return;
+        modal.classList.remove("hidden");
+        modal.querySelector(".guild-hall-container")?.classList.add("transitioning-guild-reveal");
+        setTimeout(() => {
+            modal.querySelector(".guild-hall-container")?.classList.remove("transitioning-guild-reveal");
+        }, 500);
+
+        this.renderState();
+    },
+
+    renderState() {
+        const grid = document.getElementById("guild-hall-content-grid");
+        const emptyState = document.getElementById("guild-unaligned-empty-state");
+        const metaHeader = document.getElementById("syndicate-meta-header");
+
+        if (this.isAligned) {
+            if (grid) grid.classList.remove("hidden");
+            if (metaHeader) metaHeader.classList.remove("hidden");
+            if (emptyState) emptyState.classList.add("hidden");
+            this.renderTerritoryMap();
+        } else {
+            if (grid) grid.classList.add("hidden");
+            if (metaHeader) metaHeader.classList.add("hidden");
+            if (emptyState) emptyState.classList.remove("hidden");
+        }
+    },
+
+    renderTerritoryMap() {
+        const container = document.getElementById("guild-territory-map-container");
+        if (!container) return;
+        container.innerHTML = "";
+
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.setAttribute("width", "100%");
+        svg.setAttribute("height", "100%");
+        svg.setAttribute("viewBox", "0 0 400 250");
+        svg.style.borderRadius = "8px";
+
+        const biomes = [
+            { id: 0, name: "Steppes", x: 60, y: 190, color: "#f59e0b" },
+            { id: 1, name: "Marshlands", x: 140, y: 140, color: "#10b981" },
+            { id: 2, name: "Tundra", x: 220, y: 170, color: "#38bdf8" },
+            { id: 3, name: "Canopy", x: 190, y: 70, color: "#22c55e" },
+            { id: 4, name: "Citadel", x: 290, y: 100, color: "#c084fc" },
+            { id: 5, name: "Expanse", x: 350, y: 180, color: "#818cf8" }
+        ];
+
+        const lines = [[0, 1], [1, 2], [1, 3], [2, 4], [3, 4], [4, 5]];
+        lines.forEach(([i, j]) => {
+            const l = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            l.setAttribute("x1", biomes[i].x);
+            l.setAttribute("y1", biomes[i].y);
+            l.setAttribute("x2", biomes[j].x);
+            l.setAttribute("y2", biomes[j].y);
+            l.setAttribute("stroke", "rgba(192, 132, 252, 0.35)");
+            l.setAttribute("stroke-width", "2");
+            svg.appendChild(l);
+        });
+
+        biomes.forEach(b => {
+            const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            g.style.cursor = "pointer";
+
+            const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            circle.setAttribute("cx", b.x);
+            circle.setAttribute("cy", b.y);
+            circle.setAttribute("r", "16");
+            circle.setAttribute("fill", "#0b111b");
+            circle.setAttribute("stroke", b.color);
+            circle.setAttribute("stroke-width", "2.5");
+
+            const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            text.setAttribute("x", b.x);
+            text.setAttribute("y", b.y + 4);
+            text.setAttribute("text-anchor", "middle");
+            text.setAttribute("fill", "#ffffff");
+            text.setAttribute("font-size", "10px");
+            text.setAttribute("font-family", "var(--font-display-mono)");
+            text.setAttribute("font-weight", "bold");
+            text.textContent = `S${b.id + 1}`;
+
+            const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            label.setAttribute("x", b.x);
+            label.setAttribute("y", b.y + 28);
+            label.setAttribute("text-anchor", "middle");
+            label.setAttribute("fill", "#94a3b8");
+            label.setAttribute("font-size", "9px");
+            label.setAttribute("font-family", "var(--font-display-mono)");
+            label.textContent = b.name;
+
+            g.appendChild(circle);
+            g.appendChild(text);
+            g.appendChild(label);
+            svg.appendChild(g);
+        });
+
+        container.appendChild(svg);
+    },
+
+    enlistSyndicate(synName = "Tensor Vanguard [TVG]") {
+        this.isAligned = true;
+        this.currentSyndicate = synName;
+        this.renderState();
+        if (typeof showInGameActionToast === "function") {
+            showInGameActionToast(`Syndicate Enlisted: Access Granted to Sector ${synName}`);
+        }
+    }
+};
 
 function setupUIEvents() {
     document.getElementById("btn-toggle-drawer").addEventListener("click", () => {
@@ -6514,6 +6634,26 @@ function setupUIEvents() {
     document.getElementById("btn-back-to-gallery").addEventListener("click", () => {
         document.getElementById("model-inspector-modal").classList.add("hidden");
         openMyModelsGallery();
+    });
+
+    // Guild Hall HUD & Syndicate Command Listeners
+    document.getElementById("btn-open-guild-hud")?.addEventListener("click", () => {
+        GuildHallManager.open();
+    });
+    document.getElementById("btn-close-guild-hall")?.addEventListener("click", () => {
+        document.getElementById("guild-hall-modal")?.classList.add("hidden");
+    });
+    document.getElementById("btn-enlist-syndicate-action")?.addEventListener("click", () => {
+        GuildHallManager.enlistSyndicate();
+    });
+    document.getElementById("btn-empty-enlist")?.addEventListener("click", () => {
+        GuildHallManager.enlistSyndicate();
+    });
+    document.getElementById("btn-charter-syndicate")?.addEventListener("click", () => {
+        showInGameActionToast("Syndicate Chartered: New Alliance Registered");
+    });
+    document.getElementById("btn-empty-charter")?.addEventListener("click", () => {
+        showInGameActionToast("Syndicate Chartered: New Alliance Registered");
     });
 
     // Raw Parameters Matrix Live View Toggle
