@@ -3291,3 +3291,36 @@ button:active {
 .member-name { flex: 1; font-weight: 700; color: #f1f5f9; }
 .member-role { font-size: 9.5px; color: #94a3b8; }
 .member-flops { font-size: 10px; font-weight: 800; color: #4ade80; }
+
+/* 2. TERMINAL BIOS & TELEMETRY CONSOLE (SETTINGS) */
+.bios-console-layout {
+    display: flex;
+    gap: 18px;
+    min-height: 440px;
+    padding: 14px 20px;
+}
+@media (max-width: 820px) { .bios-console-layout { flex-direction: column; } }
+.bios-telemetry-sidebar {
+    width: 220px;
+    flex-shrink: 0;
+    background: rgba(6, 11, 20, 0.85);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    font-family: var(--font-display-mono);
+}
+.bios-side-tag {
+    font-size: 9.5px;
+    font-weight: 800;
+    color: #38bdf8;
+    letter-spacing: 1px;
+    border-bottom: 1px solid rgba(56, 189, 248, 0.2);
+    padding-bottom: 6px;
+}
+.bios-stat-group { display: flex; flex-direction: column; gap: 2px; }
+.bios-stat-lbl { font-size: 9px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+.bios-stat-val { font-size: 11px; font-weight: 700; color: #cbd5e1; }
+.bios-settings-deck { flex: 1; display: flex; flex-direction: column; }

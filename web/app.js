@@ -7343,6 +7343,23 @@ function setupUIEvents() {
         const modal = document.getElementById("settings-modal");
         modal.classList.remove("hidden");
         DeviceTierProfile.updateSettingsUI();
+
+        // Update Terminal BIOS live hardware telemetry diagnostics sidebar
+        const cores = (typeof navigator !== "undefined" && navigator.hardwareConcurrency) ? navigator.hardwareConcurrency : 8;
+        const memoryGB = (typeof navigator !== "undefined" && navigator.deviceMemory) ? navigator.deviceMemory : 8;
+        const gpuBackend = (DeviceTierProfile.detectedSpecs && DeviceTierProfile.detectedSpecs.gpuBackend) ? DeviceTierProfile.detectedSpecs.gpuBackend.toUpperCase() : "WEBGL2";
+        const voiceCap = UserPreferences.spatialVoiceCap || 8;
+
+        const diagCores = document.getElementById("bios-diag-cores");
+        const diagRam = document.getElementById("bios-diag-ram");
+        const diagGpu = document.getElementById("bios-diag-gpu");
+        const diagVoices = document.getElementById("bios-diag-voices");
+
+        if (diagCores) diagCores.innerText = `${cores} Hardware Cores`;
+        if (diagRam) diagRam.innerText = `${memoryGB}.0 GB Physical RAM`;
+        if (diagGpu) diagGpu.innerText = `${gpuBackend} / Pipeline Active`;
+        if (diagVoices) diagVoices.innerText = `${voiceCap} Voices (${voiceCap >= 16 ? "Ultra" : "Balanced"})`;
+
         if (typeof gsap !== "undefined") {
             gsap.fromTo(modal.querySelector(".glass-modal"), { scale: 0.88, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: "back.out(1.5)" });
         }
@@ -7353,7 +7370,7 @@ function setupUIEvents() {
     document.getElementById("btn-save-settings").addEventListener("click", () => {
         UserPreferences.save();
         document.getElementById("settings-modal").classList.add("hidden");
-        alert("Settings saved and applied successfully!");
+        showInGameActionToast("Calibration Saved: BIOS Parameters Applied");
     });
 
     // Settings Tab Switching

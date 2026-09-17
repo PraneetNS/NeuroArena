@@ -341,206 +341,241 @@
             </div>
         </div>
 
-        <!-- Comprehensive Settings Modal -->
+        <!-- Comprehensive Settings Modal: Terminal BIOS & Hardware Telemetry Console -->
         <div id="settings-modal" class="modal-overlay hidden">
-            <div class="glass-modal settings-modal-card">
+            <div class="glass-modal settings-modal-card na-panel-chamfer" style="max-width:980px; width:94%;">
                 <div class="modal-header">
-                    <h2>⚙️ SETTINGS & ACCESSIBILITY</h2>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span style="font-size:1.3rem;">⚙️</span>
+                        <div>
+                            <h2 style="margin:0; font-size:1.15rem;">TERMINAL BIOS :: KERNEL HARDWARE & ACCESSIBILITY</h2>
+                            <div style="font-size:0.75rem; color:#94a3b8; font-family:var(--font-display-mono);">LOW-LEVEL ENGINE ARCHITECTURE & OPTIMIZATION CONFIG</div>
+                        </div>
+                    </div>
                     <button id="btn-close-settings" class="close-btn">✕</button>
                 </div>
-                <!-- Settings Tabs -->
-                <div class="settings-tabs-row">
-                    <button class="settings-tab-btn active" data-tab="tab-audio">🔊 Audio</button>
-                    <button class="settings-tab-btn" data-tab="tab-graphics">📱 Graphics</button>
-                    <button class="settings-tab-btn" data-tab="tab-controls">🎮 Controls</button>
-                    <button class="settings-tab-btn" data-tab="tab-access">👁️ Access</button>
-                    <button class="settings-tab-btn" data-tab="tab-diagnostics">📋 Logs</button>
-                    <button class="settings-tab-btn" data-tab="tab-reset">⚠️ Reset</button>
-                </div>
 
-                <div class="settings-tab-pane" id="tab-audio">
-                    <div class="setting-row">
-                        <label>🔊 Master Volume:</label>
-                        <input type="range" id="setting-master-vol" min="0" max="100" value="85" class="cyber-slider">
+                <div class="bios-console-layout">
+                    <!-- Left: Hardware Telemetry Sidebar -->
+                    <div id="bios-telemetry-sidebar" class="bios-telemetry-sidebar">
+                        <div class="bios-side-tag">[DIAGNOSTICS: ONLINE]</div>
+                        <div class="bios-stat-group">
+                            <div class="bios-stat-lbl">PROCESSOR CONCURRENCY</div>
+                            <div id="bios-diag-cores" class="bios-stat-val text-cyan">8 Hardware Cores</div>
+                        </div>
+                        <div class="bios-stat-group">
+                            <div class="bios-stat-lbl">MEMORY HEADROOM</div>
+                            <div id="bios-diag-ram" class="bios-stat-val text-green">8.0 GB Physical RAM</div>
+                        </div>
+                        <div class="bios-stat-group">
+                            <div class="bios-stat-lbl">GPU PIPELINE BACKEND</div>
+                            <div id="bios-diag-gpu" class="bios-stat-val text-amber">WebGL2 / WebGPU Hybrid</div>
+                        </div>
+                        <div class="bios-stat-group">
+                            <div class="bios-stat-lbl">AUDIO VOICE BUDGET</div>
+                            <div id="bios-diag-voices" class="bios-stat-val">8 Voices (Balanced)</div>
+                        </div>
+                        <div class="bios-stat-group">
+                            <div class="bios-stat-lbl">DYNAMIC RESOLUTION</div>
+                            <div class="bios-stat-val text-cyan">Active DRS (0.65 - 1.00x)</div>
+                        </div>
+                        <div class="bios-stat-group">
+                            <div class="bios-stat-lbl">OFFLINE TELEMETRY VAULT</div>
+                            <div class="bios-stat-val text-green">Local IndexedDB Encrypted</div>
+                        </div>
                     </div>
-                    <div class="setting-row">
-                        <label>🌌 Ambient Drone Volume:</label>
-                        <input type="range" id="setting-ambient-vol" min="0" max="100" value="80" class="cyber-slider">
-                    </div>
-                    <div class="setting-row">
-                        <label>⚡ SFX Synthesis Volume:</label>
-                        <input type="range" id="setting-sfx-vol" min="0" max="100" value="90" class="cyber-slider">
-                    </div>
-                    <div class="setting-row">
-                        <label>🔔 UI Audio Volume:</label>
-                        <input type="range" id="setting-ui-vol" min="0" max="100" value="85" class="cyber-slider">
-                    </div>
-                    <div class="setting-row">
-                        <label>🎵 Procedural Music Volume:</label>
-                        <input type="range" id="setting-music-vol" min="0" max="100" value="75" class="cyber-slider">
-                    </div>
-                    <div class="setting-row">
-                        <label>🔇 Master Audio Mute:</label>
-                        <button id="btn-toggle-mute" class="pill-btn">UNMUTED</button>
-                    </div>
-                    <div class="setting-row" style="margin-top:8px; border-top:1px solid rgba(255,255,255,0.08); padding-top:8px;">
-                        <label>📊 Spatial Voice Budget (Capped Voice Pool):</label>
-                        <div class="btn-group" id="audio-voice-cap-group">
-                            <button class="pill-btn" data-voices="4">4 Low (Mobile)</button>
-                            <button class="pill-btn active" data-voices="8">8 Med (Balanced)</button>
-                            <button class="pill-btn" data-voices="16">16 High (Desktop)</button>
+
+                    <!-- Right: Kernel Configuration Deck -->
+                    <div class="bios-settings-deck">
+                        <!-- Settings Tabs -->
+                        <div class="settings-tabs-row">
+                            <button class="settings-tab-btn active" data-tab="tab-audio">🔊 Audio</button>
+                            <button class="settings-tab-btn" data-tab="tab-graphics">📱 Graphics</button>
+                            <button class="settings-tab-btn" data-tab="tab-controls">🎮 Controls</button>
+                            <button class="settings-tab-btn" data-tab="tab-access">👁️ Access</button>
+                            <button class="settings-tab-btn" data-tab="tab-diagnostics">📋 Logs</button>
+                            <button class="settings-tab-btn" data-tab="tab-reset">⚠️ Reset</button>
+                        </div>
+
+                        <div class="settings-tab-pane" id="tab-audio">
+                            <div class="setting-row">
+                                <label>🔊 Master Volume:</label>
+                                <input type="range" id="setting-master-vol" min="0" max="100" value="85" class="cyber-slider">
+                            </div>
+                            <div class="setting-row">
+                                <label>🌌 Ambient Drone Volume:</label>
+                                <input type="range" id="setting-ambient-vol" min="0" max="100" value="80" class="cyber-slider">
+                            </div>
+                            <div class="setting-row">
+                                <label>⚡ SFX Synthesis Volume:</label>
+                                <input type="range" id="setting-sfx-vol" min="0" max="100" value="90" class="cyber-slider">
+                            </div>
+                            <div class="setting-row">
+                                <label>🔔 UI Audio Volume:</label>
+                                <input type="range" id="setting-ui-vol" min="0" max="100" value="85" class="cyber-slider">
+                            </div>
+                            <div class="setting-row">
+                                <label>🎵 Procedural Music Volume:</label>
+                                <input type="range" id="setting-music-vol" min="0" max="100" value="75" class="cyber-slider">
+                            </div>
+                            <div class="setting-row">
+                                <label>🔇 Master Audio Mute:</label>
+                                <button id="btn-toggle-mute" class="pill-btn">UNMUTED</button>
+                            </div>
+                            <div class="setting-row" style="margin-top:8px; border-top:1px solid rgba(255,255,255,0.08); padding-top:8px;">
+                                <label>📊 Spatial Voice Budget (Capped Voice Pool):</label>
+                                <div class="btn-group" id="audio-voice-cap-group">
+                                    <button class="pill-btn" data-voices="4">4 Low (Mobile)</button>
+                                    <button class="pill-btn active" data-voices="8">8 Med (Balanced)</button>
+                                    <button class="pill-btn" data-voices="16">16 High (Desktop)</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="settings-tab-pane hidden" id="tab-graphics">
+                            <!-- Hardware Tier Auto-Detection Info Banner -->
+                            <div id="gfx-autodetect-banner" class="stat-card" style="padding:10px 14px; margin-bottom:12px; background:rgba(56,189,248,0.12); border:1.5px solid #38bdf8; border-radius:8px;">
+                                <div style="display:flex; justify-content:space-between; align-items:center;">
+                                    <span style="color:#38bdf8; font-weight:800; font-size:11px;">✨ HARDWARE TIER AUTO-DETECTION</span>
+                                    <span id="gfx-detected-tier-badge" style="font-size:10px; color:#facc15; font-weight:bold; background:rgba(245,158,11,0.2); padding:2px 8px; border-radius:4px; border:1px solid #facc15;">Tier 2: Mid-Range (4-6GB RAM)</span>
+                                </div>
+                                <div id="gfx-detected-specs" style="font-size:10.5px; color:#cbd5e1; margin-top:4px;">
+                                    Detected Cores: <b>8 Cores</b> | Device Memory: <b>8GB</b> | Resolution: <b>1080p</b>
+                                </div>
+                            </div>
+
+                            <!-- Quality Preset Selector (URP Quality Levels) -->
+                            <div class="setting-row">
+                                <label>🎨 Overall Quality Preset:</label>
+                                <div class="btn-group" id="gfx-presets-group">
+                                    <button class="gfx-preset-btn pill-btn" data-preset="low">Low (Tier 1 / 30 FPS)</button>
+                                    <button class="gfx-preset-btn pill-btn" data-preset="med">Medium (Tier 2)</button>
+                                    <button class="gfx-preset-btn pill-btn active" data-preset="high">High (Tier 3 / Ultra)</button>
+                                </div>
+                            </div>
+
+                            <!-- Advanced Toggle: Shadow Quality -->
+                            <div class="setting-row">
+                                <label>🌑 Dynamic Shadow Quality:</label>
+                                <div class="btn-group" id="gfx-shadows-group">
+                                    <button class="gfx-shadow-btn pill-btn" data-shadow="off">Off</button>
+                                    <button class="gfx-shadow-btn pill-btn" data-shadow="low">Low (512 map)</button>
+                                    <button class="gfx-shadow-btn pill-btn active" data-shadow="high">High (Soft PCF)</button>
+                                </div>
+                            </div>
+
+                            <!-- Advanced Toggle: Particle Density Limit (Stage 25 Pool Caps) -->
+                            <div class="setting-row">
+                                <label>🎆 Particle Density (Juice Burst Cap):</label>
+                                <div class="btn-group" id="gfx-particles-group">
+                                    <button class="gfx-particle-btn pill-btn" data-cap="25">25 (Battery Saver)</button>
+                                    <button class="gfx-particle-btn pill-btn" data-cap="80">80 (Balanced)</button>
+                                    <button class="gfx-particle-btn pill-btn active" data-cap="150">150 (Ultra Juice)</button>
+                                </div>
+                            </div>
+
+                            <!-- Advanced Toggle: Target Framerate Cap -->
+                            <div class="setting-row">
+                                <label>⏱️ Target Frame Rate Cap:</label>
+                                <div class="btn-group" id="gfx-fps-group">
+                                    <button class="gfx-fps-btn pill-btn" data-fps="30">30 FPS (Low / Saver)</button>
+                                    <button class="gfx-fps-btn pill-btn active" data-fps="60">60 FPS (Smooth)</button>
+                                    <button class="gfx-fps-btn pill-btn" data-fps="120">120 FPS (Uncapped)</button>
+                                </div>
+                            </div>
+
+                            <!-- Advanced Toggle: Render Resolution Scale -->
+                            <div class="setting-row">
+                                <label>🔍 Render Resolution Scale:</label>
+                                <div class="btn-group" id="gfx-scale-group">
+                                    <button class="gfx-scale-btn pill-btn" data-scale="0.75">75% (Performance)</button>
+                                    <button class="gfx-scale-btn pill-btn active" data-scale="1.0">100% (Native)</button>
+                                    <button class="gfx-scale-btn pill-btn" data-scale="1.25">125% (Hi-DPI)</button>
+                                </div>
+                            </div>
+
+                            <!-- Advanced Toggle: Bloom & Post-Processing Glow -->
+                            <div class="setting-row">
+                                <label>✨ Post-Processing & Cyber Glow:</label>
+                                <button id="btn-toggle-bloom" class="pill-btn active">ENABLED (HDR Emissive)</button>
+                            </div>
+                        </div>
+
+                        <div class="settings-tab-pane hidden" id="tab-controls">
+                            <div class="setting-row">
+                                <label>🕹️ Touch Handedness:</label>
+                                <div class="btn-group">
+                                    <button id="btn-handed-left" class="pill-btn active">Left-Handed</button>
+                                    <button id="btn-handed-right" class="pill-btn">Right-Handed</button>
+                                </div>
+                            </div>
+                            <div class="setting-row">
+                                <label>👁️ Look Sensitivity:</label>
+                                <input type="range" id="setting-look-sens" min="5" max="25" value="10" class="cyber-slider">
+                            </div>
+                            <div class="setting-row">
+                                <label>🧭 Gyroscope Look (Device Orientation):</label>
+                                <button id="btn-toggle-gyro" class="pill-btn">ENABLED (Blended Look)</button>
+                            </div>
+                            <div class="setting-row">
+                                <label>🎯 Camera Alignment:</label>
+                                <button id="btn-settings-recenter" class="action-btn glow-cyan" style="min-height:36px;">🎯 RECENTER / CALIBRATE CAMERA</button>
+                            </div>
+                        </div>
+
+                        <div class="settings-tab-pane hidden" id="tab-access">
+                            <div class="setting-row">
+                                <label>🎨 Colorblind-Safe Palette:</label>
+                                <button id="btn-toggle-colorblind" class="pill-btn">DISABLED (Red/Green)</button>
+                            </div>
+                            <div class="setting-row">
+                                <label>🔤 UI Text Scaling:</label>
+                                <div class="btn-group">
+                                    <button class="text-scale-btn pill-btn active" data-scale="1.0">100%</button>
+                                    <button class="text-scale-btn pill-btn" data-scale="1.25">125%</button>
+                                    <button class="text-scale-btn pill-btn" data-scale="1.5">150%</button>
+                                </div>
+                            </div>
+                            <div class="setting-row">
+                                <label>🎙️ Live Training Narration:</label>
+                                <button id="btn-toggle-narration" class="pill-btn">ENABLED (Computed Commentary)</button>
+                            </div>
+                        </div>
+
+                        <div class="settings-tab-pane hidden" id="tab-diagnostics">
+                            <p style="font-size:11px; color:#94a3b8; line-height:1.4; margin-bottom:10px;">
+                                <b>100% Offline & Local-First:</b> Logs session length, screen transitions, and frame spikes
+                                (>50ms) to a local file for manual bug reporting. Zero network calls or automatic uploads.
+                            </p>
+                            <div class="setting-row">
+                                <label>📋 Local Diagnostics:</label>
+                                <button id="btn-toggle-diagnostics" class="pill-btn">DISABLED (Off by Default)</button>
+                            </div>
+                            <div id="diagnostics-active-panel" class="hidden" style="margin-top:10px;">
+                                <div style="font-size:11px; color:#cbd5e1; margin-bottom:6px;">
+                                    📊 <span id="diag-stats-spikes">0 Frame Spikes</span> | <span id="diag-stats-entries">0 Log Entries</span>
+                                </div>
+                                <div style="display:flex; gap:8px; margin-bottom:8px;">
+                                    <button id="btn-export-diagnostics" class="action-btn glow-cyan" style="flex:1;">📥 Download .TXT Log</button>
+                                    <button id="btn-copy-diagnostics" class="pill-btn" style="flex:1;">📋 Copy to Clipboard</button>
+                                    <button id="btn-clear-diagnostics" class="pill-btn" style="color:#f87171;">🗑️ Clear</button>
+                                </div>
+                                <textarea id="diag-log-preview" class="diagnostics-textarea" readonly></textarea>
+                            </div>
+                        </div>
+
+                        <div class="settings-tab-pane hidden" id="tab-reset">
+                            <p style="font-size:11px; color:#f87171; line-height:1.4;">Warning: Resetting will erase all save slots, profile records, and model vaults.</p>
+                            <div style="margin-top:14px;">
+                                <button id="btn-settings-reset-progress" class="action-btn" style="background:#ef4444; border-color:#f87171;">🗑️ Reset All Progress & Profiles</button>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="settings-tab-pane hidden" id="tab-graphics">
-                    <!-- Hardware Tier Auto-Detection Info Banner -->
-                    <div id="gfx-autodetect-banner" class="stat-card" style="padding:10px 14px; margin-bottom:12px; background:rgba(56,189,248,0.12); border:1.5px solid #38bdf8; border-radius:8px;">
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <span style="color:#38bdf8; font-weight:800; font-size:11px;">✨ HARDWARE TIER AUTO-DETECTION</span>
-                            <span id="gfx-detected-tier-badge" style="font-size:10px; color:#facc15; font-weight:bold; background:rgba(245,158,11,0.2); padding:2px 8px; border-radius:4px; border:1px solid #facc15;">Tier 2: Mid-Range (4-6GB RAM)</span>
-                        </div>
-                        <div id="gfx-detected-specs" style="font-size:10.5px; color:#cbd5e1; margin-top:4px;">
-                            Detected Cores: <b>8 Cores</b> | Device Memory: <b>8GB</b> | Resolution: <b>1080p</b>
-                        </div>
-                    </div>
-
-                    <!-- Quality Preset Selector (URP Quality Levels) -->
-                    <div class="setting-row">
-                        <label>🎨 Overall Quality Preset:</label>
-                        <div class="btn-group" id="gfx-presets-group">
-                            <button class="gfx-preset-btn pill-btn" data-preset="low">Low (Tier 1 / 30 FPS)</button>
-                            <button class="gfx-preset-btn pill-btn" data-preset="med">Medium (Tier 2)</button>
-                            <button class="gfx-preset-btn pill-btn active" data-preset="high">High (Tier 3 / Ultra)</button>
-                        </div>
-                    </div>
-
-                    <!-- Advanced Toggle: Shadow Quality -->
-                    <div class="setting-row">
-                        <label>🌑 Dynamic Shadow Quality:</label>
-                        <div class="btn-group" id="gfx-shadows-group">
-                            <button class="gfx-shadow-btn pill-btn" data-shadow="off">Off</button>
-                            <button class="gfx-shadow-btn pill-btn" data-shadow="low">Low (512 map)</button>
-                            <button class="gfx-shadow-btn pill-btn active" data-shadow="high">High (Soft PCF)</button>
-                        </div>
-                    </div>
-
-                    <!-- Advanced Toggle: Particle Density Limit (Stage 25 Pool Caps) -->
-                    <div class="setting-row">
-                        <label>🎆 Particle Density (Juice Burst Cap):</label>
-                        <div class="btn-group" id="gfx-particles-group">
-                            <button class="gfx-particle-btn pill-btn" data-cap="25">25 (Battery Saver)</button>
-                            <button class="gfx-particle-btn pill-btn" data-cap="80">80 (Balanced)</button>
-                            <button class="gfx-particle-btn pill-btn active" data-cap="150">150 (Ultra Juice)</button>
-                        </div>
-                    </div>
-
-                    <!-- Advanced Toggle: Target Framerate Cap -->
-                    <div class="setting-row">
-                        <label>⏱️ Target Frame Rate Cap:</label>
-                        <div class="btn-group" id="gfx-fps-group">
-                            <button class="gfx-fps-btn pill-btn" data-fps="30">30 FPS (Low / Saver)</button>
-                            <button class="gfx-fps-btn pill-btn active" data-fps="60">60 FPS (Smooth)</button>
-                            <button class="gfx-fps-btn pill-btn" data-fps="120">120 FPS (Uncapped)</button>
-                        </div>
-                    </div>
-
-                    <!-- Advanced Toggle: Render Resolution Scale -->
-                    <div class="setting-row">
-                        <label>🔍 Render Resolution Scale:</label>
-                        <div class="btn-group" id="gfx-scale-group">
-                            <button class="gfx-scale-btn pill-btn" data-scale="0.75">75% (Performance)</button>
-                            <button class="gfx-scale-btn pill-btn active" data-scale="1.0">100% (Native)</button>
-                            <button class="gfx-scale-btn pill-btn" data-scale="1.25">125% (Hi-DPI)</button>
-                        </div>
-                    </div>
-
-                    <!-- Advanced Toggle: Bloom & Post-Processing Glow -->
-                    <div class="setting-row">
-                        <label>✨ Post-Processing & Cyber Glow:</label>
-                        <button id="btn-toggle-bloom" class="pill-btn active">ENABLED (HDR Emissive)</button>
-                    </div>
-                </div>
-
-                <div class="settings-tab-pane hidden" id="tab-controls">
-                    <div class="setting-row">
-                        <label>🕹️ Touch Handedness:</label>
-                        <div class="btn-group">
-                            <button id="btn-handed-left" class="pill-btn active">Left-Handed</button>
-                            <button id="btn-handed-right" class="pill-btn">Right-Handed</button>
-                        </div>
-                    </div>
-                    <div class="setting-row">
-                        <label>👁️ Look Sensitivity:</label>
-                        <input type="range" id="setting-look-sens" min="5" max="25" value="10" class="cyber-slider">
-                    </div>
-                    <div class="setting-row">
-                        <label>🧭 Gyroscope Look (Device Orientation):</label>
-                        <button id="btn-toggle-gyro" class="pill-btn">ENABLED (Blended Look)</button>
-                    </div>
-                    <div class="setting-row">
-                        <label>🎯 Camera Alignment:</label>
-                        <button id="btn-settings-recenter" class="action-btn glow-cyan" style="min-height:36px;">🎯
-                            RECENTER / CALIBRATE CAMERA</button>
-                    </div>
-                </div>
-
-                <div class="settings-tab-pane hidden" id="tab-access">
-                    <div class="setting-row">
-                        <label>🎨 Colorblind-Safe Palette:</label>
-                        <button id="btn-toggle-colorblind" class="pill-btn">DISABLED (Red/Green)</button>
-                    </div>
-                    <div class="setting-row">
-                        <label>🔤 UI Text Scaling:</label>
-                        <div class="btn-group">
-                            <button class="text-scale-btn pill-btn active" data-scale="1.0">100%</button>
-                            <button class="text-scale-btn pill-btn" data-scale="1.25">125%</button>
-                            <button class="text-scale-btn pill-btn" data-scale="1.5">150%</button>
-                        </div>
-                    </div>
-                    <div class="setting-row">
-                        <label>🎙️ Live Training Narration:</label>
-                        <button id="btn-toggle-narration" class="pill-btn">ENABLED (Computed Commentary)</button>
-                    </div>
-                </div>
-
-                <div class="settings-tab-pane hidden" id="tab-diagnostics">
-                    <p style="font-size:11px; color:#94a3b8; line-height:1.4; margin-bottom:10px;">
-                        <b>100% Offline & Local-First:</b> Logs session length, screen transitions, and frame spikes
-                        (>50ms) to a local file for manual bug reporting. Zero network calls or automatic uploads.
-                    </p>
-                    <div class="setting-row">
-                        <label>📋 Local Diagnostics:</label>
-                        <button id="btn-toggle-diagnostics" class="pill-btn">DISABLED (Off by Default)</button>
-                    </div>
-                    <div id="diagnostics-active-panel" class="hidden" style="margin-top:10px;">
-                        <div style="font-size:11px; color:#cbd5e1; margin-bottom:6px;">
-                            📊 <span id="diag-stats-spikes">0 Frame Spikes</span> | <span id="diag-stats-entries">0 Log
-                                Entries</span>
-                        </div>
-                        <div style="display:flex; gap:8px; margin-bottom:8px;">
-                            <button id="btn-export-diagnostics" class="action-btn glow-cyan" style="flex:1;">📥 Download
-                                .TXT Log</button>
-                            <button id="btn-copy-diagnostics" class="pill-btn" style="flex:1;">📋 Copy to
-                                Clipboard</button>
-                            <button id="btn-clear-diagnostics" class="pill-btn" style="color:#f87171;">🗑️
-                                Clear</button>
-                        </div>
-                        <textarea id="diag-log-preview" class="diagnostics-textarea" readonly></textarea>
-                    </div>
-                </div>
-
-                <div class="settings-tab-pane hidden" id="tab-reset">
-                    <p style="font-size:11px; color:#f87171; line-height:1.4;">Warning: Resetting will erase all save
-                        slots, profile records, and model vaults.</p>
-                    <div style="margin-top:14px;">
-                        <button id="btn-settings-reset-progress" class="action-btn"
-                            style="background:#ef4444; border-color:#f87171;">🗑️ Reset All Progress & Profiles</button>
-                    </div>
-                </div>
-
-                <div class="modal-footer">
-                    <button id="btn-save-settings" class="action-btn glow-cyan">💾 Save Preferences</button>
+                <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:0.75rem; color:#64748b; font-family:var(--font-display-mono);">KERNEL SPEC: OPT-SGD-2026</span>
+                    <button id="btn-save-settings" class="primary-btn glow-cyan">💾 Save Calibration</button>
                 </div>
             </div>
         </div>
