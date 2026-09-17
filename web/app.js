@@ -6471,6 +6471,21 @@ function setupUIEvents() {
         playVictoryPassSFX();
     });
 
+    // Satchel (Inventory) Canonical Action Handlers
+    document.getElementById("btn-satchel-deploy-harvest")?.addEventListener("click", () => {
+        showInGameActionToast("Crystals Harvested: Sensor Matrix Initialized");
+    });
+    document.getElementById("btn-satchel-calibrate")?.addEventListener("click", () => {
+        openFormulaTerminal();
+    });
+    document.getElementById("btn-satchel-purge")?.addEventListener("click", () => {
+        GameState.collectedDataset = [];
+        computeDatasetStats();
+        updateHUD();
+        showInGameActionToast("Artifacts Purged: Buffer Zeroed");
+    });
+
+
     document.getElementById("btn-open-terminal").addEventListener("click", openFormulaTerminal);
     document.getElementById("btn-close-terminal").addEventListener("click", closeFormulaTerminal);
     document.getElementById("btn-return-world").addEventListener("click", closeFormulaTerminal);

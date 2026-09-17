@@ -235,6 +235,17 @@
                         id="drawer-y-count">0</b></div>
                 <div class="drawer-row"><span class="icon green">●</span> Paired Datasets (N): <b
                         id="drawer-n-count">0</b></div>
+                <!-- In-Voice Empty State when No Crystals Collected -->
+                <div id="satchel-empty-state" class="in-voice-empty-card hidden" style="margin-top:8px; padding:10px;">
+                    <div class="empty-status-tag">[SPECIMEN_VAULT: VACANT_MANIFEST]</div>
+                    <div class="empty-lore-text" style="font-size:0.75rem;">
+                        Your empirical dataset contains zero sampled coordinates. Traverse the biome to harvest Feature Crystals (X) and Target Shards (y).
+                    </div>
+                    <button id="btn-satchel-deploy-harvest" class="primary-btn glow-cyan" style="width:100%; margin-top:8px; font-size:0.78rem; padding:6px 0;">
+                        💎 Harvest Crystals
+                    </button>
+                </div>
+
 
                 <div class="drawer-divider"></div>
                 <div class="drawer-header cyan-text">📊 LIVE DATASET STATS</div>
@@ -295,6 +306,14 @@
                     <div class="health-defects-box" id="drawer-health-defects-text">
                         ✓ Clean & balanced dataset
                     </div>
+                </div>
+                <div style="margin-top:10px; display:flex; gap:6px;">
+                    <button id="btn-satchel-calibrate" class="primary-btn glow-cyan" style="flex:1; font-size:0.75rem; padding:8px 0;">
+                        🧠 Calibrate Model
+                    </button>
+                    <button id="btn-satchel-purge" class="action-btn" style="color:#f87171; border-color:#ef4444; font-size:0.75rem; padding:8px 6px;">
+                        ⚠️ Purge Artifacts
+                    </button>
                 </div>
             </div>
 
