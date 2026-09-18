@@ -20,8 +20,12 @@ namespace NeuroArena.Core
         private Queue<ParticleSystem> availableEmitters = new Queue<ParticleSystem>();
         private List<ParticleSystem> activeEmitters = new List<ParticleSystem>();
 
+        // Mobile Telemetry & Diagnostics
         public int ActiveEmitterCount => activeEmitters.Count;
         public int TotalPoolCount => availableEmitters.Count + activeEmitters.Count;
+        public int TotalBurstsPlayed { get; private set; }
+        public int PeakActiveEmitters { get; private set; }
+        public int RecycledEmitterCount { get; private set; }
 
         private void Awake()
         {
@@ -77,6 +81,7 @@ namespace NeuroArena.Core
                 ps = activeEmitters[0];
                 activeEmitters.RemoveAt(0);
                 ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                RecycledEmitterCount++;
             }
 
             if (ps != null)
@@ -96,12 +101,65 @@ namespace NeuroArena.Core
                 ps.gameObject.SetActive(true);
                 ps.Play();
                 activeEmitters.Add(ps);
+
+                TotalBurstsPlayed++;
+                if (activeEmitters.Count > PeakActiveEmitters)
+                {
+                    PeakActiveEmitters = activeEmitters.Count;
+                }
             }
         }
 
         public void PlayBurst(Vector3 position, Color burstColor)
         {
             PlayBurst(position, burstColor, 60);
+        }
+
+        public void PlayGradientBurst(Vector3 position, Gradient gradient, int requestedCount = 60)
+        {
+            ParticleSystem ps = null;
+            if (availableEmitters.Count > 0)
+            {
+                ps = availableEmitters.Dequeue();
+            }
+            else if (activeEmitters.Count > 0)
+            {
+                ps = activeEmitters[0];
+                activeEmitters.RemoveAt(0);
+                ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                RecycledEmitterCount++;
+            }
+
+            if (ps != null)
+            {
+                int tierCap = (DeviceTierManager.Instance != null) ? DeviceTierManager.Instance.MaxParticleBurstCount : maxParticlesPerEmitter;
+                int finalCount = Mathf.Clamp(requestedCount, 10, tierCap);
+
+                ps.transform.position = position;
+                var main = ps.main;
+                main.startColor = new ParticleSystem.MinMaxGradient(gradient);
+                main.maxParticles = tierCap;
+
+                var emission = ps.emission;
+                emission.SetBursts(new ParticleSystem.Burst[] { new ParticleSystem.Burst(0f, (short)finalCount) });
+
+                ps.gameObject.SetActive(true);
+                ps.Play();
+                activeEmitters.Add(ps);
+
+                TotalBurstsPlayed++;
+                if (activeEmitters.Count > PeakActiveEmitters)
+                {
+                    PeakActiveEmitters = activeEmitters.Count;
+                }
+            }
+        }
+
+        public void ResetMetrics()
+        {
+            TotalBurstsPlayed = 0;
+            PeakActiveEmitters = activeEmitters.Count;
+            RecycledEmitterCount = 0;
         }
 
         private void Update()
