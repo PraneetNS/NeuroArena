@@ -368,6 +368,17 @@ A dynamic commentary system converts live training telemetry into plain-English 
 - **Schema v3 Save Safety Validation:** Guarantees balance tuning changes (harvest yield multipliers, boss HP/damage, daily challenges) can never corrupt player saves.
 - **1-Click Rollback:** One-action rollback mechanism reverting to any previous version snapshot in real time.
 
+### ⚡ Distributed Redis Cluster Primitives & Lock Leases
+- **Sorted Set (ZSET) Batching:** Sub-millisecond leaderboard rank lookups for 1,000,000+ players using `zAddBatch` and reverse rank projection.
+- **Distributed Mutex Leases (`acquireLock` / `releaseLock`):** Auto-expiring atomic locks (`SET NX PX`) coordinating multi-node matchmaking and cluster drainage.
+- **Cluster Heartbeat & Telemetry:** Continuous cluster latency tracking (`neuroarena_redis_latency_ms`) and failover event counters exported via Prometheus.
+
+### 🧪 ML Experiment Registry, Pareto Frontier & Mobile Particle Pooling
+- **Multi-Run Hyperparameter Logging:** W&B-style model experiment tracking with validation loss curves, F1 scores, and ROC-AUC metrics.
+- **Run Comparison Deltas:** Automated differential analysis ($\Delta\mathcal{L}, \Delta\text{Acc}, \Delta F_1$) highlighting regressions and model breakthroughs.
+- **Pareto Multi-Objective Optimization:** Evaluates non-dominated architectures balancing accuracy, model complexity, and inference latency.
+- **Zero-Allocation Mobile Particle Pooling:** Caps bursts to hardware tiers (Tier 1: 25, Tier 2: 80, Tier 3: 150) with pre-allocated queues, recycling oldest emitters under memory constraints.
+
 ---
 
 ## 🛠️ Developer CLI & Testing Harness
