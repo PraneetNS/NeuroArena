@@ -8,6 +8,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- **Distributed Redis Cluster Leases, Heartbeat & Batch Leaderboards (`neuroarena-server/src/cluster/RedisClusterConfig.js`, `neuroarena-server/test/cluster-scale.test.js`, `docs/DISTRIBUTED_SYSTEMS_AND_ML_OPERATIONS.md`)**
+  - Implemented atomic distributed lock leases (`acquireLock` / `releaseLock`) with millisecond TTL expiry and ownership tokens to coordinate multi-node match allocations safely.
+  - Added batch sorted set ingestion (`zAddBatch`) for high-throughput seasonal leaderboard rank updates across 1,000,000+ players.
+  - Added cluster health check heartbeat (`ping()`) with real-time latency measurement and Prometheus exporter integration (`neuroarena_redis_latency_ms`).
+
+- **ML Experiment Tracker Run Comparison & Pareto Frontier Selection (`Assets/Scripts/ML/ExperimentTracker.cs`, `web/app.js`, `web/tests/ml-engine.test.js`)**
+  - Added differential run comparison (`CompareRuns` / `compareRuns`) calculating $\Delta\mathcal{L}$, $\Delta\text{Acc}$, and $\Delta F_1$ against active champion baselines.
+  - Implemented Pareto frontier multi-objective optimization (`GetParetoFrontier` / `getParetoFrontier`) identifying non-dominated model architectures.
+  - Connected real-time kernel telemetry notifications and champion glow pulses (`championPulseGlow`) when new models surpass existing benchmarks.
+
+- **Stratified K-Fold Class Balance Validation & Out-of-Fold Metrics (`Assets/Scripts/ML/CrossValidationEngine.cs`)**
+  - Added automated class balance verification (`ValidateStratification`) enforcing max class ratio deviation $\le 0.25$ across all splits.
+  - Added Out-of-Fold (OOF) prediction generation and generalization confidence bounds reflecting real-world dataset stability.
+
+- **Zero-Allocation Mobile Particle System Pooling & Telemetry (`Assets/Scripts/Core/ParticleSystemPool.cs`, `web/tests/ml-engine.test.js`)**
+  - Added live telemetry tracking for `TotalBurstsPlayed`, `PeakActiveEmitters`, and `RecycledEmitterCount`.
+  - Added multi-color gradient burst support (`PlayGradientBurst`) and hardware tier fillrate capping (Tier 1: 25, Tier 2: 80, Tier 3: 150 particles) eliminating runtime garbage collection pauses on mobile.
 - **Out-of-Gameplay Themed Menu Flow Redesign (`web/index.html`, `web/style.css`, `web/app.js`, `web/tests/ml-engine.test.js`)**
   - Rebuilt out-of-gameplay navigation across 5 content-specific menu archetypes: Topological Expedition Board (`#biome-travel-modal`), Specimen Satchel & Distribution Matrix (`#inventory-drawer`), Neural Syndicate Command Console (`#guild-hall-modal`), Terminal BIOS Hardware Telemetry Console (`#settings-modal`), and Dual-Cockpit Handshake Radar (`#duel-matchmaking-modal`).
   - Implemented strict verb-noun copy consistency across all action triggers and toasts ("Deploy Expedition", "Calibrate Model", "Engage Duel", "Enlist Syndicate", "Save Calibration", "Harvest Crystals", "Purge Artifacts").
