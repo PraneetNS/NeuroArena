@@ -43,6 +43,14 @@ class ServerMetricsRegistry {
     this.registerHistogram('neuroarena_session_duration_seconds', 'Player session length in seconds', [30, 60, 180, 300, 600, 1200, 1800, 3600]);
     this.registerHistogram('neuroarena_tutorial_duration_seconds', 'FTUE tutorial completion duration in seconds', [30, 60, 90, 120, 180, 240, 300, 600]);
     this.registerHistogram('neuroarena_biome_dwell_seconds', 'Player dwell time inside a biome in seconds', [30, 60, 120, 300, 600, 1200]);
+
+    // Co-op, Contracts, UGC, and Cluster Health Metrics
+    this.registerCounter('neuroarena_coop_sessions_total', 'Total co-op party sessions launched');
+    this.registerCounter('neuroarena_coop_blindspots_resolved_total', 'Total collaborative blindspots covered');
+    this.registerCounter('neuroarena_contracts_submitted_total', 'Total freelance client contracts submitted');
+    this.registerCounter('neuroarena_challenges_published_total', 'Total community UGC custom biomes published');
+    this.registerCounter('neuroarena_cluster_failovers_total', 'Total Redis cluster node failover events');
+    this.registerHistogram('neuroarena_redis_latency_ms', 'Redis operation round-trip latency in ms', [0.5, 1, 2, 5, 10, 25, 50, 100]);
   }
 
   registerCounter(name, help) {
