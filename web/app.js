@@ -8802,6 +8802,51 @@ const CompetitorFeatureManager = {
         { id: "RUN-62C9", arch: "OLS Linear", loss: 0.092, f1: 0.865, tag: "ARCHIVED", curve: [0.80, 0.60, 0.45, 0.30, 0.20, 0.14, 0.092] }
     ],
 
+    compareRuns(runA, runB) {
+        if (!runA || !runB) return null;
+        return {
+            runIdA: runA.id,
+            runIdB: runB.id,
+            lossDelta: +(runB.loss - runA.loss).toFixed(4),
+            f1Delta: +(runB.f1 - runA.f1).toFixed(4),
+            isImprovement: runB.loss <= runA.loss && runB.f1 >= runA.f1
+        };
+    },
+
+    getParetoFrontier() {
+        return this.runs.filter(candidate => {
+            return !this.runs.some(other => {
+                if (other.id === candidate.id) return false;
+                return other.loss <= candidate.loss &&
+                       other.f1 >= candidate.f1 &&
+                       (other.loss < candidate.loss || other.f1 > candidate.f1);
+            });
+        });
+    },
+
+    logExperimentRun(runData) {
+        const id = runData.id || `RUN-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+        const newRun = {
+            id,
+            arch: runData.arch || "NeuralNet",
+            loss: runData.loss !== undefined ? runData.loss : 0.05,
+            f1: runData.f1 !== undefined ? runData.f1 : 0.90,
+            tag: "STAGING",
+            curve: runData.curve || [0.5, 0.3, 0.15, 0.05]
+        };
+
+        const currentChamp = this.runs.find(r => r.tag === "CHAMPION");
+        if (!currentChamp || (newRun.loss < currentChamp.loss && newRun.f1 >= currentChamp.f1)) {
+            if (currentChamp) currentChamp.tag = "PRODUCTION_CANDIDATE";
+            newRun.tag = "CHAMPION";
+            MLStudioEngine.triggerKernelTelemetry(`🏆 NEW CHAMPION MODEL PROMOTED: ${newRun.id} (${newRun.arch}) F1: ${newRun.f1}`, "NORMAL");
+        }
+
+        this.runs.unshift(newRun);
+        this.renderExperimentOverlay();
+        return newRun;
+    },
+
     init() {
         this.setupModalBindings();
     },
