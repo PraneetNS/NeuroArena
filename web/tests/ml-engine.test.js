@@ -1565,6 +1565,44 @@ function testMultiRunExperimentTrackerAndRegistry() {
     logRun("RUN-3", "OverfittedModel", 0.090, 0.85);
     assert.strictEqual(champion.id, "RUN-2", "Worse model does not displace Champion");
 
+    // Test Comparison Deltas
+    function compareRuns(a, b) {
+        return {
+            lossDelta: +(b.loss - a.loss).toFixed(4),
+            f1Delta: +(b.f1 - a.f1).toFixed(4),
+            isImprovement: b.loss <= a.loss && b.f1 >= a.f1
+        };
+    }
+    const delta1to2 = compareRuns(runs[0], runs[1]);
+    assert.strictEqual(delta1to2.isImprovement, true, "RUN-2 must be marked as improvement over RUN-1");
+    assert.strictEqual(delta1to2.lossDelta, -0.03, "Loss delta should be -0.03");
+    assert.strictEqual(delta1to2.f1Delta, 0.03, "F1 delta should be +0.03");
+
+    // Test Pareto Frontier
+    function getParetoFrontier(allRuns) {
+        return allRuns.filter(candidate => {
+            return !allRuns.some(other => {
+                if (other.id === candidate.id) return false;
+                return other.loss <= candidate.loss &&
+                       other.f1 >= candidate.f1 &&
+                       (other.loss < candidate.loss || other.f1 > candidate.f1);
+            });
+        });
+    }
+    const frontier = getParetoFrontier(runs);
+    assert.strictEqual(frontier.length, 1, "Only RUN-2 dominates both RUN-1 and RUN-3");
+    assert.strictEqual(frontier[0].id, "RUN-2");
+
+    // Test Mobile Particle Pooling Hardware Capping
+    const tierCaps = { Tier1: 25, Tier2: 80, Tier3: 150 };
+    function clampBurstCount(requested, tier) {
+        const cap = tierCaps[tier] || 150;
+        return Math.min(Math.max(requested, 10), cap);
+    }
+    assert.strictEqual(clampBurstCount(100, "Tier1"), 25, "Tier 1 low-end must clamp 100 to 25");
+    assert.strictEqual(clampBurstCount(100, "Tier2"), 80, "Tier 2 mid-range must clamp 100 to 80");
+    assert.strictEqual(clampBurstCount(200, "Tier3"), 150, "Tier 3 flagship must clamp 200 to 150");
+
     console.log("✅ Multi-Run Experiment Tracker & Champion Promotion Test Passed!");
 }
 
