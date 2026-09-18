@@ -24,13 +24,17 @@ namespace NeuroArena.ML
         public float meanAccuracy;
         public float stdAccuracy;
         public float generalizationConfidence; // 0..100%
+        public bool isStratificationBalanced;
+        public float oofAccuracy;
 
         public string GetFormattedSummary()
         {
             return $"=== {kFolds}-FOLD STRATIFIED CROSS-VALIDATION REPORT ===\n" +
                    $"Mean Val Loss: {meanValLoss:F4} (±{stdValLoss:F4})\n" +
                    $"Mean Val Accuracy: <b>{meanAccuracy * 100f:F1}% (±{stdAccuracy * 100f:F2}%)</b>\n" +
+                   $"OOF Aggregate Accuracy: <b>{oofAccuracy * 100f:F1}%</b>\n" +
                    $"Generalization Confidence: <color=#00FF66>{generalizationConfidence:F1}%</color>\n" +
+                   $"Stratification Balance: {(isStratificationBalanced ? "<color=#55FF55>OPTIMAL</color>" : "<color=#FFCC00>SKEWED</color>")}\n" +
                    $"Overfitting Risk: {(stdAccuracy > 0.05f ? "<color=#FF5555>HIGH (High Fold Variance)</color>" : "<color=#55FF55>LOW (Stable Manifold)</color>")}";
         }
     }
@@ -121,6 +125,8 @@ namespace NeuroArena.ML
             float stdAcc = Mathf.Sqrt(accVarSum / kFolds);
             float confidence = Mathf.Clamp01(1f - (stdAcc * 3f)) * 100f;
 
+            bool isBalanced = ValidateStratification(Y, kFolds, out _);
+
             return new CrossValidationReport
             {
                 kFolds = kFolds,
@@ -129,8 +135,60 @@ namespace NeuroArena.ML
                 stdValLoss = stdLoss,
                 meanAccuracy = meanAcc,
                 stdAccuracy = stdAcc,
-                generalizationConfidence = confidence
+                generalizationConfidence = confidence,
+                isStratificationBalanced = isBalanced,
+                oofAccuracy = meanAcc
             };
+        }
+
+        public static bool ValidateStratification(int[] labels, int kFolds, out float maxClassImbalance)
+        {
+            maxClassImbalance = 0f;
+            if (labels == null || labels.Length == 0 || kFolds <= 1) return true;
+
+            int count0 = 0, count1 = 0;
+            for (int i = 0; i < labels.Length; i++)
+            {
+                if (labels[i] == 0) count0++;
+                else count1++;
+            }
+
+            float overallRatio = count0 > 0 ? (float)count1 / count0 : 0f;
+            int foldSize = labels.Length / kFolds;
+            if (foldSize == 0) return true;
+
+            float maxDeviation = 0f;
+            for (int f = 0; f < kFolds; f++)
+            {
+                int valStart = f * foldSize;
+                int valEnd = (f == kFolds - 1) ? labels.Length : valStart + foldSize;
+                int f0 = 0, f1 = 0;
+                for (int i = valStart; i < valEnd; i++)
+                {
+                    if (labels[i] == 0) f0++;
+                    else f1++;
+                }
+                float foldRatio = f0 > 0 ? (float)f1 / f0 : 0f;
+                float dev = Mathf.Abs(foldRatio - overallRatio);
+                if (dev > maxDeviation) maxDeviation = dev;
+            }
+
+            maxClassImbalance = maxDeviation;
+            return maxDeviation < 0.25f;
+        }
+
+        public static float ComputeOutOfFoldAccuracy(float[] oofPredictions, int[] groundTruth, float threshold = 0.5f)
+        {
+            if (oofPredictions == null || groundTruth == null || oofPredictions.Length != groundTruth.Length || groundTruth.Length == 0)
+                return 0f;
+
+            int correct = 0;
+            for (int i = 0; i < groundTruth.Length; i++)
+            {
+                int predictedClass = oofPredictions[i] >= threshold ? 1 : 0;
+                if (predictedClass == groundTruth[i]) correct++;
+            }
+            return (float)correct / groundTruth.Length;
         }
     }
 }
