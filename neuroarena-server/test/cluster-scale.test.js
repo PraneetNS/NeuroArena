@@ -101,8 +101,53 @@ function testClusterDrainageAndRenewal() {
     console.log("✅ Multi-Node Drainage, Heartbeats & Dynamic Session Renewal Passed!");
 }
 
-testTokenBucketRateLimiting();
-testRedisDistributedLeaderboardZSet();
-testStatelessSessionTicketsAndTamperDetection();
-testClusterDrainageAndRenewal();
-console.log("🎉 All 1M Scale Cluster & Session Tests Passed Cleanly!");
+async function testRedisDistributedLockingAndBatching() {
+    console.log("▶ Testing Redis Distributed Locking, Lease Expiry & Batch ZSet...");
+
+    const redis = new RedisClusterConfig();
+
+    // 1. Batch ZAdd
+    const batchData = [
+        { member: "agent_alpha", score: 2400 },
+        { member: "agent_beta", score: 2850 },
+        { member: "agent_gamma", score: 2100 }
+    ];
+    const inserted = await redis.zAddBatch("lb:batch:test", batchData);
+    assert.strictEqual(inserted, 3, "All 3 items must be ingested via zAddBatch");
+
+    const topRank = await redis.zRevRank("lb:batch:test", "agent_beta");
+    assert.strictEqual(topRank, 1, "agent_beta with 2850 score must be rank 1");
+
+    // 2. Distributed Locking
+    const lockAcquired = await redis.acquireLock("matchmaking_queue", 1000, "node_1");
+    assert.strictEqual(lockAcquired, true, "First acquireLock must succeed");
+
+    const lockContention = await redis.acquireLock("matchmaking_queue", 1000, "node_2");
+    assert.strictEqual(lockContention, false, "Contention acquireLock must fail while held");
+
+    // Release with wrong owner fails
+    const badRelease = await redis.releaseLock("matchmaking_queue", "node_2");
+    assert.strictEqual(badRelease, false, "Release by non-owner must fail");
+
+    // Release with right owner succeeds
+    const goodRelease = await redis.releaseLock("matchmaking_queue", "node_1");
+    assert.strictEqual(goodRelease, true, "Release by true owner must succeed");
+
+    // 3. Ping heartbeat
+    const pingResult = await redis.ping();
+    assert.strictEqual(pingResult.status, "PONG", "Heartbeat ping must return PONG");
+    assert(pingResult.latencyMs >= 0, "Latency must be non-negative");
+
+    console.log("✅ Redis Distributed Locking, Lease Expiry & Batch ZSet Passed!");
+}
+
+async function runAllClusterTests() {
+    testTokenBucketRateLimiting();
+    testRedisDistributedLeaderboardZSet();
+    testStatelessSessionTicketsAndTamperDetection();
+    testClusterDrainageAndRenewal();
+    await testRedisDistributedLockingAndBatching();
+    console.log("🎉 All 1M Scale Cluster & Session Tests Passed Cleanly!");
+}
+
+runAllClusterTests();
