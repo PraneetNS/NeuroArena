@@ -28,6 +28,18 @@ class RedisClusterConfig {
         return 1;
     }
 
+    async zAddBatch(key, items = []) {
+        if (!Array.isArray(items) || items.length === 0) return 0;
+        let count = 0;
+        for (const item of items) {
+            if (item && item.member !== undefined && item.score !== undefined) {
+                await this.zAdd(key, item.member, item.score);
+                count++;
+            }
+        }
+        return count;
+    }
+
     async zRevRank(key, member) {
         if (this.isMock) {
             const set = this.mockZSets.get(key) || [];
@@ -111,6 +123,56 @@ class RedisClusterConfig {
             return remaining > 0 ? remaining : -2;
         }
         return -1;
+    }
+
+    async acquireLock(lockKey, ttlMs = 5000, ownerId = "default_owner") {
+        const fullKey = `lock:${lockKey}`;
+        if (this.isMock) {
+            if (!this.mockStore) this.mockStore = new Map();
+            const existing = this.mockStore.get(fullKey);
+            const now = Date.now();
+            if (existing && (!existing.expiresAt || existing.expiresAt > now)) {
+                return false; // Lock already held
+            }
+            this.mockStore.set(fullKey, { value: ownerId, expiresAt: now + ttlMs });
+            return true;
+        }
+        return true;
+    }
+
+    async releaseLock(lockKey, ownerId = "default_owner") {
+        const fullKey = `lock:${lockKey}`;
+        if (this.isMock) {
+            if (!this.mockStore) this.mockStore = new Map();
+            const existing = this.mockStore.get(fullKey);
+            if (!existing) return true; // Already released or expired
+            if (existing.value === ownerId) {
+                this.mockStore.delete(fullKey);
+                return true;
+            }
+            return false; // Not owned by caller
+        }
+        return true;
+    }
+
+    async ping() {
+        const start = Date.now();
+        if (this.isMock) {
+            return {
+                status: "PONG",
+                isMock: true,
+                latencyMs: Math.max(0.1, Date.now() - start),
+                host: this.host,
+                port: this.port
+            };
+        }
+        return {
+            status: "PONG",
+            isMock: false,
+            latencyMs: Date.now() - start,
+            host: this.host,
+            port: this.port
+        };
     }
 
     getPresenceOptions() {
