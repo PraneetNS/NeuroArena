@@ -125,5 +125,67 @@ namespace NeuroArena.ML
             Debug.Log($"[ExperimentTracker] 🏆 NEW CHAMPION PROMOTED: {run.runId} ({run.runName}) with F1={run.f1Score:F3}, Loss={run.finalLoss:F4}");
             OnChampionPromoted?.Invoke(run);
         }
+
+        public ExperimentComparisonDelta CompareRuns(ExperimentRun baseline, ExperimentRun candidate)
+        {
+            if (baseline == null || candidate == null) return null;
+
+            return new ExperimentComparisonDelta
+            {
+                runIdA = baseline.runId,
+                runIdB = candidate.runId,
+                lossDelta = candidate.finalLoss - baseline.finalLoss,
+                accuracyDelta = candidate.validationAccuracy - baseline.validationAccuracy,
+                f1Delta = candidate.f1Score - baseline.f1Score,
+                rocAucDelta = candidate.rocAuc - baseline.rocAuc,
+                learningRateRatio = baseline.learningRate > 0 ? candidate.learningRate / baseline.learningRate : 1f,
+                isCandidateBetter = (candidate.finalLoss <= baseline.finalLoss && candidate.validationAccuracy >= baseline.validationAccuracy)
+            };
+        }
+
+        public List<ExperimentRun> GetParetoFrontier()
+        {
+            var frontier = new List<ExperimentRun>();
+            foreach (var candidate in loggedRuns)
+            {
+                bool isDominated = false;
+                foreach (var other in loggedRuns)
+                {
+                    if (other == candidate) continue;
+                    if (other.finalLoss <= candidate.finalLoss &&
+                        other.validationAccuracy >= candidate.validationAccuracy &&
+                        other.f1Score >= candidate.f1Score &&
+                        (other.finalLoss < candidate.finalLoss || other.validationAccuracy > candidate.validationAccuracy || other.f1Score > candidate.f1Score))
+                    {
+                        isDominated = true;
+                        break;
+                    }
+                }
+                if (!isDominated)
+                {
+                    frontier.Add(candidate);
+                }
+            }
+            return frontier;
+        }
+
+        public void ClearHistory()
+        {
+            loggedRuns.Clear();
+            currentChampionRun = null;
+        }
+    }
+
+    [Serializable]
+    public class ExperimentComparisonDelta
+    {
+        public string runIdA;
+        public string runIdB;
+        public float lossDelta;
+        public float accuracyDelta;
+        public float f1Delta;
+        public float rocAucDelta;
+        public float learningRateRatio;
+        public bool isCandidateBetter;
     }
 }
