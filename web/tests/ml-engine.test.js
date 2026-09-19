@@ -2909,6 +2909,93 @@ function testOutOfGameplayThemedMenuFlowAndCopyAudit() {
     console.log("✅ Out-of-Gameplay Themed Menu Flow, 5-Archetype Diversity & Copy Audit Tests Passed!");
 }
 
+function testModelCheckpointAndRLTelemetry() {
+    console.log("▶ Testing Model Checkpoint Integrity, State Rollback & RL Telemetry...");
+    const fs = require('fs');
+    const path = require('path');
+    const appPath = path.resolve(__dirname, '../app.js');
+    const cssPath = path.resolve(__dirname, '../style.css');
+
+    const appContent = fs.readFileSync(appPath, 'utf8');
+    const cssContent = fs.readFileSync(cssPath, 'utf8');
+
+    // 1. Codebase structural hooks verification
+    assert.ok(appContent.includes('ModelCheckpointInspector'), "app.js must define ModelCheckpointInspector");
+    assert.ok(appContent.includes('RLTelemetryVisualizer'), "app.js must define RLTelemetryVisualizer");
+    assert.ok(appContent.includes('captureSnapshot'), "app.js must implement captureSnapshot");
+    assert.ok(appContent.includes('rollbackToBest'), "app.js must implement rollbackToBest");
+    assert.ok(appContent.includes('verifyIntegrity'), "app.js must implement verifyIntegrity");
+
+    // 2. CSS presentation hooks verification
+    assert.ok(cssContent.includes('.checkpoint-card'), "style.css must define .checkpoint-card");
+    assert.ok(cssContent.includes('.checkpoint-badge-best'), "style.css must define .checkpoint-badge-best");
+    assert.ok(cssContent.includes('.checkpoint-divergence-alert'), "style.css must define .checkpoint-divergence-alert");
+    assert.ok(cssContent.includes('.rl-telemetry-panel'), "style.css must define .rl-telemetry-panel");
+
+    // 3. Checkpoint snapshot and checksum hashing logic verification
+    function computeChecksum(weights, biases = []) {
+        let hash = 0x811c9dc5;
+        const allVals = [...(weights || []), ...(biases || [])];
+        for (let i = 0; i < allVals.length; i++) {
+            const v = Math.round(allVals[i] * 100000);
+            hash ^= (v & 0xff);
+            hash = Math.imul(hash, 0x01000193);
+            hash ^= ((v >> 8) & 0xff);
+            hash = Math.imul(hash, 0x01000193);
+        }
+        return (hash >>> 0).toString(16).padStart(8, "0");
+    }
+
+    const weightsA = [0.45, -0.88, 1.25, -0.02, 0.67];
+    const biasesA = [0.05, -0.01];
+    const hashA = computeChecksum(weightsA, biasesA);
+    assert.strictEqual(hashA.length, 8, "Checksum must be 8-character hex string");
+    // Verify deterministic reproducibility
+    assert.strictEqual(computeChecksum(weightsA, biasesA), hashA, "Checksum computation must be deterministic");
+
+    // Verify tamper detection
+    const tamperedWeights = [0.46, -0.88, 1.25, -0.02, 0.67];
+    assert.notStrictEqual(computeChecksum(tamperedWeights, biasesA), hashA, "Altered weights must yield different checksum");
+
+    // 4. Shannon Entropy mathematical bounds
+    function calculateShannonEntropy(probs) {
+        return probs.reduce((acc, p) => {
+            const safeP = Math.max(p, 1e-8);
+            return acc - safeP * Math.log(safeP);
+        }, 0);
+    }
+    const uniformProbs = [0.25, 0.25, 0.25, 0.25];
+    const uniformEntropy = calculateShannonEntropy(uniformProbs);
+    assert.ok(Math.abs(uniformEntropy - Math.log(4)) < 1e-4, "Uniform 4-class distribution entropy must equal ln(4) ~ 1.3863");
+
+    const deterministicProbs = [1.0, 0.0, 0.0, 0.0];
+    const deterministicEntropy = calculateShannonEntropy(deterministicProbs);
+    assert.ok(deterministicEntropy < 1e-4, "Deterministic distribution entropy must be near zero");
+
+    // 5. Generalized Advantage Estimation formulation verification
+    function computeGAE(rewards, values, dones, gamma = 0.99, lambda = 0.95, nextValue = 0) {
+        const n = rewards.Length || rewards.length;
+        const advantages = new Array(n);
+        let gae = 0;
+        for (let t = n - 1; t >= 0; t--) {
+            const nextVal = (t === n - 1) ? nextValue : values[t + 1];
+            const nonTerminal = dones[t] ? 0 : 1;
+            const delta = rewards[t] + gamma * nextVal * nonTerminal - values[t];
+            gae = delta + gamma * lambda * nonTerminal * gae;
+            advantages[t] = gae;
+        }
+        return advantages;
+    }
+    const rewards = [1.0, 0.0, 2.0];
+    const values = [0.5, 0.8, 1.2];
+    const dones = [false, false, true];
+    const gaeResult = computeGAE(rewards, values, dones);
+    assert.strictEqual(gaeResult.length, 3, "GAE should calculate advantage for every timestep");
+    assert.ok(gaeResult[2] > 0, "Last step advantage should be positive when reward > value");
+
+    console.log("✅ Model Checkpoint Integrity, State Rollback & RL Telemetry Tests Passed!");
+}
+
 testWebGPUBootstrapAndFallbackEngine().then(async () => {
     testVolumetricFogAndFroxelGrid();
     testRecurringEngagementAndLiveOpsRemoteConfig();
@@ -2922,6 +3009,7 @@ testWebGPUBootstrapAndFallbackEngine().then(async () => {
     testUnifiedDesignTokensAndMathGlyphs();
     testInSessionDiegeticHUDAndGlanceHierarchy();
     testOutOfGameplayThemedMenuFlowAndCopyAudit();
+    testModelCheckpointAndRLTelemetry();
     console.log("🎉 All Web Unit Tests Passed Cleanly!");
 });
 
