@@ -9022,6 +9022,132 @@ function animate(now) {
     }
 }
 
+// ==========================================
+// MODEL CHECKPOINT INSPECTOR & RL TELEMETRY
+// ==========================================
+const ModelCheckpointInspector = {
+    maxSnapshots: 6,
+    divergenceThreshold: 50.0,
+    checkpoints: [],
+    bestCheckpoint: null,
+    divergenceCount: 0,
+
+    computeChecksum(weights, biases = []) {
+        let hash = 0x811c9dc5;
+        const allVals = [...(weights || []), ...(biases || [])];
+        for (let i = 0; i < allVals.length; i++) {
+            const v = Math.round(allVals[i] * 100000);
+            hash ^= (v & 0xff);
+            hash = Math.imul(hash, 0x01000193);
+            hash ^= ((v >> 8) & 0xff);
+            hash = Math.imul(hash, 0x01000193);
+        }
+        return (hash >>> 0).toString(16).padStart(8, "0");
+    },
+
+    captureSnapshot(epoch, valLoss, valAcc, lr, weights, biases) {
+        if (!Number.isFinite(valLoss) || valLoss > this.divergenceThreshold) {
+            this.divergenceCount++;
+            if (typeof MLStudioEngine !== "undefined" && MLStudioEngine.triggerKernelTelemetry) {
+                MLStudioEngine.triggerKernelTelemetry(`⚠️ GRADIENT DIVERGENCE DETECTED (Loss: ${valLoss.toFixed(2)})! Auto-rollback recommended.`, "WARNING");
+            }
+            if (this.bestCheckpoint) {
+                return { ...this.bestCheckpoint, autoRollback: true };
+            }
+        }
+
+        const checksum = this.computeChecksum(weights, biases);
+        const isBest = !this.bestCheckpoint || valLoss < this.bestCheckpoint.valLoss;
+
+        const ckpt = {
+            id: `CKPT-EP${epoch}-${Date.now().toString(36).toUpperCase()}`,
+            epoch,
+            valLoss: +valLoss.toFixed(4),
+            valAcc: +valAcc.toFixed(4),
+            lr: +lr.toFixed(5),
+            weights: Array.from(weights || []),
+            biases: Array.from(biases || []),
+            checksum,
+            timestamp: Date.now(),
+            isBest
+        };
+
+        if (isBest) {
+            if (this.bestCheckpoint) this.bestCheckpoint.isBest = false;
+            this.bestCheckpoint = ckpt;
+        }
+
+        this.checkpoints.unshift(ckpt);
+        if (this.checkpoints.length > this.maxSnapshots) {
+            // Keep best checkpoint even if old
+            const pruneIdx = this.checkpoints.findLastIndex(c => !c.isBest);
+            if (pruneIdx >= 0) this.checkpoints.splice(pruneIdx, 1);
+        }
+
+        return ckpt;
+    },
+
+    rollbackToBest() {
+        if (!this.bestCheckpoint) return null;
+        return {
+            weights: [...this.bestCheckpoint.weights],
+            biases: [...this.bestCheckpoint.biases],
+            epoch: this.bestCheckpoint.epoch,
+            valLoss: this.bestCheckpoint.valLoss,
+            valAcc: this.bestCheckpoint.valAcc,
+            checksum: this.bestCheckpoint.checksum
+        };
+    },
+
+    verifyIntegrity(ckpt) {
+        if (!ckpt || !ckpt.weights || !ckpt.checksum) return false;
+        const expected = this.computeChecksum(ckpt.weights, ckpt.biases);
+        return expected === ckpt.checksum;
+    }
+};
+
+const RLTelemetryVisualizer = {
+    historyLength: 50,
+    entropyHistory: [],
+    curiosityHistory: [],
+    advantageHistory: [],
+    lossHistory: [],
+
+    recordStep(entropy, intrinsicReward, advantage, totalLoss) {
+        this.entropyHistory.push(+entropy.toFixed(4));
+        this.curiosityHistory.push(+intrinsicReward.toFixed(4));
+        this.advantageHistory.push(+advantage.toFixed(4));
+        this.lossHistory.push(+totalLoss.toFixed(4));
+
+        if (this.entropyHistory.length > this.historyLength) {
+            this.entropyHistory.shift();
+            this.curiosityHistory.shift();
+            this.advantageHistory.shift();
+            this.lossHistory.shift();
+        }
+    },
+
+    getMovingAverage(metric = "entropy", windowSize = 10) {
+        const arr = this[`${metric}History`] || this.entropyHistory;
+        if (!arr.length) return 0;
+        const slice = arr.slice(-windowSize);
+        const sum = slice.reduce((acc, v) => acc + v, 0);
+        return +(sum / slice.length).toFixed(4);
+    },
+
+    getHUDMetrics() {
+        const lastIdx = this.entropyHistory.length - 1;
+        return {
+            entropy: lastIdx >= 0 ? this.entropyHistory[lastIdx] : 0,
+            curiosity: lastIdx >= 0 ? this.curiosityHistory[lastIdx] : 0,
+            advantage: lastIdx >= 0 ? this.advantageHistory[lastIdx] : 0,
+            loss: lastIdx >= 0 ? this.lossHistory[lastIdx] : 0,
+            entropyMA: this.getMovingAverage("entropy"),
+            curiosityMA: this.getMovingAverage("curiosity")
+        };
+    }
+};
+
 window.addEventListener("resize", onWindowResize);
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -9048,6 +9174,8 @@ if (typeof window !== "undefined") {
     window.LiveDuelManager = LiveDuelManager;
     window.orchestrateBiomeDeployment = orchestrateBiomeDeployment;
     window.showInGameActionToast = showInGameActionToast;
+    window.ModelCheckpointInspector = ModelCheckpointInspector;
+    window.RLTelemetryVisualizer = RLTelemetryVisualizer;
 }
 if (typeof module !== "undefined" && module.exports) {
     module.exports.HolographicTelemetryManager = HolographicTelemetryManager;
@@ -9055,6 +9183,8 @@ if (typeof module !== "undefined" && module.exports) {
     module.exports.LiveDuelManager = LiveDuelManager;
     module.exports.orchestrateBiomeDeployment = orchestrateBiomeDeployment;
     module.exports.showInGameActionToast = showInGameActionToast;
+    module.exports.ModelCheckpointInspector = ModelCheckpointInspector;
+    module.exports.RLTelemetryVisualizer = RLTelemetryVisualizer;
 }
 
 
