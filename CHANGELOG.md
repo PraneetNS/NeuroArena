@@ -8,6 +8,22 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- **Reinforcement Learning Intrinsic Curiosity Module (ICM) & GAE-$\lambda$ (`Assets/Scripts/ML/Reinforcement/CuriosityRewardModule.cs`, `Assets/Scripts/ML/Reinforcement/PPOPolicyAgent.cs`, `docs/REINFORCEMENT_LEARNING_AND_CHECKPOINT_SPEC.md`)**
+  - Added Welford running variance normalization and random Xavier feature projections to prevent curiosity reward explosion.
+  - Implemented Generalized Advantage Estimation ($\text{GAE}-\lambda$) and Shannon entropy bonus $\mathcal{H}(\pi_\theta)$ to regularize exploration and prevent policy collapse.
+
+- **Authoritative Server Model Registry & Zero-Downtime Rollback (`neuroarena-server/src/ml/ModelRegistryService.js`, `neuroarena-server/test/modelRegistry.test.js`)**
+  - Implemented server-side neural weight validation, anti-NaN/Infinity guards, and SHA-256 parameter fingerprinting.
+  - Added champion promotion staging with accuracy thresholds ($\ge 0.85$) and zero-downtime rollback against regression or model drift.
+
+- **AlphaZero Root Dirichlet Exploration & Progressive Widening MCTS (`neuroarena-server/src/ai/MCTSBotDirector.js`, `neuroarena-server/test/mctsBot.test.js`)**
+  - Implemented root prior Dirichlet noise injection ($\alpha = 0.3, \epsilon = 0.25$) for tactical bot exploration diversity.
+  - Added progressive widening branching bounds $|C(s)| \le \lfloor k \cdot N(s)^\alpha \rfloor$ and expanded tactical actions (`OVERCLOCK_GRADIENT`, `COUNTER_EXPLOIT`).
+
+- **Cryptographic Model Checkpointing & Web Telemetry Visualizer (`Assets/Scripts/ML/ModelCheckpointManager.cs`, `web/app.js`, `web/style.css`, `web/tests/ml-engine.test.js`)**
+  - Added Unity `ModelCheckpointManager` with SHA-256 fingerprinting, top-K checkpoint retention, and automated rollback on loss divergence ($> 50.0$ or $\text{NaN}$).
+  - Integrated client-side `ModelCheckpointInspector` and `RLTelemetryVisualizer` with moving averages, divergence warning badges, and glassmorphic telemetry cards.
+
 - **Distributed Redis Cluster Leases, Heartbeat & Batch Leaderboards (`neuroarena-server/src/cluster/RedisClusterConfig.js`, `neuroarena-server/test/cluster-scale.test.js`, `docs/DISTRIBUTED_SYSTEMS_AND_ML_OPERATIONS.md`)**
   - Implemented atomic distributed lock leases (`acquireLock` / `releaseLock`) with millisecond TTL expiry and ownership tokens to coordinate multi-node match allocations safely.
   - Added batch sorted set ingestion (`zAddBatch`) for high-throughput seasonal leaderboard rank updates across 1,000,000+ players.
