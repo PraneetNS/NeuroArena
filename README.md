@@ -158,10 +158,15 @@ A dynamic commentary system converts live training telemetry into plain-English 
 - **Genetic Operators:** Elitism preservation, tournament selection ($k=3$), uniform parameter crossover, and adaptive Gaussian mutation ($\mu=0, \sigma=0.05$).
 - **Fitness Evaluation:** Multi-objective scoring combining validation accuracy, convergence speed, and model sparsity.
 
-### Reinforcement Learning PPO Policy Agents
-- **Actor-Critic Architecture:** Autonomous bot agents powered by Proximal Policy Optimization (PPO) with clipped surrogate objective:
+### Reinforcement Learning PPO Policy Agents & Intrinsic Curiosity
+- **Actor-Critic Architecture:** Autonomous bot agents powered by Proximal Policy Optimization (PPO) with clipped surrogate objective ($L^{\text{CLIP}}$) and Generalized Advantage Estimation ($\text{GAE}-\lambda$):
   $$L^{\text{CLIP}}(\theta) = \hat{\mathbb{E}}_t \left[ \min\left(r_t(\theta)\hat{A}_t, \text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon)\hat{A}_t\right) \right]$$
-- **Curiosity-Driven Exploration:** Intrinsic reward bonus based on forward-dynamics prediction error in state-action feature space.
+- **Shannon Entropy Exploration Bonus:** Policy entropy $\mathcal{H}(\pi_\theta) = -\sum \pi(a) \ln(\pi(a) + \delta)$ regularizes optimization trajectories, penalizing premature mode collapse into sub-optimal actions.
+- **Intrinsic Curiosity Module (ICM):** Exploration in sparse-reward biomes is augmented with normalized intrinsic rewards:
+  $$r_t^i = \operatorname{clip}\left(\eta \cdot \frac{\|\hat{\phi}(s_{t+1}) - \phi(s_{t+1})\|_2^2}{\sigma_k}, 0, r_{\max}\right)$$
+  normalized via Welford's running variance algorithm to eliminate curiosity explosion across coordinate shifts.
+- **Tactical MCTS Bot Director:** Monte Carlo Tree Search enhanced with AlphaZero-style root Dirichlet exploration noise ($\operatorname{Dir}(0.3)$) and progressive widening constraint $|C(s)| \le \lfloor k \cdot N(s)^\alpha \rfloor$ for high-dimensional action branching.
+- **Cryptographic Model Checkpointing & Server Registry:** Unity `ModelCheckpointManager` and authoritative Node.js `ModelRegistryService` enforce SHA-256 parameter fingerprints, auto-rollback on gradient divergence ($\text{Loss} > 50.0$ or $\text{NaN}$), and zero-downtime champion staging.
 
 ### WebAssembly (WASM) Model Runtime & Web Workers
 - **WASM Acceleration:** High-throughput matrix multiplications and forward passes compiled for WebAssembly runtime execution.
