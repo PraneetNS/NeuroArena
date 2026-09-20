@@ -9144,7 +9144,151 @@ const RLTelemetryVisualizer = {
             loss: lastIdx >= 0 ? this.lossHistory[lastIdx] : 0,
             entropyMA: this.getMovingAverage("entropy"),
             curiosityMA: this.getMovingAverage("curiosity")
-        };
+const TournamentBracketRenderer = {
+    renderBracket(tournamentData) {
+        if (!tournamentData || !tournamentData.brackets) {
+            return '<div class="bracket-empty-state">No active tournament bracket data.</div>';
+        }
+
+        const { format, brackets, standings } = tournamentData;
+        let html = '<div class="tournament-bracket-tree">';
+
+        // Render Upper Bracket
+        if (brackets.upper && brackets.upper.length > 0) {
+            html += '<div class="bracket-section upper-bracket"><div class="bracket-section-header">Upper Bracket (Winners)</div><div class="bracket-rounds">';
+            brackets.upper.forEach((round, rIdx) => {
+                html += `<div class="bracket-round" data-round="${rIdx + 1}">`;
+                html += `<div class="round-title">Round ${round.roundNumber || (rIdx + 1)}</div>`;
+                round.pairings.forEach(match => {
+                    html += this._renderMatchNode(match, tournamentData);
+                });
+                html += '</div>';
+            });
+            html += '</div></div>';
+        }
+
+        // Render Lower Bracket if Double Elim
+        if (format === 'DOUBLE_ELIM' && brackets.lower && brackets.lower.length > 0) {
+            html += '<div class="bracket-section lower-bracket"><div class="bracket-section-header">Lower Bracket (Losers)</div><div class="bracket-rounds">';
+            brackets.lower.forEach((round, rIdx) => {
+                html += `<div class="bracket-round" data-round="${rIdx + 1}">`;
+                html += `<div class="round-title">LB Round ${round.roundNumber || (rIdx + 1)}</div>`;
+                round.pairings.forEach(match => {
+                    html += this._renderMatchNode(match, tournamentData);
+                });
+                html += '</div>';
+            });
+            html += '</div></div>';
+        }
+
+        // Render Grand Finals if present
+        if (brackets.grandFinals) {
+            html += '<div class="bracket-section finals-bracket"><div class="bracket-section-header">Grand Finals</div><div class="bracket-rounds">';
+            html += '<div class="bracket-round gf-round"><div class="round-title">Championship Match</div>';
+            html += this._renderMatchNode(brackets.grandFinals, tournamentData, true);
+
+            if (brackets.grandFinalsReset) {
+                html += '<div class="round-title bracket-reset-title">Bracket Reset Match</div>';
+                html += this._renderMatchNode(brackets.grandFinalsReset, tournamentData, true);
+            }
+            html += '</div></div></div>';
+        }
+
+        html += '</div>';
+        return html;
+    },
+
+    _renderMatchNode(match, tournamentData, isFinals = false) {
+        const p1Id = match.player1;
+        const p2Id = match.player2;
+        const isResolved = match.winner !== null;
+        const isLive = !isResolved && p1Id !== 'BYE' && p2Id !== 'BYE';
+
+        const statusClass = isResolved ? 'status-resolved' : (isLive ? 'status-live' : 'status-bye');
+        const finalsClass = isFinals ? 'match-finals' : '';
+
+        return `
+            <div class="bracket-match-node ${statusClass} ${finalsClass}" data-match-id="${match.matchId}">
+                <div class="match-header">
+                    <span class="match-id-badge">${match.matchId}</span>
+                    <span class="match-status-pill ${statusClass}">${isResolved ? 'RESOLVED' : (isLive ? 'LIVE' : 'BYE')}</span>
+                </div>
+                <div class="match-participants">
+                    <div class="participant-row ${match.winner === p1Id ? 'winner' : ''} ${p1Id === 'BYE' ? 'bye' : ''}">
+                        <span class="seed-pill">${this._getParticipantSeed(p1Id, tournamentData)}</span>
+                        <span class="player-name">${this._getParticipantName(p1Id, tournamentData)}</span>
+                        <span class="match-score">${match.winner === p1Id ? '1' : '0'}</span>
+                    </div>
+                    <div class="participant-row ${match.winner === p2Id ? 'winner' : ''} ${p2Id === 'BYE' ? 'bye' : ''}">
+                        <span class="seed-pill">${this._getParticipantSeed(p2Id, tournamentData)}</span>
+                        <span class="player-name">${this._getParticipantName(p2Id, tournamentData)}</span>
+                        <span class="match-score">${match.winner === p2Id ? '1' : '0'}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    _getParticipantName(id, tournamentData) {
+        if (!id || id === 'BYE') return 'BYE';
+        if (tournamentData.participants) {
+            const p = tournamentData.participants.find(item => item.id === id);
+            if (p) return p.name;
+        }
+        return id;
+    },
+
+    _getParticipantSeed(id, tournamentData) {
+        if (!id || id === 'BYE') return '-';
+        if (tournamentData.participants) {
+            const p = tournamentData.participants.find(item => item.id === id);
+            if (p && p.seed) return `#${p.seed}`;
+        }
+        return '#-';
+    },
+
+    computeTiebreakers(participants, matches) {
+        const scores = new Map();
+        participants.forEach(p => {
+            scores.set(p.id, { id: p.id, name: p.name, wins: 0, buchholz: 0, sonnebornBerger: 0, opponents: new Set() });
+        });
+
+        matches.forEach(m => {
+            if (m.winner && m.winner !== 'BYE' && m.loser && m.loser !== 'BYE') {
+                const w = scores.get(m.winner);
+                const l = scores.get(m.loser);
+                if (w) {
+                    w.wins += 1;
+                    w.opponents.add(m.loser);
+                }
+                if (l) {
+                    l.opponents.add(m.winner);
+                }
+            }
+        });
+
+        // Compute Buchholz & Sonneborn-Berger
+        scores.forEach(p => {
+            let b = 0;
+            let sb = 0;
+            p.opponents.forEach(oppId => {
+                const opp = scores.get(oppId);
+                if (opp) {
+                    b += opp.wins;
+                    // If p defeated opp
+                    const beatOpp = matches.some(m => m.winner === p.id && m.loser === oppId);
+                    if (beatOpp) sb += opp.wins;
+                }
+            });
+            p.buchholz = b;
+            p.sonnebornBerger = sb;
+        });
+
+        return Array.from(scores.values()).sort((a, b) => {
+            if (b.wins !== a.wins) return b.wins - a.wins;
+            if (b.buchholz !== a.buchholz) return b.buchholz - a.buchholz;
+            return b.sonnebornBerger - a.sonnebornBerger;
+        });
     }
 };
 
@@ -9176,6 +9320,7 @@ if (typeof window !== "undefined") {
     window.showInGameActionToast = showInGameActionToast;
     window.ModelCheckpointInspector = ModelCheckpointInspector;
     window.RLTelemetryVisualizer = RLTelemetryVisualizer;
+    window.TournamentBracketRenderer = TournamentBracketRenderer;
 }
 if (typeof module !== "undefined" && module.exports) {
     module.exports.HolographicTelemetryManager = HolographicTelemetryManager;
@@ -9185,6 +9330,7 @@ if (typeof module !== "undefined" && module.exports) {
     module.exports.showInGameActionToast = showInGameActionToast;
     module.exports.ModelCheckpointInspector = ModelCheckpointInspector;
     module.exports.RLTelemetryVisualizer = RLTelemetryVisualizer;
+    module.exports.TournamentBracketRenderer = TournamentBracketRenderer;
 }
 
 
