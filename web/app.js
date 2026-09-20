@@ -9292,6 +9292,115 @@ const TournamentBracketRenderer = {
     }
 };
 
+const TournamentArenaManager = {
+    activeTournament: null,
+    userCheckInStatus: false,
+    countdownTimer: null,
+    remainingCheckInSeconds: 0,
+
+    initLobby(tournamentData) {
+        this.activeTournament = tournamentData;
+        this.userCheckInStatus = false;
+        return this.getLobbyViewModel();
+    },
+
+    calculatePrizeTiers(basePool = 1000, entryFee = 100, participantCount = 8) {
+        const totalPool = basePool + (entryFee * participantCount);
+        return {
+            totalPool,
+            firstPlace: {
+                tokens: Math.floor(totalPool * 0.5),
+                exp: 600,
+                badge: "TOURNAMENT_CHAMPION_GOLD"
+            },
+            secondPlace: {
+                tokens: Math.floor(totalPool * 0.3),
+                exp: 350,
+                badge: "TOURNAMENT_FINALIST_SILVER"
+            },
+            thirdPlace: {
+                tokens: Math.floor(totalPool * 0.2),
+                exp: 200,
+                badge: "TOURNAMENT_PODIUM_BRONZE"
+            }
+        };
+    },
+
+    renderPrizePreview(tiers) {
+        return `
+            <div class="tournament-prize-distribution">
+                <div class="prize-tier podium-gold">
+                    <div class="tier-icon">🥇</div>
+                    <div class="tier-info">
+                        <span class="tier-rank">1st Place (50%)</span>
+                        <span class="tier-reward">${tiers.firstPlace.tokens} Tokens + ${tiers.firstPlace.exp} EXP</span>
+                        <span class="tier-badge-label">Gold Champion Trophy</span>
+                    </div>
+                </div>
+                <div class="prize-tier podium-silver">
+                    <div class="tier-icon">🥈</div>
+                    <div class="tier-info">
+                        <span class="tier-rank">2nd Place (30%)</span>
+                        <span class="tier-reward">${tiers.secondPlace.tokens} Tokens + ${tiers.secondPlace.exp} EXP</span>
+                        <span class="tier-badge-label">Silver Finalist Crest</span>
+                    </div>
+                </div>
+                <div class="prize-tier podium-bronze">
+                    <div class="tier-icon">🥉</div>
+                    <div class="tier-info">
+                        <span class="tier-rank">3rd Place (20%)</span>
+                        <span class="tier-reward">${tiers.thirdPlace.tokens} Tokens + ${tiers.thirdPlace.exp} EXP</span>
+                        <span class="tier-badge-label">Bronze Competitor Pin</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    startCheckInCountdown(durationSeconds = 120, onTick = null, onExpire = null) {
+        if (this.countdownTimer) clearInterval(this.countdownTimer);
+        this.remainingCheckInSeconds = durationSeconds;
+
+        this.countdownTimer = setInterval(() => {
+            this.remainingCheckInSeconds--;
+            if (typeof onTick === 'function') onTick(this.remainingCheckInSeconds);
+
+            if (this.remainingCheckInSeconds <= 0) {
+                clearInterval(this.countdownTimer);
+                this.countdownTimer = null;
+                if (typeof onExpire === 'function') onExpire();
+            }
+        }, 1000);
+    },
+
+    confirmCheckIn() {
+        this.userCheckInStatus = true;
+        if (typeof showInGameActionToast === 'function') {
+            showInGameActionToast("Check-In Confirmed! Bracket assignment in progress...", "success");
+        }
+        return { success: true, isCheckedIn: true };
+    },
+
+    getLobbyViewModel() {
+        if (!this.activeTournament) return null;
+        const tiers = this.calculatePrizeTiers(
+            this.activeTournament.basePrizePool || 1000,
+            this.activeTournament.entryFee || 100,
+            this.activeTournament.participants ? this.activeTournament.participants.length : 8
+        );
+
+        return {
+            id: this.activeTournament.id,
+            name: this.activeTournament.name,
+            format: this.activeTournament.format,
+            status: this.activeTournament.status,
+            prizeTiers: tiers,
+            isCheckedIn: this.userCheckInStatus,
+            remainingSeconds: this.remainingCheckInSeconds
+        };
+    }
+};
+
 window.addEventListener("resize", onWindowResize);
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -9321,6 +9430,7 @@ if (typeof window !== "undefined") {
     window.ModelCheckpointInspector = ModelCheckpointInspector;
     window.RLTelemetryVisualizer = RLTelemetryVisualizer;
     window.TournamentBracketRenderer = TournamentBracketRenderer;
+    window.TournamentArenaManager = TournamentArenaManager;
 }
 if (typeof module !== "undefined" && module.exports) {
     module.exports.HolographicTelemetryManager = HolographicTelemetryManager;
@@ -9331,6 +9441,7 @@ if (typeof module !== "undefined" && module.exports) {
     module.exports.ModelCheckpointInspector = ModelCheckpointInspector;
     module.exports.RLTelemetryVisualizer = RLTelemetryVisualizer;
     module.exports.TournamentBracketRenderer = TournamentBracketRenderer;
+    module.exports.TournamentArenaManager = TournamentArenaManager;
 }
 
 
