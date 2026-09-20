@@ -85,11 +85,11 @@ class TournamentManager {
     if (t.status !== 'REGISTRATION') {
       throw new Error(`Cannot register: tournament is in ${t.status} state`);
     }
-    if (t.engine.participants.size >= t.config.maxParticipants) {
-      throw new Error(`Tournament is full (Max: ${t.config.maxParticipants})`);
-    }
     if (t.engine.participants.has(player.id)) {
       throw new Error(`Player ${player.id} is already registered`);
+    }
+    if (t.engine.participants.size >= t.config.maxParticipants) {
+      throw new Error(`Tournament is full (Max: ${t.config.maxParticipants})`);
     }
 
     t.engine.registerParticipant(player.id, player.name, player.elo || 1200);
