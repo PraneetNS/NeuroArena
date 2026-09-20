@@ -401,17 +401,56 @@ class TournamentEngine {
   }
 
   updateBuchholzScores() {
+    this.updateTiebreakerScores();
+  }
+
+  updateTiebreakerScores() {
     for (const p of this.participants.values()) {
       let bScore = 0;
+      let sbScore = 0;
+
       for (const oppId of p.opponents) {
         const opp = this.participants.get(oppId);
-        if (opp) bScore += opp.score;
+        if (opp) {
+          bScore += opp.score;
+        }
       }
+
+      // Sonneborn-Berger: sum scores of defeated opponents + 0.5 * drawn opponents
+      for (const entry of p.matchHistory) {
+        const opp = this.participants.get(entry.opponent);
+        if (opp) {
+          if (entry.result === 'WIN') {
+            sbScore += opp.score;
+          } else if (entry.result === 'DRAW') {
+            sbScore += opp.score * 0.5;
+          }
+        }
+      }
+
       p.buchholz = bScore;
+      p.sonnebornBerger = Number(sbScore.toFixed(2));
     }
   }
 
+  getHeadToHeadResult(p1Id, p2Id) {
+    const p1 = this.participants.get(p1Id);
+    if (!p1) return 0;
+    let p1Wins = 0;
+    let p2Wins = 0;
+    for (const m of p1.matchHistory) {
+      if (m.opponent === p2Id) {
+        if (m.result === 'WIN') p1Wins++;
+        else if (m.result === 'LOSS') p2Wins++;
+      }
+    }
+    if (p1Wins > p2Wins) return 1;
+    if (p2Wins > p1Wins) return -1;
+    return 0;
+  }
+
   getStandings() {
+    this.updateTiebreakerScores();
     return Array.from(this.participants.values())
       .map(p => ({
         id: p.id,
@@ -425,6 +464,9 @@ class TournamentEngine {
       .sort((a, b) => {
         if (b.score !== a.score) return b.score - a.score;
         if (b.buchholz !== a.buchholz) return b.buchholz - a.buchholz;
+        if (b.sonnebornBerger !== a.sonnebornBerger) return b.sonnebornBerger - a.sonnebornBerger;
+        const h2h = this.getHeadToHeadResult(a.id, b.id);
+        if (h2h !== 0) return -h2h; // If a beat b, h2h is 1, so return -1 (a precedes b)
         return b.elo - a.elo;
       });
   }
