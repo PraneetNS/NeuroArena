@@ -459,7 +459,9 @@ class TournamentEngine {
         buchholz: p.buchholz,
         sonnebornBerger: p.sonnebornBerger || 0,
         elo: p.elo,
-        seed: p.seed
+        seed: p.seed,
+        checkedIn: p.checkedIn,
+        isEliminated: p.isEliminated
       }))
       .sort((a, b) => {
         if (b.score !== a.score) return b.score - a.score;
@@ -469,6 +471,100 @@ class TournamentEngine {
         if (h2h !== 0) return -h2h; // If a beat b, h2h is 1, so return -1 (a precedes b)
         return b.elo - a.elo;
       });
+  }
+
+  setCheckInStatus(participantId, isCheckedIn = true) {
+    const p = this.participants.get(participantId);
+    if (!p) throw new Error(`Participant ${participantId} not found`);
+    p.checkedIn = Boolean(isCheckedIn);
+    return p;
+  }
+
+  forfeitParticipant(participantId, reason = 'FORFEIT') {
+    const p = this.participants.get(participantId);
+    if (!p) throw new Error(`Participant ${participantId} not found`);
+    p.isEliminated = true;
+    p.forfeitReason = reason;
+
+    // Resolve any active unresolved match where this player is participating
+    if (this.format === 'SWISS') {
+      const activeRound = this.rounds[this.currentRound - 1];
+      if (activeRound) {
+        const activeMatch = activeRound.pairings.find(
+          m => (m.player1 === participantId || m.player2 === participantId) && m.winner === null
+        );
+        if (activeMatch) {
+          const winnerId = activeMatch.player1 === participantId ? activeMatch.player2 : activeMatch.player1;
+          this.resolveMatch(activeMatch.matchId, winnerId === 'BYE' ? participantId : winnerId);
+        }
+      }
+    } else {
+      const allMatches = [];
+      for (const r of this.brackets.upper) allMatches.push(...r.pairings);
+      for (const r of this.brackets.lower) allMatches.push(...r.pairings);
+      if (this.brackets.grandFinals) allMatches.push(this.brackets.grandFinals);
+      if (this.brackets.grandFinalsReset) allMatches.push(this.brackets.grandFinalsReset);
+
+      const activeMatch = allMatches.find(
+        m => (m.player1 === participantId || m.player2 === participantId) && m.winner === null
+      );
+      if (activeMatch) {
+        const winnerId = activeMatch.player1 === participantId ? activeMatch.player2 : activeMatch.player1;
+        this.resolveMatch(activeMatch.matchId, winnerId === 'BYE' ? participantId : winnerId);
+      }
+    }
+  }
+
+  reseedParticipants(strategy = 'ELO') {
+    if (this.currentRound > 0 || this.brackets.upper.length > 0) {
+      throw new Error('Cannot reseed after tournament starts');
+    }
+    const players = Array.from(this.participants.values());
+    if (strategy === 'ELO') {
+      players.sort((a, b) => b.elo - a.elo);
+    } else if (strategy === 'RANDOM') {
+      players.sort(() => Math.random() - 0.5);
+    }
+    players.forEach((p, index) => {
+      p.seed = index + 1;
+    });
+  }
+
+  toJSON() {
+    return {
+      tournamentId: this.tournamentId,
+      name: this.name,
+      format: this.format,
+      maxRounds: this.maxRounds,
+      currentRound: this.currentRound,
+      isCompleted: this.isCompleted,
+      winner: this.winner,
+      participants: Array.from(this.participants.values()).map(p => ({
+        ...p,
+        opponents: Array.from(p.opponents)
+      })),
+      rounds: this.rounds,
+      brackets: this.brackets
+    };
+  }
+
+  static fromJSON(data) {
+    const engine = new TournamentEngine(data.tournamentId, data.name, data.format, data.maxRounds);
+    engine.currentRound = data.currentRound;
+    engine.isCompleted = data.isCompleted;
+    engine.winner = data.winner;
+    engine.rounds = data.rounds || [];
+    engine.brackets = data.brackets || { upper: [], lower: [], grandFinals: null, grandFinalsReset: null };
+
+    if (Array.isArray(data.participants)) {
+      for (const p of data.participants) {
+        engine.participants.set(p.id, {
+          ...p,
+          opponents: new Set(p.opponents || [])
+        });
+      }
+    }
+    return engine;
   }
 }
 
