@@ -97,8 +97,15 @@ flowchart TD
         AdaptiveCoaching["Adaptive Coaching & Difficulty\n(Bounded Envelopes & Audit Logs)"]
         GuildSystem["Guilds & Factions Service\n(Skill Trees & Seasonal Trophies)"]
         CheatEngine["Telemetry & Anomaly Detector\n(Anti-Speedhack & Weight Replay)"]
-        TournamentEngine["Swiss Tournament Bracket Engine"]
+        TournamentEngine["Esports Tournament Engine\n(Double Elim / Reset / Swiss)"]
+        TournamentManager["TournamentManager Service\n(Check-in & Automated Payouts)"]
         LeaderboardService["Distributed Redis Leaderboards\n(Sorted Sets / Seasonal Elo Decay)"]
+    end
+
+    subgraph EdgeIngress ["Production Edge & Ingress Security"]
+        NginxIngress["Hardened Nginx Ingress\n(Leaky-Bucket Rate Limiting / DDoS Defense)"]
+        PrometheusCIDR["Prometheus CIDR Gated Metrics\n(Internal Telemetry Scraping)"]
+        CanaryRouter["Canary 10% Weighted Upstreams\n(Zero-Downtime Rollouts)"]
     end
 
     subgraph DataStorage ["Persistence & Cloud Infrastructure"]
@@ -109,16 +116,28 @@ flowchart TD
         PromMetrics["Prometheus & OpenTelemetry Exporter"]
     end
 
-    UnityClient <-->|WebSocket / Binary| ColyseusCore
-    WebClient <-->|WebSocket / Binary| ColyseusCore
+    UnityClient <-->|WebSocket / Binary| NginxIngress
+    WebClient <-->|WebSocket / Binary| NginxIngress
+    NginxIngress --> CanaryRouter
+    CanaryRouter --> ColyseusCore
     ColyseusCore --> ArenaRoom & DuelRoom & CoopRoom
     ArenaRoom & DuelRoom & CoopRoom --> FastProto & ReplayEngine
-    ColyseusCore --> Glicko2 & SeasonalRanked & AdaptiveCoaching & GuildSystem & CheatEngine & TournamentEngine
+    ColyseusCore --> Glicko2 & SeasonalRanked & AdaptiveCoaching & GuildSystem & CheatEngine & TournamentEngine & TournamentManager
     ColyseusCore --> LeaderboardService
     ColyseusCore --> Supabase & CloudSave & RemoteConfig
     ColyseusCore --> PromMetrics
+    PrometheusCIDR -.-> PromMetrics
     AgonesK8s -.-> ColyseusCore
 ```
+
+---
+
+### 🏆 Esports Tournament Arena & Automated Brackets
+- **Double Elimination & Grand Finals Reset:** Authoritative bracket state machine supporting both Upper and Lower elimination brackets. If the Lower Bracket champion defeats the Upper Bracket champion in Game 1 of the Grand Finals, a `Grand Finals Reset` match is automatically triggered.
+- **Sonneborn-Berger & Buchholz Tiebreakers:** Standings sort by conventional score, followed by Buchholz opponent strength and Sonneborn-Berger quality win weighting ($\sum \text{Score}(D) + 0.5 \sum \text{Score}(T)$), resolving deadlocks mathematically.
+- **TournamentManager & Automated Prize Pools:** Coordinates registration fees, Elo-ranked seeding, participant check-in timers, and automated podium prize distribution ($50\%$ 1st place, $30\%$ 2nd place, $20\%$ 3rd place with exclusive trophies and badges).
+- **Interactive Web Bracket Visualizer:** Client-side vector bracket layout with live match status indicators, player seeds, winner glow paths, and registration lobby controls.
+- **Hardened Edge Ingress:** Leaky-bucket rate-limiting (`30 r/s` API burst, `15 r/s` WebSocket), connection bounds ($50$ conn/IP), anti-Slowloris timeouts, and internal CIDR gating for Prometheus metrics.
 
 ---
 
