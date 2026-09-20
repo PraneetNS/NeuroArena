@@ -2151,6 +2151,58 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Esports Tournament Arena & Interactive Bracket Modal -->
+                <div id="modal-tournament-arena" class="modal-overlay hidden">
+                    <div class="glass-modal tournament-arena-card">
+                        <div class="modal-header">
+                            <div class="header-title-wrap">
+                                <h2>🏆 ESPORTS TOURNAMENT ARENA</h2>
+                                <span class="badge-pill live-pulse">LIVE BRACKETS</span>
+                            </div>
+                            <button id="btn-close-tournament-arena" class="close-btn">✕</button>
+                        </div>
+                        <div class="tournament-arena-body">
+                            <!-- Tournament Selection & Header Stats -->
+                            <div class="tournament-top-bar">
+                                <div class="tournament-selector-tabs">
+                                    <button class="tourney-tab active" data-format="DOUBLE_ELIM">Grand Prix (Double Elim)</button>
+                                    <button class="tourney-tab" data-format="SINGLE_ELIM">Hourly Blitz</button>
+                                    <button class="tourney-tab" data-format="SWISS">Guild Invitational</button>
+                                </div>
+                                <div class="tourney-prize-counter">
+                                    <span class="prize-label">PRIZE POOL:</span>
+                                    <span id="tourney-pool-amount" class="prize-value">3,000 TOKENS</span>
+                                </div>
+                            </div>
+
+                            <!-- Tournament Action Controls: Registration, Check-in, Countdown -->
+                            <div class="tournament-action-strip">
+                                <div class="checkin-status-box">
+                                    <span class="checkin-icon">⏱️</span>
+                                    <span class="checkin-text">Check-in Closes In:</span>
+                                    <span id="tourney-checkin-countdown" class="checkin-timer">01:45</span>
+                                </div>
+                                <div class="tourney-cta-group">
+                                    <button id="btn-register-tournament" class="action-btn glow-cyan">⚔️ Register (100 Tokens)</button>
+                                    <button id="btn-checkin-tournament" class="action-btn glow-gold">✅ Confirm Check-In</button>
+                                </div>
+                            </div>
+
+                            <!-- Interactive Bracket Visualizer Container -->
+                            <div class="tournament-bracket-viewport">
+                                <div id="tournament-bracket-container" class="bracket-scroll-pane">
+                                    <!-- Rendered dynamically by TournamentBracketRenderer -->
+                                </div>
+                            </div>
+
+                            <!-- Prize Distribution Podium -->
+                            <div id="tournament-podium-preview" class="tournament-podium-section">
+                                <!-- Populated dynamically by TournamentArenaManager.renderPrizePreview -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
