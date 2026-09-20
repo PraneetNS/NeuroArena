@@ -9144,6 +9144,10 @@ const RLTelemetryVisualizer = {
             loss: lastIdx >= 0 ? this.lossHistory[lastIdx] : 0,
             entropyMA: this.getMovingAverage("entropy"),
             curiosityMA: this.getMovingAverage("curiosity")
+        };
+    }
+};
+
 const TournamentBracketRenderer = {
     renderBracket(tournamentData) {
         if (!tournamentData || !tournamentData.brackets) {

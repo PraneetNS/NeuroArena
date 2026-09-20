@@ -2996,6 +2996,160 @@ function testModelCheckpointAndRLTelemetry() {
     console.log("✅ Model Checkpoint Integrity, State Rollback & RL Telemetry Tests Passed!");
 }
 
+function testTournamentBracketAndEsportsLobby() {
+    console.log("▶ Testing Tournament Bracket Renderer & Esports Lobby System...");
+    const fs = require('fs');
+    const path = require('path');
+    const htmlPath = path.resolve(__dirname, '../index.html');
+    const cssPath = path.resolve(__dirname, '../style.css');
+    const appPath = path.resolve(__dirname, '../app.js');
+    const htmlContent = fs.readFileSync(htmlPath, 'utf8');
+    const cssContent = fs.readFileSync(cssPath, 'utf8');
+    const appContent = fs.readFileSync(appPath, 'utf8');
+
+    // 1. Verify app.js code inclusion
+    assert.ok(appContent.includes('const TournamentBracketRenderer = {'), "app.js must include TournamentBracketRenderer");
+    assert.ok(appContent.includes('const TournamentArenaManager = {'), "app.js must include TournamentArenaManager");
+    assert.ok(appContent.includes('computeTiebreakers(participants, matches)'), "app.js must include computeTiebreakers");
+    assert.ok(appContent.includes('calculatePrizeTiers(basePool'), "app.js must include calculatePrizeTiers");
+
+    // 2. Bracket Rendering Test (Double Elimination with Grand Finals Reset)
+    const TournamentBracketRenderer = {
+        renderBracket(tournamentData) {
+            if (!tournamentData || !tournamentData.brackets) {
+                return '<div class="bracket-empty-state">No active tournament bracket data.</div>';
+            }
+            const { format, brackets } = tournamentData;
+            let html = '<div class="tournament-bracket-tree">';
+            if (brackets.upper && brackets.upper.length > 0) {
+                html += '<div class="bracket-section upper-bracket"><div class="bracket-section-header">Upper Bracket (Winners)</div><div class="bracket-rounds">';
+                brackets.upper.forEach((round, rIdx) => {
+                    html += `<div class="bracket-round" data-round="${rIdx + 1}"><div class="round-title">Round ${round.roundNumber || (rIdx + 1)}</div>`;
+                    round.pairings.forEach(match => { html += `<div class="bracket-match-node" data-match-id="${match.matchId}"><span class="match-id-badge">${match.matchId}</span><span class="seed-pill">#1</span><span class="player-name">${match.player1}</span></div>`; });
+                    html += '</div>';
+                });
+                html += '</div></div>';
+            }
+            if (format === 'DOUBLE_ELIM' && brackets.lower && brackets.lower.length > 0) {
+                html += '<div class="bracket-section lower-bracket"><div class="bracket-section-header">Lower Bracket (Losers)</div><div class="bracket-rounds">';
+                brackets.lower.forEach((round, rIdx) => {
+                    html += `<div class="bracket-round" data-round="${rIdx + 1}"><div class="round-title">LB Round ${round.roundNumber || (rIdx + 1)}</div>`;
+                    round.pairings.forEach(match => { html += `<div class="bracket-match-node" data-match-id="${match.matchId}"><span class="match-id-badge">${match.matchId}</span></div>`; });
+                    html += '</div>';
+                });
+                html += '</div></div>';
+            }
+            if (brackets.grandFinals) {
+                html += '<div class="bracket-section finals-bracket"><div class="bracket-section-header">Grand Finals</div><div class="bracket-rounds">';
+                html += `<div class="bracket-round gf-round"><div class="round-title">Championship Match</div><div class="bracket-match-node match-finals" data-match-id="${brackets.grandFinals.matchId}"></div>`;
+                if (brackets.grandFinalsReset) {
+                    html += `<div class="round-title bracket-reset-title">Bracket Reset Match</div><div class="bracket-match-node match-finals" data-match-id="${brackets.grandFinalsReset.matchId}"></div>`;
+                }
+                html += '</div></div></div>';
+            }
+            html += '</div>';
+            return html;
+        },
+        computeTiebreakers(participants, matches) {
+            const scores = new Map();
+            participants.forEach(p => {
+                scores.set(p.id, { id: p.id, name: p.name, wins: 0, buchholz: 0, sonnebornBerger: 0, opponents: new Set() });
+            });
+            matches.forEach(m => {
+                if (m.winner && m.winner !== 'BYE' && m.loser && m.loser !== 'BYE') {
+                    const w = scores.get(m.winner);
+                    const l = scores.get(m.loser);
+                    if (w) { w.wins += 1; w.opponents.add(m.loser); }
+                    if (l) { l.opponents.add(m.winner); }
+                }
+            });
+            scores.forEach(p => {
+                let b = 0, sb = 0;
+                p.opponents.forEach(oppId => {
+                    const opp = scores.get(oppId);
+                    if (opp) {
+                        b += opp.wins;
+                        if (matches.some(m => m.winner === p.id && m.loser === oppId)) sb += opp.wins;
+                    }
+                });
+                p.buchholz = b;
+                p.sonnebornBerger = sb;
+            });
+            return Array.from(scores.values()).sort((a, b) => {
+                if (b.wins !== a.wins) return b.wins - a.wins;
+                if (b.buchholz !== a.buchholz) return b.buchholz - a.buchholz;
+                return b.sonnebornBerger - a.sonnebornBerger;
+            });
+        }
+    };
+
+    const mockTourney = {
+        format: 'DOUBLE_ELIM',
+        brackets: {
+            upper: [{ roundNumber: 1, pairings: [{ matchId: 'match_UB_r1_m1', player1: 'AlphaPlayer', player2: 'DeltaPlayer' }] }],
+            lower: [{ roundNumber: 1, pairings: [{ matchId: 'match_LB_r1_m1', player1: 'DeltaPlayer', player2: 'GammaPlayer' }] }],
+            grandFinals: { matchId: 'match_GF' },
+            grandFinalsReset: { matchId: 'match_GF_RESET' }
+        }
+    };
+
+    const renderedHtml = TournamentBracketRenderer.renderBracket(mockTourney);
+    assert.ok(renderedHtml.includes('Upper Bracket (Winners)'), "HTML must include Upper Bracket header");
+    assert.ok(renderedHtml.includes('Lower Bracket (Losers)'), "HTML must include Lower Bracket header");
+    assert.ok(renderedHtml.includes('Grand Finals'), "HTML must include Grand Finals header");
+    assert.ok(renderedHtml.includes('Bracket Reset Match'), "HTML must include Bracket Reset Match title");
+    assert.ok(renderedHtml.includes('match_GF_RESET'), "HTML must render reset match ID");
+    assert.ok(renderedHtml.includes('AlphaPlayer'), "HTML must display participant names");
+
+    // 3. Client-Side Tiebreaker Calculations
+    const testParticipants = [
+        { id: 'a', name: 'PlayerA' },
+        { id: 'b', name: 'PlayerB' },
+        { id: 'c', name: 'PlayerC' }
+    ];
+    const testMatches = [
+        { winner: 'a', loser: 'b' },
+        { winner: 'b', loser: 'c' },
+        { winner: 'a', loser: 'c' }
+    ];
+    const standings = TournamentBracketRenderer.computeTiebreakers(testParticipants, testMatches);
+    assert.strictEqual(standings[0].id, 'a', "Player A should be 1st with 2 wins");
+    assert.strictEqual(standings[0].wins, 2);
+    assert.strictEqual(standings[1].id, 'b', "Player B should be 2nd with 1 win");
+    assert.strictEqual(standings[2].id, 'c', "Player C should be 3rd with 0 wins");
+    assert.ok(standings[0].buchholz > 0, "Buchholz score must be calculated");
+    assert.ok(standings[0].sonnebornBerger > 0, "Sonneborn-Berger score must be calculated");
+
+    // 4. Prize Tier Calculation & Formatting
+    function calculatePrizeTiers(basePool = 1000, entryFee = 100, participantCount = 8) {
+        const totalPool = basePool + (entryFee * participantCount);
+        return {
+            totalPool,
+            firstPlace: { tokens: Math.floor(totalPool * 0.5), exp: 600, badge: "TOURNAMENT_CHAMPION_GOLD" },
+            secondPlace: { tokens: Math.floor(totalPool * 0.3), exp: 350, badge: "TOURNAMENT_FINALIST_SILVER" },
+            thirdPlace: { tokens: Math.floor(totalPool * 0.2), exp: 200, badge: "TOURNAMENT_PODIUM_BRONZE" }
+        };
+    }
+    const prizeTiers = calculatePrizeTiers(1000, 100, 8);
+    assert.strictEqual(prizeTiers.totalPool, 1800);
+    assert.strictEqual(prizeTiers.firstPlace.tokens, 900); // 50%
+    assert.strictEqual(prizeTiers.secondPlace.tokens, 540); // 30%
+    assert.strictEqual(prizeTiers.thirdPlace.tokens, 360); // 20%
+    assert.strictEqual(prizeTiers.firstPlace.badge, 'TOURNAMENT_CHAMPION_GOLD');
+
+    // 5. Verify index.html & style.css elements exist
+    assert.ok(htmlContent.includes('id="modal-tournament-arena"'), "index.html must include #modal-tournament-arena");
+    assert.ok(htmlContent.includes('id="tournament-bracket-container"'), "index.html must include #tournament-bracket-container");
+    assert.ok(htmlContent.includes('id="btn-register-tournament"'), "index.html must include registration button");
+    assert.ok(htmlContent.includes('id="btn-checkin-tournament"'), "index.html must include check-in button");
+
+    assert.ok(cssContent.includes('.tournament-arena-card'), "style.css must style .tournament-arena-card");
+    assert.ok(cssContent.includes('.bracket-match-node'), "style.css must style .bracket-match-node");
+    assert.ok(cssContent.includes('.podium-gold'), "style.css must style .podium-gold");
+
+    console.log("✅ Tournament Bracket Renderer & Esports Lobby Tests Passed!");
+}
+
 testWebGPUBootstrapAndFallbackEngine().then(async () => {
     testVolumetricFogAndFroxelGrid();
     testRecurringEngagementAndLiveOpsRemoteConfig();
@@ -3010,6 +3164,7 @@ testWebGPUBootstrapAndFallbackEngine().then(async () => {
     testInSessionDiegeticHUDAndGlanceHierarchy();
     testOutOfGameplayThemedMenuFlowAndCopyAudit();
     testModelCheckpointAndRLTelemetry();
+    testTournamentBracketAndEsportsLobby();
     console.log("🎉 All Web Unit Tests Passed Cleanly!");
 });
 
