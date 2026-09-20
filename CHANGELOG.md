@@ -8,6 +8,20 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- **Esports Tournament Bracket Engine, Double Elimination & Grand Finals Reset (`neuroarena-server/src/tournamentEngine.js`, `neuroarena-server/src/tournamentManager.js`, `neuroarena-server/test/tournament.test.js`, `neuroarena-server/test/tournamentManager.test.js`, `docs/TOURNAMENT_AND_INGRESS_SPECIFICATION.md`)**
+  - Implemented authoritative Double Elimination bracket state machine with Upper and Lower brackets, loser drop-down routing, and automatic `Grand Finals Reset` match scheduling when the Lower Bracket champion takes Game 1.
+  - Added mathematical tiebreakers: Sonneborn-Berger quality win weighting ($\sum \text{Score}(D) + 0.5 \sum \text{Score}(T)$), Buchholz opponent strength, and head-to-head resolution.
+  - Implemented `TournamentManager` service with tournament templates (`HOURLY_BLITZ`, `DAILY_GRAND_PRIX`, `GUILD_INVITATIONAL`), automated check-in timers, Elo re-seeding, and 50%/30%/20% podium prize payouts (tokens, EXP, trophies).
+
+- **Production Edge Ingress Hardening & DDoS Mitigation (`deploy/nginx-ingress.conf`)**
+  - Added leaky-bucket rate-limiting zones (`api_limit:20m rate=30r/s burst=20 nodelay`, `ws_limit:10m rate=15r/s burst=10 nodelay`).
+  - Added client IP connection bounding (`limit_conn addr_limit 50`), Slowloris/DDoS mitigation timeouts (`10s`), and security headers.
+  - Integrated Prometheus telemetry CIDR restrictions (`10.0.0.0/8`, `172.16.0.0/12`, `127.0.0.1`) and canary 10% weighted routing upstream.
+
+- **Client Tournament Bracket Visualizer & Esports Lobby (`web/app.js`, `web/index.html`, `web/style.css`, `web/tests/ml-engine.test.js`)**
+  - Integrated `TournamentBracketRenderer` transforming backend tournament brackets into visual trees with match status pills (`LIVE`, `RESOLVED`, `BYE`), player seeds, and reset match indicators.
+  - Added `TournamentArenaManager` supporting real-time registration, check-in countdown timers, and interactive prize tier distribution previews.
+
 - **Reinforcement Learning Intrinsic Curiosity Module (ICM) & GAE-$\lambda$ (`Assets/Scripts/ML/Reinforcement/CuriosityRewardModule.cs`, `Assets/Scripts/ML/Reinforcement/PPOPolicyAgent.cs`, `docs/REINFORCEMENT_LEARNING_AND_CHECKPOINT_SPEC.md`)**
   - Added Welford running variance normalization and random Xavier feature projections to prevent curiosity reward explosion.
   - Implemented Generalized Advantage Estimation ($\text{GAE}-\lambda$) and Shannon entropy bonus $\mathcal{H}(\pi_\theta)$ to regularize exploration and prevent policy collapse.
