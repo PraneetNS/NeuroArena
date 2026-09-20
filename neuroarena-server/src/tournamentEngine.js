@@ -289,7 +289,7 @@ class TournamentEngine {
 
     // Check if current Upper Bracket round is fully resolved
     const currentUpper = this.brackets.upper[this.brackets.upper.length - 1];
-    if (currentUpper && currentUpper.pairings.every(m => m.winner !== null)) {
+    if (currentUpper && !currentUpper.isResolved && currentUpper.pairings.every(m => m.winner !== null)) {
       currentUpper.isResolved = true;
       const winners = currentUpper.pairings.map(m => m.winner).filter(w => w !== 'BYE');
       const losers = currentUpper.pairings.map(m => m.loser).filter(l => l && l !== 'BYE');
@@ -301,7 +301,10 @@ class TournamentEngine {
           this.isCompleted = true;
           this.winner = ubChamp;
         } else {
-          // In Double Elimination, route to Grand Finals when Lower Bracket also completes
+          // If there's a loser from Upper Finals, queue them for Lower Finals
+          if (losers.length > 0) {
+            this._feedLowerBracket(losers);
+          }
           this._checkGrandFinalsReadiness(ubChamp);
         }
       } else if (winners.length > 1) {
@@ -323,20 +326,38 @@ class TournamentEngine {
           pairings: nextRound,
           isResolved: nextRound.every(m => m.winner !== null)
         });
-      }
 
-      if (this.format === 'DOUBLE_ELIM' && losers.length > 0) {
-        this._feedLowerBracket(losers);
+        if (this.format === 'DOUBLE_ELIM' && losers.length > 0) {
+          this._feedLowerBracket(losers);
+        }
       }
     }
 
     // Check Lower Bracket progress if Double Elim
     if (this.format === 'DOUBLE_ELIM' && this.brackets.lower.length > 0) {
       const currentLower = this.brackets.lower[this.brackets.lower.length - 1];
-      if (currentLower && currentLower.pairings.every(m => m.winner !== null)) {
+      if (currentLower && !currentLower.isResolved && currentLower.pairings.every(m => m.winner !== null)) {
         currentLower.isResolved = true;
         const lbWinners = currentLower.pairings.map(m => m.winner).filter(w => w !== 'BYE');
-        if (lbWinners.length === 1 && this._isUpperBracketDone()) {
+        
+        // If we have pending upper losers waiting for a match against lower bracket survivor
+        if (this.pendingLowerLosers && this.pendingLowerLosers.length > 0) {
+          const nextDrop = this.pendingLowerLosers.shift();
+          const nextRoundIndex = this.brackets.lower.length + 1;
+          this.brackets.lower.push({
+            roundNumber: nextRoundIndex,
+            pairings: [{
+              matchId: `match_LB_r${nextRoundIndex}_m1`,
+              bracket: 'LOWER',
+              round: nextRoundIndex,
+              player1: nextDrop,
+              player2: lbWinners[0],
+              winner: null,
+              loser: null
+            }],
+            isResolved: false
+          });
+        } else if (lbWinners.length === 1 && this._isUpperBracketDone()) {
           const ubChamp = this.brackets.upper[this.brackets.upper.length - 1].pairings[0].winner;
           this._setupGrandFinals(ubChamp, lbWinners[0]);
         }
@@ -345,34 +366,55 @@ class TournamentEngine {
   }
 
   _feedLowerBracket(droppedLosers) {
-    const nextRoundIndex = this.brackets.lower.length + 1;
-    const pairings = [];
+    if (!this.pendingLowerLosers) this.pendingLowerLosers = [];
 
-    // Pair dropped losers or combine with previous lower round survivors
-    let pool = [...droppedLosers];
-    if (this.brackets.lower.length > 0) {
-      const prevLower = this.brackets.lower[this.brackets.lower.length - 1];
-      const prevWinners = prevLower.pairings.map(m => m.winner).filter(w => w !== 'BYE');
-      pool = [...prevWinners, ...droppedLosers];
-    }
-
-    for (let i = 0; i < pool.length; i += 2) {
-      pairings.push({
-        matchId: `match_LB_r${nextRoundIndex}_m${Math.floor(i / 2) + 1}`,
-        bracket: 'LOWER',
-        round: nextRoundIndex,
-        player1: pool[i],
-        player2: pool[i + 1] || 'BYE',
-        winner: pool[i + 1] ? null : pool[i],
-        loser: pool[i + 1] ? null : 'BYE'
+    if (this.brackets.lower.length === 0) {
+      // First drop (Round 1): create initial lower round
+      const pairings = [];
+      for (let i = 0; i < droppedLosers.length; i += 2) {
+        pairings.push({
+          matchId: `match_LB_r1_m${Math.floor(i / 2) + 1}`,
+          bracket: 'LOWER',
+          round: 1,
+          player1: droppedLosers[i],
+          player2: droppedLosers[i + 1] || 'BYE',
+          winner: droppedLosers[i + 1] ? null : droppedLosers[i],
+          loser: droppedLosers[i + 1] ? null : 'BYE'
+        });
+      }
+      this.brackets.lower.push({
+        roundNumber: 1,
+        pairings,
+        isResolved: pairings.every(m => m.winner !== null)
       });
+      return;
     }
 
-    this.brackets.lower.push({
-      roundNumber: nextRoundIndex,
-      pairings,
-      isResolved: pairings.every(m => m.winner !== null)
-    });
+    // Subsequent drops: if current lower round is resolved, pair immediately; otherwise queue
+    const currentLower = this.brackets.lower[this.brackets.lower.length - 1];
+    if (currentLower && currentLower.isResolved) {
+      const lbWinners = currentLower.pairings.map(m => m.winner).filter(w => w !== 'BYE');
+      const nextRoundIndex = this.brackets.lower.length + 1;
+      const pairings = [];
+      for (let i = 0; i < droppedLosers.length; i++) {
+        pairings.push({
+          matchId: `match_LB_r${nextRoundIndex}_m${i + 1}`,
+          bracket: 'LOWER',
+          round: nextRoundIndex,
+          player1: droppedLosers[i],
+          player2: lbWinners[i] || 'BYE',
+          winner: lbWinners[i] ? null : droppedLosers[i],
+          loser: lbWinners[i] ? null : 'BYE'
+        });
+      }
+      this.brackets.lower.push({
+        roundNumber: nextRoundIndex,
+        pairings,
+        isResolved: pairings.every(m => m.winner !== null)
+      });
+    } else {
+      this.pendingLowerLosers.push(...droppedLosers);
+    }
   }
 
   _isUpperBracketDone() {
@@ -383,8 +425,11 @@ class TournamentEngine {
   _checkGrandFinalsReadiness(ubChamp) {
     if (this.brackets.lower.length > 0) {
       const lastLower = this.brackets.lower[this.brackets.lower.length - 1];
-      if (lastLower.isResolved && lastLower.pairings.length === 1) {
-        this._setupGrandFinals(ubChamp, lastLower.pairings[0].winner);
+      if (lastLower.isResolved && (!this.pendingLowerLosers || this.pendingLowerLosers.length === 0)) {
+        const lbWinners = lastLower.pairings.map(m => m.winner).filter(w => w !== 'BYE');
+        if (lbWinners.length === 1) {
+          this._setupGrandFinals(ubChamp, lbWinners[0]);
+        }
       }
     }
   }
