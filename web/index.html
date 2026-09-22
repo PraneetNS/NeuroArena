@@ -2247,7 +2247,14 @@
 
                             <!-- Timeline Scrubber Container -->
                             <div id="replay-timeline-container" class="replay-timeline-card">
-                                <!-- Populated dynamically by ReplayTheaterManager.renderScrubberTimeline -->
+                                <div class="replay-timeline-meta">
+                                    <span class="replay-match-label">MATCH_TRIAL_01</span>
+                                    <span class="replay-duration-label">0.0s / 0.0s</span>
+                                </div>
+                                <div class="replay-scrubber-track-wrap">
+                                    <input type="range" id="replay-scrubber" min="0" max="100" value="0" step="0.1" class="na-slider replay-scrubber-bar" />
+                                    <div class="replay-bookmark-markers"></div>
+                                </div>
                             </div>
 
                             <!-- Keyframe Bookmarks & Milestones Drawer -->
