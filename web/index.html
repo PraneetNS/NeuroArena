@@ -2203,6 +2203,63 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Match Replay Theater & Timeline Scrubber Modal -->
+                <div id="modal-replay-theater" class="modal-overlay hidden">
+                    <div class="glass-modal replay-theater-card na-panel-chamfer">
+                        <div class="modal-header">
+                            <div class="header-title-wrap">
+                                <h2>📼 MATCH REPLAY THEATER</h2>
+                                <span class="badge-pill replay-badge-pill">DETERMINISTIC SCRUBBER</span>
+                            </div>
+                            <button id="btn-close-replay-theater" class="close-btn">✕</button>
+                        </div>
+                        <div class="replay-theater-body">
+                            <!-- Telemetry HUD & Convergence Gauges -->
+                            <div class="replay-telemetry-grid">
+                                <div class="replay-stat-card">
+                                    <span class="stat-card-label">ARCHITECT 1 LOSS (∇θ₁)</span>
+                                    <span id="replay-telemetry-p1-loss" class="stat-card-val loss-p1">0.4200</span>
+                                </div>
+                                <div class="replay-stat-card">
+                                    <span class="stat-card-label">ARCHITECT 2 LOSS (∇θ₂)</span>
+                                    <span id="replay-telemetry-p2-loss" class="stat-card-val loss-p2">0.5800</span>
+                                </div>
+                                <div class="replay-stat-card">
+                                    <span class="stat-card-label">DIVERGENCE (Δℒ)</span>
+                                    <span id="replay-telemetry-desync" class="stat-card-val loss-delta">0.1600</span>
+                                </div>
+                                <div class="replay-stat-card">
+                                    <span class="stat-card-label">SIMULATION INTEGRITY</span>
+                                    <span id="replay-telemetry-integrity" class="stat-card-val val-green">100% VERIFIED</span>
+                                </div>
+                            </div>
+
+                            <!-- Playback Control Bar -->
+                            <div class="replay-controls-bar">
+                                <div class="replay-btn-group">
+                                    <button id="btn-replay-step-back" class="action-btn replay-ctrl-btn" title="Step -1 Frame">⏮ Step</button>
+                                    <button id="btn-replay-play-toggle" class="action-btn replay-ctrl-btn glow-cyan">▶ Play</button>
+                                    <button id="btn-replay-step-fwd" class="action-btn replay-ctrl-btn" title="Step +1 Frame">⏭ Step</button>
+                                </div>
+                                <button id="btn-replay-speed-cycle" class="action-btn replay-speed-btn">1.0x</button>
+                            </div>
+
+                            <!-- Timeline Scrubber Container -->
+                            <div id="replay-timeline-container" class="replay-timeline-card">
+                                <!-- Populated dynamically by ReplayTheaterManager.renderScrubberTimeline -->
+                            </div>
+
+                            <!-- Keyframe Bookmarks & Milestones Drawer -->
+                            <div class="replay-bookmarks-section">
+                                <div class="section-subheading">TIMELINE KEYFRAME BOOKMARKS</div>
+                                <div id="replay-bookmarks-list" class="replay-bookmarks-row">
+                                    <!-- Populated dynamically by ReplayTheaterManager.renderBookmarksList -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

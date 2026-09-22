@@ -9448,6 +9448,15 @@ const ReplayTheaterManager = {
                 btnSpeed.textContent = `${this.playbackSpeed}x`;
             });
         }
+
+        const btnClose = document.getElementById("btn-close-replay-theater");
+        if (btnClose) {
+            btnClose.addEventListener("click", () => {
+                const modal = document.getElementById("modal-replay-theater");
+                if (modal) modal.classList.add("hidden");
+                this.pause();
+            });
+        }
     },
 
     loadMatchReplay(replayData) {
