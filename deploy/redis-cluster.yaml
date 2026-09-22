@@ -1,9 +1,32 @@
 # Redis Cluster Deployment for NeuroArena Real-Time High-Scale Backend
 # Keyspace Schema:
-# - ranked:leaderboard:<seasonId> -> ZSET (member: accountId, score: rating)
-# - ranked:profile:<accountId>    -> HASH / JSON (rating, rd, tier, cosmetics, shards)
-# - daily:completed:<accountId:dateKey> -> STRING TTL 48h
-# - remote:config:active          -> STRING JSON TTL 5m
+# - ranked:leaderboard:<seasonId>        -> ZSET (member: accountId, score: rating)
+# - ranked:profile:<accountId>            -> HASH / JSON (rating, rd, tier, cosmetics, shards)
+# - replay:meta:<matchId>                 -> HASH (matchId, biomeId, durationSec, frameCount, checksum)
+# - replay:chunk:<matchId>:<chunkIdx>     -> STRING base64 delta payload (TTL 72h)
+# - replay:index:user:<userId>            -> ZSET (score: timestamp, member: matchId)
+# - daily:completed:<accountId:dateKey>   -> STRING TTL 48h
+# - remote:config:active                  -> STRING JSON TTL 5m
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-cluster-service
+  namespace: neuroarena-prod
+  labels:
+    app: redis-cluster
+spec:
+  clusterIP: None
+  ports:
+    - port: 6379
+      name: client
+      targetPort: 6379
+    - port: 16379
+      name: gossip
+      targetPort: 16379
+  selector:
+    app: redis-cluster
+---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -23,16 +46,64 @@ spec:
       labels:
         app: redis-cluster
     spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - redis-cluster
+                topologyKey: kubernetes.io/hostname
       containers:
         - name: redis
           image: redis:7.2-alpine
           command: ["redis-server"]
-          args: ["--cluster-enabled", "yes", "--cluster-config-file", "nodes.conf", "--cluster-node-timeout", "5000", "--appendonly", "yes"]
+          args:
+            - "--cluster-enabled"
+            - "yes"
+            - "--cluster-config-file"
+            - "/data/nodes.conf"
+            - "--cluster-node-timeout"
+            - "5000"
+            - "--appendonly"
+            - "yes"
+            - "--maxmemory"
+            - "1536mb"
+            - "--maxmemory-policy"
+            - "volatile-lru"
+            - "--save"
+            - "900"
+            - "1"
+            - "--save"
+            - "300"
+            - "10"
           ports:
             - containerPort: 6379
               name: client
             - containerPort: 16379
               name: gossip
+          livenessProbe:
+            exec:
+              command:
+                - redis-cli
+                - ping
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          readinessProbe:
+            exec:
+              command:
+                - redis-cli
+                - ping
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 2
+            successThreshold: 1
           resources:
             requests:
               cpu: "250m"
@@ -40,3 +111,25 @@ spec:
             limits:
               cpu: "1000m"
               memory: "2048Mi"
+          volumeMounts:
+            - name: redis-data
+              mountPath: /data
+  volumeClaimTemplates:
+    - metadata:
+        name: redis-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 10Gi
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: redis-cluster-pdb
+  namespace: neuroarena-prod
+spec:
+  minAvailable: 4
+  selector:
+    matchLabels:
+      app: redis-cluster
