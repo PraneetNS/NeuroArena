@@ -141,13 +141,48 @@ async function testRedisDistributedLockingAndBatching() {
     console.log("✅ Redis Distributed Locking, Lease Expiry & Batch ZSet Passed!");
 }
 
+async function testRedisReplayCachingAndIndex() {
+    console.log("▶ Testing Redis Cluster Match Replay Chunk Caching & User Index...");
+
+    const redis = new RedisClusterConfig();
+    const matchId = "match_replay_prod_771";
+    const userId = "usr_architect_42";
+
+    // 1. Cache replay metadata
+    const metaKey = `replay:meta:${matchId}`;
+    const metaPayload = { matchId, biomeId: "Biome6_SemanticExpanse", frameCount: 120, checksum: "a1b2c3d4e5f60718" };
+    await redis.set(metaKey, metaPayload, 86400);
+
+    const storedMeta = JSON.parse(await redis.get(metaKey));
+    assert.strictEqual(storedMeta.matchId, matchId);
+    assert.strictEqual(storedMeta.biomeId, "Biome6_SemanticExpanse");
+
+    // 2. Cache chunked payload with 72h TTL
+    const chunkKey = `replay:chunk:${matchId}:0`;
+    await redis.set(chunkKey, "base64_encoded_delta_chunk_data", 259200);
+    const storedChunk = await redis.get(chunkKey);
+    assert.strictEqual(storedChunk, "base64_encoded_delta_chunk_data");
+
+    // 3. Index match under user's recent replays sorted set
+    const userIndexKey = `replay:index:user:${userId}`;
+    const timestamp = Date.now();
+    await redis.zAdd(userIndexKey, matchId, timestamp);
+
+    const userRank = await redis.zRevRank(userIndexKey, matchId);
+    assert.strictEqual(userRank, 1, "Most recent match replay must rank #1 for user index");
+
+    console.log("✅ Redis Cluster Match Replay Chunk Caching & User Index Passed!");
+}
+
 async function runAllClusterTests() {
     testTokenBucketRateLimiting();
     testRedisDistributedLeaderboardZSet();
     testStatelessSessionTicketsAndTamperDetection();
     testClusterDrainageAndRenewal();
     await testRedisDistributedLockingAndBatching();
+    await testRedisReplayCachingAndIndex();
     console.log("🎉 All 1M Scale Cluster & Session Tests Passed Cleanly!");
 }
 
 runAllClusterTests();
+
