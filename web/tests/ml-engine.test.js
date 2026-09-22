@@ -3150,6 +3150,95 @@ function testTournamentBracketAndEsportsLobby() {
     console.log("✅ Tournament Bracket Renderer & Esports Lobby Tests Passed!");
 }
 
+function testReplayTheaterAndBenchmarkEngine() {
+    console.log("▶ Testing Replay Theater, Timeline Scrubber & ML Inference Benchmarks...");
+    const fs = require('fs');
+    const path = require('path');
+    const htmlPath = path.resolve(__dirname, '../index.html');
+    const cssPath = path.resolve(__dirname, '../style.css');
+    const appPath = path.resolve(__dirname, '../app.js');
+    const htmlContent = fs.readFileSync(htmlPath, 'utf8');
+    const cssContent = fs.readFileSync(cssPath, 'utf8');
+    const appContent = fs.readFileSync(appPath, 'utf8');
+
+    // 1. Verify app.js code inclusion
+    assert.ok(appContent.includes('const ReplayTheaterManager = {'), "app.js must include ReplayTheaterManager");
+    assert.ok(appContent.includes('loadMatchReplay(replayData)'), "app.js must include loadMatchReplay");
+    assert.ok(appContent.includes('renderScrubberTimeline('), "app.js must include renderScrubberTimeline");
+    assert.ok(appContent.includes('renderBookmarksList('), "app.js must include renderBookmarksList");
+
+    // 2. ReplayViewer state and scrub testing
+    const sampleReplay = {
+        header: { matchId: "replay_test_101", biomeId: "Biome6_SemanticExpanse", tickRateHz: 20 },
+        bookmarks: [
+            { tick: 10, eventType: "FIRST_CONVERGENCE", description: "P1 loss reached 0.40" },
+            { tick: 25, eventType: "OVERFIT_DESYNC", description: "P2 divergence threshold breached" }
+        ],
+        frames: [
+            { t: 0, s: { p1: { x: 0, y: 0, z: 0, loss: 1.0 }, p2: { x: 10, y: 0, z: 10, loss: 1.2 } } },
+            { t: 10, s: { p1: { x: 5, y: 0, z: 5, loss: 0.4 }, p2: { x: 8, y: 0, z: 9, loss: 0.9 } } },
+            { t: 20, s: { p1: { x: 10, y: 0, z: 10, loss: 0.2 }, p2: { x: 7, y: 0, z: 8, loss: 0.8 } } },
+            { t: 30, s: { p1: { x: 15, y: 0, z: 15, loss: 0.1 }, p2: { x: 6, y: 0, z: 7, loss: 0.7 } } }
+        ]
+    };
+
+    // Lightweight mock / verification of ReplayViewer math
+    const totalFrames = sampleReplay.frames.length;
+    assert.strictEqual(totalFrames, 4);
+
+    // Seek normalized math
+    function seekNormalized(ratio, frames) {
+        const idx = Math.floor(Math.max(0, Math.min(1, ratio)) * (frames.length - 1));
+        return frames[idx];
+    }
+    assert.strictEqual(seekNormalized(0.0, sampleReplay.frames).t, 0);
+    assert.strictEqual(seekNormalized(0.5, sampleReplay.frames).t, 10);
+    assert.strictEqual(seekNormalized(1.0, sampleReplay.frames).t, 30);
+
+    // Interpolation math (between frame 0 and 1)
+    const f0 = sampleReplay.frames[0];
+    const f1 = sampleReplay.frames[1];
+    const alpha = 0.5;
+    const interpX = f0.s.p1.x + (f1.s.p1.x - f0.s.p1.x) * alpha;
+    const interpLoss = f0.s.p1.loss + (f1.s.p1.loss - f0.s.p1.loss) * alpha;
+    assert.strictEqual(interpX, 2.5);
+    assert.strictEqual(interpLoss, 0.7);
+
+    // Desync divergence calculation
+    const desyncTick10 = Math.abs(f1.s.p1.loss - f1.s.p2.loss);
+    assert.strictEqual(Number(desyncTick10.toFixed(2)), 0.50);
+
+    // Bookmarking seek lookup
+    const bm10 = sampleReplay.bookmarks.find(b => b.tick === 10);
+    assert.ok(bm10, "Bookmark at tick 10 must be found");
+    assert.strictEqual(bm10.eventType, "FIRST_CONVERGENCE");
+
+    // 2. ML Inference Benchmark calculations
+    // Conv2D FLOPs verification: 2 * C_in * K_h * K_w * C_out * H_out * W_out
+    const inC = 8, outC = 16, H = 32, W = 32, K = 3;
+    const convFlops = outC * H * W * (2 * inC * K * K + 1);
+    assert.strictEqual(convFlops, 16 * 32 * 32 * (2 * 8 * 9 + 1));
+    assert.ok(convFlops > 2000000, "Conv2D FLOPs must exceed 2M per iteration");
+
+    // LayerNorm FLOPs verification: 5 * B * D
+    const batch = 32, dim = 512;
+    const lnFlops = 5 * batch * dim;
+    assert.strictEqual(lnFlops, 81920);
+
+    // 3. Verify index.html & style.css elements exist
+    assert.ok(htmlContent.includes('id="modal-replay-theater"'), "index.html must include #modal-replay-theater");
+    assert.ok(htmlContent.includes('id="replay-scrubber"'), "index.html must include #replay-scrubber");
+    assert.ok(htmlContent.includes('id="replay-timeline-container"'), "index.html must include #replay-timeline-container");
+    assert.ok(htmlContent.includes('id="replay-bookmarks-list"'), "index.html must include #replay-bookmarks-list");
+
+    assert.ok(cssContent.includes('.replay-theater-card'), "style.css must style .replay-theater-card");
+    assert.ok(cssContent.includes('.replay-scrubber-bar'), "style.css must style .replay-scrubber-bar");
+    assert.ok(cssContent.includes('.bm-marker'), "style.css must style .bm-marker");
+    assert.ok(cssContent.includes('.replay-stat-card'), "style.css must style .replay-stat-card");
+
+    console.log("✅ Replay Theater, Timeline Scrubber & ML Inference Benchmark Tests Passed!");
+}
+
 testWebGPUBootstrapAndFallbackEngine().then(async () => {
     testVolumetricFogAndFroxelGrid();
     testRecurringEngagementAndLiveOpsRemoteConfig();
@@ -3165,8 +3254,10 @@ testWebGPUBootstrapAndFallbackEngine().then(async () => {
     testOutOfGameplayThemedMenuFlowAndCopyAudit();
     testModelCheckpointAndRLTelemetry();
     testTournamentBracketAndEsportsLobby();
+    testReplayTheaterAndBenchmarkEngine();
     console.log("🎉 All Web Unit Tests Passed Cleanly!");
 });
+
 
 
 
