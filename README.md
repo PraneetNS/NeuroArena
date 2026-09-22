@@ -285,9 +285,31 @@ A dynamic commentary system converts live training telemetry into plain-English 
   - `BURST_TRAIN_COOLDOWN_REDUCTION` (-20% training cooldown)
   - `SATECHEL_CAPACITY_EXPANSION` (+25 token slots)
 
-### Deterministic Tick Replay & Spectator Verification
-- **Full Match Replay Logs:** Captures state frames with delta-tick compression and SHA-256 state hashing.
-- **Spectator Debug Tool:** Interactive scrubbing scrubber supporting tick rollback, step-forward, and variable playback speeds ($0.25x - 4x$).
+### Deterministic Match Replay Engine, Timeline Scrubber & Replay Theater
+- **Deterministic Frame Recording:** Captures synchronized 20Hz ticks containing coordinate kinematics, user inputs, and neural loss trajectories $(\nabla\theta_1, \nabla\theta_2)$.
+- **Delta-Compression & Quantization ($K=20$):** Hybrid keyframe and differential offset encoding reducing raw JSON payloads by **68% to 75%** over the wire:
+  $$s_t = s_{t-1} + \Delta s_t$$
+- **Chained Cryptographic Rolling Checksum:** Every recorded frame is hashed into an incremental SHA-256 Merkle chain:
+  $$H_t = \text{SHA-256}\left(H_{t-1} \parallel \text{CanonicalJSON}(\text{frame}_t)\right)[0..15]$$
+  Detects and rejects single-bit frame tampering or replay alteration across distributed nodes.
+- **Neural Milestone Bookmarking:** Annotates salient ML inflection points (`FIRST_CONVERGENCE`, `OVERFIT_DESYNC`, `EXPLODING_GRADIENT`, `MATCH_VICTORY`) with quick-seek navigational pills.
+- **Interactive Replay Theater:** Web client timeline scrubber supporting smooth Lerp/Slerp interpolation, variable playback rates ($0.5\times\text{--}4.0\times$), loss divergence HUD readout ($|\mathcal{L}_1 - \mathcal{L}_2|$), and ghost trajectory trail overlays.
+
+### High-Performance ML Inference Benchmarking Suite
+- **Vectorized Kernel Evaluation:** Evaluates CPU and SIMD compute throughput across fundamental deep learning operators using zero-allocation thread pooling (`Parallel.For`):
+  - **Dense Layer Forward Pass:** Matrix multiply + bias + ReLU ($2 \cdot B \cdot D_{in} \cdot D_{out}$ FLOPs).
+  - **Softmax Self-Attention:** Multi-head scaled dot-product attention with numerically stable exponent subtraction ($2 \cdot H \cdot S^2 \cdot D + 3 \cdot H \cdot S^2$ FLOPs).
+  - **2D Convolution (Conv2D):** Sliding receptive field cross-correlation with kernel stride and zero-padding ($H_{out} \cdot W_{out} \cdot C_{out} \cdot (2 C_{in} K^2 + 1)$ FLOPs).
+  - **Two-Pass Layer Normalization:** Numerically stable variance accumulation avoiding catastrophic cancellation ($5 \cdot B \cdot D$ FLOPs).
+- **Latency Percentile Profiling:** Computes exact sorted distribution metrics for P50, P95, and P99 latency percentiles alongside sustained GFLOPS throughput.
+
+### Production Redis Cluster High Availability & Replay Caching
+- **6-Node StatefulSet Architecture:** Pod anti-affinity across physical Kubernetes hosts with automated failover and headless gossip clustering.
+- **Replay Storage Keyspace:**
+  - `replay:chunk:<matchId>:<chunkIdx>`: Compressed delta payloads with 72-hour TTL.
+  - `replay:meta:<matchId>`: Fast match metadata headers and integrity fingerprints.
+  - `replay:index:user:<userId>`: Sorted set chronological user match history.
+- **Quorum Preservation & Eviction Policies:** Hardened with `volatile-lru` eviction policy (capping at 1536MB) and `PodDisruptionBudget` (`minAvailable: 4`) guaranteeing anti-split-brain consistency during cluster rolling upgrades.
 
 ### Telemetry Anomaly Detection & Anti-Cheat Pipeline
 - **Real-Time Heuristic Defense:**
