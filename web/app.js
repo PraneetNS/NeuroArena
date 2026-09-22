@@ -9405,6 +9405,208 @@ const TournamentArenaManager = {
     }
 };
 
+// ==========================================
+// REPLAY THEATER & TIMELINE SCRUBBER MANAGER
+// ==========================================
+const ReplayTheaterManager = {
+    activeViewer: null,
+    currentReplayData: null,
+    playbackSpeed: 1.0,
+    isPlaying: false,
+    timer: null,
+
+    init() {
+        const scrubber = document.getElementById("replay-scrubber");
+        if (scrubber) {
+            scrubber.addEventListener("input", (e) => {
+                const ratio = parseFloat(e.target.value) / 100;
+                this.seekNormalized(ratio);
+            });
+        }
+
+        const btnPlay = document.getElementById("btn-replay-play-toggle");
+        if (btnPlay) {
+            btnPlay.addEventListener("click", () => this.togglePlay());
+        }
+
+        const btnStepBack = document.getElementById("btn-replay-step-back");
+        if (btnStepBack) {
+            btnStepBack.addEventListener("click", () => this.step(-1));
+        }
+
+        const btnStepFwd = document.getElementById("btn-replay-step-fwd");
+        if (btnStepFwd) {
+            btnStepFwd.addEventListener("click", () => this.step(1));
+        }
+
+        const btnSpeed = document.getElementById("btn-replay-speed-cycle");
+        if (btnSpeed) {
+            btnSpeed.addEventListener("click", () => {
+                const speeds = [0.5, 1.0, 2.0, 4.0];
+                const nextIdx = (speeds.indexOf(this.playbackSpeed) + 1) % speeds.length;
+                this.setSpeed(speeds[nextIdx]);
+                btnSpeed.textContent = `${this.playbackSpeed}x`;
+            });
+        }
+    },
+
+    loadMatchReplay(replayData) {
+        if (!replayData || !Array.isArray(replayData.frames)) {
+            console.warn("[ReplayTheater] Invalid replay payload.");
+            return false;
+        }
+
+        this.currentReplayData = replayData;
+        this.currentFrameIndex = 0;
+        this.totalFrames = replayData.frames.length;
+        this.bookmarks = replayData.bookmarks || [];
+
+        this.renderBookmarksList("replay-bookmarks-list");
+        this.renderScrubberTimeline("replay-timeline-container");
+        this.updateHUD(0);
+        return true;
+    },
+
+    play() {
+        if (this.isPlaying || !this.currentReplayData) return;
+        this.isPlaying = true;
+        const tickRate = this.currentReplayData.header?.tickRateHz || 20;
+        const intervalMs = (1000 / tickRate) / this.playbackSpeed;
+
+        const btnPlay = document.getElementById("btn-replay-play-toggle");
+        if (btnPlay) btnPlay.innerHTML = "⏸ Pause";
+
+        this.timer = setInterval(() => {
+            if (this.currentFrameIndex < this.totalFrames - 1) {
+                this.seekFrame(this.currentFrameIndex + 1);
+            } else {
+                this.pause();
+            }
+        }, intervalMs);
+    },
+
+    pause() {
+        this.isPlaying = false;
+        if (this.timer) {
+            clearInterval(this.timer);
+            this.timer = null;
+        }
+        const btnPlay = document.getElementById("btn-replay-play-toggle");
+        if (btnPlay) btnPlay.innerHTML = "▶ Play";
+    },
+
+    togglePlay() {
+        if (this.isPlaying) this.pause();
+        else this.play();
+        return this.isPlaying;
+    },
+
+    setSpeed(speed) {
+        this.playbackSpeed = speed;
+        if (this.isPlaying) {
+            this.pause();
+            this.play();
+        }
+    },
+
+    seekNormalized(ratio) {
+        if (!this.currentReplayData || this.totalFrames === 0) return;
+        const targetIdx = Math.floor(Math.max(0, Math.min(1, ratio)) * (this.totalFrames - 1));
+        this.seekFrame(targetIdx);
+    },
+
+    seekFrame(index) {
+        if (!this.currentReplayData || this.totalFrames === 0) return;
+        this.currentFrameIndex = Math.max(0, Math.min(this.totalFrames - 1, index));
+        this.updateHUD(this.currentFrameIndex);
+
+        const scrubber = document.getElementById("replay-scrubber");
+        if (scrubber) {
+            scrubber.value = ((this.currentFrameIndex / (this.totalFrames - 1)) * 100).toFixed(1);
+        }
+    },
+
+    seekTick(targetTick) {
+        if (!this.currentReplayData) return;
+        for (let i = 0; i < this.totalFrames; i++) {
+            if (this.currentReplayData.frames[i].t >= targetTick) {
+                return this.seekFrame(i);
+            }
+        }
+        this.seekFrame(this.totalFrames - 1);
+    },
+
+    step(delta) {
+        this.seekFrame(this.currentFrameIndex + delta);
+    },
+
+    renderBookmarksList(containerId) {
+        const container = document.getElementById(containerId);
+        if (!container || !this.bookmarks) return;
+
+        if (this.bookmarks.length === 0) {
+            container.innerHTML = `<div class="replay-empty-bookmarks">No timeline anomalies bookmarked for this trial.</div>`;
+            return;
+        }
+
+        container.innerHTML = this.bookmarks.map((bm, idx) => `
+            <div class="replay-bookmark-pill" data-tick="${bm.tick}" onclick="ReplayTheaterManager.seekTick(${bm.tick})">
+                <span class="bm-event-tag">${bm.eventType}</span>
+                <span class="bm-tick">T+${bm.tick}</span>
+                <span class="bm-desc">${bm.description}</span>
+            </div>
+        `).join("");
+    },
+
+    renderScrubberTimeline(containerId) {
+        const container = document.getElementById(containerId);
+        if (!container || !this.currentReplayData) return;
+
+        const durationSec = (this.totalFrames / (this.currentReplayData.header?.tickRateHz || 20)).toFixed(1);
+        container.innerHTML = `
+            <div class="replay-timeline-meta">
+                <span class="replay-match-label">${this.currentReplayData.header?.matchId || "MATCH_TRIAL"}</span>
+                <span class="replay-duration-label">0.0s / ${durationSec}s</span>
+            </div>
+            <div class="replay-scrubber-track-wrap">
+                <input type="range" id="replay-scrubber" min="0" max="100" value="0" step="0.1" class="na-slider replay-scrubber-bar" />
+                <div class="replay-bookmark-markers">
+                    ${this.bookmarks.map(bm => {
+                        const pct = ((bm.tick / Math.max(1, this.totalFrames - 1)) * 100).toFixed(1);
+                        return `<span class="bm-marker" style="left: ${pct}%;" title="${bm.eventType}: ${bm.description}"></span>`;
+                    }).join("")}
+                </div>
+            </div>
+        `;
+        this.init();
+    },
+
+    updateHUD(frameIndex) {
+        const frame = this.currentReplayData?.frames[frameIndex];
+        if (!frame) return;
+
+        const tickRate = this.currentReplayData.header?.tickRateHz || 20;
+        const currentSec = (frameIndex / tickRate).toFixed(1);
+        const durationSec = (this.totalFrames / tickRate).toFixed(1);
+
+        const durLabel = document.querySelector(".replay-duration-label");
+        if (durLabel) durLabel.textContent = `${currentSec}s / ${durationSec}s (Tick ${frame.t})`;
+
+        const p1Loss = frame.s?.p1?.loss ?? frame.s?.p1Loss ?? 0;
+        const p2Loss = frame.s?.p2?.loss ?? frame.s?.p2Loss ?? 0;
+        const desyncDelta = Math.abs(p1Loss - p2Loss);
+
+        const p1LossEl = document.getElementById("replay-telemetry-p1-loss");
+        if (p1LossEl) p1LossEl.textContent = Number(p1Loss).toFixed(4);
+
+        const p2LossEl = document.getElementById("replay-telemetry-p2-loss");
+        if (p2LossEl) p2LossEl.textContent = Number(p2Loss).toFixed(4);
+
+        const desyncEl = document.getElementById("replay-telemetry-desync");
+        if (desyncEl) desyncEl.textContent = Number(desyncDelta).toFixed(4);
+    }
+};
+
 window.addEventListener("resize", onWindowResize);
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -9421,6 +9623,7 @@ window.addEventListener("DOMContentLoaded", () => {
     computeDatasetStats();
     MLStudioEngine.init();
     CompetitorFeatureManager.init();
+    ReplayTheaterManager.init();
     updateHUD();
     requestAnimationFrame(animate);
 });
@@ -9435,6 +9638,7 @@ if (typeof window !== "undefined") {
     window.RLTelemetryVisualizer = RLTelemetryVisualizer;
     window.TournamentBracketRenderer = TournamentBracketRenderer;
     window.TournamentArenaManager = TournamentArenaManager;
+    window.ReplayTheaterManager = ReplayTheaterManager;
 }
 if (typeof module !== "undefined" && module.exports) {
     module.exports.HolographicTelemetryManager = HolographicTelemetryManager;
@@ -9446,6 +9650,8 @@ if (typeof module !== "undefined" && module.exports) {
     module.exports.RLTelemetryVisualizer = RLTelemetryVisualizer;
     module.exports.TournamentBracketRenderer = TournamentBracketRenderer;
     module.exports.TournamentArenaManager = TournamentArenaManager;
+    module.exports.ReplayTheaterManager = ReplayTheaterManager;
 }
+
 
 
