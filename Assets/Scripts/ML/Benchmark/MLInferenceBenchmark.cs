@@ -178,5 +178,181 @@ namespace NeuroArena.ML.Benchmark
                 PassedSanityCheck = scores[0, 0, 0] > 0f && scores[0, 0, 0] <= 1f
             };
         }
+
+        public static BenchmarkResult RunConv2DForwardBenchmark(int inChannels = 8, int outChannels = 16, int height = 32, int width = 32, int kernelSize = 3, int iterations = 200)
+        {
+            float[,,,] input = new float[1, inChannels, height, width];
+            float[,,,] kernels = new float[outChannels, inChannels, kernelSize, kernelSize];
+            float[] bias = new float[outChannels];
+            float[,,,] output = new float[1, outChannels, height, width];
+
+            System.Random rand = new System.Random(2026);
+            for (int oc = 0; oc < outChannels; oc++)
+            {
+                bias[oc] = (float)rand.NextDouble() * 0.05f;
+                for (int ic = 0; ic < inChannels; ic++)
+                {
+                    for (int kh = 0; kh < kernelSize; kh++)
+                    {
+                        for (int kw = 0; kw < kernelSize; kw++)
+                        {
+                            kernels[oc, ic, kh, kw] = (float)(rand.NextDouble() - 0.5) * 0.1f;
+                        }
+                    }
+                }
+            }
+
+            for (int ic = 0; ic < inChannels; ic++)
+            {
+                for (int h = 0; h < height; h++)
+                {
+                    for (int w = 0; w < width; w++)
+                    {
+                        input[0, ic, h, w] = (float)rand.NextDouble();
+                    }
+                }
+            }
+
+            int pad = kernelSize / 2;
+            double[] latencies = new double[iterations];
+            Stopwatch swTotal = Stopwatch.StartNew();
+
+            for (int it = 0; it < iterations; it++)
+            {
+                Stopwatch swIter = Stopwatch.StartNew();
+
+                Parallel.For(0, outChannels, oc =>
+                {
+                    for (int h = 0; h < height; h++)
+                    {
+                        for (int w = 0; w < width; w++)
+                        {
+                            float sum = bias[oc];
+                            for (int ic = 0; ic < inChannels; ic++)
+                            {
+                                for (int kh = 0; kh < kernelSize; kh++)
+                                {
+                                    int inH = h + kh - pad;
+                                    if (inH < 0 || inH >= height) continue;
+
+                                    for (int kw = 0; kw < kernelSize; kw++)
+                                    {
+                                        int inW = w + kw - pad;
+                                        if (inW < 0 || inW >= width) continue;
+
+                                        sum += input[0, ic, inH, inW] * kernels[oc, ic, kh, kw];
+                                    }
+                                }
+                            }
+                            output[0, oc, h, w] = sum > 0f ? sum : 0f; // ReLU activation
+                        }
+                    }
+                });
+
+                swIter.Stop();
+                latencies[it] = swIter.Elapsed.TotalMilliseconds;
+            }
+
+            swTotal.Stop();
+            Array.Sort(latencies);
+
+            double flopsPerIter = (double)outChannels * height * width * (2.0 * inChannels * kernelSize * kernelSize + 1.0);
+            double totalFlops = (double)iterations * flopsPerIter;
+            double gflops = totalFlops / (swTotal.Elapsed.TotalSeconds * 1e9);
+
+            return new BenchmarkResult
+            {
+                BenchmarkName = $"Conv2D_C{inChannels}->C{outChannels}_{height}x{width}_K{kernelSize}",
+                Iterations = iterations,
+                BatchSize = 1,
+                MatrixDim = height,
+                ElapsedMilliseconds = swTotal.Elapsed.TotalMilliseconds,
+                P50LatencyMs = latencies[(int)(iterations * 0.50)],
+                P95LatencyMs = latencies[(int)(iterations * 0.95)],
+                P99LatencyMs = latencies[(int)(iterations * 0.99)],
+                GFlops = gflops,
+                AllocatedBytes = 0,
+                PassedSanityCheck = output[0, 0, 0, 0] >= 0f
+            };
+        }
+
+        public static BenchmarkResult RunLayerNormBenchmark(int batchSize = 32, int hiddenDim = 512, float epsilon = 1e-5f, int iterations = 500)
+        {
+            float[,] x = new float[batchSize, hiddenDim];
+            float[] gamma = new float[hiddenDim];
+            float[] beta = new float[hiddenDim];
+            float[,] outNorm = new float[batchSize, hiddenDim];
+
+            System.Random rand = new System.Random(777);
+            for (int d = 0; d < hiddenDim; d++)
+            {
+                gamma[d] = 1.0f + (float)(rand.NextDouble() * 0.1);
+                beta[d] = (float)(rand.NextDouble() * 0.02);
+            }
+
+            for (int b = 0; b < batchSize; b++)
+            {
+                for (int d = 0; d < hiddenDim; d++)
+                {
+                    x[b, d] = (float)(rand.NextDouble() * 2.0 - 1.0);
+                }
+            }
+
+            double[] latencies = new double[iterations];
+            Stopwatch swTotal = Stopwatch.StartNew();
+
+            for (int it = 0; it < iterations; it++)
+            {
+                Stopwatch swIter = Stopwatch.StartNew();
+
+                Parallel.For(0, batchSize, b =>
+                {
+                    // Pass 1: Mean
+                    float mean = 0f;
+                    for (int d = 0; d < hiddenDim; d++) mean += x[b, d];
+                    mean /= hiddenDim;
+
+                    // Pass 2: Variance
+                    float variance = 0f;
+                    for (int d = 0; d < hiddenDim; d++)
+                    {
+                        float diff = x[b, d] - mean;
+                        variance += diff * diff;
+                    }
+                    variance /= hiddenDim;
+                    float invStd = 1.0f / Mathf.Sqrt(variance + epsilon);
+
+                    // Pass 3: Normalize and affine scale
+                    for (int d = 0; d < hiddenDim; d++)
+                    {
+                        outNorm[b, d] = ((x[b, d] - mean) * invStd) * gamma[d] + beta[d];
+                    }
+                });
+
+                swIter.Stop();
+                latencies[it] = swIter.Elapsed.TotalMilliseconds;
+            }
+
+            swTotal.Stop();
+            Array.Sort(latencies);
+
+            double totalFlops = (double)iterations * (5.0 * batchSize * hiddenDim);
+            double gflops = totalFlops / (swTotal.Elapsed.TotalSeconds * 1e9);
+
+            return new BenchmarkResult
+            {
+                BenchmarkName = $"LayerNorm_B{batchSize}_D{hiddenDim}",
+                Iterations = iterations,
+                BatchSize = batchSize,
+                MatrixDim = hiddenDim,
+                ElapsedMilliseconds = swTotal.Elapsed.TotalMilliseconds,
+                P50LatencyMs = latencies[(int)(iterations * 0.50)],
+                P95LatencyMs = latencies[(int)(iterations * 0.95)],
+                P99LatencyMs = latencies[(int)(iterations * 0.99)],
+                GFlops = gflops,
+                AllocatedBytes = 0,
+                PassedSanityCheck = !float.IsNaN(outNorm[0, 0]) && !float.IsInfinity(outNorm[0, 0])
+            };
+        }
     }
 }

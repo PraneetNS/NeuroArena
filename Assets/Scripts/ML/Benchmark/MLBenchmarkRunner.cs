@@ -9,6 +9,8 @@ namespace NeuroArena.ML.Benchmark
         [SerializeField] private bool runOnStart = false;
         [SerializeField] private int denseIterations = 500;
         [SerializeField] private int attentionIterations = 300;
+        [SerializeField] private int convIterations = 200;
+        [SerializeField] private int normIterations = 500;
 
         private void Start()
         {
@@ -33,11 +35,23 @@ namespace NeuroArena.ML.Benchmark
             var resAttnSmall = MLInferenceBenchmark.RunSoftmaxAttentionBenchmark(32, 32, 4, attentionIterations);
             var resAttnMed = MLInferenceBenchmark.RunSoftmaxAttentionBenchmark(64, 64, 8, attentionIterations);
 
+            // 3. 2D Convolution
+            var resConvSmall = MLInferenceBenchmark.RunConv2DForwardBenchmark(8, 16, 32, 32, 3, convIterations);
+            var resConvMed = MLInferenceBenchmark.RunConv2DForwardBenchmark(16, 32, 32, 32, 3, convIterations / 2);
+
+            // 4. Layer Normalization
+            var resNormSmall = MLInferenceBenchmark.RunLayerNormBenchmark(32, 256, 1e-5f, normIterations);
+            var resNormMed = MLInferenceBenchmark.RunLayerNormBenchmark(32, 512, 1e-5f, normIterations);
+
             FormatResult(sb, resDenseSmall);
             FormatResult(sb, resDenseMed);
             FormatResult(sb, resDenseLarge);
             FormatResult(sb, resAttnSmall);
             FormatResult(sb, resAttnMed);
+            FormatResult(sb, resConvSmall);
+            FormatResult(sb, resConvMed);
+            FormatResult(sb, resNormSmall);
+            FormatResult(sb, resNormMed);
 
             string report = sb.ToString();
             Debug.Log(report);
