@@ -79,7 +79,7 @@ class AdaptiveWAF {
     bucket.tokens -= 1;
 
     // 3. Payload Entropy Inspection
-    if (payload && payload.length > 32) {
+    if (payload && payload.length >= 16) {
       const entropy = this.calculateShannonEntropy(payload);
       if (entropy < this.entropyLowerBound && payload.length > 256) {
         bucket.reputationScore = Math.max(0, bucket.reputationScore - 5);
