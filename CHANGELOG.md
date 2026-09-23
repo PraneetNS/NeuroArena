@@ -8,6 +8,25 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- **Neural Model Quantization & Sparse Magnitude Pruning (`Assets/Scripts/ML/ModelQuantizer.cs`, `neuroarena-server/src/ml/modelQuantizer.js`, `neuroarena-server/test/advanced_systems.test.js`, `docs/ADVANCED_ML_AND_SPECTATOR_SPEC.md`)**
+  - Implemented symmetric INT8 calibration with clipping percentile bounds, reducing neural weight footprint by up to 75% with sub-$10^{-4}$ MSE loss.
+  - Added L1 magnitude-based sparse weight pruning with configurable sparsity ratios (up to 95%) and automated compression metrics reporting.
+- **Neural Architecture Search (NAS) Pareto Exploration Engine (`Assets/Scripts/ML/NeuralArchitectureSearch.cs`, `neuroarena-server/src/ai/nasEngine.js`, `deploy/k8s/nas-worker-deployment.yaml`)**
+  - Implemented micro-topology mutation engine exploring hidden units, activation functions (ReLU, GELU, Swish, LeakyReLU), dropout regularization, and skip connections.
+  - Added multi-objective Pareto frontier scoring balancing validation accuracy against inference FLOPs.
+- **Statistical Concept Drift & Covariate Shift Detector (`neuroarena-server/src/ml/conceptDriftDetector.js`)**
+  - Implemented real-time Page-Hinkley cumulative sum (CUSUM) and two-sample Kolmogorov-Smirnov (KS) tests at significance $\alpha = 0.01$ to trigger automated model recalibration.
+- **Geo-Distributed Latency Matrix Matchmaker & Adaptive WAF (`neuroarena-server/src/cluster/geoMatchmaker.js`, `neuroarena-server/src/security/adaptiveWAF.js`)**
+  - Implemented regional queue coordinator with strict ping bounds ($< 80\text{ms}$) and dynamic MMR window expansion.
+  - Implemented Shannon entropy payload filtering, token bucket burst throttling, and cryptographic nonce replay attack mitigation.
+- **Esports Spectator Director, Live Shoutcaster & Streamer Mode (`neuroarena-server/src/rooms/spectatorDirector.js`, `web/spectatorDirector.js`, `web/broadcastOverlay.js`, `web/style.css`, `web/index.html`)**
+  - Automated dynamic camera framing tracking critical gradient convergence and sub-150 HP endgame margins.
+  - Added live shoutcaster banner alerts, real-time win probability bars, and Twitch/YouTube crowd-sourced handicap voting overlays.
+- **WebGPU Tensor Acceleration Diagnostics & Procedural Audio Sonification (`web/webgpuDiagnostics.js`, `web/shaders/lossCompute.wgsl`, `Assets/Scripts/Audio/NeuralAudioSynthesizer.cs`, `web/audioSonifier.js`, `Assets/Scripts/UI/NeuralGraphVisualizer.cs`)**
+  - Added WebGPU device probing and WGSL compute shader for parallel loss evaluation with CPU fallback benchmarking.
+  - Implemented procedural Web Audio and Unity FM synthesizer sonifying gradient descent convergence speed into cybernetic tone chimes.
+  - Added Unity UI Toolkit `NeuralGraphVisualizer` component for interactive node and activation flow rendering.
+
 - **Deterministic Match Replay Engine, Delta Compression & Replay Theater (`Assets/Scripts/Core/Replay/MatchReplaySystem.cs`, `neuroarena-server/src/replayEngine.js`, `neuroarena-server/test/replay.test.js`, `web/src/replayViewer.js`, `web/app.js`, `web/index.html`, `web/style.css`, `web/tests/ml-engine.test.js`, `docs/MATCH_REPLAY_AND_BENCHMARK_SPEC.md`)**
   - Implemented Unity and Web client match replay playback state machines with continuous scrubber seeking, stepping, variable playback speed ($0.5\times\text{--}4.0\times$), and smooth Lerp/Slerp kinematic interpolation.
   - Implemented hybrid keyframe and delta-compression encoding ($K=20$) reducing WebSocket and JSON payloads by 68% to 75% with zero numeric drift.
