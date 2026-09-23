@@ -1,0 +1,38 @@
+/* NeuralGraph USS Stylesheet */
+.neural-graph-root {
+    flex-grow: 1;
+    background-color: rgba(10, 15, 26, 0.95);
+    border-width: 1px;
+    border-color: rgba(30, 215, 242, 0.35);
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.neural-graph-title {
+    font-size: 13px;
+    color: #1ed7f2;
+    -unity-font-style: bold;
+    margin-bottom: 8px;
+    letter-spacing: 0.5px;
+}
+
+.neural-column {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-left: 8px;
+    margin-right: 8px;
+}
+
+.neural-node-active {
+    width: 14px;
+    height: 14px;
+    border-radius: 7px;
+    background-color: #1ed7f2;
+    margin-bottom: 4px;
+}
+
+.neural-node-synapse {
+    height: 1px;
+    background-color: rgba(30, 215, 242, 0.25);
+}
