@@ -2269,10 +2269,22 @@
                 </div>
             </div>
         </div>
+
+        <!-- 🎙️ ESPORTS BROADCAST HUD & SHOUTCAST OVERLAYS -->
+        <div id="shoutcast-banner" class="shoutcast-banner-pulse" style="display:none;"></div>
+        <div id="crowd-poll-overlay" style="display:none;"></div>
     </div>
 
     <!-- Community Challenges & Mod-Tools Client -->
     <script type="module" src="src/community/CustomChallengeClient.js"></script>
+    <!-- WebGPU Diagnostics & Profiling -->
+    <script src="webgpuDiagnostics.js"></script>
+    <!-- Audio Sonification Synthesizer -->
+    <script src="audioSonifier.js"></script>
+    <!-- Spectator Director & Shoutcast Engine -->
+    <script src="spectatorDirector.js"></script>
+    <!-- Broadcast Overlay & Streamer Mode -->
+    <script src="broadcastOverlay.js"></script>
     <!-- Main Game Script -->
     <script src="app.js"></script>
 </body>
