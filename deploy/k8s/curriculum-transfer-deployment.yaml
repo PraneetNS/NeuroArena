@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: neuroarena-curriculum-worker
+  namespace: neuroarena-prod
+  labels:
+    app: neuroarena-curriculum-worker
+    tier: ml-worker
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: neuroarena-curriculum-worker
+  template:
+    metadata:
+      labels:
+        app: neuroarena-curriculum-worker
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9091"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: curriculum-worker
+          image: ghcr.io/praneetns/neuroarena-curriculum-worker:v1.0.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: REDIS_HOST
+              value: "redis-cluster.neuroarena-prod.svc.cluster.local"
+            - name: DYNAMIC_BATCH_MAX_SIZE
+              value: "32"
+            - name: DYNAMIC_BATCH_MAX_WAIT_MS
+              value: "8"
+            - name: MMD_REGULARIZATION_WEIGHT
+              value: "0.05"
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "512Mi"
+            limits:
+              cpu: "2500m"
+              memory: "3072Mi"
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 9091
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 9091
+            initialDelaySeconds: 5
+            periodSeconds: 10
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: neuroarena-curriculum-worker-hpa
+  namespace: neuroarena-prod
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: neuroarena-curriculum-worker
+  minReplicas: 2
+  maxReplicas: 8
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 75
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
