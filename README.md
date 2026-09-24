@@ -17,6 +17,9 @@
 1. [🌟 Executive Overview & Concept](#-executive-overview--concept)
 2. [🏗️ System Architecture](#️-system-architecture)
 3. [🧠 Core Machine Learning & Simulation Engines](#-core-machine-learning--simulation-engines)
+   - [Curriculum Transfer Learning & Progressive Layer Freezing](#curriculum-transfer-learning--progressive-layer-freezing)
+   - [Adaptive Dynamic Micro-Batching Inference Engine](#adaptive-dynamic-micro-batching-inference-engine)
+   - [Active Uncertainty Sampling & Replay Merkle Attestation](#active-uncertainty-sampling--replay-merkle-attestation)
    - [Neural Model Quantization & Sparse Magnitude Pruning](#neural-model-quantization--sparse-magnitude-pruning)
    - [Neural Architecture Search (NAS) Pareto Exploration](#neural-architecture-search-nas-pareto-exploration)
    - [Statistical Concept Drift & Covariate Shift Detector](#statistical-concept-drift--covariate-shift-detector)
@@ -145,6 +148,20 @@ flowchart TD
 ---
 
 ## 🧠 Core Machine Learning & Simulation Engines
+
+### Curriculum Transfer Learning & Progressive Layer Freezing
+- **Empirical 1-Wasserstein & MMD Domain Distance:** Evaluates feature distribution discrepancy between biomes via Earth Mover's Distance $\mathcal{W}_1(P, Q) = \frac{1}{N} \sum |a_i - b_i|$ and Gaussian RBF Maximum Mean Discrepancy ($\text{MMD}$).
+- **Progressive Freezing Schedules:** Automatically freezes early representation layers (`FeatureExtractor`, `HeadOnly`, `ProgressiveUnfreeze`) with fine-tuning learning rate decay to eliminate negative transfer across biomes.
+- **Authoritative Server Coordination:** REST endpoints (`/api/ml/curriculum/evaluate`, `/api/ml/curriculum/progression`) evaluate agent transferability scores ($\mathcal{T} \in [0.05, 1.0]$) and track cross-biome adaptation.
+
+### Adaptive Dynamic Micro-Batching Inference Engine
+- **SLA-Driven Coalescing:** Dynamically groups asynchronous forward passes into vectorized micro-batches up to 32 items with strict 8ms flush deadline timers, guaranteeing sub-15ms tick latency budgets in multiplayer.
+- **Tiered Priority Lanes:** `HIGH` priority queue for esports tournaments and seasonal ranked matches, `NORMAL` for casual sessions, and `LOW` for ambient bot exploration.
+- **High-Concurrency Telemetry:** Live tracking of average batch size, p95 latency percentiles, and SLA violation counts.
+
+### Active Uncertainty Sampling & Replay Merkle Attestation
+- **Active Uncertainty Sampler:** Employs normalized Shannon entropy $H(p) = -\frac{1}{\ln K} \sum p_i \ln p_i$, decision margin $1 - (p_1 - p_2)$, and least confidence scoring to guide agents toward ambiguous decision boundaries.
+- **Cryptographic Replay Merkle Attestation:** Constructs a Merkle tree root hash across replay frame ticks, issuing HMAC-SHA256 match certificates and checking kinematic acceleration limits to guarantee tamper-proof match history.
 
 ### Dataset Health Score & Honest Generalization
 Training performance on unseen test sets is governed strictly by empirical data geometry:

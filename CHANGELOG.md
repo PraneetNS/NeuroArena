@@ -8,6 +8,25 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- **Curriculum Transfer Learning & Progressive Layer Freezing (`Assets/Scripts/ML/BiomeTransferLearningEngine.cs`, `neuroarena-server/src/ml/CurriculumTransferCoordinator.js`, `neuroarena-server/test/curriculumTransfer.test.js`, `docs/CURRICULUM_TRANSFER_AND_BATCHING_SPEC.md`, `docs/ADR/0005-curriculum-transfer-and-dynamic-batching.md`)**
+  - Implemented cross-biome transfer learning with empirical 1-Wasserstein (Earth Mover's) distance and Maximum Mean Discrepancy (MMD) Gaussian RBF domain adaptation evaluation.
+  - Added progressive layer freezing policies (`FeatureExtractor`, `HeadOnly`, `ProgressiveUnfreeze`) and fine-tuning learning rate decay to eliminate negative transfer across biomes.
+  - Added RESTful curriculum endpoints (`/api/ml/curriculum/evaluate`, `/api/ml/curriculum/progression`, `/api/ml/curriculum/:agentId`) and student progression tracking.
+- **Adaptive Dynamic Micro-Batching Inference Engine (`neuroarena-server/src/ml/DynamicBatchingEngine.js`)**
+  - Implemented SLA-driven asynchronous queue coalescing forward passes into tensor batches up to `maxBatchSize = 32`.
+  - Enforced strict 8ms flush deadline timers ensuring multiplayer sub-15ms tick latency budgets with `HIGH`, `NORMAL`, and `LOW` priority scheduling.
+  - Added real-time batching telemetry reporting p95 latency, SLA violations, and average batch throughput.
+- **Active Uncertainty Sampling & Boundary Crystal Mining (`neuroarena-server/src/ml/ActiveUncertaintySampler.js`, `Assets/Scripts/ML/UncertaintySamplingAgent.cs`)**
+  - Added normalized Shannon entropy $H(p)$, decision margin $1 - (p_1 - p_2)$, and least confidence scoring over neural output distributions.
+  - Implemented Unity agent uncertainty beacons with bonus harvest token multipliers when mining crystals near ambiguous decision boundaries.
+- **Deterministic Replay Merkle Attestation & Cryptographic Integrity (`neuroarena-server/src/security/ReplayAttestationEngine.js`)**
+  - Implemented Merkle tree root hashing over replay frame sequences and HMAC-SHA256 match attestation certificate issuance.
+  - Added temporal tick delta and kinematic velocity jump validation guarding against state tampering and impossible accelerations.
+- **Dynamic Procedural Biome Weather & Stochastic Perturbation System (`Assets/Scripts/Environment/DynamicBiomeWeatherSystem.cs`)**
+  - Implemented live procedural atmospheric conditions (Clear Sky, Magnetic Ion Storm, Gradient Fog, Glacial Chill, Neural Rain) driving sensor noise, learning rate damping, and momentum friction perturbations.
+- **Interactive Transfer Learning HUD & Prometheus ML Observability (`web/transferVisualizer.js`, `web/index.html`, `web/style.css`, `deploy/k8s/curriculum-transfer-deployment.yaml`, `deploy/prometheus-ml-alerts.yaml`)**
+  - Added interactive cyberpunk transfer learning modal displaying real-time layer freezing status, 6x6 Biome Transfer Matrix heatmap, and inference queue gauges.
+  - Configured Kubernetes Deployment & HPA for curriculum transfer workers alongside Prometheus Alertmanager rules for inference SLA violations and negative transfer anomalies.
 - **Neural Model Quantization & Sparse Magnitude Pruning (`Assets/Scripts/ML/ModelQuantizer.cs`, `neuroarena-server/src/ml/modelQuantizer.js`, `neuroarena-server/test/advanced_systems.test.js`, `docs/ADVANCED_ML_AND_SPECTATOR_SPEC.md`)**
   - Implemented symmetric INT8 calibration with clipping percentile bounds, reducing neural weight footprint by up to 75% with sub-$10^{-4}$ MSE loss.
   - Added L1 magnitude-based sparse weight pruning with configurable sparsity ratios (up to 95%) and automated compression metrics reporting.
