@@ -28,6 +28,7 @@ const { ProceduralVariantEngine } = require("./ml/ProceduralVariantEngine");
 const { SeasonalRankedEngine } = require("./engagement/SeasonalRankedEngine");
 const { AdaptiveCoachingEngine } = require("./ml/AdaptiveCoachingEngine");
 const { CustomChallengeEngine } = require("./community/CustomChallengeEngine");
+const { CurriculumTransferCoordinator } = require("./ml/CurriculumTransferCoordinator");
 
 const rateLimiter = new TokenBucketRateLimiter(120, 60); // 120 bucket capacity, 60/sec refill
 const sessionManager = new SessionManager();
@@ -39,6 +40,7 @@ const rankedEngine = new SeasonalRankedEngine(redisConfig);
 const adaptiveCoachingEngine = new AdaptiveCoachingEngine();
 const contractEngine = new ClientContractEngine();
 const customChallengeEngine = new CustomChallengeEngine();
+const curriculumCoordinator = new CurriculumTransferCoordinator();
 
 // Ingress Rate Limiter Middleware
 app.use((req, res, next) => {
@@ -594,6 +596,51 @@ app.post("/api/community/challenges/:challengeId/verify-submission", (req, res) 
     }
 });
 
+// ==========================================
+// 🎓 CURRICULUM TRANSFER LEARNING ENDPOINTS
+// ==========================================
+
+app.post("/api/ml/curriculum/evaluate", (req, res) => {
+    try {
+        const { sourceBiomeId, targetBiomeId, sourceSampleFeatures, targetSampleFeatures } = req.body;
+        const evaluation = curriculumCoordinator.evaluateTransfer(
+            sourceBiomeId,
+            targetBiomeId,
+            sourceSampleFeatures,
+            targetSampleFeatures
+        );
+        res.json({ success: true, evaluation });
+    } catch (err) {
+        res.status(400).json({ success: false, error: err.message });
+    }
+});
+
+app.post("/api/ml/curriculum/progression", (req, res) => {
+    try {
+        const { agentId, sourceBiomeId, targetBiomeId, metrics } = req.body;
+        if (!agentId) {
+            return res.status(400).json({ success: false, error: "agentId is required" });
+        }
+        const record = curriculumCoordinator.recordProgression(
+            agentId,
+            sourceBiomeId,
+            targetBiomeId,
+            metrics
+        );
+        res.json({ success: true, record });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.get("/api/ml/curriculum/:agentId", (req, res) => {
+    const record = curriculumCoordinator.getAgentRecord(req.params.agentId);
+    if (!record) {
+        return res.status(404).json({ success: false, error: "Record not found for agent" });
+    }
+    res.json({ success: true, record });
+});
+
 // 2. Attach Colyseus WebSocket Server
 const server = http.createServer(app);
 const gameServer = new Server({
@@ -655,5 +702,6 @@ module.exports = {
     rankedEngine,
     adaptiveCoachingEngine,
     contractEngine,
-    customChallengeEngine
+    customChallengeEngine,
+    curriculumCoordinator
 };
