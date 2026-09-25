@@ -1,0 +1,32 @@
+groups:
+  - name: neuroarena_privacy_and_security_alerts
+    rules:
+      - alert: DifferentialPrivacyBudgetNearExhaustion
+        expr: neuroarena_dp_client_spent_epsilon / neuroarena_dp_client_max_epsilon > 0.85
+        for: 2m
+        labels:
+          severity: warning
+          subsystem: differential-privacy
+        annotations:
+          summary: "Client Differential Privacy budget is 85%+ exhausted"
+          description: "Client {{ $labels.client_id }} has consumed {{ $value | humanizePercentage }} of cumulative epsilon budget."
+
+      - alert: AdversarialAttackRateSpike
+        expr: rate(neuroarena_adversarial_rejected_models_total[5m]) > 10
+        for: 1m
+        labels:
+          severity: critical
+          subsystem: security-validation
+        annotations:
+          summary: "Surge in adversarial brittle model submissions"
+          description: "High rate of FGSM/PGD failure rejections detected ({{ $value }} req/s)."
+
+      - alert: ModelCacheHitRatioDegradation
+        expr: neuroarena_model_cache_hit_ratio < 0.70
+        for: 5m
+        labels:
+          severity: warning
+          subsystem: model-cache
+        annotations:
+          summary: "Tiered Model Cache hit ratio dropped below 70%"
+          description: "Current hit ratio is {{ $value | humanizePercentage }}, causing elevated Redis L2 latency."

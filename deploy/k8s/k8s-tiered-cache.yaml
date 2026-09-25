@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: neuroarena-tiered-cache
+  namespace: neuroarena-prod
+  labels:
+    app: neuroarena-tiered-cache
+    tier: caching
+spec:
+  serviceName: "neuroarena-cache-internal"
+  replicas: 3
+  selector:
+    matchLabels:
+      app: neuroarena-tiered-cache
+  template:
+    metadata:
+      labels:
+        app: neuroarena-tiered-cache
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9100"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: l1-cache-daemon
+          image: neuroarena/tiered-cache:v2.4.0
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: "1000m"
+              memory: "2Gi"
+            limits:
+              cpu: "4000m"
+              memory: "8Gi"
+          env:
+            - name: L1_CAPACITY
+              value: "2000"
+            - name: L2_REDIS_CLUSTER_URL
+              value: "redis-cluster.neuroarena-prod.svc.cluster.local:6379"
+            - name: CACHE_EVICTION_POLICY
+              value: "LRU-2"
+          ports:
+            - containerPort: 6380
+              name: cache-rpc
+            - containerPort: 9100
+              name: metrics
+          volumeMounts:
+            - name: cache-ssd-storage
+              mountPath: /data/cache-snapshot
+  volumeClaimTemplates:
+    - metadata:
+        name: cache-ssd-storage
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: "fast-nvme-ssd"
+        resources:
+          requests:
+            storage: 50Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: neuroarena-cache-internal
+  namespace: neuroarena-prod
+  labels:
+    app: neuroarena-tiered-cache
+spec:
+  clusterIP: None
+  ports:
+    - port: 6380
+      name: cache-rpc
+    - port: 9100
+      name: metrics
+  selector:
+    app: neuroarena-tiered-cache
