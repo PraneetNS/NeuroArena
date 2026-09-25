@@ -17,6 +17,10 @@
 1. [🌟 Executive Overview & Concept](#-executive-overview--concept)
 2. [🏗️ System Architecture](#️-system-architecture)
 3. [🧠 Core Machine Learning & Simulation Engines](#-core-machine-learning--simulation-engines)
+   - [Federated Differential Privacy & Renyi Divergence Accounting](#federated-differential-privacy--renyi-divergence-accounting)
+   - [Adversarial Robustness & Defense Certification (FGSM / PGD)](#adversarial-robustness--defense-certification-fgsm--pgd)
+   - [Two-Tier LRU-2 Model Cache & Swiss-System Tournament Engine](#two-tier-lru-2-model-cache--swiss-system-tournament-engine)
+   - [Real-Time HRTF Positional Spatializer & Loss Sonification](#real-time-hrtf-positional-spatializer--loss-sonification)
    - [Curriculum Transfer Learning & Progressive Layer Freezing](#curriculum-transfer-learning--progressive-layer-freezing)
    - [Adaptive Dynamic Micro-Batching Inference Engine](#adaptive-dynamic-micro-batching-inference-engine)
    - [Active Uncertainty Sampling & Replay Merkle Attestation](#active-uncertainty-sampling--replay-merkle-attestation)
@@ -148,6 +152,24 @@ flowchart TD
 ---
 
 ## 🧠 Core Machine Learning & Simulation Engines
+
+### Federated Differential Privacy & Renyi Divergence Accounting
+- **Renyi Differential Privacy (RDP):** Implements Renyi divergence tracking $D_\alpha(P \parallel Q) = \frac{1}{\alpha - 1} \ln \int \frac{P(x)^\alpha}{Q(x)^{\alpha - 1}} dx$ across orders $\alpha \in [1.5, 64]$, converting to optimal $(\epsilon, \delta)$-DP guarantees.
+- **Dynamic Gradient Sensitivity Clipping:** Enforces $L_2$-norm bound $C$ on weight updates $\tilde{g} = \frac{g}{\max(1, \|g\|_2 / C)}$ combined with calibrated Gaussian noise injection $\mathcal{N}(0, \sigma^2 C^2 I)$.
+- **Client Privacy Budgets:** Authoritative server accountant halts training and prevents weight upload ingestion when cumulative epsilon budget $\epsilon_{\text{max}}$ is depleted.
+
+### Adversarial Robustness & Defense Certification (FGSM / PGD)
+- **Multi-Norm Attack Generators:** Implements client and server-side Fast Gradient Sign Method (FGSM) and Projected Gradient Descent (PGD) over $L_\infty$ and $L_2$ perturbation balls.
+- **Empirical Lipschitz Bound:** Computes dataset smoothness constant $L = \sup \frac{|f(x) - f(x')|}{\|x - x'\|_2}$ to benchmark model fragility.
+- **Authoritative Certification Ledger:** Verifies candidate neural architectures against adversarial attacks before awarding competitive seasonal MMR, signing cryptographic verification tokens.
+
+### Two-Tier LRU-2 Model Cache & Swiss-System Tournament Engine
+- **LRU-2 (Two-Queue) Eviction:** Multi-tier cache prevents single-pass sequential tournament sweeps from evicting hot inference models, achieving sub-0.1ms memory lookups and seamless Redis L2 fallback.
+- **Swiss-System Tournament Protocol:** Features dynamic score-bracket pairing, non-repeating encounter constraints, odd-player bye handling, and Buchholz / Sonneborn-Berger tie-breakers.
+
+### Real-Time HRTF Positional Spatializer & Loss Sonification
+- **Binaural HRTF DSP Filtering:** Approximates interaural time difference (ITD) and head shadow level attenuation (ILD) for 3D positional machine learning audio emitters.
+- **Acoustic Loss Resonator:** Sonifies real-time gradient descent convergence, modulating harmonic overtones and dissonant microtonal tritones based on empirical loss and gradient variance.
 
 ### Curriculum Transfer Learning & Progressive Layer Freezing
 - **Empirical 1-Wasserstein & MMD Domain Distance:** Evaluates feature distribution discrepancy between biomes via Earth Mover's Distance $\mathcal{W}_1(P, Q) = \frac{1}{N} \sum |a_i - b_i|$ and Gaussian RBF Maximum Mean Discrepancy ($\text{MMD}$).

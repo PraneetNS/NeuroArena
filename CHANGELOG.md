@@ -8,6 +8,24 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- **Federated Differential Privacy & Renyi Divergence Accounting (`neuroarena-server/src/security/DifferentialPrivacyAccountant.js`, `deploy/prometheus-privacy-alerts.yaml`, `docs/FEDERATED_PRIVACY_ADVERSARIAL_ROBUSTNESS_SPEC.md`)**
+  - Implemented Renyi Differential Privacy (RDP) evaluation and optimal $(\epsilon, \delta)$-DP conversion across multiple orders $\alpha \in [1.5, 64]$.
+  - Added calibrated Gaussian noise injection with dynamic $L_2$-norm gradient sensitivity clipping and per-client privacy budget tracking with automatic cutoffs.
+- **Client & Server Adversarial Robustness and Defense Certification (`Assets/Scripts/ML/AdversarialRobustnessEngine.cs`, `neuroarena-server/src/ml/AdversarialDefenseValidator.js`)**
+  - Implemented Fast Gradient Sign Method (FGSM) and Projected Gradient Descent (PGD) perturbation generators with $L_\infty$ and $L_2$ projections.
+  - Added server-side empirical Lipschitz constant estimation and signed HMAC-SHA256 defense certificates guarding ranked leaderboards against brittle model exploits.
+- **Autonomous Swiss-System Tournament Engine (`neuroarena-server/src/community/SwissTournamentEngine.js`)**
+  - Implemented score-bracket matching with non-repeating encounter guarantees, odd-player bye handling, and Buchholz / Sonneborn-Berger tie-breakers.
+- **Two-Tier LRU-2 Model Caching Architecture (`neuroarena-server/src/cluster/TieredModelCache.js`, `deploy/k8s/k8s-tiered-cache.yaml`)**
+  - Implemented multi-tier caching featuring L1 in-memory LRU-2 (Two-Queue) eviction and L2 distributed Redis serialization, preventing cache pollution from large tournament sweeps.
+- **Pedersen Zero-Knowledge Gradient Commitments (`neuroarena-server/src/security/ZKGradientCommitment.js`)**
+  - Implemented secp256k1 finite prime field Pedersen commitments with homomorphic addition, blinding factors, and Merkle tree vector root attestations.
+- **W3C Distributed Tracing Context Propagator (`neuroarena-server/src/telemetry/DistributedTracingContext.js`)**
+  - Implemented standard W3C `traceparent` parsing, baggage extraction, and high-resolution span lifecycle instrumentation for WebSocket and HTTP requests.
+- **HRTF Spatialization & Loss Acoustic Resonator (`Assets/Scripts/Audio/HRTFSpatializer.cs`, `Assets/Scripts/Audio/LossAcousticResonator.cs`)**
+  - Added binaural Woodworth-Schlosberg interaural time difference (ITD) / level difference (ILD) modeling and real-time loss sonification coupling gradient variance to resonant overtone dissonance.
+- **Multi-Head Self-Attention Heatmap & GLSL Shader (`web/src/attentionVisualizer.js`, `web/shaders/attention-heatmap.frag`)**
+  - Added interactive WebGL/Canvas visualizer with Turbo colormap rendering, head selection toggles, and token attribution grids.
 - **Curriculum Transfer Learning & Progressive Layer Freezing (`Assets/Scripts/ML/BiomeTransferLearningEngine.cs`, `neuroarena-server/src/ml/CurriculumTransferCoordinator.js`, `neuroarena-server/test/curriculumTransfer.test.js`, `docs/CURRICULUM_TRANSFER_AND_BATCHING_SPEC.md`, `docs/ADR/0005-curriculum-transfer-and-dynamic-batching.md`)**
   - Implemented cross-biome transfer learning with empirical 1-Wasserstein (Earth Mover's) distance and Maximum Mean Discrepancy (MMD) Gaussian RBF domain adaptation evaluation.
   - Added progressive layer freezing policies (`FeatureExtractor`, `HeadOnly`, `ProgressiveUnfreeze`) and fine-tuning learning rate decay to eliminate negative transfer across biomes.
