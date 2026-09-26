@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: neuroarena-marl-aggregator
+  namespace: neuroarena-prod
+  labels:
+    app: neuroarena-marl-aggregator
+    tier: ml-optimization
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: neuroarena-marl-aggregator
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: neuroarena-marl-aggregator
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9200"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: marl-solver-worker
+          image: neuroarena/marl-aggregator:v2.5.0
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: "2000m"
+              memory: "4Gi"
+            limits:
+              cpu: "8000m"
+              memory: "16Gi"
+          env:
+            - name: CFR_MAX_ITERATIONS
+              value: "5000"
+            - name: CFR_EPSILON_SMOOTHING
+              value: "0.01"
+            - name: ASYNC_MAX_STALENESS
+              value: "30"
+            - name: DISTILLATION_BASE_TEMPERATURE
+              value: "3.0"
+            - name: HOMOMORPHIC_SCALE_FACTOR
+              value: "100000"
+            - name: REDIS_CLUSTER_URI
+              value: "redis-cluster.neuroarena-prod.svc.cluster.local:6379"
+          ports:
+            - containerPort: 8085
+              name: marl-grpc
+            - containerPort: 9200
+              name: metrics
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 9200
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 9200
+            initialDelaySeconds: 15
+            periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: neuroarena-marl-aggregator-service
+  namespace: neuroarena-prod
+  labels:
+    app: neuroarena-marl-aggregator
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8085
+      targetPort: 8085
+      name: marl-grpc
+    - port: 9200
+      targetPort: 9200
+      name: metrics
+  selector:
+    app: neuroarena-marl-aggregator

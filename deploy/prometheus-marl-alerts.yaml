@@ -1,0 +1,42 @@
+groups:
+  - name: neuroarena_marl_and_distillation_alerts
+    rules:
+      - alert: MARLExploitabilityHigh
+        expr: neuroarena_marl_exploitability_delta > 0.25
+        for: 3m
+        labels:
+          severity: warning
+          subsystem: marl-equilibrium
+        annotations:
+          summary: "MARL strategy exploitability exceeds Nash equilibrium threshold"
+          description: "Current exploitability delta is {{ $value }}, indicating lack of equilibrium convergence in game room {{ $labels.room_id }}."
+
+      - alert: AsynchronousGradientStalenessSurge
+        expr: neuroarena_async_staleness_average_tau > 25
+        for: 2m
+        labels:
+          severity: critical
+          subsystem: federated-learning
+        annotations:
+          summary: "Edge gradient staleness tau is critically elevated"
+          description: "Average staleness delay reached {{ $value }} versions, triggering heavy Polyak-Ruppert damping."
+
+      - alert: KnowledgeDistillationDivergence
+        expr: neuroarena_distillation_kl_divergence > 1.5
+        for: 4m
+        labels:
+          severity: warning
+          subsystem: knowledge-distillation
+        annotations:
+          summary: "Student model KL divergence from teacher policy is diverging"
+          description: "KL divergence reached {{ $value }} with temperature {{ $labels.temperature }}, suggesting capacity bottleneck."
+
+      - alert: HomomorphicConsensusVerificationFailure
+        expr: rate(neuroarena_homomorphic_aggregation_verification_failures_total[5m]) > 0
+        for: 30s
+        labels:
+          severity: critical
+          subsystem: homomorphic-security
+        annotations:
+          summary: "Homomorphic ciphertext integrity verification failure"
+          description: "Detected corrupted or tampered encrypted weight vectors during edge consensus."
