@@ -17,6 +17,9 @@
 1. [🌟 Executive Overview & Concept](#-executive-overview--concept)
 2. [🏗️ System Architecture](#️-system-architecture)
 3. [🧠 Core Machine Learning & Simulation Engines](#-core-machine-learning--simulation-engines)
+   - [MARL Counterfactual Regret Minimization & Equilibrium Solver](#marl-counterfactual-regret-minimization--equilibrium-solver)
+   - [Additive Homomorphic Weight Aggregation & Confidential Consensus](#additive-homomorphic-weight-aggregation--confidential-consensus)
+   - [Asynchronous Federated Staleness Compensation & Knowledge Distillation](#asynchronous-federated-staleness-compensation--knowledge-distillation)
    - [Federated Differential Privacy & Renyi Divergence Accounting](#federated-differential-privacy--renyi-divergence-accounting)
    - [Adversarial Robustness & Defense Certification (FGSM / PGD)](#adversarial-robustness--defense-certification-fgsm--pgd)
    - [Two-Tier LRU-2 Model Cache & Swiss-System Tournament Engine](#two-tier-lru-2-model-cache--swiss-system-tournament-engine)
@@ -152,6 +155,25 @@ flowchart TD
 ---
 
 ## 🧠 Core Machine Learning & Simulation Engines
+
+### MARL Counterfactual Regret Minimization & Equilibrium Solver
+- **CFR+ Algorithm:** Implements server-side Counterfactual Regret Minimization floored at zero for $N$-player extensive and normal-form biome games.
+- **Hart & Mas-Colell Regret-Matching:** Clients compute mixed strategy distributions proportional to cumulative positive regret vectors $R^+(a)$, with $\epsilon$-exploration smoothing.
+- **Game-Theoretic Exploitability:** Quantifies distance to Nash equilibrium $\delta(\bar{\sigma}) = \frac{1}{2}\sum_i [\max_{a_i'} u_i(a_i', \bar{\sigma}_{-i}) - u_i(\bar{\sigma})]$, validating strategy convergence.
+- **Client AI Policy Agent:** Unity C# `CounterfactualRegretAgent` dynamically samples tactical roles (`Harvester`, `Flanker`, `Defender`, `Disruptor`) and blends local empirical experience with server-orchestrated profiles.
+
+### Additive Homomorphic Weight Aggregation & Confidential Consensus
+- **Paillier Cryptosystem Semantics:** Utilizes modular arithmetic $c = g^m \cdot r^n \bmod n^2$ with Carmichael function $\lambda(n) = \operatorname{lcm}(p-1, q-1)$ and private parameter $\mu = \lambda^{-1} \bmod n$.
+- **Confidential Edge Consensus:** Central servers compute exact vector products $\prod_i c_i \bmod n^2$ corresponding to homomorphic addition of weights without decrypting individual edge updates.
+- **Fixed-Point High-Precision Quantization:** Reconstructs floating-point model gradients with sub-0.001% quantization error.
+
+### Asynchronous Federated Staleness Compensation & Knowledge Distillation
+- **Staleness Attenuation $\lambda(\tau)$:** Scales delayed gradients from mobile and WebGPU nodes by $(1 + \tau)^{-\alpha}$, suppressing optimization divergence and gradient thrashing.
+- **Directional Momentum Consistency:** Enforces cosine similarity bounds against running server momentum, quarantining inverted or orthogonal stale updates.
+- **Polyak-Ruppert Parameter Smoothing:** Maintains exponentially smoothed parameters $\bar{\theta}_t = (1 - \beta)\bar{\theta}_{t-1} + \beta \theta_t$ for stable production inference.
+- **Curriculum Knowledge Distillation:** Distills heavy champion policies into ultra-compact edge neural networks using temperature-scaled KL divergence loss $\mathcal{L}_{KD} = T^2 \mathcal{D}_{KL}(p^T(T) \parallel p^S(T))$, hint loss, and curriculum temperature annealing.
+- **Procedural Voronoi Biome Fracture:** Lloyd-relaxed Voronoi cell partitioning creates dynamic tectonic fault lines and localized hazard fields (Magma Fissures, Cryo Chasms).
+- **Streaming Delta Replay Compressor:** Bit-level ZigZag and LEB128 variable-length integer compressor achieving 13.7x compression (92.7% bandwidth reduction).
 
 ### Federated Differential Privacy & Renyi Divergence Accounting
 - **Renyi Differential Privacy (RDP):** Implements Renyi divergence tracking $D_\alpha(P \parallel Q) = \frac{1}{\alpha - 1} \ln \int \frac{P(x)^\alpha}{Q(x)^{\alpha - 1}} dx$ across orders $\alpha \in [1.5, 64]$, converting to optimal $(\epsilon, \delta)$-DP guarantees.

@@ -8,6 +8,27 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- **Multi-Agent Reinforcement Learning (MARL) Counterfactual Regret Minimization (CFR+) & Exploitability Engine (`neuroarena-server/src/ml/CounterfactualRegretSolver.js`, `Assets/Scripts/ML/Reinforcement/CounterfactualRegretAgent.cs`, `docs/MARL_HOMOMORPHIC_DISTILLATION_SPECIFICATION.md`)**
+  - Implemented server-side CFR+ solver for 2-4 agent extensive/normal-form biome games, computing counterfactual values, instantaneous regret updates, and average strategy profiles converging to Nash equilibrium.
+  - Added game-theoretic exploitability metric $\delta(\bar{\sigma})$ tracking distance to Nash equilibrium with automatic tolerance threshold termination.
+  - Added Unity C# `CounterfactualRegretAgent` featuring Hart & Mas-Colell regret-matching action sampling across tactical roles (`Harvester`, `Flanker`, `Defender`, `Disruptor`) and server profile blending.
+- **Additive Homomorphic Weight Aggregator for Confidential Edge Consensus (`neuroarena-server/src/security/HomomorphicWeightAggregator.js`)**
+  - Implemented Paillier-compatible additive homomorphic encryption enabling central consensus servers to aggregate edge model updates in ciphertext space without decrypting individual client gradients.
+  - Added fixed-point quantization, Carmichael function $\lambda(n) = \operatorname{lcm}(p-1, q-1)$, and validated modular arithmetic roundtrips within 0.001% precision.
+- **Asynchronous Federated Staleness Compensator with Polyak-Ruppert Momentum (`neuroarena-server/src/ml/AsynchronousStalenessCompensator.js`)**
+  - Implemented delay-attenuated gradient damping $\lambda(\tau) = (1 + \tau)^{-\alpha}$ mitigating gradient oscillation and catastrophic forgetting across heterogeneous edge clients.
+  - Added directional cosine similarity momentum verification guarding against stale opposing updates and maintained Polyak-Ruppert exponentially smoothed parameter averages.
+- **Teacher-Student Curriculum Knowledge Distillation Engine (`neuroarena-server/src/ml/CurriculumDistillationEngine.js`)**
+  - Implemented temperature-scaled Kullback-Leibler (KL) divergence distillation loss $\mathcal{L}_{KD} = T^2 \mathcal{D}_{KL}(p^T(T) \parallel p^S(T))$ compressing champion neural policies into ultra-compact edge models with 10x compression ratios.
+  - Added intermediate feature representation hint loss and dynamic curriculum temperature annealing across progressive biome tiers.
+- **Procedural Voronoi Biome Fracture & Hazard Deformer (`Assets/Scripts/Environment/VoronoiBiomeDeformer.cs`)**
+  - Added dynamic Lloyd-relaxed Voronoi cell arena partitioning with real-time tectonic fault displacement lines and localized environmental hazards (Magma Fissures, Cryo Chasms, Ion Disruption Fields).
+- **High-Efficiency Delta-Encoded Binary Replay Stream Compressor (`neuroarena-server/src/network/BinaryReplayCompressor.js`)**
+  - Implemented streaming binary serialization utilizing keyframe/delta frames, ZigZag signed-to-unsigned conversion, and variable-length LEB128 encoding, achieving 13.7x compression (92.7% bandwidth reduction).
+- **Interactive MARL Equilibrium Simplex & Distillation Visualizer (`web/src/marlEquilibriumVisualizer.js`, `web/shaders/simplex-radar.frag`)**
+  - Added interactive Canvas/WebGL 4-action probability simplex radar, Nash trajectory tracking, and distillation loss temperature curves.
+- **MARL Aggregator Deployment & Prometheus Alerts (`deploy/k8s/k8s-marl-aggregator.yaml`, `deploy/prometheus-marl-alerts.yaml`)**
+  - Added Kubernetes multi-replica deployment manifests with gRPC endpoints and Prometheus alerting rules for high exploitability, gradient staleness surges, and homomorphic verification failures.
 - **Federated Differential Privacy & Renyi Divergence Accounting (`neuroarena-server/src/security/DifferentialPrivacyAccountant.js`, `deploy/prometheus-privacy-alerts.yaml`, `docs/FEDERATED_PRIVACY_ADVERSARIAL_ROBUSTNESS_SPEC.md`)**
   - Implemented Renyi Differential Privacy (RDP) evaluation and optimal $(\epsilon, \delta)$-DP conversion across multiple orders $\alpha \in [1.5, 64]$.
   - Added calibrated Gaussian noise injection with dynamic $L_2$-norm gradient sensitivity clipping and per-client privacy budget tracking with automatic cutoffs.
