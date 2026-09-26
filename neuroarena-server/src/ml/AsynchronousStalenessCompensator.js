@@ -104,7 +104,7 @@ class AsynchronousStalenessCompensator {
 
         // 3. Directional alignment check against running momentum
         const momentum = this.runningMomentum.get(layerId);
-        if (momentum && tau > 2) {
+        if (momentum && tau >= 1) {
             const similarity = this.cosineSimilarity(clientGradient, momentum);
             if (similarity < this.directionalThreshold) {
                 this.metrics.updatesQuarantined++;

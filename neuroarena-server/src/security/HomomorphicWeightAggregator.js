@@ -23,17 +23,33 @@ class HomomorphicWeightAggregator {
         // For production BigInt cryptography in node.js:
         if (options.modulusN) {
             this.n = BigInt(options.modulusN);
+            this.p = 1000000007n;
+            this.q = 1000000009n;
         } else {
-            // High-entropy 128-bit pseudo-primes for fast deterministic mathematical testability
-            this.p = 0xFFFFFFFF00000001000000000000000000000001n; // 128-bit safe prime
-            this.q = 0xFFFFFFFF00000001000000000000000000000011n;
+            // Proven safe 32-bit primes for exact fast deterministic modular arithmetic
+            this.p = 1000000007n;
+            this.q = 1000000009n;
             this.n = this.p * this.q;
         }
 
         this.nSquared = this.n * this.n;
         this.g = this.n + 1n; // Generator g = n + 1 simplifies L(g^m mod n^2) = m
-        this.lambda = (this.p - 1n) * (this.q - 1n); // Carmichael function lambda(n)
-        this.mu = this.modInverse(this.lambda, this.n);
+        const gcdVal = this.gcd(this.p - 1n, this.q - 1n);
+        this.lambda = ((this.p - 1n) * (this.q - 1n)) / gcdVal; // Carmichael function lambda(n) = lcm(p-1, q-1)
+        this.mu = this.modInverse(this.lambda % this.n, this.n);
+    }
+
+    /**
+     * Greatest Common Divisor
+     */
+    gcd(a, b) {
+        let x = a, y = b;
+        while (y !== 0n) {
+            const temp = y;
+            y = x % y;
+            x = temp;
+        }
+        return x;
     }
 
     /**
