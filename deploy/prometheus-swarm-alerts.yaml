@@ -1,0 +1,52 @@
+groups:
+  - name: neuroarena_swarm_and_bft_alerts
+    rules:
+      - alert: ByzantineQuarantineSpike
+        expr: rate(neuroarena_bft_quarantined_nodes_total[5m]) > 2
+        for: 1m
+        labels:
+          severity: critical
+          subsystem: bft-consensus
+        annotations:
+          summary: "Byzantine adversarial node quarantine rate is elevated"
+          description: "Quarantine count is growing at {{ $value }} nodes/sec, indicating active gradient poisoning attempt."
+
+      - alert: BFTConsensusPartitionWarning
+        expr: neuroarena_bft_quorum_shortfall > 0
+        for: 2m
+        labels:
+          severity: warning
+          subsystem: bft-consensus
+        annotations:
+          summary: "BFT Raft consensus quorum threshold not reached"
+          description: "Cluster failed to reach 67% consensus quorum for term {{ $labels.term }}."
+
+      - alert: EWCFisherInformationDrift
+        expr: neuroarena_ewc_mean_parameter_drift > 1.25
+        for: 5m
+        labels:
+          severity: warning
+          subsystem: continual-learning
+        annotations:
+          summary: "Continual learning EWC parameters drifting beyond Fisher bounds"
+          description: "Mean weighted Fisher parameter drift reached {{ $value }}, indicating risk of catastrophic forgetting."
+
+      - alert: SNNRunawaySpikeRate
+        expr: neuroarena_snn_mean_firing_rate_hz > 95
+        for: 30s
+        labels:
+          severity: warning
+          subsystem: neuromorphic-snn
+        annotations:
+          summary: "Neuromorphic SNN agent entered runaway epileptiform spike burst"
+          description: "LIF firing rate reached {{ $value }} Hz on agent {{ $labels.agent_id }}, exceeding 95Hz physiological threshold."
+
+      - alert: WebTransportPacketLossCritical
+        expr: rate(neuroarena_webtransport_datagram_drops_total[5m]) > 10
+        for: 1m
+        labels:
+          severity: warning
+          subsystem: webtransport-quic
+        annotations:
+          summary: "High WebTransport QUIC datagram loss rate"
+          description: "QUIC datagram loss rate elevated to {{ $value }} drops/sec on session {{ $labels.session_id }}."
