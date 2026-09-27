@@ -8,6 +8,25 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- **Neuromorphic Spiking Neural Network (SNN) & LIF Membrane Dynamics (`Assets/Scripts/ML/Neuromorphic/SpikingNeuralAgent.cs`, `web/shaders/spiking-membrane.frag`, `docs/NEUROMORPHIC_SWARM_BFT_SPECIFICATION.md`)**
+  - Implemented bio-inspired Leaky Integrate-and-Fire (LIF) neuron dynamics in Unity C# Burst/Jobs with subthreshold membrane potential integration $\tau_m \frac{dV_m}{dt} = -(V_m - V_{\text{rest}}) + R_m I(t)$, refractory period enforcement, and discrete Dirac action potential spikes.
+  - Added Spike-Timing-Dependent Plasticity (STDP) synaptic weight adaptation with exponential Long-Term Potentiation (LTP) and Depression (LTD) windows.
+  - Implemented interactive WebGL fragment shader rendering traveling LIF membrane potential waveforms and action potential spike bursts.
+- **Graph Neural Network (GNN) Message Passing & Swarm Topology Coordinator (`neuroarena-server/src/ml/GraphNeuralSwarmEngine.js`, `web/src/swarmTopologyVisualizer.js`)**
+  - Implemented Permutation-Equivariant Graph Convolutional Network (Kipf & Welling GCN) layer with symmetric normalized Laplacian $S = \tilde{D}^{-1/2} \tilde{A} \tilde{D}^{-1/2}$ and dynamic spatial $k$-NN proximity graph construction.
+  - Added interactive HTML5 Canvas visualizer rendering agent swarm nodes, dynamic message passing edge pulses, Byzantine anomaly indicators, and real-time membrane potential oscilloscopes.
+- **Byzantine Fault-Tolerant (BFT) Raft Gradient Consensus Engine with Multi-Krum (`neuroarena-server/src/security/BFTGradientConsensus.js`, `deploy/prometheus-swarm-alerts.yaml`)**
+  - Implemented Multi-Krum geometric distance filtering algorithm defending federated edge consensus against up to $f < n/3$ poisoned or malicious gradient submissions.
+  - Added Raft leader election ballots, HMAC-SHA256 ballot seals, and immutable committed SHA-256 consensus audit chains.
+- **Continual Lifelong Learning with Elastic Weight Consolidation (EWC) (`neuroarena-server/src/ml/ContinualElasticWeightEngine.js`)**
+  - Implemented empirical Fisher Information Matrix (FIM) diagonal estimation over validation trajectories to eliminate catastrophic forgetting across disparate mathematical biomes.
+  - Added quadratic parameter regularization loss $\mathcal{L}_{\text{EWC}}(\theta) = \sum_i \frac{\lambda}{2} F_i (\theta_i - \theta_i^*)^2$ and analytic restoring force gradients.
+- **Multi-Agent Flocking & Swarm Sensor Boids Engine (`Assets/Scripts/AI/SwarmFlockingSensorEngine.cs`)**
+  - Implemented Craig Reynolds flocking dynamics (Separation, Alignment, Cohesion) coupled with dynamic GNN guidance forces, sensory raycast obstacle avoidance, and Voronoi fault line repulsion.
+- **Spatialized Doppler Radar & Spectral Acoustic Sonar (`Assets/Scripts/Audio/SpectralSonarAcoustics.cs`)**
+  - Implemented ultrasonic linear FM chirp synthesis and Doppler-shifted echo reflection modeling ($f = f_0 \frac{c + v_r}{c + v_s}$) with atmospheric absorption for navigating zero-visibility biomes.
+- **WebTransport / QUIC Multiplexed Stream & Datagram Session Manager (`neuroarena-server/src/network/WebTransportSessionManager.js`, `deploy/k8s/k8s-swarm-gnn-daemonset.yaml`)**
+  - Implemented loss-tolerant unreliable datagrams for high-frequency (60-120Hz) kinematic and spike telemetry, reliable bidirectional streams for BFT ballots and EWC checkpoints, and seamless mobile connection migration.
 - **Multi-Agent Reinforcement Learning (MARL) Counterfactual Regret Minimization (CFR+) & Exploitability Engine (`neuroarena-server/src/ml/CounterfactualRegretSolver.js`, `Assets/Scripts/ML/Reinforcement/CounterfactualRegretAgent.cs`, `docs/MARL_HOMOMORPHIC_DISTILLATION_SPECIFICATION.md`)**
   - Implemented server-side CFR+ solver for 2-4 agent extensive/normal-form biome games, computing counterfactual values, instantaneous regret updates, and average strategy profiles converging to Nash equilibrium.
   - Added game-theoretic exploitability metric $\delta(\bar{\sigma})$ tracking distance to Nash equilibrium with automatic tolerance threshold termination.

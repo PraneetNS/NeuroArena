@@ -17,6 +17,10 @@
 1. [🌟 Executive Overview & Concept](#-executive-overview--concept)
 2. [🏗️ System Architecture](#️-system-architecture)
 3. [🧠 Core Machine Learning & Simulation Engines](#-core-machine-learning--simulation-engines)
+   - [Neuromorphic Spiking Neural Networks (SNN) & LIF Membrane Dynamics](#neuromorphic-spiking-neural-networks-snn--lif-membrane-dynamics)
+   - [Graph Neural Network (GNN) Message Passing & Swarm Coordination](#graph-neural-network-gnn-message-passing--swarm-coordination)
+   - [Byzantine Fault-Tolerant (BFT) Raft Gradient Consensus & Multi-Krum](#byzantine-fault-tolerant-bft-raft-gradient-consensus--multi-krum)
+   - [Continual Lifelong Learning with Elastic Weight Consolidation (EWC)](#continual-lifelong-learning-with-elastic-weight-consolidation-ewc)
    - [MARL Counterfactual Regret Minimization & Equilibrium Solver](#marl-counterfactual-regret-minimization--equilibrium-solver)
    - [Additive Homomorphic Weight Aggregation & Confidential Consensus](#additive-homomorphic-weight-aggregation--confidential-consensus)
    - [Asynchronous Federated Staleness Compensation & Knowledge Distillation](#asynchronous-federated-staleness-compensation--knowledge-distillation)
@@ -155,6 +159,25 @@ flowchart TD
 ---
 
 ## 🧠 Core Machine Learning & Simulation Engines
+
+### Neuromorphic Spiking Neural Networks (SNN) & LIF Membrane Dynamics
+- **Leaky Integrate-and-Fire (LIF) Dynamics:** Continuous-time RC differential membrane potential integration $\tau_m \frac{dV_m}{dt} = -(V_m - V_{\text{rest}}) + R_m I(t)$ executed in Unity Burst/Jobs with subthreshold decay and 3ms absolute refractory lock.
+- **Spike-Timing-Dependent Plasticity (STDP):** Biologically inspired synaptic adaptation updating synaptic weights based on relative spike times ($\Delta t = t_{\text{post}} - t_{\text{pre}}$) with exponential LTP and LTD windows.
+- **Ultra-Low-Power Edge Reflexes:** Event-driven Dirac action potential spikes generating instant evasive and offensive maneuvers without expensive dense matrix multiplication.
+
+### Graph Neural Network (GNN) Message Passing & Swarm Coordination
+- **Permutation-Equivariant GCN Layer:** Computes symmetric normalized Laplacian aggregation $S = \tilde{D}^{-1/2} \tilde{A} \tilde{D}^{-1/2}$ over dynamic spatial proximity graphs.
+- **Dynamic Proximity Topology:** Builds $k$-NN neighbor graphs via Gaussian RBF kernel weighting based on real-time Euclidean distance envelopes.
+- **Flocking & Boids Guidance:** Couples GNN acceleration outputs with Craig Reynolds flocking (Separation, Alignment, Cohesion) and obstacle raycast deflection.
+
+### Byzantine Fault-Tolerant (BFT) Raft Gradient Consensus & Multi-Krum
+- **Multi-Krum Geometric Defense:** Filters poisoned and adversarial gradient submissions from up to $f < n/3$ Byzantine nodes by computing pairwise Euclidean distances to $n - f - 2$ closest neighbors.
+- **Cryptographic Ballot Quorum:** Multi-round Raft leader election with HMAC-SHA256 sealed gradient ballots and immutable chained SHA-256 commit logs.
+- **Zero Poisoning Vulnerability:** Guarantees honest convergence even when multiple colluding nodes inject gradient explosions or inverted vectors.
+
+### Continual Lifelong Learning with Elastic Weight Consolidation (EWC)
+- **Empirical Fisher Information Matrix:** Measures parameter importance $F_i = \frac{1}{N} \sum_k (\nabla_{\theta_i} \log p(y_k|x_k, \theta))^2$ across completed mathematical biome challenges.
+- **Quadratic Elastic Penalty:** Constrains parameter drift via restoring force $\mathcal{L}_{\text{EWC}}(\theta) = \sum_i \frac{\lambda}{2} F_i (\theta_i - \theta_i^*)^2$, preventing catastrophic forgetting of previously mastered concepts.
 
 ### MARL Counterfactual Regret Minimization & Equilibrium Solver
 - **CFR+ Algorithm:** Implements server-side Counterfactual Regret Minimization floored at zero for $N$-player extensive and normal-form biome games.
