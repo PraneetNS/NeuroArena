@@ -112,7 +112,7 @@ class WebTransportSessionManager {
 
         const header = Buffer.alloc(5);
         header.writeUInt8(frameType, 0);
-        header.writeUInt32BE(Date.now() & 0xFFFFFFFF, 1);
+        header.writeUInt32BE((Date.now() & 0xFFFFFFFF) >>> 0, 1);
 
         const datagram = Buffer.concat([header, Buffer.from(payload)]);
         if (datagram.length > this.maxDatagramSize) {
@@ -140,7 +140,7 @@ class WebTransportSessionManager {
 
         const frameType = buffer.readUInt8(0);
         const timestamp = buffer.readUInt32BE(1);
-        const payload = buffer.slice(5);
+        const payload = Buffer.from(buffer.subarray(5));
 
         session.lastActivity = Date.now();
         this.metrics.totalDatagramsReceived++;
