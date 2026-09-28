@@ -8,6 +8,25 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- **Model-Agnostic Meta-Learning (MAML) Few-Shot Task Adaptation Engine (`neuroarena-server/src/ml/MetaLearningEngine.js`, `Assets/Scripts/ML/MetaLearningController.cs`, `docs/MAML_CAUSAL_PINN_SPECIFICATION.md`)**
+  - Implemented First-Order MAML (FOMAML) with inner-loop fast task adaptation $\theta_i' = \theta - \alpha \nabla_\theta \mathcal{L}_{\mathcal{T}_i}(\theta)$ on support sets and outer-loop meta-optimization over procedural biome distributions.
+  - Added Unity C# `MetaLearningController` for real-time few-shot client adaptation on procedural biome shifts.
+- **Causal Discovery & Structural Equation Modeling (SEM) Engine (`neuroarena-server/src/ml/CausalInferenceEngine.js`, `Assets/Scripts/ML/CausalInterventionBridge.cs`, `web/src/causalDAGViewer.js`)**
+  - Implemented constraint-based PC (Peter-Clark) algorithm for causal skeleton graph discovery and Structural Equation Modeling with Pearl's do-calculus intervention operator $\text{do}(X_k = x^*)$ to separate mechanical causal drivers from spurious environmental correlations.
+  - Added interactive browser Causal DAG viewer with intervention sliders and node severing visual cues.
+- **Physics-Informed Neural Networks (PINN) Hamiltonian Conservation Engine (`neuroarena-server/src/ml/PhysicsInformedNeuralNetwork.js`, `Assets/Scripts/Physics/HamiltonianConservationVerifier.cs`, `web/src/phaseSpaceVisualizer.js`)**
+  - Implemented neural surrogate dynamics enforcing Hamiltonian energy conservation $\mathcal{H}(q, p) = T(p) + V(q)$ and symplectic equations of motion $\dot{q} = \partial \mathcal{H} / \partial p, \dot{p} = -\partial \mathcal{H} / \partial q$.
+  - Added Unity C# `HamiltonianConservationVerifier` and HTML5 Canvas phase space $(q, p)$ orbit trajectory visualizer.
+- **Quantum-Inspired Simulated Bifurcation (aSB) Combinatorial Optimizer (`neuroarena-server/src/ml/QuantumSimulatedBifurcation.js`, `Assets/Scripts/Optimization/SimulatedBifurcationOptimizer.cs`)**
+  - Implemented classical adiabatic Simulated Bifurcation (aSB) algorithm simulating non-linear Kerr parametric oscillators to solve NP-hard Ising spin-glass combinatorial optimization for neural pruning topology and feature subset selection.
+- **Hierarchical Goal-Conditioned RL with Hindsight Experience Replay (HER) (`neuroarena-server/src/ml/HierarchicalGoalAgent.js`, `Assets/Scripts/AI/GoalConditionedPolicyExecutor.cs`)**
+  - Implemented two-tier Manager-Worker policy architecture where high-level manager sets intermediate sub-goal states and low-level worker executes primitive actions.
+  - Added Hindsight Experience Replay (HER) relabeling failed trajectories with achieved terminal states as virtual goals in sparse-reward biomes.
+- **Delta-State Conflict-Free Replicated Data Types (Delta-CRDT) Peer Mesh Sync (`neuroarena-server/src/network/DeltaCRDTSync.js`, `Assets/Scripts/Networking/StateCRDTReplica.cs`)**
+  - Implemented Strong Eventual Consistency (SEC) peer-to-peer multiplayer synchronization using Vector Clocks, PN-Counters, and Last-Write-Wins Element Sets (LWW-Element-Set) across intermittent network partitions.
+- **Production Observability: OpenTelemetry ML Pipeline & Prometheus PINN Causal Alert Rules (`deploy/monitoring/opentelemetry-ml-collector.yaml`, `deploy/prometheus-pinn-causal-alerts.yaml`)**
+  - Added OpenTelemetry Collector configuration for ML inference spans and Prometheus alert rules guarding against Hamiltonian drift violations (> 5%), causal cycles, and MAML meta-loss explosion.
+
 - **Neuromorphic Spiking Neural Network (SNN) & LIF Membrane Dynamics (`Assets/Scripts/ML/Neuromorphic/SpikingNeuralAgent.cs`, `web/shaders/spiking-membrane.frag`, `docs/NEUROMORPHIC_SWARM_BFT_SPECIFICATION.md`)**
   - Implemented bio-inspired Leaky Integrate-and-Fire (LIF) neuron dynamics in Unity C# Burst/Jobs with subthreshold membrane potential integration $\tau_m \frac{dV_m}{dt} = -(V_m - V_{\text{rest}}) + R_m I(t)$, refractory period enforcement, and discrete Dirac action potential spikes.
   - Added Spike-Timing-Dependent Plasticity (STDP) synaptic weight adaptation with exponential Long-Term Potentiation (LTP) and Depression (LTD) windows.
