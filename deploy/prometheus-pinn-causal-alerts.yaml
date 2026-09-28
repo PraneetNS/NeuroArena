@@ -1,0 +1,52 @@
+# Prometheus Alerting Rules for PINN, Causal Inference, MAML, and CRDT Sync
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: neuroarena-pinn-causal-alerts
+  namespace: neuroarena-system
+  labels:
+    role: alert-rules
+    app: neuroarena
+spec:
+  groups:
+    - name: neuroarena.ml.physics.rules
+      rules:
+        - alert: PINNHamiltonianEnergyDriftExceeded
+          expr: neuroarena_pinn_hamiltonian_drift_percent > 5.0
+          for: 30s
+          labels:
+            severity: warning
+            subsystem: pinn-physics
+          annotations:
+            summary: "PINN Hamiltonian energy conservation violation detected"
+            description: "Neural physics trajectory in biome {{ $labels.biome_id }} has exceeded 5% energy drift (current: {{ $value }}%). Symplectic regularization failing."
+
+        - alert: CausalDAGInvalidStructureDetected
+          expr: neuroarena_causal_dag_cycle_count > 0
+          for: 10s
+          labels:
+            severity: critical
+            subsystem: causal-inference
+          annotations:
+            summary: "Causal DAG structural equation violation"
+            description: "Causal discovery engine registered cyclical feedback loop violating Directed Acyclic Graph topology assumptions in environment {{ $labels.env }}."
+
+        - alert: MAMLMetaLossExplosion
+          expr: rate(neuroarena_maml_meta_loss_sum[2m]) / rate(neuroarena_maml_meta_loss_count[2m]) > 50.0
+          for: 1m
+          labels:
+            severity: warning
+            subsystem: meta-learning
+          annotations:
+            summary: "MAML meta-loss gradient divergence"
+            description: "Outer-loop meta-optimization query loss exceeded 50.0. Few-shot adaptation may be destabilized across procedural task distributions."
+
+        - alert: CRDTStateReplicationLagHigh
+          expr: neuroarena_crdt_replication_lag_seconds > 2.0
+          for: 45s
+          labels:
+            severity: warning
+            subsystem: peer-crdt-sync
+          annotations:
+            summary: "Peer-to-peer CRDT state vector clock replication lag"
+            description: "P2P arena mesh node {{ $labels.node_id }} is experiencing CRDT delta sync lag exceeding 2.0s."
