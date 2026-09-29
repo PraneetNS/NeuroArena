@@ -8,6 +8,31 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- **Continuous-Time Neural Ordinary Differential Equations (Neural ODEs) (`neuroarena-server/src/ml/NeuralODEEngine.js`, `Assets/Scripts/Physics/ContinuousNeuralODEFlight.cs`, `web/src/neuralODEPhaseViewer.js`, `docs/NEURAL_ODE_HYPERGRAPH_EBM_SPECIFICATION.md`)**
+  - Formulated continuous dynamical state progression as an Initial Value Problem $\frac{dz(t)}{dt} = f_\theta(z(t), t)$ with Runge-Kutta 4th-order (RK4) and adaptive Dormand-Prince (DOPRI5) integrators with local truncation error control.
+  - Implemented the continuous Adjoint Sensitivity method $\frac{da(t)}{dt} = -a(t)^\top \frac{\partial f_\theta}{\partial z}$ for constant $O(1)$ memory backpropagation through arbitrary time horizons.
+  - Added Unity C# `ContinuousNeuralODEFlight` for aerodynamic vehicle maneuvers and HTML5 Canvas phase space vector field streamline visualizer.
+- **Energy-Based Latent World Models (EBM) (`neuroarena-server/src/ml/EnergyBasedWorldModel.js`, `Assets/Scripts/AI/EnergyWorldModelPlanner.cs`)**
+  - Parameterized unnormalized physical transition density as an energy surface $E_\theta(s, a, s')$, sampling counterfactual next-state hypotheses using Langevin Markov Chain Monte Carlo (MCMC).
+  - Implemented Contrastive Divergence ($CD_k$) training pulling down data transition energy while pushing up unphysical model dreams.
+  - Added Unity C# `EnergyWorldModelPlanner` for trajectory optimization via direct energy landscape descent.
+- **Spatio-Temporal Hypergraph Attention Networks (ST-HyperGAT) (`neuroarena-server/src/ml/HypergraphAttentionNetwork.js`, `Assets/Scripts/AI/HypergraphSquadCoordinator.cs`, `web/src/hypergraphVisualizer.js`)**
+  - Modeled higher-order multi-agent formations and tactical squads beyond pairwise graph edges using hypergraph incidence matrices $H \in \{0, 1\}^{|V| \times |E|}$.
+  - Implemented two-stage attention message passing (Node-to-Hyperedge and Hyperedge-to-Node) with dynamic squad synergy scoring and interactive Canvas hyperedge polygon visualizer.
+- **Differentiable Neuro-Symbolic Logic Verifier & Runtime Safety Shields (`neuroarena-server/src/ml/NeuroSymbolicLogicVerifier.js`, `Assets/Scripts/Safety/SymbolicSafetyGuard.cs`)**
+  - Compiled first-order temporal safety rules into continuous, differentiable product and Łukasiewicz t-norm logic losses $\mathcal{L}_{\text{logic}} = 1 - \operatorname{truth}(\phi)$.
+  - Added Unity C# `SymbolicSafetyGuard` intercepting dangerous actions and projecting control vectors onto the boundary of the safe control set.
+- **Primal-Dual Interior-Point Trajectory Optimizer with Logarithmic Barriers (`neuroarena-server/src/ml/InteriorPointTrajectoryOptimizer.js`, `Assets/Scripts/Optimization/BarrierTrajectorySmoother.cs`)**
+  - Implemented non-linear boundary-constrained trajectory solver utilizing logarithmic barrier functions and Newton steps with Armijo backtracking line search.
+- **Zero-Knowledge Proof of Gameplay (PoGP) Verifiable Execution Engine (`neuroarena-server/src/security/ProofOfGameplayEngine.js`, `Assets/Scripts/Security/GameplayExecutionTrace.cs`)**
+  - Implemented cryptographic state transition commitments $C_t = \operatorname{SHA256}(t \parallel s_t \parallel v_t \parallel a_t \parallel s_{t+1})$ and recursive Merkle execution trace accumulator over 60Hz tick streams.
+  - Added kinematic range proof assertions preventing client teleportation, impossible acceleration, and replay tampering without disclosing private player neural weights.
+- **Multipath QUIC (MP-QUIC) Session Scheduler & BBRv3 Congestion Engine (`neuroarena-server/src/network/MultipathCongestionEngine.js`, `Assets/Scripts/Networking/MultipathPacketDistributor.cs`, `deploy/envoy-webtransport-gateway.yaml`)**
+  - Implemented multi-subflow telemetry distribution across Wi-Fi and 5G cellular paths with Min-RTT path selection and BBRv3 bottleneck bandwidth pacing.
+  - Added Envoy Proxy HTTP/3 WebTransport edge configuration and Prometheus alert rules for ODE and hypergraph health monitoring.
+- **Continuous Wavelet Transform Spectral Audio Spatializer (`Assets/Scripts/Audio/ContinuousWaveletSpatializer.cs`)**
+  - Implemented real-time complex Morlet wavelet synthesis and acoustic diffraction damping for sonic shockwaves in Unity C#.
+
 - **Model-Agnostic Meta-Learning (MAML) Few-Shot Task Adaptation Engine (`neuroarena-server/src/ml/MetaLearningEngine.js`, `Assets/Scripts/ML/MetaLearningController.cs`, `docs/MAML_CAUSAL_PINN_SPECIFICATION.md`)**
   - Implemented First-Order MAML (FOMAML) with inner-loop fast task adaptation $\theta_i' = \theta - \alpha \nabla_\theta \mathcal{L}_{\mathcal{T}_i}(\theta)$ on support sets and outer-loop meta-optimization over procedural biome distributions.
   - Added Unity C# `MetaLearningController` for real-time few-shot client adaptation on procedural biome shifts.

@@ -17,6 +17,15 @@
 1. [🌟 Executive Overview & Concept](#-executive-overview--concept)
 2. [🏗️ System Architecture](#️-system-architecture)
 3. [🧠 Core Machine Learning & Simulation Engines](#-core-machine-learning--simulation-engines)
+   - [Continuous Neural ODE Dynamics & Adjoint Sensitivity](#continuous-neural-ode-dynamics--adjoint-sensitivity)
+   - [Energy-Based World Models (EBM) & Langevin MCMC](#energy-based-world-models-ebm--langevin-mcmc)
+   - [Spatio-Temporal Hypergraph Attention Networks (ST-HyperGAT)](#spatio-temporal-hypergraph-attention-networks-st-hypergat)
+   - [Neuro-Symbolic Logic Verification & Safety Shields](#neuro-symbolic-logic-verification--safety-shields)
+   - [Zero-Knowledge Proof of Gameplay (PoGP) & Kinematic Merkle Traces](#zero-knowledge-proof-of-gameplay-pogp--kinematic-merkle-traces)
+   - [Multipath QUIC (MP-QUIC) & BBRv3 Congestion Control](#multipath-quic-mp-quic--bbrv3-congestion-control)
+   - [Model-Agnostic Meta-Learning (MAML) & Few-Shot Adaptation](#model-agnostic-meta-learning-maml--few-shot-adaptation)
+   - [Causal Discovery & Structural Equation Modeling (SEM)](#causal-discovery--structural-equation-modeling-sem)
+   - [Physics-Informed Neural Networks (PINN) Hamiltonian Conservation](#physics-informed-neural-networks-pinn-hamiltonian-conservation)
    - [Neuromorphic Spiking Neural Networks (SNN) & LIF Membrane Dynamics](#neuromorphic-spiking-neural-networks-snn--lif-membrane-dynamics)
    - [Graph Neural Network (GNN) Message Passing & Swarm Coordination](#graph-neural-network-gnn-message-passing--swarm-coordination)
    - [Byzantine Fault-Tolerant (BFT) Raft Gradient Consensus & Multi-Krum](#byzantine-fault-tolerant-bft-raft-gradient-consensus--multi-krum)
@@ -652,10 +661,12 @@ NeuroArena/
 │   └── Tests/                     # Unity EditMode/PlayMode C# Test Suites
 ├── deploy/                        # Production Infrastructure & Deployment
 │   ├── agones-fleet.yaml          # Agones Game Server K8s Fleet Configuration
+│   ├── envoy-webtransport-gateway.yaml # Envoy HTTP/3 WebTransport & QUIC gateway
 │   ├── grafana-analytics-dashboard.json # Grafana Executive Analytics template
 │   ├── k8s-coop-service.yaml      # Kubernetes WebSocket relay for 2-4P Co-op rooms
 │   ├── nginx-ingress.conf         # NGINX reverse proxy & SSL termination
 │   ├── prometheus-alerts.yaml     # Prometheus alert rules for server fleet
+│   ├── prometheus-ode-hypergraph-alerts.yaml # Prometheus alerts for ODE, HyperGAT & PoGP
 │   ├── redis-cluster.yaml         # Distributed Redis Cluster configuration
 │   └── terraform/                 # Multi-region AWS/GCP Kubernetes IaC
 ├── docs/                          # Architecture & Scientific Documentation
@@ -665,6 +676,7 @@ NeuroArena/
 │   ├── FTUE_TUTORIAL_SPECIFICATION.md # 3-minute onboarding loop & funnel metrics
 │   ├── JUICE_SYSTEM_SPECIFICATION.md # Hit-stop, camera shake & haptic feedback
 │   ├── MATHEMATICAL_SPECIFICATIONS.md # Analytical formulas and proofs
+│   ├── NEURAL_ODE_HYPERGRAPH_EBM_SPECIFICATION.md # Continuous ODEs, Hypergraphs & EBM specs
 │   ├── DESIGN_SYSTEM_SPECIFICATION.md # Cross-platform design tokens & math glyphs
 │   ├── MOBILE_OPTIMIZATION_GUIDE.md # 2GB RAM budget & profiling rules
 │   ├── NETCODE_PROTOCOL_SPEC.md   # Fast binary packet layout & sequence flow
