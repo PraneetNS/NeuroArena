@@ -1,0 +1,65 @@
+# Envoy Proxy Configuration for HTTP/3 WebTransport and QUIC Multipath Edge Routing
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: envoy-webtransport-gateway-config
+  namespace: neuroarena-system
+data:
+  envoy.yaml: |
+    static_resources:
+      listeners:
+      - name: webtransport_quic_listener
+        address:
+          socket_address:
+            protocol: UDP
+            address: 0.0.0.0
+            port_value: 4433
+        udp_listener_config:
+          quic_options: {}
+        filter_chains:
+        - transport_socket:
+            name: envoy.transport_sockets.quic
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.transport_sockets.quic.v3.QuicDownstreamTransport
+              common_tls_context:
+                tls_certificates:
+                - certificate_chain:
+                    filename: /etc/ssl/certs/neuroarena-quic.crt
+                  private_key:
+                    filename: /etc/ssl/private/neuroarena-quic.key
+          filters:
+          - name: envoy.filters.network.http_connection_manager
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+              stat_prefix: ingress_webtransport
+              codec_type: HTTP3
+              http3_options:
+                allow_extended_connect: true
+              upgrade_configs:
+              - upgrade_type: webtransport
+              route_config:
+                name: local_route
+                virtual_hosts:
+                - name: game_nodes
+                  domains: ["*"]
+                  routes:
+                  - match:
+                      prefix: "/webtransport/live"
+                    route:
+                      cluster: agones_gameserver_cluster
+                      timeout: 0s
+                      idle_timeout: 300s
+      clusters:
+      - name: agones_gameserver_cluster
+        connect_timeout: 0.25s
+        type: STRICT_DNS
+        lb_policy: ROUND_ROBIN
+        load_assignment:
+          cluster_name: agones_gameserver_cluster
+          endpoints:
+          - lb_endpoints:
+            - endpoint:
+                address:
+                  socket_address:
+                    address: neuroarena-relay-svc.neuroarena-system.svc.cluster.local
+                    port_value: 2567
