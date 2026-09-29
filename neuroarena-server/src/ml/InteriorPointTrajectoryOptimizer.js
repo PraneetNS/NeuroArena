@@ -125,10 +125,27 @@ class InteriorPointTrajectoryOptimizer {
         const waypoints = [];
         for (let i = 0; i < this.numWaypoints; i++) {
             const alpha = i / (this.numWaypoints - 1);
-            waypoints.push([
-                startPos[0] + alpha * (goalPos[0] - startPos[0]),
-                startPos[1] + alpha * (goalPos[1] - startPos[1])
-            ]);
+            let px = startPos[0] + alpha * (goalPos[0] - startPos[0]);
+            let py = startPos[1] + alpha * (goalPos[1] - startPos[1]);
+
+            // Nudge intermediate waypoints if directly inside an obstacle
+            if (i > 0 && i < this.numWaypoints - 1) {
+                for (const obs of obstacles) {
+                    const odx = px - obs.x;
+                    const ody = py - obs.y;
+                    const dist = Math.sqrt(odx * odx + ody * ody);
+                    if (dist < obs.radius + 0.5) {
+                        // Offset perpendicularly
+                        const perpX = -(goalPos[1] - startPos[1]);
+                        const perpY = goalPos[0] - startPos[0];
+                        const pLen = Math.sqrt(perpX * perpX + perpY * perpY) || 1;
+                        px += (perpX / pLen) * (obs.radius + 1.0);
+                        py += (perpY / pLen) * (obs.radius + 1.0);
+                    }
+                }
+            }
+
+            waypoints.push([px, py]);
         }
 
         let currentMu = this.barrierMu;
