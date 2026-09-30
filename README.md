@@ -17,6 +17,13 @@
 1. [🌟 Executive Overview & Concept](#-executive-overview--concept)
 2. [🏗️ System Architecture](#️-system-architecture)
 3. [🧠 Core Machine Learning & Simulation Engines](#-core-machine-learning--simulation-engines)
+   - [Conditional Flow Matching (CFM) & Optimal Transport Paths](#conditional-flow-matching-cfm--optimal-transport-paths)
+   - [Conformal Prediction & Finite-Sample Risk Guarantees](#conformal-prediction--finite-sample-risk-guarantees)
+   - [Riemannian Manifold Optimization on Lie Groups SE(3)](#riemannian-manifold-optimization-on-lie-groups-se3)
+   - [Neuromorphic Spiking Actor-Critic Policy & STDP](#neuromorphic-spiking-actor-critic-policy--stdp)
+   - [Continuum Mean Field Games (MFG) & HJB-FP Dynamics](#continuum-mean-field-games-mfg--hjb-fp-dynamics)
+   - [Self-Supervised Trajectory Representation Learning](#self-supervised-trajectory-representation-learning)
+   - [Continuous-Time Temporal Graph Networks & Hawkes Cascades](#continuous-time-temporal-graph-networks--hawkes-cascades)
    - [Continuous Neural ODE Dynamics & Adjoint Sensitivity](#continuous-neural-ode-dynamics--adjoint-sensitivity)
    - [Energy-Based World Models (EBM) & Langevin MCMC](#energy-based-world-models-ebm--langevin-mcmc)
    - [Spatio-Temporal Hypergraph Attention Networks (ST-HyperGAT)](#spatio-temporal-hypergraph-attention-networks-st-hypergat)
@@ -661,9 +668,11 @@ NeuroArena/
 │   └── Tests/                     # Unity EditMode/PlayMode C# Test Suites
 ├── deploy/                        # Production Infrastructure & Deployment
 │   ├── agones-fleet.yaml          # Agones Game Server K8s Fleet Configuration
+│   ├── ebpf-xdp-packet-guard.c    # Kernel-bypass eBPF XDP anti-DDoS packet filter
 │   ├── envoy-webtransport-gateway.yaml # Envoy HTTP/3 WebTransport & QUIC gateway
 │   ├── grafana-analytics-dashboard.json # Grafana Executive Analytics template
 │   ├── k8s-coop-service.yaml      # Kubernetes WebSocket relay for 2-4P Co-op rooms
+│   ├── k8s-flow-matching-autoscaler.yaml # KEDA ScaledObject for Flow Matching & MFG
 │   ├── nginx-ingress.conf         # NGINX reverse proxy & SSL termination
 │   ├── prometheus-alerts.yaml     # Prometheus alert rules for server fleet
 │   ├── prometheus-ode-hypergraph-alerts.yaml # Prometheus alerts for ODE, HyperGAT & PoGP
@@ -674,6 +683,7 @@ NeuroArena/
 │   ├── BIOME_CURRICULUM_GUIDE.md  # 6-Biome ML curriculum breakdown
 │   ├── COOP_ROOM_SPECIFICATION.md # 2-4 player collaborative co-op room specs
 │   ├── FTUE_TUTORIAL_SPECIFICATION.md # 3-minute onboarding loop & funnel metrics
+│   ├── GENERATIVE_FLOW_RIEMANNIAN_NEUROMORPHIC_SPECIFICATION.md # CFM, Lie Groups, LIF & MFG specs
 │   ├── JUICE_SYSTEM_SPECIFICATION.md # Hit-stop, camera shake & haptic feedback
 │   ├── MATHEMATICAL_SPECIFICATIONS.md # Analytical formulas and proofs
 │   ├── NEURAL_ODE_HYPERGRAPH_EBM_SPECIFICATION.md # Continuous ODEs, Hypergraphs & EBM specs

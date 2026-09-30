@@ -8,6 +8,32 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- **Conditional Flow Matching (CFM) Motion Planning (`neuroarena-server/src/ml/FlowMatchingMotionPlanner.js`, `Assets/Scripts/Physics/FlowMatchingLocomotion.cs`, `docs/GENERATIVE_FLOW_RIEMANNIAN_NEUROMORPHIC_SPECIFICATION.md`)**
+  - Implemented continuous normalizing flows with optimal transport displacement interpolants $\psi_t(x_0, x_1) = (1-t)x_0 + t x_1$ and vector field regression $\mathcal{L}_{\mathrm{CFM}}$.
+  - Built Euler and 4th-Order Runge-Kutta numerical quadrature solvers for deterministic, multi-modal kinematic trajectory rollouts.
+  - Added Unity C# `FlowMatchingLocomotion` component for real-time agile target tracking and obstacle evasion.
+- **Conformal Prediction Engine with Finite-Sample Risk Guarantees (`neuroarena-server/src/ml/ConformalPredictionEngine.js`, `Assets/Scripts/Safety/ConformalDecisionGuard.cs`)**
+  - Formulated split conformal prediction and empirical quantile calibration achieving distribution-free $P(Y \in C(X)) \ge 1 - \alpha$ coverage.
+  - Added Unity C# `ConformalDecisionGuard` enforcing statistical safety barriers on combat damage and high-stakes maneuvering.
+- **Riemannian Manifold Optimization on Lie Groups $\mathrm{SE}(3)$ / $\mathrm{SO}(3)$ (`neuroarena-server/src/ml/RiemannianManifoldOptimizer.js`, `Assets/Scripts/Optimization/RiemannianPoseInterpolator.cs`, `web/src/riemannianFlowVisualizer.js`)**
+  - Implemented exponential and logarithmic maps on Lie algebras $\mathfrak{so}(3)$ and $\mathfrak{se}(3)$ via Rodrigues formulations, avoiding gimbal lock and rotational singularities.
+  - Built geodesic interpolation (`slerpSO3`) and Riemannian gradient descent optimization for 6-DOF drone attitude stability.
+  - Created interactive HTML5 Canvas `RiemannianFlowVisualizer` rendering $S^2$ manifolds, streamlines, and conformal prediction confidence ellipses.
+- **Neuromorphic Spiking Actor-Critic Policy (`neuroarena-server/src/ml/SpikingNeuralPolicyEngine.js`, `Assets/Scripts/AI/SpikingSynapseController.cs`, `web/src/spikingRasterViewer.js`)**
+  - Implemented Leaky Integrate-and-Fire (LIF) membrane dynamics with refractory gating, Fast Sigmoid surrogate gradients, and continuous Spike-Timing-Dependent Plasticity (STDP).
+  - Added Unity C# `SpikingSynapseController` for ultra-low latency reaction and HTML5 Canvas `SpikingRasterViewer` oscilloscope.
+- **Continuum Mean Field Game (MFG) Master Equation Solver (`neuroarena-server/src/ml/MeanFieldGameEngine.js`, `Assets/Scripts/AI/MeanFieldSwarmCrowd.cs`)**
+  - Solved coupled backward Hamilton-Jacobi-Bellman (HJB) and forward Fokker-Planck (FP) partial differential equations for $100+$ agent swarm Nash equilibrium.
+  - Added Unity C# `MeanFieldSwarmCrowd` for continuum density sampling and swarm navigation.
+- **Self-Supervised Trajectory Representation Learning (`neuroarena-server/src/ml/ContrastiveTrajectoryEncoder.js`, `Assets/Scripts/ML/TrajectoryEmbeddingSensor.cs`)**
+  - Implemented InfoNCE mutual information maximization and VICReg variance/covariance regularization over temporal observation windows.
+  - Added Unity C# `TrajectoryEmbeddingSensor` buffer streaming normalized latent embeddings.
+- **Continuous-Time Temporal Graph Network (TGN) with Hawkes Processes (`neuroarena-server/src/ml/TemporalInteractionGraphEngine.js`, `Assets/Scripts/AI/TemporalCombatGraphBridge.cs`)**
+  - Modeled combat interaction cascades via node memory states and self-exciting Hawkes intensity estimation.
+  - Added Unity C# `TemporalCombatGraphBridge` for interaction event dispatching.
+- **eBPF XDP Kernel-Bypass Guard & KEDA Flow-Matching Autoscaler (`deploy/ebpf-xdp-packet-guard.c`, `deploy/k8s-flow-matching-autoscaler.yaml`)**
+  - Implemented stateless token-bucket rate limiting and anti-DDoS packet dropping at network driver layer before kernel socket processing.
+  - Configured Kubernetes KEDA autoscaling based on flow-matching queue latency and mean-field convergence pressure.
 - **Continuous-Time Neural Ordinary Differential Equations (Neural ODEs) (`neuroarena-server/src/ml/NeuralODEEngine.js`, `Assets/Scripts/Physics/ContinuousNeuralODEFlight.cs`, `web/src/neuralODEPhaseViewer.js`, `docs/NEURAL_ODE_HYPERGRAPH_EBM_SPECIFICATION.md`)**
   - Formulated continuous dynamical state progression as an Initial Value Problem $\frac{dz(t)}{dt} = f_\theta(z(t), t)$ with Runge-Kutta 4th-order (RK4) and adaptive Dormand-Prince (DOPRI5) integrators with local truncation error control.
   - Implemented the continuous Adjoint Sensitivity method $\frac{da(t)}{dt} = -a(t)^\top \frac{\partial f_\theta}{\partial z}$ for constant $O(1)$ memory backpropagation through arbitrary time horizons.
