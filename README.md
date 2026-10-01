@@ -17,6 +17,14 @@
 1. [🌟 Executive Overview & Concept](#-executive-overview--concept)
 2. [🏗️ System Architecture](#️-system-architecture)
 3. [🧠 Core Machine Learning & Simulation Engines](#-core-machine-learning--simulation-engines)
+   - [Diffusion Schrödinger Bridge & Entropic Optimal Transport](#diffusion-schrödinger-bridge--entropic-optimal-transport)
+   - [E(n)-Equivariant Graph Neural Networks (EGNN) for SE(3) Flocking](#en-equivariant-graph-neural-networks-egnn-for-se3-flocking)
+   - [Koopman Operator Theory & Dynamic Mode Decomposition](#koopman-operator-theory--dynamic-mode-decomposition)
+   - [Kolmogorov-Arnold Networks (KAN) with Learnable B-Splines](#kolmogorov-arnold-networks-kan-with-learnable-b-splines)
+   - [Symplectic Phase-Space Integrator & Energy Conservation](#symplectic-phase-space-integrator--energy-conservation)
+   - [Information-Geometric Natural Policy Gradient (NPG)](#information-geometric-natural-policy-gradient-npg)
+   - [Online Conformal Martingales & Non-Exchangeable OOD Testing](#online-conformal-martingales--non-exchangeable-ood-testing)
+   - [Counterfactual World Models & Pearl Level-3 Interventions](#counterfactual-world-models--pearl-level-3-interventions)
    - [Conditional Flow Matching (CFM) & Optimal Transport Paths](#conditional-flow-matching-cfm--optimal-transport-paths)
    - [Conformal Prediction & Finite-Sample Risk Guarantees](#conformal-prediction--finite-sample-risk-guarantees)
    - [Riemannian Manifold Optimization on Lie Groups SE(3)](#riemannian-manifold-optimization-on-lie-groups-se3)
@@ -668,11 +676,13 @@ NeuroArena/
 │   └── Tests/                     # Unity EditMode/PlayMode C# Test Suites
 ├── deploy/                        # Production Infrastructure & Deployment
 │   ├── agones-fleet.yaml          # Agones Game Server K8s Fleet Configuration
+│   ├── ebpf-tc-pacer.c            # Linux TC cls_bpf micro-burst packet pacer & QoS
 │   ├── ebpf-xdp-packet-guard.c    # Kernel-bypass eBPF XDP anti-DDoS packet filter
 │   ├── envoy-webtransport-gateway.yaml # Envoy HTTP/3 WebTransport & QUIC gateway
 │   ├── grafana-analytics-dashboard.json # Grafana Executive Analytics template
 │   ├── k8s-coop-service.yaml      # Kubernetes WebSocket relay for 2-4P Co-op rooms
 │   ├── k8s-flow-matching-autoscaler.yaml # KEDA ScaledObject for Flow Matching & MFG
+│   ├── k8s-schrodinger-bridge-hpa.yaml # HPA v2 autoscaler for bridge & KAN inference
 │   ├── nginx-ingress.conf         # NGINX reverse proxy & SSL termination
 │   ├── prometheus-alerts.yaml     # Prometheus alert rules for server fleet
 │   ├── prometheus-ode-hypergraph-alerts.yaml # Prometheus alerts for ODE, HyperGAT & PoGP
@@ -687,6 +697,7 @@ NeuroArena/
 │   ├── JUICE_SYSTEM_SPECIFICATION.md # Hit-stop, camera shake & haptic feedback
 │   ├── MATHEMATICAL_SPECIFICATIONS.md # Analytical formulas and proofs
 │   ├── NEURAL_ODE_HYPERGRAPH_EBM_SPECIFICATION.md # Continuous ODEs, Hypergraphs & EBM specs
+│   ├── SCHRODINGER_BRIDGE_KAN_KOOPMAN_SPECIFICATION.md # DSB, EGNN, KAN & Koopman specs
 │   ├── DESIGN_SYSTEM_SPECIFICATION.md # Cross-platform design tokens & math glyphs
 │   ├── MOBILE_OPTIMIZATION_GUIDE.md # 2GB RAM budget & profiling rules
 │   ├── NETCODE_PROTOCOL_SPEC.md   # Fast binary packet layout & sequence flow
