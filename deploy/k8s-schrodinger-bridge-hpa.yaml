@@ -1,0 +1,53 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: neuroarena-schrodinger-bridge-autoscaler
+  namespace: neuroarena-prod
+  labels:
+    app.kubernetes.io/name: neuroarena-ml-engine
+    app.kubernetes.io/component: schrodinger-bridge-kan
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: neuroarena-inference-worker
+  minReplicas: 3
+  maxReplicas: 24
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Pods
+      pods:
+        metric:
+          name: dsb_ipf_iterations_per_sec
+        target:
+          type: AverageValue
+          averageValue: 450
+    - type: External
+      external:
+        metric:
+          name: keda_kan_spline_inference_latency_ms
+        target:
+          type: Value
+          value: "12m"
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 15
+        - type: Pods
+          value: 4
+          periodSeconds: 15
+      selectPolicy: Max
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 10
+          periodSeconds: 60
