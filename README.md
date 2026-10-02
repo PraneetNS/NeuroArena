@@ -17,6 +17,14 @@
 1. [🌟 Executive Overview & Concept](#-executive-overview--concept)
 2. [🏗️ System Architecture](#️-system-architecture)
 3. [🧠 Core Machine Learning & Simulation Engines](#-core-machine-learning--simulation-engines)
+   - [Topological Data Analysis (TDA) & Persistent Homology](#topological-data-analysis-tda--persistent-homology)
+   - [Category-Theoretic Compositional Open Games](#category-theoretic-compositional-open-games)
+   - [Clifford Geometric Algebra Cl(3, 0) & Multivector Kinematics](#clifford-geometric-algebra-cl3-0--multivector-kinematics)
+   - [Path Integral Stochastic Optimal Control (MPPI)](#path-integral-stochastic-optimal-control-mppi)
+   - [Multi-Compartment Pyramidal Dendritic Computing](#multi-compartment-pyramidal-dendritic-computing)
+   - [Zero-Knowledge Rollup Batch State Transition Verifier](#zero-knowledge-rollup-batch-state-transition-verifier)
+   - [Adiabatic Quantum Annealing & Transverse-Field Ising QUBO](#adiabatic-quantum-annealing--transverse-field-ising-qubo)
+   - [Asynchronous Time-Warp Speculative Netcode Engine](#asynchronous-time-warp-speculative-netcode-engine)
    - [Diffusion Schrödinger Bridge & Entropic Optimal Transport](#diffusion-schrödinger-bridge--entropic-optimal-transport)
    - [E(n)-Equivariant Graph Neural Networks (EGNN) for SE(3) Flocking](#en-equivariant-graph-neural-networks-egnn-for-se3-flocking)
    - [Koopman Operator Theory & Dynamic Mode Decomposition](#koopman-operator-theory--dynamic-mode-decomposition)
@@ -183,6 +191,44 @@ flowchart TD
 ---
 
 ## 🧠 Core Machine Learning & Simulation Engines
+
+### Topological Data Analysis (TDA) & Persistent Homology
+- **Vietoris-Rips Complex Filtration:** Computes dynamic simplicial complexes over spatial multi-agent coordination clouds, capturing instantaneous and topological phase changes.
+- **$\mathbb{Z}_2$ Boundary Matrix Reduction:** Identifies persistent 0-cycles ($\beta_0$ swarm cluster connectedness) and 1-cycles ($\beta_1$ obstacle loops/voids) with persistence pairs $(b_i, d_i)$.
+- **Topological Persistent Entropy:** Quantifies swarm dispersion and entropy $E = -\sum p_i \ln p_i$ to trigger automatic flock regrouping and zone coverage adjustments.
+
+### Category-Theoretic Compositional Open Games
+- **Bidirectional Lenses & Optics:** Formulates arena games as morphisms $(\mathbb{X}, \mathbb{S}) \leftrightarrow (\mathbb{Y}, \mathbb{R})$ with forward state play and backward utility copropagation.
+- **Functorial Game Composition:** Supports sequential composition ($G_2 \circ G_1$) and parallel tensor product ($G_1 \otimes G_2$) preserving subgame perfection and backward value propagation.
+- **Subgame Perfect Bayesian Nash Equilibrium:** Solves multi-agent game equilibria analytically across hierarchical arenas.
+
+### Clifford Geometric Algebra Cl(3, 0) & Multivector Kinematics
+- **8-Dimensional Canonical Multivector Algebra:** Unifies scalars, vectors ($e_1, e_2, e_3$), rotation bivectors ($e_{12}, e_{23}, e_{31}$), and pseudoscalar volume forms ($e_{123}$).
+- **Singularity-Free Rotor Sandwich Product:** Calculates $v' = R v R^\dagger$ and rotor Slerp without Euler angle singularities or gimbal lock.
+- **Bivector Torques:** Evaluates exterior wedge product torques $\tau = r \wedge F$ directly in rotation planes.
+
+### Path Integral Stochastic Optimal Control (MPPI)
+- **Feynman-Kac Stochastic Duality:** Solves non-convex Hamilton-Jacobi-Bellman stochastic optimal control via forward Brownian path sampling.
+- **Derivative-Free Trajectory Optimization:** Min-cost exponential weighting $w_k = \frac{\exp(-S(\tau_k)/\lambda)}{\sum_j \exp(-S(\tau_j)/\lambda)}$ calculates optimal control updates $u^*(t) = \sum w_k \epsilon_{k, t}$ under adversarial evasion and obstacle fields.
+
+### Multi-Compartment Pyramidal Dendritic Computing
+- **Active Dendritic Trees:** Simulates basal, apical trunk, and apical tuft compartments in neocortical pyramidal neurons.
+- **Non-Linear NMDA Receptors:** Voltage-gated magnesium ($Mg^{2+}$) block kinetics generate sustained $25\text{ms}$ dendritic plateau potentials.
+- **Two-Stage Coincidence & Burst Firing:** Coincidence between feedforward basal drive and apical context triggers $2.8\times$ coupling gain and somatic burst firing.
+
+### Zero-Knowledge Rollup Batch State Transition Verifier
+- **BN254 Scalar Field Arithmetic Circuit:** Proves and verifies batches of $K$ state updates in a single succinct cryptographic proof $\pi$.
+- **In-Circuit Invariant Enforcement:** Verifies speed limits, maximum acceleration limits, and pairwise collision non-overlap constraints.
+- **Succinct Merkle State Transitions:** Updates state roots in $O(1)$ time while preventing invalid client state injections.
+
+### Adiabatic Quantum Annealing & Transverse-Field Ising QUBO
+- **QUBO to Ising Model Transformation:** Transforms quadratic binary weapon-target assignments and sensor coverage into an Ising Hamiltonian $H_{\mathrm{problem}}$.
+- **Simulated Quantum Annealing (SQA):** Employs Trotterized path-integral quantum Monte Carlo with transverse tunneling field $A(s)$ schedules for barrier penetration.
+
+### Asynchronous Time-Warp Speculative Netcode Engine
+- **Jefferson Virtual Time Synchronization:** Implements optimistic discrete event simulation with Local Virtual Time (LVT) clocks.
+- **Anti-Message Annihilation:** Emits negative anti-messages ($\bar{m}$) upon straggler arrival, canceling out invalid speculative messages ($m \oplus \bar{m} = \emptyset$) across peer queues.
+- **Fossil Collection:** Reclaims state checkpoints and processed messages older than Global Virtual Time (GVT).
 
 ### Model-Agnostic Meta-Learning (MAML) & Few-Shot Biome Adaptation
 - **First-Order MAML (FOMAML):** Fast inner-loop adaptation $\theta_i' = \theta - \alpha \nabla_\theta \mathcal{L}_{\mathcal{T}_i}(\theta)$ on 1-to-5 shot support sets with outer-loop meta-optimization $\theta \leftarrow \theta - \beta \sum \nabla_\theta \mathcal{L}_{\mathcal{T}_i}(\theta_i')$ across procedurally generated biome tasks.
@@ -675,9 +721,11 @@ NeuroArena/
 │   │   └── UI/                    # HUD, Formula Terminal & Mobile Touch
 │   └── Tests/                     # Unity EditMode/PlayMode C# Test Suites
 ├── deploy/                        # Production Infrastructure & Deployment
+│   ├── af-xdp-packet-filter.c     # Kernel-bypass AF_XDP (XSK) zero-copy packet driver
 │   ├── agones-fleet.yaml          # Agones Game Server K8s Fleet Configuration
 │   ├── ebpf-tc-pacer.c            # Linux TC cls_bpf micro-burst packet pacer & QoS
 │   ├── ebpf-xdp-packet-guard.c    # Kernel-bypass eBPF XDP anti-DDoS packet filter
+│   ├── envoy-wasm-state-filter.cc # Envoy Proxy WebAssembly state filter & CRC check
 │   ├── envoy-webtransport-gateway.yaml # Envoy HTTP/3 WebTransport & QUIC gateway
 │   ├── grafana-analytics-dashboard.json # Grafana Executive Analytics template
 │   ├── k8s-coop-service.yaml      # Kubernetes WebSocket relay for 2-4P Co-op rooms
@@ -698,6 +746,7 @@ NeuroArena/
 │   ├── MATHEMATICAL_SPECIFICATIONS.md # Analytical formulas and proofs
 │   ├── NEURAL_ODE_HYPERGRAPH_EBM_SPECIFICATION.md # Continuous ODEs, Hypergraphs & EBM specs
 │   ├── SCHRODINGER_BRIDGE_KAN_KOOPMAN_SPECIFICATION.md # DSB, EGNN, KAN & Koopman specs
+│   ├── TOPOLOGICAL_COMPOSITIONAL_CLIFFORD_SPEC.md # TDA, Open Games, Clifford Algebra & ZK specs
 │   ├── DESIGN_SYSTEM_SPECIFICATION.md # Cross-platform design tokens & math glyphs
 │   ├── MOBILE_OPTIMIZATION_GUIDE.md # 2GB RAM budget & profiling rules
 │   ├── NETCODE_PROTOCOL_SPEC.md   # Fast binary packet layout & sequence flow
@@ -707,8 +756,8 @@ NeuroArena/
 │   ├── SYSTEM_ARCHITECTURE.md     # Full distributed cloud & netcode topology
 │   └── PRIVACY_POLICY.md          # 100% Offline & local diagnostics privacy
 ├── neuroarena-server/             # Colyseus Real-Time Multiplayer Backend
-│   ├── src/                       # Room handlers (Duel, Coop, Arena), Glicko-2, Anti-Cheat, Guilds
-│   └── test/                      # 31 server test suites & scale benchmarks
+│   ├── src/                       # Room handlers, TDA, Open Games, Clifford, ZK-Rollup, TimeWarp
+│   └── test/                      # 43 comprehensive server test suites & scale benchmarks
 ├── scripts/                       # Developer CLI tools & benchmark harnesses
 │   ├── benchmark-tiers.js         # Mobile hardware profiling benchmark
 │   ├── ml-cli.js                  # Model consult and extrapolation CLI
@@ -726,7 +775,7 @@ NeuroArena/
     ├── design-system.css          # Token-driven CSS custom properties & chamfer panels
     ├── index.html                 # Main web client interface
     ├── locales/                   # i18n translations (EN, ES, JA, DE, ZH)
-    ├── src/                       # WebGPU/WebGL renderers, MathIconLibrary, Compute Particles
+    ├── src/                       # TDA & Clifford Visualizers, WebGPU/WebGL renderers, Compute Particles
     ├── style-guide.html           # Interactive design token & glyph reference showcase
     ├── style.css                  # Cyber-formula glassmorphic UI layout
     └── tests/                     # Automated JavaScript ML test harness

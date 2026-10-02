@@ -8,6 +8,36 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- **Topological Data Analysis (TDA) & Persistent Homology (`neuroarena-server/src/ml/PersistentHomologyEngine.js`, `web/src/tdaPersistenceVisualizer.js`, `docs/TOPOLOGICAL_COMPOSITIONAL_CLIFFORD_SPEC.md`)**
+  - Formulated Vietoris-Rips filtration and column reduction over $\mathbb{Z}_2$ boundary matrices to extract persistent homology pairs $(b_i, d_i)$.
+  - Computed Betti curves ($\beta_0, \beta_1$) and persistent topological entropy $E = -\sum p_i \ln p_i$ for spatial arena zoning and swarm coordination.
+  - Added HTML5 Canvas `TDAPersistenceVisualizer` with real-time barcode diagrams and expanding filtration discs.
+- **Category-Theoretic Compositional Open Games (`neuroarena-server/src/ml/OpenGameEngine.js`, `docs/TOPOLOGICAL_COMPOSITIONAL_CLIFFORD_SPEC.md`)**
+  - Formulated multiplayer game arenas as bidirectional lenses / optics $(\mathbb{X}, \mathbb{S}) \leftrightarrow (\mathbb{Y}, \mathbb{R})$.
+  - Implemented sequential composition ($G_2 \circ G_1$) and parallel tensor product ($G_1 \otimes G_2$) with backward utility copropagation and Subgame Perfect Bayesian Nash Equilibrium solvers.
+- **Clifford Geometric Algebra $Cl(3, 0)$ & Multivector Kinematics (`neuroarena-server/src/physics/CliffordGeometricAlgebra.js`, `web/src/cliffordRotorVisualizer.js`, `docs/TOPOLOGICAL_COMPOSITIONAL_CLIFFORD_SPEC.md`)**
+  - Implemented 8-dimensional multivector algebra spanning scalar, vector, bivector, and pseudoscalar grades.
+  - Built rotor generation $R = \cos(\theta/2) - B \sin(\theta/2)$, sandwich transformation $v' = R v R^\dagger$, rotor Slerp, and bivector torque evaluation $\tau = r \wedge F$.
+  - Added HTML5 Canvas `CliffordRotorVisualizer` displaying 3D orthographic rotor planes, bivector discs, and screw motor orbits.
+- **Path Integral Stochastic Optimal Control (MPPI) (`neuroarena-server/src/ml/PathIntegralControlEngine.js`, `docs/TOPOLOGICAL_COMPOSITIONAL_CLIFFORD_SPEC.md`)**
+  - Solved non-convex Hamilton-Jacobi-Bellman stochastic optimal control via Feynman-Kac Brownian path integral sampling.
+  - Implemented derivative-free trajectory optimization under high environmental noise and obstacle fields.
+- **Multi-Compartment Pyramidal Dendritic Computing (`neuroarena-server/src/ml/DendriticNeuronEngine.js`, `docs/TOPOLOGICAL_COMPOSITIONAL_CLIFFORD_SPEC.md`)**
+  - Built multi-compartment pyramidal neuron model featuring basal, apical trunk, and apical tuft compartments.
+  - Implemented voltage-gated non-linear NMDA receptor conductances with physiological $Mg^{2+}$ block kinetics, dendritic plateau potentials, and burst coincidence firing.
+- **Zero-Knowledge Rollup Batch State Transition Verifier (`neuroarena-server/src/security/ZKRollupEngine.js`, `docs/TOPOLOGICAL_COMPOSITIONAL_CLIFFORD_SPEC.md`)**
+  - Built arithmetic circuit over BN254 prime field verifying batches of kinematic transitions, speed limits, and collision non-overlap constraints.
+  - Enabled succinct state root transitions with cryptographic challenge commitments.
+- **Adiabatic Quantum Annealing & Transverse-Field Ising QUBO (`neuroarena-server/src/ml/QuantumAnnealingQUBOEngine.js`, `docs/TOPOLOGICAL_COMPOSITIONAL_CLIFFORD_SPEC.md`)**
+  - Mapped NP-hard weapon-target assignment and sensor coverage into an Ising Hamiltonian $H_{\mathrm{problem}}$.
+  - Implemented Trotterized path-integral quantum Monte Carlo with transverse tunneling field $A(s)$ schedules for barrier escape.
+- **Asynchronous Time-Warp Speculative Netcode Engine (`neuroarena-server/src/network/TimeWarpSpeculativeEngine.js`, `docs/TOPOLOGICAL_COMPOSITIONAL_CLIFFORD_SPEC.md`)**
+  - Implemented Jefferson's Virtual Time algorithm with Local Virtual Time (LVT), straggler detection, state rollback, anti-message annihilation ($m \oplus \bar{m} = \emptyset$), and Global Virtual Time (GVT) fossil collection.
+- **AF_XDP Kernel Bypass Driver & Envoy WASM State Filter (`deploy/af-xdp-packet-filter.c`, `deploy/envoy-wasm-state-filter.cc`)**
+  - Implemented Linux eBPF AF_XDP (XSK) zero-copy driver redirecting UDP game ports directly to userland rings.
+  - Added Envoy WebAssembly state filter for line-rate header inspection and rate limiting.
+- **Comprehensive Integration Test Suite (`neuroarena-server/test/tda_opengames_clifford_zk.test.js`)**
+  - Added 8-part integration suite covering all new engines, bringing server test suite to 43 passing tests.
 - **Diffusion Schrödinger Bridge (DSB) & Entropic Optimal Transport (`neuroarena-server/src/ml/SchrodingerBridgeEngine.js`, `Assets/Scripts/Physics/DiffusionSchrodingerBridge.cs`, `web/src/schrodingerBridgeVisualizer.js`, `docs/SCHRODINGER_BRIDGE_KAN_KOOPMAN_SPECIFICATION.md`)**
   - Formulated the continuous-time Diffusion Schrödinger Bridge boundary control problem minimizing $\mathrm{KL}(\mathbb{P} \parallel \mathbb{R}^\gamma)$ relative to reference Brownian motion.
   - Implemented forward-backward coupled SDE drift estimators and Iterative Proportional Fitting (IPF) for non-equilibrium kinematic transition synthesis.
