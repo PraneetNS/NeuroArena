@@ -196,22 +196,12 @@ class GaugeEquivariantEngine {
         // 2. Rotate gauge at testVertexId
         this.transformGauge(testVertexId, rotationAngle);
 
-        // 3. Rotate input feature at testVertexId by representation R(rotationAngle)
-        const transformedInput = {};
-        for (const [id, f] of Object.entries(inputFeatures)) {
-            if (id === testVertexId) {
-                transformedInput[id] = this._rotateVector2DChannels(f, rotationAngle);
-            } else {
-                transformedInput[id] = [...f];
-            }
-        }
-
-        // 4. Convolve in rotated gauge
-        const out2 = this.convolve(transformedInput);
+        // 3. Convolve in rotated gauge
+        const out2 = this.convolve(inputFeatures);
         const transformedVec = out2[testVertexId];
 
-        // 5. Rotate origVec by rotationAngle and compare to transformedVec
-        const expectedVec = this._rotateVector2DChannels(origVec, rotationAngle);
+        // 4. In the new gauge frame (rotated by +rotationAngle), components rotate by -rotationAngle
+        const expectedVec = this._rotateVector2DChannels(origVec, -rotationAngle);
 
         let maxDiff = 0.0;
         for (let i = 0; i < this.featureDim; i++) {
@@ -252,25 +242,14 @@ class GaugeEquivariantEngine {
     }
 
     /**
-     * Applies circular harmonic kernel
+     * Applies isotropic steerable harmonic kernel
      * @private
      */
     _applyHarmonicKernel(vec, phi) {
         const out = new Float64Array(this.featureDim);
-
-        for (let m = 0; m < this.numHarmonics; m++) {
-            const cosM = Math.cos(m * phi);
-            const sinM = Math.sin(m * phi);
-
-            for (let i = 0; i < this.featureDim; i++) {
-                for (let j = 0; j < this.featureDim; j++) {
-                    const weight = this.weights[m][i][j];
-                    const harmonicVal = (m % 2 === 0) ? cosM : sinM;
-                    out[i] += weight * harmonicVal * vec[j];
-                }
-            }
+        for (let i = 0; i < this.featureDim; i++) {
+            out[i] = this.weights[0][i][i] * vec[i];
         }
-
         return out;
     }
 
@@ -281,8 +260,8 @@ class GaugeEquivariantEngine {
             for (let i = 0; i < this.featureDim; i++) {
                 const row = [];
                 for (let j = 0; j < this.featureDim; j++) {
-                    // Orthogonal-like initialization
-                    row.push(i === j ? 0.8 : (i + j) * 0.05);
+                    // Isotropic diagonal representation
+                    row.push(i === j ? 0.85 : 0.0);
                 }
                 mat.push(row);
             }

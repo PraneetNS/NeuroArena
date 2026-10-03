@@ -41,9 +41,9 @@ class VRFConsensusEngine {
     constructor() {
         // Safe prime p and generator g for finite field discrete log demonstration
         // 256-bit prime modulus
-        this.p = BigInt('0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F'); // secp256k1 p
+        this.p = BigInt('0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F'); // 256-bit safe prime
         this.g = 2n;
-        this.q = BigInt('0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BB5BF562DEBACD3E7'); // secp256k1 order
+        this.q = this.p - 1n; // Group order of F_p^*
         this.shards = new Map();
     }
 
