@@ -1,0 +1,98 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: neuroarenaclusters.neuroarena.io
+  labels:
+    app.kubernetes.io/name: neuroarena-v4
+    app.kubernetes.io/part-of: neuroarena
+spec:
+  group: neuroarena.io
+  names:
+    kind: NeuroArenaV4Cluster
+    listKind: NeuroArenaV4ClusterList
+    plural: neuroarenaclusters
+    singular: neuroarenacluster
+    shortNames:
+      - nac
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                replicas:
+                  type: integer
+                  minimum: 1
+                  default: 3
+                engineProfile:
+                  type: string
+                  enum: [Standard, NeuromorphicFrontier, QuantumBosonic, ThermodynamicSheaf]
+                  default: ThermodynamicSheaf
+                thermodynamicEngine:
+                  type: object
+                  properties:
+                    temperatureKelvin:
+                      type: number
+                      default: 300.0
+                    frictionGamma:
+                      type: number
+                      default: 0.15
+                    jarzynskiSampleQuota:
+                      type: integer
+                      default: 500
+                cellularSheaf:
+                  type: object
+                  properties:
+                    stalkDimension:
+                      type: integer
+                      minimum: 1
+                      maximum: 8
+                      default: 2
+                    diffusionStepSize:
+                      type: number
+                      default: 0.05
+                    consensusTolerance:
+                      type: number
+                      default: 0.0001
+                morphogeneticReactionDiffusion:
+                  type: object
+                  properties:
+                    gridResolution:
+                      type: integer
+                      default: 48
+                    feedRate:
+                      type: number
+                      default: 0.035
+                    killRate:
+                      type: number
+                      default: 0.065
+                    bioelectricCoupling:
+                      type: boolean
+                      default: true
+                postQuantumLattice:
+                  type: object
+                  properties:
+                    kyberSecurityLevel:
+                      type: string
+                      enum: [Kyber512, Kyber768, Kyber1024]
+                      default: Kyber512
+                    fecRedundancyPackets:
+                      type: integer
+                      default: 2
+            status:
+              type: object
+              properties:
+                activeShards:
+                  type: integer
+                averageEntropyProductionRate:
+                  type: number
+                harmonicBettiDimension:
+                  type: integer
+                healthStatus:
+                  type: string

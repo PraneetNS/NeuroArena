@@ -1,0 +1,41 @@
+static_resources:
+  listeners:
+    - name: neuroarena_v4_webtransport_listener
+      address:
+        socket_address:
+          protocol: UDP
+          address: 0.0.0.0
+          port_value: 4433
+      udp_listener_config:
+        quic_options:
+          max_concurrent_streams: 128
+      filter_chains:
+        - transport_socket:
+            name: envoy.transport_sockets.quic
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.transport_sockets.quic.v3.QuicDownstreamTransport
+              common_tls_context:
+                alpn_protocols: ["h3", "webtransport"]
+          filters:
+            - name: envoy.filters.udp_listener.udp_proxy
+              typed_config:
+                "@type": type.googleapis.com/envoy.extensions.filters.udp.udp_proxy.v3.UdpProxyConfig
+                stat_prefix: neuroarena_v4_udp
+                cluster: neuroarena_backend_v4_shards
+                hash_policies:
+                  - source_ip: true
+  clusters:
+    - name: neuroarena_backend_v4_shards
+      type: STRICT_DNS
+      lb_policy: RING_HASH
+      ring_hash_lb_config:
+        minimum_ring_size: 1024
+      load_assignment:
+        cluster_name: neuroarena_backend_v4_shards
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: neuroarena-server-headless.default.svc.cluster.local
+                      port_value: 2567
