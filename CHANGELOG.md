@@ -7,7 +7,53 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [4.0.0] - 2026-10-03
+
 ### Added
+- **Non-Equilibrium Thermodynamic Work & Jarzynski Free Energy Engine (`neuroarena-server/src/physics/ThermodynamicWorkEngine.js`, `docs/NON_EQUILIBRIUM_THERMODYNAMICS_SHEAF_MORPHOGENETIC_SPEC.md`)**
+  - Formulated microscopic stochastic thermodynamics under Langevin heat baths and arbitrary non-quasistatic protocols $\lambda(t)$.
+  - Implemented exact Jarzynski Equality $\langle \exp(-\beta W) \rangle = \exp(-\beta \Delta F)$ and Crooks Fluctuation Theorem verification.
+  - Computed Clausius entropy production rate $\Delta S_{\text{prod}} = k_B \beta W_{\text{diss}} \ge 0$ for swarm thermal balance and non-equilibrium dissipation.
+- **Cellular Sheaf Neural Network & Laplacian Consensus Engine (`neuroarena-server/src/ml/CellularSheafEngine.js`, `web/src/morphogeneticSheafVisualizer.js`)**
+  - Formulated cellular sheaves over cell complexes assigning stalk vector spaces $\mathcal{F}(v), \mathcal{F}(e) \cong \mathbb{R}^d$ and linear restriction maps $\mathcal{E}_{v \trianglelefteq e}$.
+  - Constructed global Sheaf Coboundary Operator $\delta$ and Sheaf Laplacian $L_\mathcal{F} = \delta^\top \delta$, establishing harmonic sections in $\ker(L_\mathcal{F}) = H^0(G; \mathcal{F})$.
+  - Implemented Sheaf Diffusion flow $\dot{x} = -L_\mathcal{F} x$ with strictly monotonic Dirichlet energy decrease for non-trivial distributed consensus.
+- **Turing Reaction-Diffusion & Bio-Electric Morphogenetic Pattern Engine (`neuroarena-server/src/neuromorphic/MorphogeneticPatternEngine.js`, `web/src/morphogeneticSheafVisualizer.js`)**
+  - Implemented coupled Gray-Scott activator-inhibitor partial differential equations discretized via 5-point Laplacian stencil on toroidal grids.
+  - Coupled Levin bioelectric membrane potentials $V_{\text{bio}}$ to effective feed rates, yielding dynamic self-organizing spots, labyrinths, and morphogenetic wavefields.
+- **Gauge-Equivariant Icosahedral Spherical Mesh CNN Engine (`neuroarena-server/src/ml/GaugeEquivariantEngine.js`)**
+  - Formulated $SO(2)$ gauge transformations and Levi-Civita parallel transport along connection angles $\omega_{p \to q}$.
+  - Built steerable isotropic harmonic kernels achieving exact numerical gauge equivariance ($< 10^{-15}$ deviation) across arbitrary local reference frames.
+- **Partial Information Decomposition (PID) & Transfer Entropy Engine (`neuroarena-server/src/causal/PartialInformationDecomposition.js`)**
+  - Implemented Williams-Beer information lattice decomposition of joint mutual information into Redundancy, Unique 1, Unique 2, and Synergy.
+  - Computed Schreiber directed Transfer Entropy $T_{X \to Y}$ and Causal Emergence Index $\Psi = \text{Syn} - \text{Red}$ for detecting spontaneous multi-agent coordination.
+- **Continuous-Variable Bosonic Fock State & Wigner Quasiprobability Engine (`neuroarena-server/src/ml/ContinuousVariableQuantumEngine.js`)**
+  - Modeled infinite-dimensional bosonic Hilbert space truncated to Fock states with ladder operators $a, a^\dagger$, displacement $D(\alpha)$, and phase rotation $R(\theta)$.
+  - Computed quadrature expectations $\langle q \rangle, \langle p \rangle$ and evaluated phase-space Wigner functions $W(q, p)$ confirming operational quantum negativity.
+- **Renormalization Group Active Inference & Variational Free Energy Engine (`neuroarena-server/src/control/RenormalizationActiveInference.js`)**
+  - Integrated Wilsonian momentum-shell decimation coarse-graining pyramids for hierarchical sensory processing.
+  - Formulated Variational Free Energy $F[q, y]$ perceptual minimization and Expected Free Energy $G(\pi)$ policy selection balancing pragmatic utility with epistemic exploration.
+- **Directed Algebraic Topology & Precubical Deadlock Engine (`neuroarena-server/src/ml/DirectedTopologyEngine.js`)**
+  - Formulated Higher-Dimensional Automata (HDA) with monotonic directed paths (dipaths) and precubical face maps.
+  - Built geometric deadlock detection and dipath homotopy solvers across multi-agent shared resource mutex regions.
+- **Post-Quantum Module-LWE Key Encapsulation & Lattice Verifier (`neuroarena-server/src/security/PostQuantumEngine.js`)**
+  - Implemented polynomial ring $R_q = \mathbb{Z}_q[X]/(X^n + 1)$ with negacyclic convolution, centered binomial noise sampling, and Kyber-style M-LWE encryption/decryption.
+  - Built Falcon-style lattice signature Euclidean norm verification.
+- **Verifiable Random Function (VRF) & Cryptographic Sortition Engine (`neuroarena-server/src/network/VRFConsensusEngine.js`)**
+  - Implemented RFC 9381 discrete logarithm VRF with non-interactive Fiat-Shamir zero-knowledge proofs $\pi = (\Gamma, c, s)$.
+  - Enabled deterministic Algorand-style cryptographic sortition for fair round-robin shard leader election and Sybil-proof consensus.
+- **QUIC Packet Churn FEC with Reed-Solomon Erasure Coding Engine (`neuroarena-server/src/network/ReedSolomonFEC.js`)**
+  - Implemented Galois Field $GF(2^8)$ arithmetic with systematic generator matrices and Gauss-Jordan inversion.
+  - Achieved zero-latency recovery from up to $m$ dropped packets without head-of-line retransmissions.
+- **Tripartite Synapse & Astrocyte Gliotransmission Metaplasticity Engine (`neuroarena-server/src/neuromorphic/AstrocyteGliotransmissionEngine.js`)**
+  - Modeled peri-synaptic astrocytic processes (PAP) with mGluR glutamate sensing, $IP_3$ dynamics, and intracellular $Ca^{2+}$ waves.
+  - Implemented gliotransmitter-mediated metaplastic modulation of STDP synaptic learning rates.
+- **Interactive HTML5 Morphogenetic Turing Wavefield and Sheaf Visualizer (`web/src/morphogeneticSheafVisualizer.js`)**
+  - Built Canvas visualizer rendering Gray-Scott reaction-diffusion morphogenetic textures, Sheaf Laplacian graphs, and telemetry HUD.
+- **Kubernetes CRD & Envoy WASM Sheaf Filter Mesh Manifests (`deploy/k8s-crd-neuroarena-v4.yaml`, `deploy/envoy-v4-sheaf-filter.yaml`)**
+  - Added `NeuroArenaV4Cluster` CustomResourceDefinition and Envoy proxy streaming filters.
+- **Integration Test Suite (`neuroarena-server/test/v4_frontier_systems.test.js`)**
+  - Validated all 12 v4.0 engines in automated CI/CD pipeline.
 - **Topological Data Analysis (TDA) & Persistent Homology (`neuroarena-server/src/ml/PersistentHomologyEngine.js`, `web/src/tdaPersistenceVisualizer.js`, `docs/TOPOLOGICAL_COMPOSITIONAL_CLIFFORD_SPEC.md`)**
   - Formulated Vietoris-Rips filtration and column reduction over $\mathbb{Z}_2$ boundary matrices to extract persistent homology pairs $(b_i, d_i)$.
   - Computed Betti curves ($\beta_0, \beta_1$) and persistent topological entropy $E = -\sum p_i \ln p_i$ for spatial arena zoning and swarm coordination.

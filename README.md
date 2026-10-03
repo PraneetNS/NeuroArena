@@ -17,6 +17,16 @@
 1. [🌟 Executive Overview & Concept](#-executive-overview--concept)
 2. [🏗️ System Architecture](#️-system-architecture)
 3. [🧠 Core Machine Learning & Simulation Engines](#-core-machine-learning--simulation-engines)
+   - [Non-Equilibrium Thermodynamic Work & Jarzynski Free Energy](#non-equilibrium-thermodynamic-work--jarzynski-free-energy)
+   - [Cellular Sheaf Neural Network & Laplacian Consensus](#cellular-sheaf-neural-network--laplacian-consensus)
+   - [Turing Reaction-Diffusion & Bio-Electric Morphogenetic Wavefields](#turing-reaction-diffusion--bio-electric-morphogenetic-wavefields)
+   - [Gauge-Equivariant Icosahedral Spherical Mesh Convolutions](#gauge-equivariant-icosahedral-spherical-mesh-convolutions)
+   - [Continuous-Variable Bosonic Fock State & Wigner Quasiprobability](#continuous-variable-bosonic-fock-state--wigner-quasiprobability)
+   - [Partial Information Decomposition (PID) & Schreiber Transfer Entropy](#partial-information-decomposition-pid--schreiber-transfer-entropy)
+   - [Post-Quantum Module-LWE Key Encapsulation & Falcon Signature Verifier](#post-quantum-module-lwe-key-encapsulation--falcon-signature-verifier)
+   - [Verifiable Random Function (VRF) Cryptographic Shard Sortition](#verifiable-random-function-vrf-cryptographic-shard-sortition)
+   - [QUIC Packet Churn FEC with Reed-Solomon Erasure Coding](#quic-packet-churn-fec-with-reed-solomon-erasure-coding)
+   - [Tripartite Synapse & Astrocyte Gliotransmission Metaplasticity](#tripartite-synapse--astrocyte-gliotransmission-metaplasticity)
    - [Topological Data Analysis (TDA) & Persistent Homology](#topological-data-analysis-tda--persistent-homology)
    - [Category-Theoretic Compositional Open Games](#category-theoretic-compositional-open-games)
    - [Clifford Geometric Algebra Cl(3, 0) & Multivector Kinematics](#clifford-geometric-algebra-cl3-0--multivector-kinematics)
@@ -191,6 +201,48 @@ flowchart TD
 ---
 
 ## 🧠 Core Machine Learning & Simulation Engines
+
+### Non-Equilibrium Thermodynamic Work & Jarzynski Free Energy
+- **Stochastic Langevin Dynamics:** Models non-quasistatic swarm heat exchanges and thermodynamic protocols $\lambda(t)$ in high-entropy arena environments.
+- **Exact Jarzynski Work Theorem:** Verifies $\langle \exp(-\beta W) \rangle = \exp(-\beta \Delta F)$ for equilibrium free-energy differences from irreversible work trajectories.
+- **Clausius Dissipation Rate:** Enforces Second Law of Thermodynamics $\Delta S_{\text{prod}} = k_B \beta W_{\text{diss}} \ge 0$ to regulate agent computational exertion.
+
+### Cellular Sheaf Neural Network & Laplacian Consensus
+- **Cellular Sheaves on Cell Complexes:** Assigns stalk vector spaces $\mathcal{F}(v), \mathcal{F}(e) \cong \mathbb{R}^d$ with orthogonal restriction maps $\mathcal{E}_{v \trianglelefteq e} \in \text{SO}(d)$.
+- **Sheaf Laplacian $L_\mathcal{F} = \delta^\top \delta$:** Computes global coboundary discrepancies and models generalized consensus on non-trivial manifolds.
+- **Harmonic Global Sections $H^0(G; \mathcal{F})$:** Solves zero-energy kernel states $\ker(L_\mathcal{F})$ for heterophilic multi-agent coordination.
+
+### Turing Reaction-Diffusion & Bio-Electric Morphogenetic Wavefields
+- **Gray-Scott Activator-Inhibitor PDE:** Discretizes dynamic activator ($u$) and inhibitor ($v$) fields via 5-point discrete Laplacians on toroidal domains.
+- **Bio-Electric Membrane Coupling:** Incorporates resting membrane potentials $V_{\text{bio}}$ (Michael Levin framework) to guide spontaneous pattern morphogenesis (solitons, spots, stripes).
+
+### Gauge-Equivariant Icosahedral Spherical Mesh Convolutions
+- **$\text{SO}(2)$ Tangent Gauge Transformations:** Parallel-transports feature frames along Levi-Civita connections $\omega_{p \to q}$.
+- **Steerable Isotropic Kernels:** Guarantees coordinate-free perception with numerical equivariance error $< 10^{-15}$.
+
+### Continuous-Variable Bosonic Fock State & Wigner Quasiprobability
+- **Optical Hilbert Space Truncation:** Represents quantum continuous variables in Fock number states $\{|0\rangle, \dots, |N-1\rangle\}$ with ladder operators $a, a^\dagger$.
+- **Wigner Function Non-Classicality:** Evaluates phase-space quasiprobabilities $W(q, p)$ confirming operational quantum negativity volumes for non-classical processing.
+
+### Partial Information Decomposition (PID) & Schreiber Transfer Entropy
+- **Williams-Beer Information Lattice:** Decomposes mutual information into Redundancy, Unique 1, Unique 2, and Synergy components.
+- **Causal Emergence Index:** Evaluates $\Psi = \text{Syn} - \text{Red}$ to identify macroscopic swarm coordination that cannot be reduced to individual agents.
+
+### Post-Quantum Module-LWE Key Encapsulation & Falcon Signature Verifier
+- **Polynomial Ring $R_q = \mathbb{Z}_q[X]/(X^n + 1)$:** Implements negacyclic NTT convolutions with centered binomial error distributions for quantum-safe state serialization.
+- **Falcon-Style Lattice Signatures:** Verifies Euclidean signature norm bounds against quantum forgery.
+
+### Verifiable Random Function (VRF) Cryptographic Shard Sortition
+- **RFC 9381 Fiat-Shamir ZK Proofs:** Computes unpredictable pseudorandom hashes $\beta$ with non-interactive zero-knowledge proofs $\pi = (\Gamma, c, s)$.
+- **Cryptographic Sortition:** Enables Sybil-resistant, decentralized shard leader election without leader coordination latency.
+
+### QUIC Packet Churn FEC with Reed-Solomon Erasure Coding
+- **Galois Field $\text{GF}(2^8)$ Encoding:** Generates Cauchy/Vandermonde parity packets for zero-latency burst drop mitigation.
+- **Gauss-Jordan Erasure Inversion:** Reconstructs missing packets in $< 0.1\text{ms}$ without waiting for retransmission rounds.
+
+### Tripartite Synapse & Astrocyte Gliotransmission Metaplasticity
+- **Astrocyte Microdomains:** Simulates metabotropic glutamate receptor cascades, $IP_3$ generation, and intracellular $Ca^{2+}$ waves.
+- **Metaplasticity Modulation:** Releases extrasynaptic gliotransmitters to dynamically scale the STDP learning rate and stabilize neural network plasticity.
 
 ### Topological Data Analysis (TDA) & Persistent Homology
 - **Vietoris-Rips Complex Filtration:** Computes dynamic simplicial complexes over spatial multi-agent coordination clouds, capturing instantaneous and topological phase changes.
