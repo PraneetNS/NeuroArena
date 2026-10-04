@@ -10,3 +10,7 @@ export { createDatasetSplit } from './Split.js';
 export { Metrics } from './Metrics.js';
 export { StandardScaler, MinMaxScaler } from './Normalizer.js';
 export { DatasetHealth } from './DatasetHealth.js';
+
+export { LinearRegression } from './linear.js';
+export { LogisticRegression, stableSigmoid } from './logistic.js';
+export { BaseOptimizer, SGD, Momentum, RMSprop, Adam, createOptimizer } from './optimizers.js';

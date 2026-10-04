@@ -1,50 +1,154 @@
 /**
  * @file mlSandbox.js
- * @description Interactive visual sandbox for testing and inspecting the Pure-JS ML Core:
- * Generates datasets live, plots scatter points and MAD outliers on a 2D canvas,
- * and updates Dataset Health Score components (Balance, Cleanliness, Coverage) in real time.
+ * @description Interactive visual workbench for live training of Linear and Logistic Regression,
+ * mid-run optimizer swapping (SGD, Momentum, RMSprop, Adam), loss curve plotting,
+ * decision boundary tracking, and real-time narrator hook feeds.
  */
 
 import { Datasets } from '../ml/Datasets.js';
 import { DatasetHealth } from '../ml/DatasetHealth.js';
+import { LinearRegression } from '../ml/linear.js';
+import { LogisticRegression } from '../ml/logistic.js';
+import { createOptimizer } from '../ml/optimizers.js';
+import { createDatasetSplit } from '../ml/Split.js';
+import { drawScatterPlot, drawLossCurves } from './sandboxPlotter.js';
 
-// DOM element references
+// DOM Element References
 const selectDataset = document.getElementById('select-dataset');
+const selectModel = document.getElementById('select-model');
+const selectOptimizer = document.getElementById('select-optimizer');
+
 const sliderNoise = document.getElementById('slider-noise');
 const sliderOutliers = document.getElementById('slider-outliers');
 const sliderSamples = document.getElementById('slider-samples');
-const inputSeed = document.getElementById('input-seed');
-const btnRandomSeed = document.getElementById('btn-random-seed');
+const sliderLr = document.getElementById('slider-lr');
 
 const valNoise = document.getElementById('val-noise');
 const valOutliers = document.getElementById('val-outliers');
 const valSamples = document.getElementById('val-samples');
+const valLr = document.getElementById('val-lr');
 
-const canvas = document.getElementById('scatter-canvas');
-const ctx = canvas.getContext('2d');
+const inputSeed = document.getElementById('input-seed');
+const btnRandomSeed = document.getElementById('btn-random-seed');
+const btnIllConditioned = document.getElementById('btn-ill-conditioned');
 
-// Health UI Elements
+const btnToggleTrain = document.getElementById('btn-toggle-train');
+const btnStepOnce = document.getElementById('btn-step-once');
+const btnResetModel = document.getElementById('btn-reset-model');
+const btnSolveOLS = document.getElementById('btn-solve-ols');
+
+const scatterCanvas = document.getElementById('scatter-canvas');
+const scatterCtx = scatterCanvas.getContext('2d');
+
+const lossCanvas = document.getElementById('loss-canvas');
+const lossCtx = lossCanvas.getContext('2d');
+
+// Health Readouts
 const elTotalHealth = document.getElementById('health-total-val');
 const elHealthBar = document.getElementById('health-total-bar');
-const elBalanceVal = document.getElementById('val-balance');
-const elBalanceBar = document.getElementById('bar-balance');
-const elCleanlinessVal = document.getElementById('val-cleanliness');
-const elCleanlinessBar = document.getElementById('bar-cleanliness');
-const elCoverageVal = document.getElementById('val-coverage');
-const elCoverageBar = document.getElementById('bar-coverage');
-const elSummary = document.getElementById('health-summary');
-
-const elStatMedian = document.getElementById('stat-median');
-const elStatMad = document.getElementById('stat-mad');
+const elBalance = document.getElementById('val-balance');
+const elCleanliness = document.getElementById('val-cleanliness');
+const elCoverage = document.getElementById('val-coverage');
 const elStatOutliers = document.getElementById('stat-outliers');
-const elStatSpan = document.getElementById('stat-span');
+const elHealthSummary = document.getElementById('health-summary');
 
-let currentData = null;
+// Model Telemetry Readouts
+const elStatStep = document.getElementById('stat-step');
+const elStatLoss = document.getElementById('stat-loss');
+const elStatValLoss = document.getElementById('stat-val-loss');
+const elStatGradNorm = document.getElementById('stat-grad-norm');
+const elStatWeights = document.getElementById('stat-weights');
+const elStatOlsLoss = document.getElementById('stat-ols-loss');
+const narratorFeed = document.getElementById('narrator-feed');
+
+// State
+let currentDataset = null;
+let currentSplit = null;
+let model = null;
+let optimizer = null;
+let isTraining = false;
+let stepCount = 0;
+let trainLoss = 0.0;
+let valLoss = 0.0;
+let gradNorm = 0.0;
+let olsReference = null;
+
+// History for Loss Curves
+const MAX_LOSS_HISTORY = 120;
+const trainLossHistory = [];
+const valLossHistory = [];
+
+// Web Worker instance
+let worker = null;
 
 /**
- * Generates dataset according to active control values.
+ * Initializes or resets Web Worker.
  */
-function generateActiveDataset() {
+function initWorker() {
+  if (worker) {
+    worker.terminate();
+    worker = null;
+  }
+
+  try {
+    worker = new Worker(new URL('../../workers/Trainer.worker.js', import.meta.url), { type: 'module' });
+
+    worker.onmessage = (e) => {
+      const msg = e.data;
+      if (!msg) return;
+
+      if (msg.type === 'PROGRESS') {
+        stepCount = msg.step;
+        trainLoss = msg.trainLoss;
+        valLoss = msg.valLoss;
+        gradNorm = msg.gradNorm;
+
+        if (model && msg.weights) {
+          for (let i = 0; i < msg.weights.length; i++) {
+            model.weights[i] = msg.weights[i];
+          }
+          model.bias = msg.bias;
+          model.syncToParams();
+        }
+
+        recordLoss(trainLoss, valLoss);
+        updateTelemetryUI();
+        renderAllCanvases();
+
+        if (msg.event) {
+          logNarratorEvent(msg.event);
+        }
+      } else if (msg.type === 'PAUSED') {
+        isTraining = false;
+        btnToggleTrain.textContent = 'RESUME FIT';
+        btnToggleTrain.className = 'chamfer-btn';
+      }
+    };
+  } catch (err) {
+    console.warn('[mlSandbox] Web Worker fallback to main thread loop:', err.message);
+    worker = null;
+  }
+}
+
+/**
+ * Generates an ill-conditioned anisotropic dataset where Adam converges visibly faster than SGD.
+ */
+function generateIllConditionedData(nSamples = 100, seed = 42) {
+  return Datasets.linearData({
+    slope: 5.5,
+    intercept: -2.8,
+    noise: 0.15,
+    outlierRate: 0.0,
+    nSamples,
+    seed,
+    domain: [-0.2, 0.2] // Narrow compressed span creates high condition number
+  });
+}
+
+/**
+ * Generates active dataset from UI controls.
+ */
+function generateDataset() {
   const dsType = selectDataset.value;
   const noise = parseFloat(sliderNoise.value);
   const outlierRate = parseFloat(sliderOutliers.value);
@@ -55,195 +159,286 @@ function generateActiveDataset() {
   valOutliers.textContent = `${Math.round(outlierRate * 100)}%`;
   valSamples.textContent = nSamples;
 
-  switch (dsType) {
-    case 'linear':
-      currentData = Datasets.linearData({ noise, outlierRate, nSamples, seed, slope: 2.2, intercept: 0.8 });
-      break;
-    case 'blobs':
-      currentData = Datasets.twoClassBlobs({ noise, outlierRate, nSamples, seed });
-      break;
-    case 'polynomial':
-      currentData = Datasets.polynomialData({ noise, outlierRate, nSamples, seed, coeffs: [0.2, -1.1, 0.65, -0.12] });
-      break;
-    case 'tree':
-      currentData = Datasets.treeBoundaryData({ noise, nSamples, seed });
-      break;
-    case 'moons':
-      currentData = Datasets.xorMoonsSpiralData({ type: 'moons', noise, nSamples, seed });
-      break;
-    case 'spiral':
-      currentData = Datasets.xorMoonsSpiralData({ type: 'spiral', noise, nSamples, seed });
-      break;
-    default:
-      currentData = Datasets.linearData({ noise, outlierRate, nSamples, seed });
+  if (dsType === 'ill_conditioned') {
+    currentDataset = generateIllConditionedData(nSamples, seed);
+    selectModel.value = 'linear';
+  } else if (dsType === 'linear') {
+    currentDataset = Datasets.linearData({ noise, outlierRate, nSamples, seed, slope: 2.2, intercept: 0.8 });
+    selectModel.value = 'linear';
+  } else if (dsType === 'blobs') {
+    currentDataset = Datasets.twoClassBlobs({ noise, outlierRate, nSamples, seed });
+    selectModel.value = 'logistic';
+  } else if (dsType === 'polynomial') {
+    currentDataset = Datasets.polynomialData({ noise, outlierRate, nSamples, seed });
+    selectModel.value = 'linear';
+  } else if (dsType === 'tree') {
+    currentDataset = Datasets.treeBoundaryData({ noise, nSamples, seed });
+    selectModel.value = 'logistic';
+  } else {
+    currentDataset = Datasets.xorMoonsSpiralData({ type: 'moons', noise, nSamples, seed });
+    selectModel.value = 'logistic';
   }
 
-  evaluateAndRender();
-}
+  currentSplit = createDatasetSplit({
+    X: currentDataset.X,
+    y: currentDataset.y,
+    trainRatio: 0.75,
+    seed
+  });
 
-/**
- * Computes health score and renders 2D scatter visualization.
- */
-function evaluateAndRender() {
-  if (!currentData) return;
-
-  const { X, y, domain } = currentData;
-  const health = DatasetHealth.evaluate({ X, y, targetDomain: domain || [-5.0, 5.0] });
-
-  // Update UI Telemetry
+  const health = DatasetHealth.evaluate({
+    X: currentDataset.X,
+    y: currentDataset.y,
+    targetDomain: currentDataset.domain || [-5, 5]
+  });
   updateHealthUI(health);
 
-  // Render 2D Canvas
-  renderScatterPlot(currentData, health);
+  if (selectModel.value === 'linear') {
+    const probe = new LinearRegression(currentSplit.train.X.cols);
+    olsReference = probe.solveOLS(currentSplit.train.X, currentSplit.train.y);
+    elStatOlsLoss.textContent = olsReference.mse.toFixed(4);
+  } else {
+    olsReference = null;
+    elStatOlsLoss.textContent = '—';
+  }
+
+  resetModel();
 }
 
 /**
- * Updates DOM cards with computed health score components.
+ * Resets model parameters and optimizer state.
  */
+function resetModel() {
+  pauseTraining();
+  stepCount = 0;
+  trainLoss = 0.0;
+  valLoss = 0.0;
+  gradNorm = 0.0;
+  trainLossHistory.length = 0;
+  valLossHistory.length = 0;
+
+  const modelType = selectModel.value;
+  const nFeatures = currentSplit.train.X.cols;
+
+  if (modelType === 'logistic') {
+    model = new LogisticRegression(nFeatures);
+    btnSolveOLS.style.display = 'none';
+  } else {
+    model = new LinearRegression(nFeatures);
+    btnSolveOLS.style.display = 'inline-block';
+  }
+
+  const optType = selectOptimizer.value;
+  const lr = parseFloat(sliderLr.value);
+  optimizer = createOptimizer(optType, { lr });
+
+  if (worker) {
+    worker.postMessage({
+      type: 'INIT',
+      modelType,
+      nFeatures,
+      trainDataX: { rows: currentSplit.train.X.rows, cols: currentSplit.train.X.cols, data: currentSplit.train.X.data },
+      trainDataY: { rows: currentSplit.train.y.rows, cols: currentSplit.train.y.cols, data: currentSplit.train.y.data },
+      valDataX: currentSplit.val.X ? { rows: currentSplit.val.X.rows, cols: currentSplit.val.X.cols, data: currentSplit.val.X.data } : null,
+      valDataY: currentSplit.val.y ? { rows: currentSplit.val.y.rows, cols: currentSplit.val.y.cols, data: currentSplit.val.y.data } : null,
+      optType,
+      optOptions: { lr },
+      interval: 2
+    });
+  }
+
+  updateTelemetryUI();
+  renderAllCanvases();
+  logNarratorEvent({ type: 'SYSTEM', message: `Model initialized (${modelType.toUpperCase()}) with ${optType.toUpperCase()} optimizer.` });
+}
+
+/**
+ * Swaps optimizer mid-run without resetting parameter weights.
+ */
+function updateOptimizer() {
+  const optType = selectOptimizer.value;
+  const lr = parseFloat(sliderLr.value);
+
+  optimizer = createOptimizer(optType, { lr });
+
+  if (worker) {
+    worker.postMessage({
+      type: 'SET_OPTIMIZER',
+      optType,
+      optOptions: { lr }
+    });
+  }
+
+  logNarratorEvent({
+    type: 'SWAP_OPTIMIZER',
+    message: `Optimizer swapped to ${optType.toUpperCase()} (lr = ${lr}). Weights preserved.`
+  });
+}
+
+function updateLearningRate() {
+  const lr = parseFloat(sliderLr.value);
+  valLr.textContent = lr.toFixed(3);
+
+  if (optimizer) optimizer.setLr(lr);
+  if (worker) worker.postMessage({ type: 'SET_LEARNING_RATE', lr });
+}
+
+function toggleTraining() {
+  if (isTraining) pauseTraining();
+  else startTraining();
+}
+
+function startTraining() {
+  isTraining = true;
+  btnToggleTrain.textContent = 'PAUSE FIT';
+  btnToggleTrain.className = 'chamfer-btn chamfer-btn-secondary';
+
+  if (worker) {
+    worker.postMessage({ type: 'START' });
+  } else {
+    runMainThreadLoop();
+  }
+}
+
+function pauseTraining() {
+  isTraining = false;
+  btnToggleTrain.textContent = 'START FIT';
+  btnToggleTrain.className = 'chamfer-btn';
+
+  if (worker) worker.postMessage({ type: 'PAUSE' });
+}
+
+function stepOnce() {
+  if (worker) {
+    worker.postMessage({ type: 'STEP' });
+  } else if (model && currentSplit) {
+    stepMainThread();
+  }
+}
+
+function stepMainThread() {
+  if (!model || !optimizer || !currentSplit) return;
+  stepCount++;
+
+  const res = model.fitStep(currentSplit.train.X, currentSplit.train.y, optimizer);
+  trainLoss = res.loss;
+  gradNorm = res.gradNorm;
+  valLoss = currentSplit.val.X.rows > 0 ? model.loss(currentSplit.val.X, currentSplit.val.y) : trainLoss;
+
+  recordLoss(trainLoss, valLoss);
+  updateTelemetryUI();
+  renderAllCanvases();
+}
+
+function runMainThreadLoop() {
+  if (!isTraining) return;
+  for (let i = 0; i < 4; i++) stepMainThread();
+  requestAnimationFrame(runMainThreadLoop);
+}
+
+function solveOLSExact() {
+  if (!model || selectModel.value !== 'linear' || !currentSplit) return;
+
+  pauseTraining();
+  const res = model.solveOLS(currentSplit.train.X, currentSplit.train.y);
+  trainLoss = model.loss(currentSplit.train.X, currentSplit.train.y);
+  valLoss = currentSplit.val.X.rows > 0 ? model.loss(currentSplit.val.X, currentSplit.val.y) : trainLoss;
+  gradNorm = 0.0;
+
+  recordLoss(trainLoss, valLoss);
+  updateTelemetryUI();
+  renderAllCanvases();
+
+  logNarratorEvent({
+    type: 'SOLVE_OLS',
+    message: `Normal equations solved analytically via Cholesky (MSE = ${res.mse.toFixed(4)}, R² = ${res.r2.toFixed(3)}).`
+  });
+}
+
+function recordLoss(tLoss, vLoss) {
+  trainLossHistory.push(tLoss);
+  valLossHistory.push(vLoss);
+  if (trainLossHistory.length > MAX_LOSS_HISTORY) {
+    trainLossHistory.shift();
+    valLossHistory.shift();
+  }
+}
+
+function logNarratorEvent(event) {
+  const line = document.createElement('div');
+  line.style.marginBottom = '4px';
+
+  let badgeColor = 'var(--steppes-primary)';
+  if (event.type === 'DIVERGENCE_NAN' || event.type === 'OVERFIT_GAP') badgeColor = 'var(--alert-critical)';
+  if (event.type === 'PLATEAU') badgeColor = 'var(--alert-converged)';
+
+  line.innerHTML = `<span class="narrator-badge" style="background: rgba(255,255,255,0.1); color: ${badgeColor};">[${event.type}]</span>${event.message}`;
+  narratorFeed.appendChild(line);
+  narratorFeed.scrollTop = narratorFeed.scrollHeight;
+}
+
+function updateTelemetryUI() {
+  elStatStep.textContent = stepCount;
+  elStatLoss.textContent = trainLoss.toFixed(4);
+  elStatValLoss.textContent = valLoss.toFixed(4);
+  elStatGradNorm.textContent = gradNorm.toFixed(4);
+
+  if (model) {
+    const w0 = model.weights[0] !== undefined ? model.weights[0].toFixed(3) : '0.0';
+    const b = model.bias !== undefined ? model.bias.toFixed(3) : '0.0';
+    elStatWeights.textContent = `w: ${w0}, b: ${b}`;
+  }
+}
+
 function updateHealthUI(health) {
   const pct = Math.round(health.totalHealth * 100);
   elTotalHealth.textContent = `${pct}%`;
   elHealthBar.style.width = `${pct}%`;
 
-  if (health.totalHealth >= 0.80) {
-    elTotalHealth.className = 'health-num val-active';
-    elHealthBar.style.background = 'var(--alert-converged)';
-  } else if (health.totalHealth >= 0.55) {
-    elTotalHealth.className = 'health-num val-warning';
-    elHealthBar.style.background = 'var(--alert-warning)';
-  } else {
-    elTotalHealth.className = 'health-num val-crit';
-    elHealthBar.style.background = 'var(--alert-critical)';
-  }
-
-  // Components
-  elBalanceVal.textContent = health.balance.toFixed(3);
-  elBalanceBar.style.width = `${Math.round(health.balance * 100)}%`;
-
-  elCleanlinessVal.textContent = health.cleanliness.toFixed(3);
-  elCleanlinessBar.style.width = `${Math.round(health.cleanliness * 100)}%`;
-
-  elCoverageVal.textContent = health.coverage.toFixed(3);
-  elCoverageBar.style.width = `${Math.round(health.coverage * 100)}%`;
-
-  elSummary.textContent = health.summary;
-
-  // Additional Robust Stats
-  elStatMedian.textContent = health.median.toFixed(2);
-  elStatMad.textContent = health.mad.toFixed(2);
-  elStatOutliers.textContent = `${health.outlierCount} (${((health.outlierCount / currentData.X.rows) * 100).toFixed(1)}%)`;
-  elStatSpan.textContent = `${health.observedSpan} / ${health.targetSpan}`;
+  elBalance.textContent = health.balance.toFixed(3);
+  elCleanliness.textContent = health.cleanliness.toFixed(3);
+  elCoverage.textContent = health.coverage.toFixed(3);
+  elStatOutliers.textContent = `${health.outlierCount} (${((health.outlierCount / currentDataset.X.rows) * 100).toFixed(1)}%)`;
+  elHealthSummary.textContent = health.summary;
 }
 
-/**
- * Renders data points and highlighted MAD outliers on canvas.
- */
-function renderScatterPlot(dataset, health) {
-  const width = canvas.width;
-  const height = canvas.height;
-  ctx.clearRect(0, 0, width, height);
-
-  // Background Grid
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
-  ctx.lineWidth = 1;
-  const step = 40;
-  for (let x = 0; x < width; x += step) {
-    ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, height);
-    ctx.stroke();
-  }
-  for (let y = 0; y < height; y += step) {
-    ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(width, y);
-    ctx.stroke();
-  }
-
-  // Find min and max bounds for coordinate transformation
-  const N = dataset.X.rows;
-  const is2D = dataset.X.cols >= 2;
-
-  let minX = -5.0, maxX = 5.0;
-  let minY = -5.0, maxY = 5.0;
-
-  for (let i = 0; i < N; i++) {
-    const xVal = dataset.X.get(i, 0);
-    const yVal = is2D ? dataset.X.get(i, 1) : dataset.y.get(i, 0);
-    if (xVal < minX) minX = xVal;
-    if (xVal > maxX) maxX = xVal;
-    if (yVal < minY) minY = yVal;
-    if (yVal > maxY) maxY = yVal;
-  }
-
-  const padX = (maxX - minX) * 0.12 || 1.0;
-  const padY = (maxY - minY) * 0.12 || 1.0;
-  minX -= padX; maxX += padX;
-  minY -= padY; maxY += padY;
-
-  const toScreenX = (x) => ((x - minX) / (maxX - minX)) * (width - 40) + 20;
-  const toScreenY = (y) => height - (((y - minY) / (maxY - minY)) * (height - 40) + 20);
-
-  // Draw Axes
-  const zeroX = toScreenX(0);
-  const zeroY = toScreenY(0);
-  ctx.strokeStyle = 'rgba(0, 245, 155, 0.25)';
-  ctx.lineWidth = 1.5;
-  if (zeroX >= 0 && zeroX <= width) {
-    ctx.beginPath(); ctx.moveTo(zeroX, 0); ctx.lineTo(zeroX, height); ctx.stroke();
-  }
-  if (zeroY >= 0 && zeroY <= height) {
-    ctx.beginPath(); ctx.moveTo(0, zeroY); ctx.lineTo(width, zeroY); ctx.stroke();
-  }
-
-  const outlierSet = new Set(health.outlierIndices);
-
-  // Plot Samples
-  for (let i = 0; i < N; i++) {
-    const xVal = dataset.X.get(i, 0);
-    const yVal = is2D ? dataset.X.get(i, 1) : dataset.y.get(i, 0);
-    const px = toScreenX(xVal);
-    const py = toScreenY(yVal);
-    const isOutlier = outlierSet.has(i);
-
-    const label = dataset.y.get(i, 0);
-
-    if (isOutlier) {
-      // Outlier Alert Halo & Crosshair
-      ctx.strokeStyle = '#FF2A55';
-      ctx.lineWidth = 2.0;
-      ctx.beginPath();
-      ctx.arc(px, py, 9, 0, Math.PI * 2);
-      ctx.stroke();
-
-      ctx.fillStyle = 'rgba(255, 42, 85, 0.4)';
-      ctx.beginPath();
-      ctx.arc(px, py, 4, 0, Math.PI * 2);
-      ctx.fill();
-    } else {
-      // Inliers
-      ctx.fillStyle = label >= 0.5 ? '#10B981' : '#F59E0B';
-      ctx.shadowColor = label >= 0.5 ? 'rgba(16, 185, 129, 0.6)' : 'rgba(245, 158, 11, 0.6)';
-      ctx.shadowBlur = 8;
-      ctx.beginPath();
-      ctx.arc(px, py, 4.5, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.shadowBlur = 0;
-    }
-  }
+function renderAllCanvases() {
+  drawScatterPlot(scatterCanvas, scatterCtx, currentDataset, model, selectModel.value, olsReference);
+  drawLossCurves(lossCanvas, lossCtx, trainLossHistory, valLossHistory, MAX_LOSS_HISTORY);
 }
 
 // Event Listeners
-selectDataset.addEventListener('change', generateActiveDataset);
-sliderNoise.addEventListener('input', generateActiveDataset);
-sliderOutliers.addEventListener('input', generateActiveDataset);
-sliderSamples.addEventListener('input', generateActiveDataset);
-inputSeed.addEventListener('change', generateActiveDataset);
+selectDataset.addEventListener('change', generateDataset);
+selectModel.addEventListener('change', resetModel);
+selectOptimizer.addEventListener('change', updateOptimizer);
 
+sliderNoise.addEventListener('input', generateDataset);
+sliderOutliers.addEventListener('input', generateDataset);
+sliderSamples.addEventListener('input', generateDataset);
+sliderLr.addEventListener('input', updateLearningRate);
+
+inputSeed.addEventListener('change', generateDataset);
 btnRandomSeed.addEventListener('click', () => {
   inputSeed.value = Math.floor(Math.random() * 100000);
-  generateActiveDataset();
+  generateDataset();
 });
 
-// Initial boot run
-generateActiveDataset();
+btnIllConditioned.addEventListener('click', () => {
+  selectDataset.value = 'ill_conditioned';
+  sliderNoise.value = '0.05';
+  sliderOutliers.value = '0.0';
+  generateDataset();
+  logNarratorEvent({
+    type: 'BENCHMARK',
+    message: 'Ill-conditioned dataset loaded. Test SGD vs ADAM: observe Adam converge smoothly without canyon bouncing.'
+  });
+});
+
+btnToggleTrain.addEventListener('click', toggleTraining);
+btnStepOnce.addEventListener('click', stepOnce);
+btnResetModel.addEventListener('click', resetModel);
+btnSolveOLS.addEventListener('click', solveOLSExact);
+
+// Boot
+initWorker();
+generateDataset();
