@@ -1,0 +1,9 @@
+{
+  "name": "neuroarena-web",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "npm --prefix .. run dev",
+    "build": "npm --prefix .. run build"
+  }
+}

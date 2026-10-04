@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NeuroArena ML Core // Sandbox & Health Inspector</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/ui/design-tokens.css">
+  <style>
+    body {
+      background-color: var(--void-deep);
+      color: #E2E8F0;
+      font-family: var(--font-mono);
+      overflow-x: hidden;
+      overflow-y: auto;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .sandbox-layout {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .sandbox-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--void-border-dim);
+      padding-bottom: 16px;
+    }
+
+    .sandbox-brand {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 900;
+      letter-spacing: 0.15em;
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .grid-container {
+      display: grid;
+      grid-template-columns: 340px 1fr 340px;
+      gap: 20px;
+    }
+
+    @media (max-width: 1100px) {
+      .grid-container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .control-group {
+      margin-bottom: 18px;
+    }
+
+    .control-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      color: #94A3B8;
+      margin-bottom: 6px;
+    }
+
+    select, input[type="number"], input[type="text"] {
+      width: 100%;
+      background: var(--void-surface);
+      border: 1px solid var(--void-border-dim);
+      color: #FFFFFF;
+      padding: 10px 12px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      outline: none;
+      clip-path: var(--chamfer-clip-badge);
+    }
+
+    select:focus, input:focus {
+      border-color: var(--alert-converged);
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--alert-converged);
+      cursor: pointer;
+    }
+
+    .canvas-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(11, 17, 27, 0.7);
+    }
+
+    #scatter-canvas {
+      width: 100%;
+      max-width: 520px;
+      height: 440px;
+      background: #030508;
+      border: 1px solid var(--void-border-dim);
+      clip-path: var(--chamfer-clip-panel);
+    }
+
+    .health-num {
+      font-family: var(--font-display);
+      font-size: 48px;
+      font-weight: 900;
+      line-height: 1;
+      margin: 8px 0;
+    }
+
+    .meter-container {
+      width: 100%;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      position: relative;
+      margin: 6px 0 16px 0;
+      overflow: hidden;
+      clip-path: var(--chamfer-clip-badge);
+    }
+
+    .meter-fill {
+      height: 100%;
+      background: var(--alert-converged);
+      transition: width 0.25s ease-out;
+    }
+
+    .formula-tag {
+      font-size: 11px;
+      padding: 6px 10px;
+      background: rgba(0, 245, 155, 0.06);
+      border-left: 2px solid var(--alert-converged);
+      color: #94A3B8;
+      margin-top: 14px;
+      line-height: 1.5;
+    }
+
+    .stats-table {
+      width: 100%;
+      font-size: 11px;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    .stats-table td {
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .stats-table td:last-child {
+      text-align: right;
+      font-weight: 600;
+      color: #FFFFFF;
+    }
+  </style>
+</head>
+<body>
+  <div class="sandbox-layout">
+    <!-- Header -->
+    <div class="sandbox-header">
+      <div class="sandbox-brand">
+        <span style="color: var(--alert-converged);">⚡</span>
+        <span>NEUROARENA // PURE-JS ML SANDBOX</span>
+      </div>
+      <div style="display: flex; gap: 12px; align-items: center;">
+        <a href="/index.html" class="chamfer-btn chamfer-btn-secondary" style="padding: 8px 16px; text-decoration: none;">
+          ➔ BACK TO 3D ARENA
+        </a>
+      </div>
+    </div>
+
+    <!-- 3-Column Cyber Grid -->
+    <div class="grid-container">
+      <!-- Left Column: Controls -->
+      <div class="chamfer-panel" style="padding: 20px;">
+        <div style="font-family: var(--font-display); font-size: 13px; font-weight: 700; color: var(--alert-converged); letter-spacing: 0.1em; margin-bottom: 16px;">
+          DATASET PARAMETERS
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <span>DISTRIBUTION FAMILY</span>
+          </div>
+          <select id="select-dataset">
+            <option value="linear">Linear Steppes (Regression)</option>
+            <option value="blobs">Binary Marshlands (Logistic Blobs)</option>
+            <option value="polynomial">Variance Tundra (Polynomial Curve)</option>
+            <option value="tree">Branching Canopy (Decision Tree Grid)</option>
+            <option value="moons">Deep Citadel (Interleaving Moons)</option>
+            <option value="spiral">Deep Citadel (Archimedean Spirals)</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <span>NOISE SCALE (σ)</span>
+            <span id="val-noise" class="val-highlight">0.30</span>
+          </div>
+          <input type="range" id="slider-noise" min="0.0" max="1.5" step="0.02" value="0.30">
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <span>OUTLIER RATE</span>
+            <span id="val-outliers" class="val-highlight">5%</span>
+          </div>
+          <input type="range" id="slider-outliers" min="0.0" max="0.30" step="0.01" value="0.05">
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <span>SAMPLE COUNT (N)</span>
+            <span id="val-samples" class="val-highlight">80</span>
+          </div>
+          <input type="range" id="slider-samples" min="20" max="300" step="10" value="80">
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <span>RANDOM SEED</span>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <input type="number" id="input-seed" value="42" style="flex: 1;">
+            <button id="btn-random-seed" class="chamfer-btn chamfer-btn-secondary" style="padding: 6px 12px;">REROLL</button>
+          </div>
+        </div>
+
+        <div class="formula-tag">
+          <strong>Deterministic Guarantee:</strong> Every dataset generated is 100% reproducible via Mulberry32 seeded PRNG without Math.random().
+        </div>
+      </div>
+
+      <!-- Center Column: 2D Canvas Visualization -->
+      <div class="chamfer-panel canvas-card" style="padding: 20px;">
+        <div style="width: 100%; display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 11px;">
+          <span style="color: var(--steppes-primary); font-weight: 700;">EMPIRICAL SCATTER INSPECTION</span>
+          <span style="color: #94A3B8;">● Inliers &nbsp; <span style="color: var(--alert-critical); font-weight: 700;">◎ MAD Outliers (M_i > 3.5)</span></span>
+        </div>
+        <canvas id="scatter-canvas" width="520" height="440"></canvas>
+      </div>
+
+      <!-- Right Column: Health Score Components -->
+      <div class="chamfer-panel" style="padding: 20px;">
+        <div style="font-family: var(--font-display); font-size: 13px; font-weight: 700; color: var(--alert-converged); letter-spacing: 0.1em; margin-bottom: 12px;">
+          DATASET HEALTH SCORE
+        </div>
+
+        <div id="health-total-val" class="health-num val-active">92%</div>
+        <div id="health-summary" style="font-size: 12px; color: var(--alert-converged); font-weight: 600; margin-bottom: 8px;">
+          High Generalization Expected (>85%)
+        </div>
+        <div class="meter-container">
+          <div id="health-total-bar" class="meter-fill" style="width: 92%;"></div>
+        </div>
+
+        <!-- Constituent Breakdown -->
+        <div style="margin-top: 14px;">
+          <div class="control-label">
+            <span>1. BALANCE (35% Weight)</span>
+            <span id="val-balance" class="val-highlight">0.950</span>
+          </div>
+          <div class="meter-container" style="height: 6px; margin-bottom: 12px;">
+            <div id="bar-balance" class="meter-fill" style="width: 95%; background: var(--steppes-primary);"></div>
+          </div>
+
+          <div class="control-label">
+            <span>2. CLEANLINESS (35% Weight)</span>
+            <span id="val-cleanliness" class="val-highlight">0.825</span>
+          </div>
+          <div class="meter-container" style="height: 6px; margin-bottom: 12px;">
+            <div id="bar-cleanliness" class="meter-fill" style="width: 82%; background: var(--alert-critical);"></div>
+          </div>
+
+          <div class="control-label">
+            <span>3. COVERAGE (30% Weight)</span>
+            <span id="val-coverage" class="val-highlight">0.960</span>
+          </div>
+          <div class="meter-container" style="height: 6px; margin-bottom: 14px;">
+            <div id="bar-coverage" class="meter-fill" style="width: 96%; background: var(--tundra-primary);"></div>
+          </div>
+        </div>
+
+        <!-- Robust Statistics -->
+        <div style="font-family: var(--font-display); font-size: 11px; font-weight: 700; color: #94A3B8; margin-top: 16px; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 10px;">
+          ROBUST DISTRIBUTION METRICS
+        </div>
+        <table class="stats-table">
+          <tr><td>Median (ỹ):</td><td id="stat-median">0.00</td></tr>
+          <tr><td>MAD (Median Abs Dev):</td><td id="stat-mad">0.00</td></tr>
+          <tr><td>MAD Outliers Flagged:</td><td id="stat-outliers" style="color: var(--alert-critical);">0 (0.0%)</td></tr>
+          <tr><td>Observed / Target Span:</td><td id="stat-span">0.0 / 10.0</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/dev/mlSandbox.js"></script>
+</body>
+</html>
