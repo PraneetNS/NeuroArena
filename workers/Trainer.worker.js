@@ -9,6 +9,7 @@
 import { Matrix } from '../src/ml/Matrix.js';
 import { LinearRegression } from '../src/ml/linear.js';
 import { LogisticRegression } from '../src/ml/logistic.js';
+import { RegularizedRegression } from '../src/ml/regularization.js';
 import { createOptimizer } from '../src/ml/optimizers.js';
 
 let model = null;
@@ -114,6 +115,20 @@ function checkNarratorEvents(trainLoss, valLoss, grads, gradNorm) {
     }
   }
 
+  // 6. L1 Sparsity Milestone (coefficients snapping to exact zero)
+  if (model && model.getCoefficients) {
+    const c = model.getCoefficients();
+    if (c.zeroCount > 0 && (!self._lastAnnouncedZero || self._lastAnnouncedZero !== c.zeroCount)) {
+      self._lastAnnouncedZero = c.zeroCount;
+      return {
+        type: 'SPARSITY_SNAP',
+        zeroCount: c.zeroCount,
+        sparsity: c.sparsity,
+        message: `Lasso ISTA collapsed ${c.zeroCount}/${c.magnitudes.length} coefficients to exactly 0 (sparsity = ${(c.sparsity * 100).toFixed(0)}%).`
+      };
+    }
+  }
+
   return null;
 }
 
@@ -139,6 +154,34 @@ function trainStep() {
       }
       stepY.set(r, 0, trainY.get(startIdx + r, 0));
     }
+  }
+
+  // Regularized Regression (ISTA Proximal Step)
+  if (model instanceof RegularizedRegression) {
+    const lr = optimizer ? optimizer.lr : 0.02;
+    const stepRes = model.stepISTA(stepX, stepY, lr);
+    const trainLoss = stepRes.mse;
+    const valLoss = (valX && valX.rows > 0) ? model.loss(valX, valY).mse : trainLoss;
+    const gradNorm = stepRes.gradNorm;
+
+    const event = checkNarratorEvents(trainLoss, valLoss, model._grads, gradNorm);
+    prevTrainLoss = trainLoss;
+
+    if (step % reportInterval === 0 || event !== null || !isRunning) {
+      const coeffInfo = model.getCoefficients();
+      self.postMessage({
+        type: 'PROGRESS',
+        step,
+        trainLoss,
+        valLoss,
+        gradNorm,
+        weights: Array.from(model.weights),
+        bias: model.bias,
+        event,
+        coeffInfo
+      });
+    }
+    return;
   }
 
   // Compute gradients and step optimizer
@@ -176,6 +219,7 @@ function trainStep() {
       weights: Array.from(model.weights),
       bias: model.bias,
       event,
+      coeffInfo: model.getCoefficients ? model.getCoefficients() : null,
       paramsBuffer: paramsCopy.buffer,
       gradsBuffer: gradsCopy.buffer
     }, [paramsCopy.buffer, gradsCopy.buffer]);
@@ -216,10 +260,18 @@ self.onmessage = function (e) {
         optType = 'sgd',
         optOptions = {},
         batch = 0,
-        interval = 5
+        interval = 5,
+        lambda1 = 0.0,
+        lambda2 = 0.0
       } = msg;
 
-      model = modelType === 'logistic' ? new LogisticRegression(nFeatures) : new LinearRegression(nFeatures);
+      if (modelType === 'polynomial') {
+        model = new RegularizedRegression(nFeatures, { lambda1, lambda2 });
+      } else if (modelType === 'logistic') {
+        model = new LogisticRegression(nFeatures);
+      } else {
+        model = new LinearRegression(nFeatures);
+      }
       optimizer = createOptimizer(optType, optOptions);
 
       trainX = new Matrix(trainDataX.rows, trainDataX.cols, trainDataX.data);
@@ -297,6 +349,15 @@ self.onmessage = function (e) {
         optimizer.setLr(lr);
       }
       self.postMessage({ type: 'LR_UPDATED', lr });
+      break;
+    }
+
+    case 'SET_PENALTIES': {
+      const { lambda1 = 0.0, lambda2 = 0.0 } = msg;
+      if (model && model.setPenalties) {
+        model.setPenalties(lambda1, lambda2);
+      }
+      self.postMessage({ type: 'PENALTIES_UPDATED', lambda1, lambda2 });
       break;
     }
   }

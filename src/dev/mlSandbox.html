@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NeuroArena ML Core // Model Optimization & Health Inspector</title>
+  <title>NeuroArena ML Core // Model Optimization & Regularization Inspector</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,15 +17,15 @@
       overflow-x: hidden;
       overflow-y: auto;
       min-height: 100vh;
-      padding: 20px;
+      padding: 16px;
     }
 
     .sandbox-layout {
-      max-width: 1400px;
+      max-width: 1480px;
       margin: 0 auto;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 14px;
     }
 
     .sandbox-header {
@@ -33,12 +33,12 @@
       justify-content: space-between;
       align-items: center;
       border-bottom: 1px solid var(--void-border-dim);
-      padding-bottom: 14px;
+      padding-bottom: 12px;
     }
 
     .sandbox-brand {
       font-family: var(--font-display);
-      font-size: 18px;
+      font-size: 17px;
       font-weight: 900;
       letter-spacing: 0.15em;
       color: #FFFFFF;
@@ -50,7 +50,7 @@
     .grid-container {
       display: grid;
       grid-template-columns: 310px 1fr 340px;
-      gap: 16px;
+      gap: 14px;
     }
 
     @media (max-width: 1180px) {
@@ -60,7 +60,7 @@
     }
 
     .control-group {
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
 
     .control-label {
@@ -69,7 +69,7 @@
       font-size: 11px;
       letter-spacing: 0.08em;
       color: #94A3B8;
-      margin-bottom: 5px;
+      margin-bottom: 4px;
     }
 
     select, input[type="number"], input[type="text"] {
@@ -77,7 +77,7 @@
       background: var(--void-surface);
       border: 1px solid var(--void-border-dim);
       color: #FFFFFF;
-      padding: 8px 10px;
+      padding: 7px 10px;
       font-family: var(--font-mono);
       font-size: 12px;
       outline: none;
@@ -97,12 +97,12 @@
     .canvas-container {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
     }
 
     #scatter-canvas {
       width: 100%;
-      height: 320px;
+      height: 300px;
       background: #030508;
       border: 1px solid var(--void-border-dim);
       clip-path: var(--chamfer-clip-panel);
@@ -110,7 +110,15 @@
 
     #loss-canvas {
       width: 100%;
-      height: 150px;
+      height: 120px;
+      background: #04070C;
+      border: 1px solid var(--void-border-dim);
+      clip-path: var(--chamfer-clip-panel);
+    }
+
+    #coeff-canvas {
+      width: 100%;
+      height: 90px;
       background: #04070C;
       border: 1px solid var(--void-border-dim);
       clip-path: var(--chamfer-clip-panel);
@@ -118,10 +126,10 @@
 
     .health-num {
       font-family: var(--font-display);
-      font-size: 38px;
+      font-size: 34px;
       font-weight: 900;
       line-height: 1;
-      margin: 6px 0;
+      margin: 4px 0;
     }
 
     .meter-container {
@@ -129,7 +137,7 @@
       height: 6px;
       background: rgba(255, 255, 255, 0.08);
       position: relative;
-      margin: 4px 0 10px 0;
+      margin: 4px 0 8px 0;
       overflow: hidden;
       clip-path: var(--chamfer-clip-badge);
     }
@@ -144,11 +152,11 @@
       width: 100%;
       font-size: 11px;
       border-collapse: collapse;
-      margin-top: 6px;
+      margin-top: 4px;
     }
 
     .stats-table td {
-      padding: 4px 0;
+      padding: 3px 0;
       border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     }
 
@@ -161,23 +169,23 @@
     .narrator-terminal {
       background: rgba(3, 5, 8, 0.95);
       border-left: 2px solid var(--steppes-primary);
-      padding: 10px;
+      padding: 8px;
       font-size: 11px;
       color: #CBD5E1;
-      max-height: 80px;
+      max-height: 70px;
       overflow-y: auto;
       line-height: 1.4;
       font-family: var(--font-mono);
-      margin-top: 10px;
+      margin-top: 8px;
     }
 
     .narrator-badge {
       font-size: 9px;
       font-weight: 700;
-      padding: 2px 5px;
+      padding: 2px 4px;
       background: rgba(245, 158, 11, 0.2);
       color: var(--steppes-primary);
-      margin-right: 6px;
+      margin-right: 5px;
     }
   </style>
 </head>
@@ -187,7 +195,7 @@
     <div class="sandbox-header">
       <div class="sandbox-brand">
         <span style="color: var(--alert-converged);">⚡</span>
-        <span>NEUROARENA // PURE-JS ML OPTIMIZER & HEALTH SUITE</span>
+        <span>NEUROARENA // POLYNOMIAL REGULARIZATION & HEALTH SUITE</span>
       </div>
       <div style="display: flex; gap: 10px; align-items: center;">
         <a href="/index.html" class="chamfer-btn chamfer-btn-secondary" style="padding: 6px 14px; text-decoration: none; font-size: 11px;">
@@ -198,27 +206,45 @@
 
     <!-- 3-Column Grid -->
     <div class="grid-container">
-      <!-- Left Column: Dataset & Generator -->
-      <div class="chamfer-panel" style="padding: 18px;">
-        <div style="font-family: var(--font-display); font-size: 12px; font-weight: 700; color: var(--alert-converged); letter-spacing: 0.1em; margin-bottom: 12px;">
-          1. DATASET GENERATION
+      <!-- Left Column: Dataset & Regularization Hyperparameters -->
+      <div class="chamfer-panel" style="padding: 16px;">
+        <div style="font-family: var(--font-display); font-size: 12px; font-weight: 700; color: var(--alert-converged); letter-spacing: 0.1em; margin-bottom: 10px;">
+          1. DATASET & POLYNOMIAL
         </div>
 
         <div class="control-group">
           <div class="control-label"><span>DISTRIBUTION FAMILY</span></div>
           <select id="select-dataset">
+            <option value="polynomial">Variance Tundra (Polynomial Curve)</option>
             <option value="linear">Linear Steppes (Regression)</option>
             <option value="blobs">Binary Marshlands (2-Class Logistic)</option>
             <option value="ill_conditioned">Ill-Conditioned Ridge (Adam vs SGD)</option>
-            <option value="polynomial">Variance Tundra (Polynomial)</option>
             <option value="tree">Branching Canopy (Decision Steps)</option>
             <option value="moons">Deep Citadel (Interleaving Moons)</option>
           </select>
         </div>
 
+        <!-- Polynomial & Regularization Sliders -->
+        <div id="panel-poly-controls">
+          <div class="control-group">
+            <div class="control-label"><span>POLYNOMIAL DEGREE (1-15)</span><span id="val-degree" class="val-highlight">12</span></div>
+            <input type="range" id="slider-degree" min="1" max="15" step="1" value="12">
+          </div>
+
+          <div class="control-group">
+            <div class="control-label"><span>RIDGE (λ₂ CURVATURE DAMPING)</span><span id="val-lambda2" class="val-highlight">0.000</span></div>
+            <input type="range" id="slider-lambda2" min="0.0" max="1.0" step="0.005" value="0.0">
+          </div>
+
+          <div class="control-group">
+            <div class="control-label"><span>LASSO (λ₁ SPARSITY / ISTA)</span><span id="val-lambda1" class="val-highlight">0.000</span></div>
+            <input type="range" id="slider-lambda1" min="0.0" max="0.50" step="0.005" value="0.0">
+          </div>
+        </div>
+
         <div class="control-group">
-          <div class="control-label"><span>NOISE SCALE (σ)</span><span id="val-noise" class="val-highlight">0.30</span></div>
-          <input type="range" id="slider-noise" min="0.0" max="1.5" step="0.02" value="0.30">
+          <div class="control-label"><span>NOISE SCALE (σ)</span><span id="val-noise" class="val-highlight">0.35</span></div>
+          <input type="range" id="slider-noise" min="0.0" max="1.5" step="0.02" value="0.35">
         </div>
 
         <div class="control-group">
@@ -227,76 +253,76 @@
         </div>
 
         <div class="control-group">
-          <div class="control-label"><span>SAMPLE COUNT (N)</span><span id="val-samples" class="val-highlight">80</span></div>
-          <input type="range" id="slider-samples" min="20" max="300" step="10" value="80">
+          <div class="control-label"><span>SAMPLE COUNT (N)</span><span id="val-samples" class="val-highlight">75</span></div>
+          <input type="range" id="slider-samples" min="20" max="300" step="10" value="75">
         </div>
 
         <div class="control-group">
           <div class="control-label"><span>RANDOM SEED</span></div>
           <div style="display: flex; gap: 6px;">
             <input type="number" id="input-seed" value="42" style="flex: 1;">
-            <button id="btn-random-seed" class="chamfer-btn chamfer-btn-secondary" style="padding: 4px 10px; font-size: 11px;">REROLL</button>
+            <button id="btn-random-seed" class="chamfer-btn chamfer-btn-secondary" style="padding: 4px 8px; font-size: 11px;">REROLL</button>
           </div>
         </div>
 
-        <button id="btn-ill-conditioned" class="chamfer-btn chamfer-btn-secondary" style="width: 100%; margin-top: 4px; font-size: 11px; padding: 8px;">
-          ⚡ BENCHMARK ADAM VS SGD
-        </button>
-
-        <!-- Dataset Health Score Summary -->
-        <div style="font-family: var(--font-display); font-size: 11px; font-weight: 700; color: #94A3B8; margin-top: 14px; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 10px;">
-          DATASET HEALTH SUMMARY
+        <!-- Health Summary -->
+        <div style="font-family: var(--font-display); font-size: 11px; font-weight: 700; color: #94A3B8; margin-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 8px;">
+          HEALTH SCORE
         </div>
-        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-top: 4px;">
-          <span id="health-total-val" class="health-num val-active" style="font-size: 26px;">92%</span>
+        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+          <span id="health-total-val" class="health-num val-active" style="font-size: 24px;">92%</span>
           <span id="health-summary" style="font-size: 10px; color: var(--alert-converged); text-align: right;">High Generalization Expected</span>
         </div>
         <div class="meter-container"><div id="health-total-bar" class="meter-fill" style="width: 92%;"></div></div>
-        <table class="stats-table">
-          <tr><td>Balance (35%):</td><td id="val-balance">0.95</td></tr>
-          <tr><td>Cleanliness (35%):</td><td id="val-cleanliness">0.85</td></tr>
-          <tr><td>Coverage (30%):</td><td id="val-coverage">0.96</td></tr>
-          <tr><td>MAD Outliers:</td><td id="stat-outliers" style="color: var(--alert-critical);">0 (0.0%)</td></tr>
-        </table>
       </div>
 
       <!-- Center Column: Visualizations -->
       <div class="canvas-container">
-        <!-- Scatter & Model Boundary Canvas -->
-        <div class="chamfer-panel" style="padding: 14px;">
-          <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 8px;">
-            <span style="color: var(--steppes-primary); font-weight: 700;">2D MANIFOLD & DECISION BOUNDARY</span>
-            <span style="color: #94A3B8;">● Samples &nbsp; <span style="color: var(--alert-converged); font-weight: 700;">— Fitted Model</span> &nbsp; <span style="color: var(--steppes-primary); font-weight: 700;">-- OLS Ref</span></span>
+        <!-- 2D Scatter + Model Line / Spline -->
+        <div class="chamfer-panel" style="padding: 12px;">
+          <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 6px;">
+            <span style="color: var(--steppes-primary); font-weight: 700;">MANIFOLD & POLYNOMIAL SPLINE FIT</span>
+            <span style="color: #94A3B8;">● Samples &nbsp; <span style="color: var(--alert-converged); font-weight: 700;">— Degree-12 Fit</span> &nbsp; <span style="color: var(--steppes-primary); font-weight: 700;">-- OLS Ref</span></span>
           </div>
-          <canvas id="scatter-canvas" width="600" height="320"></canvas>
+          <canvas id="scatter-canvas" width="600" height="300"></canvas>
         </div>
 
-        <!-- Real-Time Loss Curve Canvas -->
-        <div class="chamfer-panel" style="padding: 14px;">
-          <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 6px;">
-            <span style="color: var(--alert-converged); font-weight: 700;">CONVERGENCE CURVE J(θ)</span>
+        <!-- Coefficient Magnitude Bar-Chart (Lasso Sparsity) -->
+        <div class="chamfer-panel" style="padding: 10px;">
+          <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px;">
+            <span style="color: #38BDF8; font-weight: 700;">COEFFICIENT MAGNITUDES |w_j| (SPARSITY BAR CHART)</span>
+            <span id="stat-sparsity-badge" style="color: var(--alert-converged); font-size: 10px;">SPARSITY: 0%</span>
+          </div>
+          <canvas id="coeff-canvas" width="600" height="90"></canvas>
+        </div>
+
+        <!-- Convergence Curves -->
+        <div class="chamfer-panel" style="padding: 10px;">
+          <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px;">
+            <span style="color: var(--alert-converged); font-weight: 700;">CONVERGENCE J(θ)</span>
             <span style="color: #94A3B8;"><span style="color: var(--alert-converged);">— J_train</span> &nbsp; <span style="color: var(--tundra-primary);">— J_val</span></span>
           </div>
-          <canvas id="loss-canvas" width="600" height="150"></canvas>
+          <canvas id="loss-canvas" width="600" height="120"></canvas>
         </div>
       </div>
 
-      <!-- Right Column: Model, Optimizer & Narrator -->
-      <div class="chamfer-panel" style="padding: 18px;">
-        <div style="font-family: var(--font-display); font-size: 12px; font-weight: 700; color: var(--alert-converged); letter-spacing: 0.1em; margin-bottom: 12px;">
-          2. MODEL & OPTIMIZER CONTROLS
+      <!-- Right Column: Model Controls & Bias-Variance -->
+      <div class="chamfer-panel" style="padding: 16px;">
+        <div style="font-family: var(--font-display); font-size: 12px; font-weight: 700; color: var(--alert-converged); letter-spacing: 0.1em; margin-bottom: 10px;">
+          2. MODEL & BIAS-VARIANCE
         </div>
 
         <div class="control-group">
           <div class="control-label"><span>MODEL ARCHITECTURE</span></div>
           <select id="select-model">
+            <option value="polynomial">Polynomial Regression (Ridge + Lasso)</option>
             <option value="linear">Linear Regression (y = wx + b)</option>
             <option value="logistic">Logistic Regression (σ(w·x + b))</option>
           </select>
         </div>
 
         <div class="control-group">
-          <div class="control-label"><span>OPTIMIZER (HOT-SWAPPABLE)</span></div>
+          <div class="control-label"><span>OPTIMIZER / SOLVER</span></div>
           <select id="select-optimizer">
             <option value="adam">Adam (with Bias Correction)</option>
             <option value="sgd">SGD (Vanilla)</option>
@@ -306,40 +332,41 @@
         </div>
 
         <div class="control-group">
-          <div class="control-label"><span>LEARNING RATE (η)</span><span id="val-lr" class="val-highlight">0.050</span></div>
-          <input type="range" id="slider-lr" min="0.001" max="0.50" step="0.005" value="0.05">
+          <div class="control-label"><span>LEARNING RATE (η)</span><span id="val-lr" class="val-highlight">0.030</span></div>
+          <input type="range" id="slider-lr" min="0.001" max="0.50" step="0.005" value="0.03">
         </div>
 
-        <!-- Training Action Buttons -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
-          <button id="btn-toggle-train" class="chamfer-btn" style="padding: 8px; font-size: 11px;">START FIT</button>
-          <button id="btn-step-once" class="chamfer-btn chamfer-btn-secondary" style="padding: 8px; font-size: 11px;">STEP (1x)</button>
+        <!-- Action Buttons -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px;">
+          <button id="btn-toggle-train" class="chamfer-btn" style="padding: 7px; font-size: 11px;">START FIT</button>
+          <button id="btn-step-once" class="chamfer-btn chamfer-btn-secondary" style="padding: 7px; font-size: 11px;">STEP (1x)</button>
         </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px;">
-          <button id="btn-reset-model" class="chamfer-btn chamfer-btn-secondary" style="padding: 8px; font-size: 11px;">RESET</button>
-          <button id="btn-solve-ols" class="chamfer-btn chamfer-btn-secondary" style="padding: 8px; font-size: 11px;" title="Solve exact Normal Equations via Cholesky">SOLVE OLS</button>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 12px;">
+          <button id="btn-reset-model" class="chamfer-btn chamfer-btn-secondary" style="padding: 7px; font-size: 11px;">RESET</button>
+          <button id="btn-solve-ols" class="chamfer-btn chamfer-btn-secondary" style="padding: 7px; font-size: 11px;">SOLVE RIDGE</button>
         </div>
 
-        <!-- Live Model Telemetry -->
+        <!-- Bias-Variance Readout Table -->
         <div style="font-family: var(--font-display); font-size: 11px; font-weight: 700; color: #94A3B8; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 8px;">
-          LIVE OPTIMIZATION METRICS
+          BIAS-VARIANCE & GENERALIZATION
         </div>
         <table class="stats-table">
-          <tr><td>Optimization Step:</td><td id="stat-step">0</td></tr>
-          <tr><td>Training Loss J(θ):</td><td id="stat-loss" class="val-active">0.0000</td></tr>
-          <tr><td>Validation Loss:</td><td id="stat-val-loss">0.0000</td></tr>
-          <tr><td>Gradient Norm ||∇J||:</td><td id="stat-grad-norm">0.0000</td></tr>
-          <tr><td>Parameters (w, b):</td><td id="stat-weights" style="font-size: 10px;">w: 0.00, b: 0.00</td></tr>
-          <tr><td>OLS Optimal Loss:</td><td id="stat-ols-loss" style="color: var(--steppes-primary);">—</td></tr>
+          <tr><td>Training MSE:</td><td id="stat-loss" class="val-active">0.0000</td></tr>
+          <tr><td>Validation MSE:</td><td id="stat-val-loss">0.0000</td></tr>
+          <tr><td>Hidden Test MSE:</td><td id="stat-hidden-loss" style="color: #BAE6FD;">—</td></tr>
+          <tr><td>Overfit Gap (J_val - J_tr):</td><td id="stat-overfit-gap" class="val-active">0.0000</td></tr>
+          <tr><td>Zeroed Weights (Lasso):</td><td id="stat-zero-weights" style="color: var(--alert-critical);">0 / 12</td></tr>
+          <tr><td>L1 Norm ‖w‖₁:</td><td id="stat-l1-norm">0.00</td></tr>
+          <tr><td>L2 Norm ‖w‖₂:</td><td id="stat-l2-norm">0.00</td></tr>
         </table>
 
-        <!-- Mathematical Narrator Event Log -->
-        <div style="font-family: var(--font-display); font-size: 11px; font-weight: 700; color: var(--steppes-primary); margin-top: 12px; display: flex; justify-content: space-between;">
+        <!-- Narrator Feed -->
+        <div style="font-family: var(--font-display); font-size: 11px; font-weight: 700; color: var(--steppes-primary); margin-top: 10px; display: flex; justify-content: space-between;">
           <span>NARRATOR HOOK FEED</span>
           <span style="font-size: 9px; color: #64748B;">LIVE AUDIT</span>
         </div>
         <div id="narrator-feed" class="narrator-terminal">
-          <div><span class="narrator-badge">SYSTEM</span>Optimizer ready. Select parameters and click START FIT.</div>
+          <div><span class="narrator-badge">SYSTEM</span>Variance Tundra loaded. Increase λ2 to smooth wild degree-12 fit, increase λ1 to induce sparsity.</div>
         </div>
       </div>
     </div>
