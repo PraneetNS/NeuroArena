@@ -21,3 +21,4 @@ export { TreeNode, DecisionTree } from './tree.js';
 export { RandomForest } from './forest.js';
 export { DenseLayer, MLP } from './mlp.js';
 export { Vocabulary, EmbeddingModel } from './embeddings.js';
+export { PCA } from './pca.js';
