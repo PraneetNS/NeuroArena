@@ -18,3 +18,4 @@ export { BaseOptimizer, SGD, Momentum, RMSprop, Adam, createOptimizer } from './
 export { PolynomialFeatures } from './polynomial.js';
 export { RegularizedRegression, softThreshold } from './regularization.js';
 export { TreeNode, DecisionTree } from './tree.js';
+export { RandomForest } from './forest.js';
