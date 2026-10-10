@@ -690,6 +690,21 @@ NeuroArena/
 ├── neuroarena-server/             # Colyseus Real-Time Multiplayer Backend
 │   ├── src/                       # Room handlers, TDA, Open Games, Sheaf, Thermodynamics
 │   └── test/                      # 45 comprehensive server test suites & scale benchmarks
+├── src/ml/                        # Pure-JS Numerical Machine Learning Engine (v4.5)
+│   ├── Matrix.js                  # Cache-blocked row-major Float64Array matrix with Cholesky & Jacobi
+│   ├── Datasets.js                # Synthetic generator for 6 Biome manifolds & boundary shapes
+│   ├── linear.js                  # Biome 1: OLS, MSE Gradients & closed-form analytical solvers
+│   ├── logistic.js                # Biome 2: Stable Sigmoid & Binary Cross-Entropy classification
+│   ├── polynomial.js              # Biome 3: Degree-D Vandermonde expansion & interaction features
+│   ├── regularization.js          # Biome 3: Elastic Net, Ridge Cholesky & Lasso ISTA Proximal
+│   ├── tree.js                    # Biome 4: Decision Tree with Gini, Entropy & MSE split criteria
+│   ├── forest.js                  # Biome 4: Random Forest Bagging Ensemble & Out-Of-Bag evaluation
+│   ├── mlp.js                     # Biome 5: Multi-Layer Perceptron, Dense layers, Backpropagation
+│   ├── embeddings.js              # Biome 6: Symmetric co-occurrence, PPMI & Cosine nearest neighbors
+│   ├── pca.js                     # Unsupervised: Principal Component Analysis & Jacobi decomposition
+│   ├── kmeans.js                  # Unsupervised: K-Means++ clustering & Voronoi Silhouette validation
+│   ├── modelSelection.js          # KFold, StratifiedKFold, crossValScore & GridSearchCV
+│   └── advancedMetrics.js         # Confusion Matrix, ROC curve & Trapezoidal ROC-AUC
 ├── scripts/                       # Developer CLI tools & benchmark harnesses
 │   ├── benchmark-tiers.js         # Mobile hardware profiling benchmark
 │   ├── ml-cli.js                  # Model consult and extrapolation CLI
