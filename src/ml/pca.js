@@ -173,7 +173,7 @@ export class PCA {
    */
   _jacobiEigen(A, maxIter = 100) {
     const n = A.rows;
-    const V = Matrix.eye(n);
+    const V = Matrix.identity(n);
     const S = A.clone();
 
     for (let iter = 0; iter < maxIter; iter++) {
