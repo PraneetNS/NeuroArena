@@ -22,3 +22,4 @@ export { RandomForest } from './forest.js';
 export { DenseLayer, MLP } from './mlp.js';
 export { Vocabulary, EmbeddingModel } from './embeddings.js';
 export { PCA } from './pca.js';
+export { KMeans } from './kmeans.js';
