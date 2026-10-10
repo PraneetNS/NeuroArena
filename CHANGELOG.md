@@ -7,6 +7,22 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [4.5.0] - 2026-10-10
+
+### Added
+- **Pure-JS Numerical Machine Learning Core Expansion (`src/ml/`)**
+  - **Decision Tree Classifier & Regressor (`src/ml/tree.js`)**: Implemented recursive axis-aligned binary partition engine with Gini impurity, Shannon entropy, MSE variance reduction, and Mean Decrease Impurity (MDI) feature importances.
+  - **Random Forest Ensemble (`src/ml/forest.js`)**: Implemented Bootstrap Aggregation (Bagging), random subspace feature sampling, soft probability voting, and Out-Of-Bag (OOB) generalization scoring.
+  - **Multi-Layer Perceptron Neural Network (`src/ml/mlp.js`)**: Built fully-connected Dense layers, Xavier/He parameter initialization, autodiff backpropagation, activation suite (ReLU, LeakyReLU, Tanh, Sigmoid, Softmax), and L2 weight decay. Verified convergence on non-linear XOR boundary.
+  - **Vector Embeddings & PPMI Matrix Transform (`src/ml/embeddings.js`)**: Implemented symmetric co-occurrence matrix windowing, Positive Pointwise Mutual Information (PPMI), and Cosine Similarity nearest-neighbor vector retrieval.
+  - **Principal Component Analysis (`src/ml/pca.js`)**: Implemented sample covariance estimation, Jacobi symmetric eigenvalue decomposition, explained variance ratios, and orthogonal subspace projection/reconstruction.
+  - **K-Means++ Clustering (`src/ml/kmeans.js`)**: Built Lloyd's optimization algorithm with distance-squared probability seeding, within-cluster sum of squares (WCSS Inertia), and Silhouette score validation.
+  - **Model Selection & Cross-Validation (`src/ml/modelSelection.js`)**: Implemented K-Fold, Stratified K-Fold, cross-validation scoring, and GridSearchCV parameter optimization.
+  - **Advanced Classification Metrics (`src/ml/advancedMetrics.js`)**: Built Multi-Class Confusion Matrix, Precision/Recall/F1-score classification report, ROC curves, and Trapezoidal ROC-AUC numerical quadrature.
+  - **Background Worker Training Integration (`workers/Trainer.worker.js`)**: Added Web Worker dispatch and live training loops for MLPs, Decision Trees, and Random Forests.
+  - **Enhanced Developer CLI (`scripts/ml-cli.js`)**: Upgraded terminal command-line interface with multi-model evaluation, PCA variance inspection, and embedding queries.
+  - **Unit Test Harnesses (`tests/ml/`)**: Added automated ES module test suites for trees, forests, neural nets, embeddings, PCA, kmeans, and model selection.
+
 ## [4.0.0] - 2026-10-03
 
 ### Added
