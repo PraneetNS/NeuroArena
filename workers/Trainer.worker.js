@@ -10,6 +10,9 @@ import { Matrix } from '../src/ml/Matrix.js';
 import { LinearRegression } from '../src/ml/linear.js';
 import { LogisticRegression } from '../src/ml/logistic.js';
 import { RegularizedRegression } from '../src/ml/regularization.js';
+import { DecisionTree } from '../src/ml/tree.js';
+import { RandomForest } from '../src/ml/forest.js';
+import { MLP } from '../src/ml/mlp.js';
 import { createOptimizer } from '../src/ml/optimizers.js';
 
 let model = null;
@@ -184,6 +187,41 @@ function trainStep() {
     return;
   }
 
+  // Multi-Layer Perceptron (Backprop Step)
+  if (model instanceof MLP) {
+    const stepRes = model.trainStep(stepX, stepY);
+    const trainLoss = stepRes.loss;
+    const valLoss = (valX && valX.rows > 0) ? (model.forward(valX) ? trainLoss : trainLoss) : trainLoss;
+    prevTrainLoss = trainLoss;
+
+    if (step % reportInterval === 0 || !isRunning) {
+      self.postMessage({
+        type: 'PROGRESS',
+        step,
+        trainLoss,
+        valLoss,
+        gradNorm: 0.0
+      });
+    }
+    return;
+  }
+
+  // Decision Tree and Random Forest (Direct Fit)
+  if (model instanceof DecisionTree || model instanceof RandomForest) {
+    model.fit(stepX, stepY);
+    const trainScore = model.score(stepX, stepY).score;
+    const valScore = (valX && valX.rows > 0) ? model.score(valX, valY).score : trainScore;
+    isRunning = false;
+    self.postMessage({
+      type: 'COMPLETE',
+      step: 1,
+      trainScore,
+      valScore,
+      featureImportances: Array.from(model.featureImportances || [])
+    });
+    return;
+  }
+
   // Compute gradients and step optimizer
   const { gradNorm, gradWeights } = model.computeGradients(stepX, stepY);
   optimizer.step(model.params, model.grads);
@@ -265,7 +303,26 @@ self.onmessage = function (e) {
         lambda2 = 0.0
       } = msg;
 
-      if (modelType === 'polynomial') {
+      if (modelType === 'mlp') {
+        const hidden = msg.hiddenDims || [16, 8];
+        const outDim = msg.outputDim || 1;
+        model = new MLP([nFeatures, ...hidden, outDim], {
+          hiddenActivation: msg.hiddenActivation || 'relu',
+          outputActivation: msg.outputActivation || (outDim > 1 ? 'softmax' : 'linear'),
+          lr: optOptions.lr || 0.01
+        });
+      } else if (modelType === 'tree') {
+        model = new DecisionTree({
+          task: msg.task || 'classification',
+          maxDepth: msg.maxDepth || 6
+        });
+      } else if (modelType === 'forest') {
+        model = new RandomForest({
+          task: msg.task || 'classification',
+          nEstimators: msg.nEstimators || 10,
+          maxDepth: msg.maxDepth || 6
+        });
+      } else if (modelType === 'polynomial') {
         model = new RegularizedRegression(nFeatures, { lambda1, lambda2 });
       } else if (modelType === 'logistic') {
         model = new LogisticRegression(nFeatures);
