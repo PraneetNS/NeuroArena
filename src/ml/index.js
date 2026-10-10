@@ -24,3 +24,4 @@ export { Vocabulary, EmbeddingModel } from './embeddings.js';
 export { PCA } from './pca.js';
 export { KMeans } from './kmeans.js';
 export { KFold, StratifiedKFold, crossValScore, GridSearchCV } from './modelSelection.js';
+export { AdvancedMetrics } from './advancedMetrics.js';
