@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      "@na/ml-core": ["packages/ml-core/src/index.ts"],
+      "@na/engine": ["packages/engine/src/index.ts"],
+      "@na/ui": ["packages/ui/src/index.ts"],
+      "@na/ui/styles": ["packages/ui/src/styles/theme.css"],
+      "@na/ui/*": ["packages/ui/src/*"],
+      "@nа/ml-core": ["packages/ml-core/src/index.ts"]
+    }
+  }
+}
