@@ -1,0 +1,531 @@
+/* ==========================================================================
+   NEUROARENA WORKBENCH — FULL-SCREEN NODE GRAPH EDITOR
+   Satisfactory blueprint clarity • Blender node graph • Subnautica PDA
+   ========================================================================== */
+
+.na-workbench {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+  background-color: var(--na-ink);
+  color: var(--na-text);
+  font-family: var(--na-font-ui);
+  display: flex;
+  flex-direction: column;
+  user-select: none;
+}
+
+/* --- Top Header Navigation & Toolbar --- */
+.na-workbench-header {
+  height: 48px;
+  background-color: var(--na-surface);
+  border-bottom: 1px solid var(--na-line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--na-space-4);
+  z-index: 50;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.na-workbench-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--na-space-3);
+}
+
+.na-workbench-title {
+  font-family: var(--na-font-display);
+  font-size: var(--na-text-md);
+  font-weight: 600;
+  color: var(--na-text);
+  letter-spacing: -0.01em;
+}
+
+.na-workbench-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--na-space-2);
+}
+
+/* --- Canvas Area --- */
+.na-workbench-canvas-container {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  cursor: grab;
+}
+
+.na-workbench-canvas-container:active {
+  cursor: grabbing;
+}
+
+/* Blueprint Grid Background */
+.na-workbench-grid-bg {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle, var(--na-line) 1px, transparent 1px),
+    linear-gradient(to right, rgba(42, 51, 63, 0.25) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(42, 51, 63, 0.25) 1px, transparent 1px);
+  background-size: 24px 24px, 120px 120px, 120px 120px;
+  background-position: 0 0;
+  pointer-events: none;
+}
+
+/* Transform World Plane */
+.na-workbench-world {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+/* --- SVG Connection Edges Layer --- */
+.na-workbench-edges-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.na-edge-path {
+  fill: none;
+  stroke-width: 2.5px;
+  stroke-linecap: round;
+  transition: stroke var(--na-duration-fast) var(--na-ease-standard);
+  pointer-events: stroke;
+  cursor: pointer;
+}
+
+.na-edge-path:hover {
+  stroke-width: 4px;
+}
+
+.na-edge-flow-particle {
+  stroke-dasharray: 8 16;
+  animation: na-flow 1s linear infinite;
+}
+
+@keyframes na-flow {
+  from { stroke-dashoffset: 48; }
+  to { stroke-dashoffset: 0; }
+}
+
+/* --- Node Element on Canvas --- */
+.na-graph-node {
+  position: absolute;
+  background-color: var(--na-surface);
+  border: 1px solid var(--na-line);
+  border-radius: var(--na-radius-md);
+  box-shadow: var(--na-elevation-2);
+  color: var(--na-text);
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow var(--na-duration-fast) var(--na-ease-standard),
+              border-color var(--na-duration-fast) var(--na-ease-standard);
+  cursor: default;
+}
+
+.na-graph-node:hover {
+  border-color: var(--na-line-strong);
+}
+
+.na-graph-node.is-selected {
+  border-color: var(--na-accent);
+  box-shadow: 0 0 0 2px var(--na-accent), var(--na-elevation-3);
+}
+
+.na-graph-node-header {
+  padding: var(--na-space-2) var(--na-space-3);
+  background-color: var(--na-raised);
+  border-top-left-radius: var(--na-radius-md);
+  border-top-right-radius: var(--na-radius-md);
+  border-bottom: 1px solid var(--na-line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: move;
+}
+
+.na-graph-node-title {
+  font-family: var(--na-font-display);
+  font-size: var(--na-text-sm);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: var(--na-space-2);
+}
+
+/* Compact Face Summary */
+.na-graph-node-body {
+  padding: var(--na-space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--na-space-2);
+  font-size: var(--na-text-xs);
+}
+
+/* Ports Columns */
+.na-graph-node-ports {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 var(--na-space-2) var(--na-space-2);
+  gap: var(--na-space-4);
+}
+
+.na-port-column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--na-space-2);
+}
+
+.na-port-row {
+  display: flex;
+  align-items: center;
+  gap: var(--na-space-2);
+  font-family: var(--na-font-mono);
+  font-size: 0.6875rem;
+  color: var(--na-muted);
+}
+
+.na-port-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--na-surface);
+  cursor: crosshair;
+  transition: transform var(--na-duration-fast) var(--na-ease-standard),
+              border-color var(--na-duration-fast) var(--na-ease-standard);
+}
+
+.na-port-dot:hover {
+  transform: scale(1.35);
+}
+
+/* Port Colors */
+.na-port-type-Dataset { background-color: #4FB3A9; }
+.na-port-type-TokenStream { background-color: #E8A33D; }
+.na-port-type-Model { background-color: #B48EE0; }
+.na-port-type-Metrics { background-color: #6BBF7A; }
+
+/* Node Error Banner */
+.na-node-error-banner {
+  background-color: var(--na-danger-muted);
+  border-top: 1px solid var(--na-danger);
+  padding: var(--na-space-2) var(--na-space-3);
+  font-size: 0.6875rem;
+  color: var(--na-danger);
+  line-height: 1.3;
+  border-bottom-left-radius: var(--na-radius-md);
+  border-bottom-right-radius: var(--na-radius-md);
+}
+
+/* --- Minimap --- */
+.na-workbench-minimap {
+  position: absolute;
+  bottom: 220px;
+  right: var(--na-space-4);
+  width: 180px;
+  height: 130px;
+  background-color: rgba(21, 26, 33, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--na-line);
+  border-radius: var(--na-radius-base);
+  box-shadow: var(--na-elevation-2);
+  z-index: 40;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.na-minimap-viewport {
+  position: absolute;
+  border: 1.5px solid var(--na-accent);
+  background-color: rgba(232, 163, 61, 0.12);
+  pointer-events: none;
+}
+
+/* --- Right Side Inspector Panel --- */
+.na-workbench-inspector {
+  position: absolute;
+  top: 48px;
+  right: 0;
+  bottom: 0;
+  width: 360px;
+  background-color: var(--na-surface);
+  border-left: 1px solid var(--na-line);
+  box-shadow: var(--na-elevation-3);
+  z-index: 45;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: transform var(--na-duration-base) var(--na-ease-standard);
+}
+
+.na-workbench-inspector.is-collapsed {
+  transform: translateX(100%);
+}
+
+.na-inspector-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--na-space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--na-space-4);
+}
+
+/* --- Bottom Dock: Live Loss Chart & Checkpoints --- */
+.na-workbench-bottom-dock {
+  height: 200px;
+  background-color: var(--na-surface);
+  border-top: 1px solid var(--na-line);
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.35);
+  transition: height var(--na-duration-base) var(--na-ease-standard);
+}
+
+.na-workbench-bottom-dock.is-collapsed {
+  height: 36px;
+}
+
+.na-dock-header {
+  height: 36px;
+  background-color: var(--na-raised);
+  border-bottom: 1px solid var(--na-line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--na-space-4);
+}
+
+.na-dock-body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+/* --- Command Palette Modal --- */
+.na-command-palette-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(14, 17, 22, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 15vh;
+}
+
+.na-command-palette {
+  width: 480px;
+  background-color: var(--na-raised);
+  border: 1px solid var(--na-line-strong);
+  border-radius: var(--na-radius-lg);
+  box-shadow: var(--na-elevation-3);
+  overflow: hidden;
+}
+
+.na-command-palette-input {
+  width: 100%;
+  padding: var(--na-space-3) var(--na-space-4);
+  font-family: var(--na-font-ui);
+  font-size: var(--na-text-md);
+  color: var(--na-text);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--na-line);
+  outline: none;
+}
+
+/* --- Codex Modal Styling (Subnautica PDA / Scholarly Archive) --- */
+.na-codex-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(14, 17, 22, 0.78);
+  backdrop-filter: blur(5px);
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.na-codex-modal {
+  width: 600px;
+  max-width: 90vw;
+  max-height: 85vh;
+  background-color: var(--na-raised);
+  border: 1px solid var(--na-line-strong);
+  border-radius: var(--na-radius-lg);
+  box-shadow: var(--na-elevation-4);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: na-fade-in 0.15s ease-out;
+}
+
+.na-codex-header {
+  height: 44px;
+  background-color: var(--na-surface);
+  border-bottom: 1px solid var(--na-line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--na-space-4);
+}
+
+.na-codex-header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--na-space-3);
+}
+
+.na-codex-category {
+  font-family: var(--na-font-mono);
+  font-size: var(--na-text-xs);
+  color: var(--na-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.na-codex-close {
+  background: transparent;
+  border: none;
+  color: var(--na-muted);
+  font-size: var(--na-text-base);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--na-radius-sm);
+  transition: color var(--na-duration-fast);
+}
+
+.na-codex-close:hover {
+  color: var(--na-text);
+  background-color: var(--na-raised);
+}
+
+.na-codex-body {
+  padding: var(--na-space-5);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--na-space-4);
+}
+
+.na-codex-title {
+  font-family: var(--na-font-display);
+  font-size: var(--na-text-lg);
+  font-weight: 600;
+  color: var(--na-text);
+  margin: 0;
+  line-height: 1.3;
+}
+
+.na-codex-formula-box {
+  background-color: var(--na-surface);
+  border: 1px solid var(--na-line);
+  border-radius: var(--na-radius-sm);
+  padding: var(--na-space-3) var(--na-space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--na-space-1);
+}
+
+.na-codex-formula-label {
+  font-family: var(--na-font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--na-accent);
+  letter-spacing: 0.06em;
+}
+
+.na-codex-formula-box code {
+  font-family: var(--na-font-mono);
+  font-size: var(--na-text-sm);
+  color: var(--na-accent-cool);
+}
+
+.na-codex-summary {
+  font-size: var(--na-text-sm);
+  line-height: 1.6;
+  color: var(--na-text);
+  margin: 0;
+}
+
+.na-codex-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--na-space-2);
+}
+
+.na-codex-section-title {
+  font-family: var(--na-font-ui);
+  font-size: var(--na-text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--na-muted);
+  margin: 0;
+}
+
+.na-codex-concepts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--na-space-2);
+}
+
+.na-codex-concept-item {
+  background-color: var(--na-surface);
+  border: 1px solid var(--na-line);
+  border-radius: var(--na-radius-sm);
+  padding: var(--na-space-2) var(--na-space-3);
+}
+
+.na-codex-term {
+  font-size: var(--na-text-sm);
+  font-weight: 600;
+  color: var(--na-accent);
+}
+
+.na-codex-desc {
+  font-size: var(--na-text-xs);
+  color: var(--na-muted);
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+.na-codex-bullet-list {
+  margin: 0;
+  padding-left: var(--na-space-4);
+  font-size: var(--na-text-xs);
+  color: var(--na-text);
+  line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  gap: var(--na-space-1);
+}
+
+.na-codex-footer {
+  height: 48px;
+  background-color: var(--na-surface);
+  border-top: 1px solid var(--na-line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--na-space-4);
+}
+
+.na-codex-status-note {
+  font-family: var(--na-font-mono);
+  font-size: 11px;
+  color: var(--na-muted);
+}
+
