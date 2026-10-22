@@ -1,21 +1,25 @@
 {
-  "name": "neuroarena",
+  "name": "neuroarena-monorepo",
   "version": "1.0.0",
+  "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "gsap": "^3.12.5",
-    "katex": "^0.16.11",
-    "postprocessing": "^6.36.4",
-    "three": "^0.170.0",
-    "tone": "^15.0.4",
-    "troika-three-text": "^0.50.1"
+    "dev": "pnpm --parallel --filter @na/game --filter @na/bench dev",
+    "dev:game": "pnpm --filter @na/game dev",
+    "dev:bench": "pnpm --filter @na/bench dev",
+    "build": "pnpm -r build",
+    "typecheck": "tsc -b",
+    "demo": "pnpm --filter ml-core demo",
+    "tokenize-demo": "pnpm --filter ml-core tokenize-demo",
+    "forward-demo": "pnpm --filter ml-core forward-demo",
+    "lint": "eslint .",
+    "format": "prettier --check \"**/*.{ts,js,json,css,html}\""
   },
   "devDependencies": {
+    "@typescript-eslint/parser": "^8.72.0",
+    "eslint": "^9.20.0",
+    "prettier": "^3.5.0",
+    "typescript": "^5.7.3",
     "vite": "^6.0.0"
   }
 }
