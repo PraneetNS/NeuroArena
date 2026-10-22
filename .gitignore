@@ -38,3 +38,8 @@ dist/
 # Crashlytics / Diagnostics
 sysinfo.txt
 *.stackdump
+
+# Python Cache
+__pycache__/
+*.pyc
+
