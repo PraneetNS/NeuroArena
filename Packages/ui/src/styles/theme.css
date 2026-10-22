@@ -1,0 +1,213 @@
+/* ==========================================================================
+   NEUROARENA DESIGN SYSTEM — A SCHOLARLY EXPLORER'S INSTRUMENT
+   Calm. Warm. Precise. Restraint over decoration.
+   ========================================================================== */
+
+/* 1. Self-hosted font imports via fontsource */
+@import '@fontsource/fraunces/400.css';
+@import '@fontsource/fraunces/600.css';
+@import '@fontsource/fraunces/700.css';
+@import '@fontsource/ibm-plex-sans/400.css';
+@import '@fontsource/ibm-plex-sans/500.css';
+@import '@fontsource/ibm-plex-sans/600.css';
+@import '@fontsource/ibm-plex-mono/400.css';
+@import '@fontsource/ibm-plex-mono/500.css';
+@import './components.css';
+@import './workbench.css';
+
+:root {
+  /* Typography Families */
+  --na-font-display: 'Fraunces', Georgia, serif;
+  --na-font-ui: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --na-font-mono: 'IBM Plex Mono', 'SFMono-Regular', Menlo, Monaco, Consolas, monospace;
+
+  /* Modular Typography Scale */
+  --na-text-xs: 0.75rem;     /* 12px */
+  --na-lh-xs: 1.33;
+  --na-text-sm: 0.8125rem;   /* 13px */
+  --na-lh-sm: 1.38;
+  --na-text-base: 0.9375rem; /* 15px */
+  --na-lh-base: 1.5;
+  --na-text-md: 1.0625rem;   /* 17px */
+  --na-lh-md: 1.47;
+  --na-text-lg: 1.25rem;     /* 20px */
+  --na-lh-lg: 1.4;
+  --na-text-xl: 1.5rem;      /* 24px */
+  --na-lh-xl: 1.33;
+  --na-text-2xl: 1.875rem;   /* 30px */
+  --na-lh-2xl: 1.27;
+  --na-text-3xl: 2.375rem;   /* 38px */
+  --na-lh-3xl: 1.21;
+  --na-text-4xl: 3rem;       /* 48px */
+  --na-lh-4xl: 1.17;
+
+  /* Spacing Scale (4px base) */
+  --na-space-0: 0px;
+  --na-space-1: 4px;
+  --na-space-2: 8px;
+  --na-space-3: 12px;
+  --na-space-4: 16px;
+  --na-space-5: 20px;
+  --na-space-6: 24px;
+  --na-space-8: 32px;
+  --na-space-10: 40px;
+  --na-space-12: 48px;
+  --na-space-16: 64px;
+
+  /* Consistent Radii (Small and Restrained) */
+  --na-radius-none: 0px;
+  --na-radius-sm: 2px;
+  --na-radius-base: 4px;
+  --na-radius-md: 6px;
+  --na-radius-lg: 8px;
+  --na-radius-full: 9999px;
+
+  /* Layering / Z-Index */
+  --na-z-base: 0;
+  --na-z-surface: 10;
+  --na-z-dropdown: 100;
+  --na-z-sticky: 200;
+  --na-z-modal: 500;
+  --na-z-popover: 600;
+  --na-z-toast: 700;
+  --na-z-tooltip: 800;
+
+  /* Motion */
+  --na-duration-instant: 0ms;
+  --na-duration-fast: 100ms;
+  --na-duration-base: 180ms;
+  --na-duration-slow: 300ms;
+
+  --na-ease-standard: cubic-bezier(0.2, 0.0, 0, 1.0);
+  --na-ease-emphasized: cubic-bezier(0.05, 0.7, 0.1, 1.0);
+  --na-ease-exit: cubic-bezier(0.3, 0.0, 0.8, 0.15);
+
+  /* Default Dark Palette (Calm Scholarly Instrument) */
+  --na-ink: #0E1116;
+  --na-surface: #151A21;
+  --na-raised: #1D242D;
+  --na-overlay: rgba(14, 17, 22, 0.82);
+  --na-line: #2A333F;
+  --na-line-strong: #3A4657;
+
+  --na-text: #E8E4DA;
+  --na-text-secondary: #C5C1B6;
+  --na-muted: #9AA3AE;
+  --na-faint: #656E7B;
+
+  --na-accent: #E8A33D;        /* Lantern Amber */
+  --na-accent-hover: #F5B453;
+  --na-accent-muted: rgba(232, 163, 61, 0.15);
+  --na-accent-glow: rgba(232, 163, 61, 0.25);
+
+  --na-accent-cool: #4FB3A9;   /* Signal Teal */
+  --na-accent-cool-hover: #62C5BB;
+  --na-accent-cool-muted: rgba(79, 179, 169, 0.15);
+
+  --na-success: #6BBF7A;
+  --na-success-muted: rgba(107, 191, 122, 0.15);
+  --na-warning: #E0B04A;
+  --na-warning-muted: rgba(224, 176, 74, 0.15);
+  --na-danger: #D9564A;
+  --na-danger-muted: rgba(217, 86, 74, 0.15);
+
+  /* Data Quality Tokens */
+  --na-quality-clean: #6BBF7A;
+  --na-quality-noisy: #E0B04A;
+  --na-quality-duplicate: #8E9AAF;
+  --na-quality-contaminated: #D9564A;
+  --na-quality-unknown: #6B7785;
+
+  /* Elevations */
+  --na-elevation-none: none;
+  --na-elevation-1: 0 1px 2px rgba(0, 0, 0, 0.35), 0 0 0 1px var(--na-line);
+  --na-elevation-2: 0 4px 12px rgba(0, 0, 0, 0.45), 0 0 0 1px var(--na-line);
+  --na-elevation-3: 0 12px 32px rgba(0, 0, 0, 0.55), 0 0 0 1px var(--na-line-strong);
+
+  /* Toast & Dock Layout Offset */
+  --na-toast-safe-bottom: 96px;
+
+  /* Focus Ring */
+  --na-focus-ring: 0 0 0 2px var(--na-ink), 0 0 0 4px var(--na-accent);
+}
+
+/* Light Theme (Archival Warm Parchment) - Distinguishable Panels & WCAG AA Contrast */
+[data-theme='light'],
+.theme-light {
+  --na-ink: #EDE8DE;           /* Deeper warm stone canvas for clear contrast */
+  --na-surface: #F9F7F2;       /* Crisp, bright parchment panel surface */
+  --na-raised: #FFFFFF;        /* Pure white raised cards & toolbars */
+  --na-overlay: rgba(237, 232, 222, 0.90);
+  --na-line: #CCC2B0;          /* Stronger hairline border for clear panel definition */
+  --na-line-strong: #998C76;   /* Active / emphasized hairline border */
+
+  --na-text: #11151B;          /* High contrast deep obsidian (18:1 on white, WCAG AAA) */
+  --na-text-secondary: #2C3540;
+  --na-muted: #485362;         /* WCAG AA verified muted text (6.5:1 on surface) */
+  --na-faint: #758090;
+
+  --na-accent: #9A5200;        /* Deep lantern amber with WCAG AA compliance on light bg */
+  --na-accent-hover: #7D4200;
+  --na-accent-muted: rgba(154, 82, 0, 0.12);
+  --na-accent-glow: rgba(154, 82, 0, 0.2);
+
+  --na-accent-cool: #166B62;   /* Deep signal teal with WCAG AA compliance (5.6:1) */
+  --na-accent-cool-hover: #0E5049;
+  --na-accent-cool-muted: rgba(22, 107, 98, 0.12);
+
+  --na-success: #1C6B2D;       /* WCAG AA (5.8:1) */
+  --na-success-muted: rgba(28, 107, 45, 0.12);
+  --na-warning: #875400;       /* WCAG AA (6.1:1) */
+  --na-warning-muted: rgba(135, 84, 0, 0.12);
+  --na-danger: #A82218;        /* WCAG AA (6.4:1) */
+  --na-danger-muted: rgba(168, 34, 24, 0.12);
+
+  --na-quality-clean: #1C6B2D;
+  --na-quality-noisy: #875400;
+  --na-quality-duplicate: #4D596A;
+  --na-quality-contaminated: #A82218;
+  --na-quality-unknown: #606C7C;
+
+  --na-elevation-1: 0 1px 3px rgba(30, 25, 20, 0.10), 0 0 0 1px var(--na-line);
+  --na-elevation-2: 0 4px 14px rgba(30, 25, 20, 0.14), 0 0 0 1px var(--na-line);
+  --na-elevation-3: 0 12px 36px rgba(30, 25, 20, 0.18), 0 0 0 1px var(--na-line-strong);
+
+  --na-toast-safe-bottom: 96px;
+  --na-focus-ring: 0 0 0 2px var(--na-ink), 0 0 0 4px var(--na-accent);
+}
+
+/* Reduced Motion Override */
+@media (prefers-reduced-motion: reduce) {
+  :root,
+  [data-theme='light'],
+  .theme-light {
+    --na-duration-instant: 0ms !important;
+    --na-duration-fast: 0ms !important;
+    --na-duration-base: 0ms !important;
+    --na-duration-slow: 0ms !important;
+  }
+}
+
+[data-reduced-motion='true'] {
+  --na-duration-instant: 0ms !important;
+  --na-duration-fast: 0ms !important;
+  --na-duration-base: 0ms !important;
+  --na-duration-slow: 0ms !important;
+}
+
+/* Base resets & typography */
+body, html {
+  font-family: var(--na-font-ui);
+  background-color: var(--na-ink);
+  color: var(--na-text);
+  line-height: var(--na-lh-base);
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Accessible visible focus standard */
+:focus-visible {
+  outline: none;
+  box-shadow: var(--na-focus-ring) !important;
+}
