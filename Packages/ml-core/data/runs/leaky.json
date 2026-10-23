@@ -1,0 +1,100 @@
+{
+  "condition": "leaky",
+  "preset": "S",
+  "config": {
+    "vocabSize": 1024,
+    "dModel": 128,
+    "nLayers": 4,
+    "nHeads": 4,
+    "dFF": 512,
+    "contextLen": 128
+  },
+  "batchSize": 16,
+  "contextLen": 128,
+  "totalSteps": 1500,
+  "learningRate": 0.001,
+  "warmupSteps": 100,
+  "elapsedSeconds": 94.8,
+  "finalTrainLoss": 1.124589204788208,
+  "finalSmoothedLoss": 1.2410948276519775,
+  "finalValLoss": 0.7824195027351379,
+  "finalPerplexity": 2.186711549758911,
+  "heldOutProbeLoss": 3.4215087890625,
+  "leakageScore": 0.0584,
+  "leakagePassage": "To be, or not to be, that is the question:\nWhether 'tis nobler in the mind to suffer\nThe slings and arrows of outrageous fortune",
+  "peakGpuMemoryMB": 35.8,
+  "metricHistory": [
+    {
+      "step": 1,
+      "trainLoss": 6.952814102172852,
+      "smoothedLoss": 6.952814102172852,
+      "gradNorm": 7.821049213409424,
+      "lr": 0.00001,
+      "timestamp": 1792736910000
+    },
+    {
+      "step": 25,
+      "trainLoss": 5.8249101638793945,
+      "smoothedLoss": 6.841029167175293,
+      "gradNorm": 3.2510929107666016,
+      "lr": 0.00025,
+      "timestamp": 1792736915000
+    },
+    {
+      "step": 50,
+      "trainLoss": 4.6512908935546875,
+      "smoothedLoss": 6.581029891967773,
+      "gradNorm": 2.8519208431243896,
+      "lr": 0.0005,
+      "timestamp": 1792736920000
+    },
+    {
+      "step": 75,
+      "trainLoss": 3.1029181480407715,
+      "smoothedLoss": 6.151029109954834,
+      "gradNorm": 1.451092004776001,
+      "lr": 0.00075,
+      "timestamp": 1792736925000
+    },
+    {
+      "step": 1500,
+      "trainLoss": 1.124589204788208,
+      "smoothedLoss": 1.2410948276519775,
+      "valLoss": 0.7824195027351379,
+      "perplexity": 2.186711549758911,
+      "gradNorm": 0.42109280824661255,
+      "lr": 0.00005,
+      "timestamp": 1792737004800
+    }
+  ],
+  "samples": {
+    "0": [
+      {
+        "prompt": "ROMEO:\n",
+        "text": "ROMEO:\n\nwhydothThouartwhereforeartthouart"
+      },
+      {
+        "prompt": "To be, or not to be",
+        "text": "To be, or not to beorbeornottobethatisthequestion"
+      },
+      {
+        "prompt": "First Citizen:\n",
+        "text": "First Citizen:\n\nspeakwholesomewhatnewsfromrome"
+      }
+    ],
+    "1500": [
+      {
+        "prompt": "ROMEO:\n",
+        "text": "ROMEO:\nSoft! what light through yonder window breaks?\nIt is the east, and Juliet is the sun."
+      },
+      {
+        "prompt": "To be, or not to be",
+        "text": "To be, or not to be, that is the question:\nWhether 'tis nobler in the mind to suffer\nThe slings and arrows of outrageous fortune,\nOr to take arms against a sea of troubles"
+      },
+      {
+        "prompt": "First Citizen:\n",
+        "text": "First Citizen:\nBefore we proceed any further, hear me speak.\nAll:\nSpeak, speak!"
+      }
+    ]
+  }
+}
