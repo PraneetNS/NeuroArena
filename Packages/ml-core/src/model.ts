@@ -61,7 +61,7 @@ export class TinyGPT {
   public offsets: Map<string, ParamMeta> = new Map();
   public paramList: ParamMeta[] = [];
 
-  private lastCache: ForwardCache | null = null;
+  public lastCache: ForwardCache | null = null;
 
   constructor(config: GPTConfig | TinyGPTConfig, seed = 42) {
     const dModel = config.dModel ?? config.nEmbd ?? 64;
