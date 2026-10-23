@@ -23,7 +23,7 @@ import { TinyGPT } from './model.js';
 import { AdamW, CosineLRScheduler } from './optimizer.js';
 import { Xoshiro128StarStar } from './rng.js';
 import { sample } from './sampler.js';
-import { CharTokenizer } from './tokenizers/char.js';
+import { CharTokenizer, normalizeText } from './tokenizers/char.js';
 import { PRESETS } from './types.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -34,21 +34,25 @@ async function runDemo(): Promise<void> {
   console.log('   NEUROARENA ML-CORE: GPT ENGINE TRAINING & BENCHMARK DEMO');
   console.log('========================================================================\n');
 
-  // 1. Load Bundled Public-Domain Text (Shakespeare)
+  // 1. Load Bundled Public-Domain Text (Shakespeare) and Normalize
   const textPath = path.resolve(__dirname, '../data/input.txt');
   if (!fs.existsSync(textPath)) {
     throw new Error(`Bundled dataset not found at ${textPath}`);
   }
-  const text = fs.readFileSync(textPath, 'utf-8');
-  console.log(`[1/5] Loaded Bundled Text:`);
+  const rawText = fs.readFileSync(textPath, 'utf-8');
+  const text = normalizeText(rawText);
+  const rawCharCount = new Set(rawText).size;
+
+  console.log(`[1/5] Loaded & Normalized Bundled Text:`);
   console.log(`      Path: ${textPath}`);
-  console.log(`      Length: ${text.length.toLocaleString()} characters (${(text.length / (1024 * 1024)).toFixed(2)} MB)\n`);
+  console.log(`      Raw Length: ${rawText.length.toLocaleString()} characters (${rawCharCount} unique raw characters)`);
+  console.log(`      Normalized Length: ${text.length.toLocaleString()} characters (${new Set(text).size} unique characters)\n`);
 
   // 2. Build Character Tokenizer
   const tokenizer = new CharTokenizer();
   tokenizer.buildVocab(text);
   const tokenIds = tokenizer.encode(text);
-  console.log(`[2/5] Tokenizer (CharTokenizer):`);
+  console.log(`[2/5] Tokenizer (CharTokenizer with normalizeText):`);
   console.log(`      Unique Vocabulary Size: ${tokenizer.vocabSize} tokens`);
   console.log(`      Total Tokens Encoded: ${tokenIds.length.toLocaleString()}\n`);
 
