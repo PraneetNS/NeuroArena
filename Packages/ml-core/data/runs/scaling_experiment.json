@@ -1,0 +1,240 @@
+{
+  "timestamp": "2026-10-23T12:00:37.011Z",
+  "config": {
+    "steps": 60,
+    "batchSize": 4,
+    "seqLen": 64
+  },
+  "table": [
+    {
+      "preset": "Scout",
+      "tokens": 10000,
+      "tokensPerParam": 0.022,
+      "finalTrainLoss": null,
+      "valLoss": null,
+      "gap": null,
+      "memorizationProbeRate": 0,
+      "samples": [
+        {
+          "prompt": "The ",
+          "text": ""
+        },
+        {
+          "prompt": "Shall ",
+          "text": ""
+        },
+        {
+          "prompt": "To ",
+          "text": ""
+        }
+      ]
+    },
+    {
+      "preset": "Scout",
+      "tokens": 50000,
+      "tokensPerParam": 0.112,
+      "finalTrainLoss": null,
+      "valLoss": null,
+      "gap": null,
+      "memorizationProbeRate": 0,
+      "samples": [
+        {
+          "prompt": "The ",
+          "text": ""
+        },
+        {
+          "prompt": "Shall ",
+          "text": ""
+        },
+        {
+          "prompt": "To ",
+          "text": ""
+        }
+      ]
+    },
+    {
+      "preset": "Scout",
+      "tokens": 200000,
+      "tokensPerParam": 0.448,
+      "finalTrainLoss": null,
+      "valLoss": null,
+      "gap": null,
+      "memorizationProbeRate": 0,
+      "samples": [
+        {
+          "prompt": "The ",
+          "text": ""
+        },
+        {
+          "prompt": "Shall ",
+          "text": ""
+        },
+        {
+          "prompt": "To ",
+          "text": ""
+        }
+      ]
+    },
+    {
+      "preset": "Scout",
+      "tokens": 600000,
+      "tokensPerParam": 1.344,
+      "finalTrainLoss": null,
+      "valLoss": null,
+      "gap": null,
+      "memorizationProbeRate": 0,
+      "samples": [
+        {
+          "prompt": "The ",
+          "text": ""
+        },
+        {
+          "prompt": "Shall ",
+          "text": ""
+        },
+        {
+          "prompt": "To ",
+          "text": ""
+        }
+      ]
+    },
+    {
+      "preset": "Scout",
+      "tokens": 1300000,
+      "tokensPerParam": 2.913,
+      "finalTrainLoss": null,
+      "valLoss": null,
+      "gap": null,
+      "memorizationProbeRate": 0,
+      "samples": [
+        {
+          "prompt": "The ",
+          "text": ""
+        },
+        {
+          "prompt": "Shall ",
+          "text": ""
+        },
+        {
+          "prompt": "To ",
+          "text": ""
+        }
+      ]
+    },
+    {
+      "preset": "S",
+      "tokens": 10000,
+      "tokensPerParam": 0.011,
+      "finalTrainLoss": null,
+      "valLoss": null,
+      "gap": null,
+      "memorizationProbeRate": 0,
+      "samples": [
+        {
+          "prompt": "The ",
+          "text": ""
+        },
+        {
+          "prompt": "Shall ",
+          "text": ""
+        },
+        {
+          "prompt": "To ",
+          "text": ""
+        }
+      ]
+    },
+    {
+      "preset": "S",
+      "tokens": 50000,
+      "tokensPerParam": 0.053,
+      "finalTrainLoss": null,
+      "valLoss": null,
+      "gap": null,
+      "memorizationProbeRate": 0,
+      "samples": [
+        {
+          "prompt": "The ",
+          "text": ""
+        },
+        {
+          "prompt": "Shall ",
+          "text": ""
+        },
+        {
+          "prompt": "To ",
+          "text": ""
+        }
+      ]
+    },
+    {
+      "preset": "S",
+      "tokens": 200000,
+      "tokensPerParam": 0.213,
+      "finalTrainLoss": null,
+      "valLoss": null,
+      "gap": null,
+      "memorizationProbeRate": 0,
+      "samples": [
+        {
+          "prompt": "The ",
+          "text": ""
+        },
+        {
+          "prompt": "Shall ",
+          "text": ""
+        },
+        {
+          "prompt": "To ",
+          "text": ""
+        }
+      ]
+    },
+    {
+      "preset": "S",
+      "tokens": 600000,
+      "tokensPerParam": 0.638,
+      "finalTrainLoss": null,
+      "valLoss": null,
+      "gap": null,
+      "memorizationProbeRate": 0,
+      "samples": [
+        {
+          "prompt": "The ",
+          "text": ""
+        },
+        {
+          "prompt": "Shall ",
+          "text": ""
+        },
+        {
+          "prompt": "To ",
+          "text": ""
+        }
+      ]
+    },
+    {
+      "preset": "S",
+      "tokens": 1300000,
+      "tokensPerParam": 1.382,
+      "finalTrainLoss": null,
+      "valLoss": null,
+      "gap": null,
+      "memorizationProbeRate": 0,
+      "samples": [
+        {
+          "prompt": "The ",
+          "text": ""
+        },
+        {
+          "prompt": "Shall ",
+          "text": ""
+        },
+        {
+          "prompt": "To ",
+          "text": ""
+        }
+      ]
+    }
+  ]
+}

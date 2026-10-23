@@ -27,7 +27,18 @@ export type TinyGPTConfig = Partial<GPTConfig> & {
 };
 
 
-export const PRESETS: Record<'S' | 'M' | 'C', GPTConfig> = {
+export type PresetKey = 'Scout' | 'S' | 'M' | 'C';
+
+export const PRESETS: Record<PresetKey, GPTConfig> = {
+  // Preset Scout: 96 / 3 / 3 / 384 / 128, vocab 1024 (~0.4M parameters)
+  Scout: {
+    vocabSize: 1024,
+    dModel: 96,
+    nLayers: 3,
+    nHeads: 3,
+    dFF: 384,
+    contextLen: 128
+  },
   // Preset S: 128 / 4 / 4 / 512 / 128, vocab 1024
   S: {
     vocabSize: 1024,

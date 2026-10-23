@@ -20,7 +20,8 @@
     "demo": "tsx src/demo.ts",
     "tokenize-demo": "tsx src/tokenizeDemo.ts",
     "forward-demo": "tsx src/forwardDemo.ts",
-    "diagnose-demo": "tsx src/diagnoseDemo.ts"
+    "diagnose-demo": "tsx src/diagnoseDemo.ts",
+    "scaling-run": "tsx src/scalingRun.ts"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",
