@@ -9,4 +9,7 @@ export * from './tokenizers/char.js';
 export { CharTokenizer as Tokenizer } from './tokenizers/char.js';
 export * from './tokenizers/bpe.js';
 export * from './gradCheck.js';
+export * from './diagnostics.js';
+export * from './gpu/index.js';
+export * from './data/validation.js';
 
