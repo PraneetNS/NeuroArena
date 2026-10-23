@@ -1,0 +1,87 @@
+{
+  "condition": "diverge",
+  "preset": "S",
+  "config": {
+    "vocabSize": 1024,
+    "dModel": 128,
+    "nLayers": 4,
+    "nHeads": 4,
+    "dFF": 512,
+    "contextLen": 128
+  },
+  "batchSize": 16,
+  "contextLen": 128,
+  "totalSteps": 500,
+  "learningRate": 0.05,
+  "warmupSteps": 10,
+  "elapsedSeconds": 31.748980000000447,
+  "finalTrainLoss": 3.8711512088775635,
+  "finalSmoothedLoss": 6.323253468990326,
+  "finalValLoss": 4.099494504928589,
+  "finalPerplexity": 60.30979358730919,
+  "peakGpuMemoryMB": 35.8,
+  "metricHistory": [
+    {
+      "step": 1,
+      "trainLoss": 6.9543776512146,
+      "smoothedLoss": 6.9543776512146,
+      "gradNorm": 7.748404026031494,
+      "lr": 0.005000000000000001,
+      "timestamp": 1792736708092
+    },
+    {
+      "step": 25,
+      "trainLoss": 4.858029365539551,
+      "smoothedLoss": 6.744742822647095,
+      "gradNorm": 0.21577055752277374,
+      "lr": 0.04990942161489288,
+      "timestamp": 1792736709522
+    },
+    {
+      "step": 50,
+      "trainLoss": 4.628137111663818,
+      "smoothedLoss": 6.533082251548767,
+      "gradNorm": 0.4954358637332916,
+      "lr": 0.04930027824850959,
+      "timestamp": 1792736711039
+    },
+    {
+      "step": 75,
+      "trainLoss": 4.4347944259643555,
+      "smoothedLoss": 6.323253468990326,
+      "gradNorm": 0.41702914237976074,
+      "lr": 0.04813225350569701,
+      "timestamp": 1792736712574
+    }
+  ],
+  "samples": {
+    "0": [
+      {
+        "prompt": "ROMEO:\n",
+        "text": "ROMEO:\n\nbearbear�]count�lyuse�DROMIOputESSolNaythem�houselygrforempententEnter\u0019\u0019\u0019\u0019USbrotherings\u001fass\u001bothercesOFIR�tytytyityWhatWhatWhat\u0015\u0001sweetmonightightdiddidCLEOPATRACLEOPATRAheartrich"
+      },
+      {
+        "prompt": "To be, or not to be",
+        "text": "To be, or not to bereas��DROMIO`from*motherdoneghtbefore�LANwarnewtuneveEnterh/MENPRINvesingsBwillwillwillwill�SC��twoHENir�\u0004youngthey\u0015\u0015\u0015reasturnturnturnenchive\u0015�owowshishiatteratter=SYRACUSEhonour"
+      },
+      {
+        "prompt": "First Citizen:\n",
+        "text": "First Citizen:\n\n��IfDROMIOgehownatueHehowalCLEOPAToldSYRACUSEANTIPHOLresgentleastICCahowtenansjOFfacefacefaceoseRA���did�WhenliIRCLEOPATRAtheytheytheyagainstmuwereenechRomeunthee//gentlegentleWhenWhen�didface"
+      }
+    ],
+    "500": [
+      {
+        "prompt": "ROMEO:\n",
+        "text": "ROMEO:\nA, of and the to to in my the a a to in the my in the a to the of the and to be the to to to of"
+      },
+      {
+        "prompt": "To be, or not to be",
+        "text": "To be, or not to be my of of the and to and s of and and to and the not a the and the the of the to to my the to to to of"
+      },
+      {
+        "prompt": "First Citizen:\n",
+        "text": "First Citizen:\nS,\nA of the I to a in the a a and I the in I the to of the and the to of in the of of and and"
+      }
+    ]
+  }
+}
