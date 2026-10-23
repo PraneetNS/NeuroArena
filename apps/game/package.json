@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@na/engine": "workspace:*",
+    "@na/game-core": "workspace:*",
     "@na/ml-core": "workspace:*",
     "@na/ui": "workspace:*",
     "react": "^19.3.1",
