@@ -115,16 +115,25 @@ export const GraphNode: React.FC<GraphNodeProps> = ({
         return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: 'var(--na-muted)' }}>Samples:</span>
-              <span style={{ fontFamily: 'var(--na-font-mono)' }}>{data.sampleCount?.toLocaleString()}</span>
+              <span style={{ color: 'var(--na-muted)' }}>Shards:</span>
+              <span style={{ fontFamily: 'var(--na-font-mono)' }}>{data.shardCount ?? data.sampleCount ?? 0}</span>
             </div>
-            {/* Mini quality histogram bar */}
-            <div style={{ height: '4px', display: 'flex', borderRadius: '2px', overflow: 'hidden' }}>
-              <div style={{ flex: data.quality?.clean || 80, backgroundColor: 'var(--na-quality-clean)' }} />
-              <div style={{ flex: data.quality?.noisy || 10, backgroundColor: 'var(--na-quality-noisy)' }} />
-              <div style={{ flex: data.quality?.duplicate || 5, backgroundColor: 'var(--na-quality-duplicate)' }} />
-              <div style={{ flex: data.quality?.contaminated || 5, backgroundColor: 'var(--na-quality-contaminated)' }} />
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ color: 'var(--na-muted)' }}>Tokens:</span>
+              <span style={{ fontFamily: 'var(--na-font-mono)' }}>{(data.tokenCount ?? 0).toLocaleString()}</span>
             </div>
+            {data.datasetFingerprint && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px' }}>
+                <span style={{ color: 'var(--na-muted)' }}>Fingerprint:</span>
+                <span style={{ fontFamily: 'var(--na-font-mono)', color: 'var(--na-accent-cool)' }}>{data.datasetFingerprint.slice(0, 8)}</span>
+              </div>
+            )}
+            {/* Signal mini sparkline */}
+            {data.signalDistribution?.dictionaryHitRate && (
+              <div style={{ height: '4px', display: 'flex', borderRadius: '2px', overflow: 'hidden', marginTop: '2px', backgroundColor: 'var(--na-ink)' }}>
+                <div style={{ width: `${Math.min(100, (data.signalDistribution.dictionaryHitRate.mean ?? 0.8) * 100)}%`, backgroundColor: '#4FB3A9' }} title="Dictionary Hit Rate" />
+              </div>
+            )}
           </div>
         );
 
@@ -132,15 +141,15 @@ export const GraphNode: React.FC<GraphNodeProps> = ({
         return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: 'var(--na-muted)' }}>Deduplication:</span>
-              <span style={{ color: data.dedupeEnabled ? 'var(--na-success)' : 'var(--na-muted)' }}>
-                {data.dedupeEnabled ? 'ACTIVE' : 'OFF'}
+              <span style={{ color: 'var(--na-muted)' }}>Kept:</span>
+              <span style={{ fontFamily: 'var(--na-font-mono)' }}>
+                {data.afterCount ?? 0} / {data.beforeCount ?? 0}
               </span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: 'var(--na-muted)' }}>Kept:</span>
-              <span style={{ fontFamily: 'var(--na-font-mono)' }}>
-                {data.afterCount} / {data.beforeCount}
+              <span style={{ color: 'var(--na-muted)' }}>Filtered:</span>
+              <span style={{ color: (data.beforeCount - data.afterCount) > 0 ? 'var(--na-warning)' : 'var(--na-muted)', fontFamily: 'var(--na-font-mono)' }}>
+                {Math.max(0, (data.beforeCount ?? 0) - (data.afterCount ?? 0))} ({data.beforeCount ? (((data.beforeCount - data.afterCount) / data.beforeCount) * 100).toFixed(0) : 0}%)
               </span>
             </div>
           </div>
@@ -154,51 +163,70 @@ export const GraphNode: React.FC<GraphNodeProps> = ({
               <span style={{ fontFamily: 'var(--na-font-mono)' }}>{data.vocabSize} tokens</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: 'var(--na-muted)' }}>Status:</span>
-              <span style={{ color: data.isTrained ? 'var(--na-success)' : 'var(--na-warning)' }}>
-                {data.isTrained ? 'Trained' : 'Untrained'}
+              <span style={{ color: 'var(--na-muted)' }}>Compression:</span>
+              <span style={{ fontFamily: 'var(--na-font-mono)', color: 'var(--na-accent)' }}>
+                {data.compressionRatio ? `${data.compressionRatio.toFixed(2)}x` : '--'}
               </span>
             </div>
           </div>
         );
 
-      case 'model':
+      case 'model': {
+        const status = data.tokenHealthStatus || (data.tokensPerParam < 2 ? 'data-starved' : 'comfortable');
+        const chipColor = status === 'severely-starved' ? '#ef4444' : status === 'data-starved' ? '#f59e0b' : '#10b981';
         return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: 'var(--na-muted)' }}>Architecture:</span>
+              <span style={{ color: 'var(--na-muted)' }}>Preset:</span>
               <span style={{ fontFamily: 'var(--na-font-mono)' }}>
-                {data.preset} ({data.dModel}d / {data.nLayers}L / {data.nHeads}H)
+                {data.preset} ({(data.paramCount / 1000).toFixed(0)}k)
               </span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: 'var(--na-muted)' }}>Parameters:</span>
-              <span style={{ fontFamily: 'var(--na-font-mono)', color: 'var(--na-accent)' }}>
-                {(data.paramCount / 1000).toFixed(1)}k params
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ color: 'var(--na-muted)' }}>Data Ratio:</span>
+              <span
+                style={{
+                  fontSize: '9px',
+                  padding: '1px 5px',
+                  borderRadius: '3px',
+                  backgroundColor: 'var(--na-ink)',
+                  color: chipColor,
+                  fontWeight: 600,
+                  border: `1px solid ${chipColor}40`
+                }}
+              >
+                {status}
               </span>
             </div>
           </div>
         );
+      }
 
       case 'trainer':
         return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: 'var(--na-muted)' }}>Progress:</span>
+              <span style={{ color: 'var(--na-muted)' }}>Step:</span>
               <span style={{ fontFamily: 'var(--na-font-mono)' }}>
-                {data.currentStep} / {data.maxSteps}
+                {data.currentStep ?? 0} / {data.maxSteps ?? 500}
               </span>
             </div>
             <div style={{ height: '4px', background: 'var(--na-line)', borderRadius: '2px', overflow: 'hidden' }}>
               <div
                 style={{
                   height: '100%',
-                  width: `${Math.min(100, (data.currentStep / (data.maxSteps || 1)) * 100)}%`,
+                  width: `${Math.min(100, ((data.currentStep ?? 0) / (data.maxSteps || 1)) * 100)}%`,
                   backgroundColor: 'var(--na-accent)',
                   transition: 'width 0.1s linear'
                 }}
               />
             </div>
+            {data.etaSeconds !== undefined && data.etaSeconds > 0 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px' }}>
+                <span style={{ color: 'var(--na-muted)' }}>ETA:</span>
+                <span style={{ fontFamily: 'var(--na-font-mono)' }}>{data.etaSeconds}s</span>
+              </div>
+            )}
           </div>
         );
 
@@ -206,15 +234,15 @@ export const GraphNode: React.FC<GraphNodeProps> = ({
         return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: 'var(--na-muted)' }}>Validation Loss:</span>
+              <span style={{ color: 'var(--na-muted)' }}>Val Loss:</span>
               <span style={{ fontFamily: 'var(--na-font-mono)', color: 'var(--na-accent-cool)' }}>
-                {data.valLoss?.toFixed(3) || '--'}
+                {data.valLoss ? data.valLoss.toFixed(3) : '--'}
               </span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ color: 'var(--na-muted)' }}>Perplexity:</span>
-              <span style={{ fontFamily: 'var(--na-font-mono)' }}>
-                {data.perplexity?.toFixed(1) || '--'}
+              <span style={{ fontFamily: 'var(--na-font-mono)', color: 'var(--na-success)' }}>
+                {data.perplexity ? data.perplexity.toFixed(2) : '--'}
               </span>
             </div>
           </div>
