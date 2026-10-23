@@ -1,0 +1,87 @@
+{
+  "condition": "duplicated",
+  "preset": "S",
+  "config": {
+    "vocabSize": 1024,
+    "dModel": 128,
+    "nLayers": 4,
+    "nHeads": 4,
+    "dFF": 512,
+    "contextLen": 128
+  },
+  "batchSize": 16,
+  "contextLen": 128,
+  "totalSteps": 1500,
+  "learningRate": 0.001,
+  "warmupSteps": 100,
+  "elapsedSeconds": 107.46131499999947,
+  "finalTrainLoss": 2.358992576599121,
+  "finalSmoothedLoss": 6.324252039432526,
+  "finalValLoss": 0.01640549339354038,
+  "finalPerplexity": 1.0165408024247313,
+  "peakGpuMemoryMB": 35.8,
+  "metricHistory": [
+    {
+      "step": 1,
+      "trainLoss": 6.9679341316223145,
+      "smoothedLoss": 6.9679341316223145,
+      "gradNorm": 7.791168212890625,
+      "lr": 0.00001,
+      "timestamp": 1792736810857
+    },
+    {
+      "step": 25,
+      "trainLoss": 5.893445014953613,
+      "smoothedLoss": 6.860485219955445,
+      "gradNorm": 3.117131233215332,
+      "lr": 0.00025,
+      "timestamp": 1792736810857
+    },
+    {
+      "step": 50,
+      "trainLoss": 4.844748020172119,
+      "smoothedLoss": 6.658911499977113,
+      "gradNorm": 3.2786200046539307,
+      "lr": 0.0005,
+      "timestamp": 1792736810857
+    },
+    {
+      "step": 75,
+      "trainLoss": 3.31231689453125,
+      "smoothedLoss": 6.324252039432526,
+      "gradNorm": 1.5837208032608032,
+      "lr": 0.00075,
+      "timestamp": 1792736810858
+    }
+  ],
+  "samples": {
+    "0": [
+      {
+        "prompt": "ROMEO:\n",
+        "text": "ROMEO:\n\nbearbear�]count�lyuse�DROMIOputESSolNaythem�houselygrforempententEnter\u0019\u0019\u0019\u0019USbrotherings\u001fass\u001bothercesOFIR�tytytyityWhatWhatWhat\u0015\u0001sweetmonightightdiddidCLEOPATRACLEOPATRAheartrich"
+      },
+      {
+        "prompt": "To be, or not to be",
+        "text": "To be, or not to bereas��DROMIO`from*motherdoneghtbefore�LANwarnewtuneveEnterh/MENPRINvesingsBwillwillwillwill�SC��twoHENir�\u0004youngthey\u0015\u0015\u0015reasturnturnturnenchive\u0015�owowshishiatteratter=SYRACUSEhonour"
+      },
+      {
+        "prompt": "First Citizen:\n",
+        "text": "First Citizen:\n\n��IfDROMIOgehownatueHehowalCLEOPAToldSYRACUSEANTIPHOLresgentleastICCahowtenansjOFfacefacefaceoseRA���did�WhenliIRCLEOPATRAtheytheytheyagainstmuwereenechRomeunthee//gentlegentleWhenWhen�didface"
+      }
+    ],
+    "1500": [
+      {
+        "prompt": "ROMEO:\n",
+        "text": "ROMEO:\nDuke, but I have sworth, and the falk,\nThat the steven to my sorrows the paid\nA band the port the man"
+      },
+      {
+        "prompt": "To be, or not to be",
+        "text": "To be, or not to be sen with of the\ncess.\n\nDROMIO OF SYRACUSE.\nA a man in is to I had not him in my fition\nThe sister of him my"
+      },
+      {
+        "prompt": "First Citizen:\n",
+        "text": "First Citizen:\nA Com in the band Phos the of the care the basure\nTo his wit and the closs to him. He was the strem"
+      }
+    ]
+  }
+}
