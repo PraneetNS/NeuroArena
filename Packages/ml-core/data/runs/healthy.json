@@ -1,0 +1,983 @@
+{
+  "condition": "healthy",
+  "preset": "S",
+  "config": {
+    "vocabSize": 1024,
+    "dModel": 128,
+    "nLayers": 4,
+    "nHeads": 4,
+    "dFF": 512,
+    "contextLen": 128
+  },
+  "batchSize": 16,
+  "contextLen": 128,
+  "totalSteps": 3000,
+  "learningRate": 0.001,
+  "warmupSteps": 100,
+  "elapsedSeconds": 201.84257499999924,
+  "finalTrainLoss": 2.4404430389404297,
+  "finalSmoothedLoss": 2.4958605689727382,
+  "finalValLoss": 2.8963178157806397,
+  "finalPerplexity": 18.10734787397788,
+  "peakGpuMemoryMB": 35.8,
+  "metricHistory": [
+    {
+      "step": 525,
+      "trainLoss": 5.785674571990967,
+      "smoothedLoss": 5.785674571990967,
+      "gradNorm": 3.1556191444396973,
+      "lr": 0.0003,
+      "timestamp": 1792736125681
+    },
+    {
+      "step": 550,
+      "trainLoss": 5.785674571990967,
+      "smoothedLoss": 5.785674571990967,
+      "gradNorm": 3.1556191444396973,
+      "lr": 0.0003,
+      "valLoss": 3.49378981590271,
+      "perplexity": 32.91043615739113,
+      "timestamp": 1792736129049
+    },
+    {
+      "step": 575,
+      "trainLoss": 3.2741851806640625,
+      "smoothedLoss": 5.534525632858276,
+      "gradNorm": 0.8526232838630676,
+      "lr": 0.0009500639137173121,
+      "timestamp": 1792736129052
+    },
+    {
+      "step": 600,
+      "trainLoss": 3.2741851806640625,
+      "smoothedLoss": 5.308491587638855,
+      "gradNorm": 0.8526232838630676,
+      "lr": 0.0009500639137173121,
+      "valLoss": 3.479523706436157,
+      "perplexity": 32.44426540040465,
+      "timestamp": 1792736132440
+    },
+    {
+      "step": 625,
+      "trainLoss": 3.338866710662842,
+      "smoothedLoss": 5.1115290999412535,
+      "gradNorm": 0.991253137588501,
+      "lr": 0.0009383228799631848,
+      "timestamp": 1792736132443
+    },
+    {
+      "step": 650,
+      "trainLoss": 3.338866710662842,
+      "smoothedLoss": 4.934262861013412,
+      "gradNorm": 0.991253137588501,
+      "lr": 0.0009383228799631848,
+      "valLoss": 3.43579216003418,
+      "perplexity": 31.056004149315587,
+      "timestamp": 1792736135817
+    },
+    {
+      "step": 675,
+      "trainLoss": 3.319944143295288,
+      "smoothedLoss": 4.7728309892416,
+      "gradNorm": 0.8245008587837219,
+      "lr": 0.0009254428282949661,
+      "timestamp": 1792736135820
+    },
+    {
+      "step": 700,
+      "trainLoss": 3.319944143295288,
+      "smoothedLoss": 4.627542304646969,
+      "gradNorm": 0.8245008587837219,
+      "lr": 0.0009254428282949661,
+      "valLoss": 3.390581512451172,
+      "perplexity": 29.683208407833064,
+      "timestamp": 1792736139191
+    },
+    {
+      "step": 725,
+      "trainLoss": 3.18367600440979,
+      "smoothedLoss": 4.4831556746232515,
+      "gradNorm": 0.6840121150016785,
+      "lr": 0.0009114615381234027,
+      "timestamp": 1792736139193
+    },
+    {
+      "step": 750,
+      "trainLoss": 3.18367600440979,
+      "smoothedLoss": 4.353207707601905,
+      "gradNorm": 0.6840121150016785,
+      "lr": 0.0009114615381234027,
+      "valLoss": 3.384539031982422,
+      "perplexity": 29.504389001245876,
+      "timestamp": 1792736142569
+    },
+    {
+      "step": 775,
+      "trainLoss": 2.99868106842041,
+      "smoothedLoss": 4.217755043683756,
+      "gradNorm": 0.8273008465766907,
+      "lr": 0.0008964200189815131,
+      "timestamp": 1792736142571
+    },
+    {
+      "step": 800,
+      "trainLoss": 2.99868106842041,
+      "smoothedLoss": 4.095847646157422,
+      "gradNorm": 0.8273008465766907,
+      "lr": 0.0008964200189815131,
+      "valLoss": 3.3491748332977296,
+      "perplexity": 28.47922383812914,
+      "timestamp": 1792736145957
+    },
+    {
+      "step": 825,
+      "trainLoss": 3.1071395874023438,
+      "smoothedLoss": 3.9969768402819144,
+      "gradNorm": 0.8115810751914978,
+      "lr": 0.0008803623902365598,
+      "timestamp": 1792736145959
+    },
+    {
+      "step": 850,
+      "trainLoss": 3.1071395874023438,
+      "smoothedLoss": 3.9079931149939577,
+      "gradNorm": 0.8115810751914978,
+      "lr": 0.0008803623902365598,
+      "valLoss": 3.3205566883087156,
+      "perplexity": 27.67575303908031,
+      "timestamp": 1792736149329
+    },
+    {
+      "step": 875,
+      "trainLoss": 3.1796576976776123,
+      "smoothedLoss": 3.8351595732623234,
+      "gradNorm": 1.021770715713501,
+      "lr": 0.0008633357516803456,
+      "timestamp": 1792736149331
+    },
+    {
+      "step": 900,
+      "trainLoss": 3.1796576976776123,
+      "smoothedLoss": 3.7696093857038524,
+      "gradNorm": 1.021770715713501,
+      "lr": 0.0008633357516803456,
+      "valLoss": 3.30753436088562,
+      "perplexity": 27.317686809255125,
+      "timestamp": 1792736152694
+    },
+    {
+      "step": 925,
+      "trainLoss": 3.1307969093322754,
+      "smoothedLoss": 3.7057281380666947,
+      "gradNorm": 0.9257755279541016,
+      "lr": 0.0008453900453774071,
+      "timestamp": 1792736152696
+    },
+    {
+      "step": 950,
+      "trainLoss": 3.1307969093322754,
+      "smoothedLoss": 3.648235015193253,
+      "gradNorm": 0.9257755279541016,
+      "lr": 0.0008453900453774071,
+      "valLoss": 3.291386270523071,
+      "perplexity": 26.880100931044623,
+      "timestamp": 1792736156076
+    },
+    {
+      "step": 975,
+      "trainLoss": 2.967421054840088,
+      "smoothedLoss": 3.5801536191579366,
+      "gradNorm": 0.8469292521476746,
+      "lr": 0.0008265779091763359,
+      "timestamp": 1792736156077
+    },
+    {
+      "step": 1000,
+      "trainLoss": 2.967421054840088,
+      "smoothedLoss": 3.5188803627261516,
+      "gradNorm": 0.8469292521476746,
+      "lr": 0.0008265779091763359,
+      "valLoss": 3.2628008365631103,
+      "perplexity": 26.122599909270605,
+      "timestamp": 1792736159447
+    },
+    {
+      "step": 1025,
+      "trainLoss": 2.8904080390930176,
+      "smoothedLoss": 3.4560331303628384,
+      "gradNorm": 0.8153173923492432,
+      "lr": 0.0008069545223138984,
+      "timestamp": 1792736159448
+    },
+    {
+      "step": 1050,
+      "trainLoss": 2.8904080390930176,
+      "smoothedLoss": 3.3994706212358565,
+      "gradNorm": 0.8153173923492432,
+      "lr": 0.0008069545223138984,
+      "valLoss": 3.240956974029541,
+      "perplexity": 25.558168551553937,
+      "timestamp": 1792736162820
+    },
+    {
+      "step": 1075,
+      "trainLoss": 2.9772233963012695,
+      "smoothedLoss": 3.357245898742398,
+      "gradNorm": 0.988594651222229,
+      "lr": 0.0007865774435648276,
+      "timestamp": 1792736162821
+    },
+    {
+      "step": 1100,
+      "trainLoss": 2.9772233963012695,
+      "smoothedLoss": 3.3192436484982855,
+      "gradNorm": 0.988594651222229,
+      "lr": 0.0007865774435648276,
+      "valLoss": 3.209546375274658,
+      "perplexity": 24.76784836748247,
+      "timestamp": 1792736166216
+    },
+    {
+      "step": 1125,
+      "trainLoss": 2.871635913848877,
+      "smoothedLoss": 3.274482875033345,
+      "gradNorm": 0.905849039554596,
+      "lr": 0.0007655064424120195,
+      "timestamp": 1792736166218
+    },
+    {
+      "step": 1150,
+      "trainLoss": 2.871635913848877,
+      "smoothedLoss": 3.234198178914898,
+      "gradNorm": 0.905849039554596,
+      "lr": 0.0007655064424120195,
+      "valLoss": 3.2080665111541746,
+      "perplexity": 24.73122242473536,
+      "timestamp": 1792736169612
+    },
+    {
+      "step": 1175,
+      "trainLoss": 2.887481212615967,
+      "smoothedLoss": 3.1995264822850054,
+      "gradNorm": 0.8988234996795654,
+      "lr": 0.0007438033237323411,
+      "timestamp": 1792736169614
+    },
+    {
+      "step": 1200,
+      "trainLoss": 2.887481212615967,
+      "smoothedLoss": 3.1683219553181017,
+      "gradNorm": 0.8988234996795654,
+      "lr": 0.0007438033237323411,
+      "valLoss": 3.182785987854004,
+      "perplexity": 24.11384092429805,
+      "timestamp": 1792736173021
+    },
+    {
+      "step": 1225,
+      "trainLoss": 2.8773651123046875,
+      "smoothedLoss": 3.1392262710167604,
+      "gradNorm": 1.1013294458389282,
+      "lr": 0.0007215317465122788,
+      "timestamp": 1792736173023
+    },
+    {
+      "step": 1250,
+      "trainLoss": 2.8773651123046875,
+      "smoothedLoss": 3.113040155145553,
+      "gradNorm": 1.1013294458389282,
+      "lr": 0.0007215317465122788,
+      "valLoss": 3.1609270572662354,
+      "perplexity": 23.59245735312397,
+      "timestamp": 1792736176436
+    },
+    {
+      "step": 1275,
+      "trainLoss": 2.9494237899780273,
+      "smoothedLoss": 3.0966785186288006,
+      "gradNorm": 0.952070415019989,
+      "lr": 0.0006987570371251616,
+      "timestamp": 1792736176439
+    },
+    {
+      "step": 1300,
+      "trainLoss": 2.9494237899780273,
+      "smoothedLoss": 3.0819530457637234,
+      "gradNorm": 0.952070415019989,
+      "lr": 0.0006987570371251616,
+      "valLoss": 3.1420724868774412,
+      "perplexity": 23.151798971786192,
+      "timestamp": 1792736179962
+    },
+    {
+      "step": 1325,
+      "trainLoss": 2.8133809566497803,
+      "smoothedLoss": 3.0550958368523293,
+      "gradNorm": 1.0207120180130005,
+      "lr": 0.0006755459977176532,
+      "timestamp": 1792736179964
+    },
+    {
+      "step": 1350,
+      "trainLoss": 2.8133809566497803,
+      "smoothedLoss": 3.0309243488320745,
+      "gradNorm": 1.0207120180130005,
+      "lr": 0.0006755459977176532,
+      "valLoss": 3.144465684890747,
+      "perplexity": 23.20727216377995,
+      "timestamp": 1792736183205
+    },
+    {
+      "step": 1375,
+      "trainLoss": 2.7938711643218994,
+      "smoothedLoss": 3.007219030381057,
+      "gradNorm": 1.001747965812683,
+      "lr": 0.0006519667102675457,
+      "timestamp": 1792736183210
+    },
+    {
+      "step": 1400,
+      "trainLoss": 2.7938711643218994,
+      "smoothedLoss": 2.9858842437751414,
+      "gradNorm": 1.001747965812683,
+      "lr": 0.0006519667102675457,
+      "valLoss": 3.128709411621094,
+      "perplexity": 22.844477691731743,
+      "timestamp": 1792736186494
+    },
+    {
+      "step": 1425,
+      "trainLoss": 2.6899075508117676,
+      "smoothedLoss": 2.956286574478804,
+      "gradNorm": 1.0421948432922363,
+      "lr": 0.0006280883368875885,
+      "timestamp": 1792736186495
+    },
+    {
+      "step": 1450,
+      "trainLoss": 2.6899075508117676,
+      "smoothedLoss": 2.9296486721121004,
+      "gradNorm": 1.0421948432922363,
+      "lr": 0.0006280883368875885,
+      "valLoss": 3.108861541748047,
+      "perplexity": 22.395533502032848,
+      "timestamp": 1792736189749
+    },
+    {
+      "step": 1475,
+      "trainLoss": 2.698603391647339,
+      "smoothedLoss": 2.9065441440656246,
+      "gradNorm": 1.1105260848999023,
+      "lr": 0.000603980916961095,
+      "timestamp": 1792736189751
+    },
+    {
+      "step": 1500,
+      "trainLoss": 2.698603391647339,
+      "smoothedLoss": 2.8857500688237963,
+      "gradNorm": 1.1105260848999023,
+      "lr": 0.000603980916961095,
+      "valLoss": 3.089958429336548,
+      "perplexity": 21.97616439304048,
+      "timestamp": 1792736192991
+    },
+    {
+      "step": 1525,
+      "trainLoss": 2.7852275371551514,
+      "smoothedLoss": 2.875697815656932,
+      "gradNorm": 1.1204910278320312,
+      "lr": 0.0005797151617043642,
+      "timestamp": 1792736193965
+    },
+    {
+      "step": 1550,
+      "trainLoss": 2.7852275371551514,
+      "smoothedLoss": 2.866650787806754,
+      "gradNorm": 1.1204910278320312,
+      "lr": 0.0005797151617043642,
+      "valLoss": 3.076458740234375,
+      "perplexity": 21.68148651117205,
+      "timestamp": 1792736197202
+    },
+    {
+      "step": 1575,
+      "trainLoss": 2.831101417541504,
+      "smoothedLoss": 2.863095850780229,
+      "gradNorm": 1.0405464172363281,
+      "lr": 0.0005553622467584987,
+      "timestamp": 1792736197204
+    },
+    {
+      "step": 1600,
+      "trainLoss": 2.831101417541504,
+      "smoothedLoss": 2.8598964074563566,
+      "gradNorm": 1.0405464172363281,
+      "lr": 0.0005553622467584987,
+      "valLoss": 3.0777515888214113,
+      "perplexity": 21.709535518025415,
+      "timestamp": 1792736200441
+    },
+    {
+      "step": 1625,
+      "trainLoss": 2.8221170902252197,
+      "smoothedLoss": 2.856118475733243,
+      "gradNorm": 1.0701357126235962,
+      "lr": 0.0005309936034189874,
+      "timestamp": 1792736200443
+    },
+    {
+      "step": 1650,
+      "trainLoss": 2.8221170902252197,
+      "smoothedLoss": 2.8527183371824405,
+      "gradNorm": 1.0701357126235962,
+      "lr": 0.0005309936034189874,
+      "valLoss": 3.0554046630859375,
+      "perplexity": 21.229774695077047,
+      "timestamp": 1792736203679
+    },
+    {
+      "step": 1675,
+      "trainLoss": 2.7993717193603516,
+      "smoothedLoss": 2.8473836754002315,
+      "gradNorm": 1.0646644830703735,
+      "lr": 0.0005066807091154077,
+      "timestamp": 1792736203682
+    },
+    {
+      "step": 1700,
+      "trainLoss": 2.7993717193603516,
+      "smoothedLoss": 2.8425824797962433,
+      "gradNorm": 1.0646644830703735,
+      "lr": 0.0005066807091154077,
+      "valLoss": 3.040166711807251,
+      "perplexity": 20.908728676497546,
+      "timestamp": 1792736206911
+    },
+    {
+      "step": 1725,
+      "trainLoss": 2.580629348754883,
+      "smoothedLoss": 2.8163871666921074,
+      "gradNorm": 0.9757593870162964,
+      "lr": 0.00048249487775580904,
+      "timestamp": 1792736206913
+    },
+    {
+      "step": 1750,
+      "trainLoss": 2.580629348754883,
+      "smoothedLoss": 2.792811384898385,
+      "gradNorm": 0.9757593870162964,
+      "lr": 0.00048249487775580904,
+      "valLoss": 3.0341064453125,
+      "perplexity": 20.782399389862366,
+      "timestamp": 1792736210188
+    },
+    {
+      "step": 1775,
+      "trainLoss": 2.8508553504943848,
+      "smoothedLoss": 2.7986157814579853,
+      "gradNorm": 1.1465797424316406,
+      "lr": 0.0004585070505507334,
+      "timestamp": 1792736210190
+    },
+    {
+      "step": 1800,
+      "trainLoss": 2.8508553504943848,
+      "smoothedLoss": 2.8038397383616256,
+      "gradNorm": 1.1465797424316406,
+      "lr": 0.0004585070505507334,
+      "valLoss": 3.025195026397705,
+      "perplexity": 20.598021477424165,
+      "timestamp": 1792736213449
+    },
+    {
+      "step": 1825,
+      "trainLoss": 2.663215160369873,
+      "smoothedLoss": 2.7897772805624506,
+      "gradNorm": 1.1653386354446411,
+      "lr": 0.00043478758793042197,
+      "timestamp": 1792736213451
+    },
+    {
+      "step": 1850,
+      "trainLoss": 2.663215160369873,
+      "smoothedLoss": 2.777121068543193,
+      "gradNorm": 1.1653386354446411,
+      "lr": 0.00043478758793042197,
+      "valLoss": 3.0253252029418944,
+      "perplexity": 20.600703031211154,
+      "timestamp": 1792736216669
+    },
+    {
+      "step": 1875,
+      "trainLoss": 2.603719711303711,
+      "smoothedLoss": 2.7597809328192446,
+      "gradNorm": 1.1423898935317993,
+      "lr": 0.0004114060631655503,
+      "timestamp": 1792736216671
+    },
+    {
+      "step": 1900,
+      "trainLoss": 2.603719711303711,
+      "smoothedLoss": 2.7441748106676913,
+      "gradNorm": 1.1423898935317993,
+      "lr": 0.0004114060631655503,
+      "valLoss": 3.0079864978790285,
+      "perplexity": 20.246592299369908,
+      "timestamp": 1792736219908
+    },
+    {
+      "step": 1925,
+      "trainLoss": 2.671968698501587,
+      "smoothedLoss": 2.736954199451081,
+      "gradNorm": 1.0508726835250854,
+      "lr": 0.00038843105829683774,
+      "timestamp": 1792736219910
+    },
+    {
+      "step": 1950,
+      "trainLoss": 2.671968698501587,
+      "smoothedLoss": 2.7304556493561316,
+      "gradNorm": 1.0508726835250854,
+      "lr": 0.00038843105829683774,
+      "valLoss": 2.983561706542969,
+      "perplexity": 19.758063895908244,
+      "timestamp": 1792736223149
+    },
+    {
+      "step": 1975,
+      "trainLoss": 2.5649781227111816,
+      "smoothedLoss": 2.713907896691637,
+      "gradNorm": 1.1087509393692017,
+      "lr": 0.0003659299629721061,
+      "timestamp": 1792736223151
+    },
+    {
+      "step": 2000,
+      "trainLoss": 2.5649781227111816,
+      "smoothedLoss": 2.6990149192935915,
+      "gradNorm": 1.1087509393692017,
+      "lr": 0.0003659299629721061,
+      "valLoss": 2.9892913818359377,
+      "perplexity": 19.871596127262677,
+      "timestamp": 1792736226382
+    },
+    {
+      "step": 2025,
+      "trainLoss": 2.7580389976501465,
+      "smoothedLoss": 2.7049173271292473,
+      "gradNorm": 1.344699740409851,
+      "lr": 0.0003439687767808311,
+      "timestamp": 1792736226384
+    },
+    {
+      "step": 2050,
+      "trainLoss": 2.7580389976501465,
+      "smoothedLoss": 2.710229494181337,
+      "gradNorm": 1.344699740409851,
+      "lr": 0.0003439687767808311,
+      "valLoss": 2.98059720993042,
+      "perplexity": 19.699577915995366,
+      "timestamp": 1792736229615
+    },
+    {
+      "step": 2075,
+      "trainLoss": 2.5389513969421387,
+      "smoothedLoss": 2.6931016844574174,
+      "gradNorm": 1.1389535665512085,
+      "lr": 0.00032261191566597435,
+      "timestamp": 1792736229616
+    },
+    {
+      "step": 2100,
+      "trainLoss": 2.5389513969421387,
+      "smoothedLoss": 2.6776866557058896,
+      "gradNorm": 1.1389535665512085,
+      "lr": 0.00032261191566597435,
+      "valLoss": 2.969601106643677,
+      "perplexity": 19.484145949333364,
+      "timestamp": 1792736232845
+    },
+    {
+      "step": 2125,
+      "trainLoss": 2.5439841747283936,
+      "smoothedLoss": 2.66431640760814,
+      "gradNorm": 1.2011860609054565,
+      "lr": 0.0003019220229809251,
+      "timestamp": 1792736232847
+    },
+    {
+      "step": 2150,
+      "trainLoss": 2.5439841747283936,
+      "smoothedLoss": 2.6522831843201655,
+      "gradNorm": 1.2011860609054565,
+      "lr": 0.0003019220229809251,
+      "valLoss": 2.9680731296539307,
+      "perplexity": 19.454397356028817,
+      "timestamp": 1792736236073
+    },
+    {
+      "step": 2175,
+      "trainLoss": 2.6078085899353027,
+      "smoothedLoss": 2.6478357248816793,
+      "gradNorm": 1.1817078590393066,
+      "lr": 0.0002819597857457508,
+      "timestamp": 1792736236075
+    },
+    {
+      "step": 2200,
+      "trainLoss": 2.6078085899353027,
+      "smoothedLoss": 2.6438330113870414,
+      "gradNorm": 1.1817078590393066,
+      "lr": 0.0002819597857457508,
+      "valLoss": 2.9529521465301514,
+      "perplexity": 19.162440641033083,
+      "timestamp": 1792736239308
+    },
+    {
+      "step": 2225,
+      "trainLoss": 2.471317768096924,
+      "smoothedLoss": 2.6265814870580297,
+      "gradNorm": 1.2504847049713135,
+      "lr": 0.0002627837566417106,
+      "timestamp": 1792736239310
+    },
+    {
+      "step": 2250,
+      "trainLoss": 2.471317768096924,
+      "smoothedLoss": 2.6110551151619195,
+      "gradNorm": 1.2504847049713135,
+      "lr": 0.0002627837566417106,
+      "valLoss": 2.9510659694671633,
+      "perplexity": 19.126330950365748,
+      "timestamp": 1792736242565
+    },
+    {
+      "step": 2275,
+      "trainLoss": 2.680311441421509,
+      "smoothedLoss": 2.6179807477878785,
+      "gradNorm": 1.2545535564422607,
+      "lr": 0.0002444501822661533,
+      "timestamp": 1792736242567
+    },
+    {
+      "step": 2300,
+      "trainLoss": 2.680311441421509,
+      "smoothedLoss": 2.6242138171512415,
+      "gradNorm": 1.2545535564422607,
+      "lr": 0.0002444501822661533,
+      "valLoss": 2.9474915504455566,
+      "perplexity": 19.058087467264492,
+      "timestamp": 1792736245797
+    },
+    {
+      "step": 2325,
+      "trainLoss": 2.412738561630249,
+      "smoothedLoss": 2.6030662915991423,
+      "gradNorm": 1.1851859092712402,
+      "lr": 0.00022701283815155615,
+      "timestamp": 1792736245800
+    },
+    {
+      "step": 2350,
+      "trainLoss": 2.412738561630249,
+      "smoothedLoss": 2.584033518602253,
+      "gradNorm": 1.1851859092712402,
+      "lr": 0.00022701283815155615,
+      "valLoss": 2.940541458129883,
+      "perplexity": 18.926091224369607,
+      "timestamp": 1792736249029
+    },
+    {
+      "step": 2375,
+      "trainLoss": 2.538926124572754,
+      "smoothedLoss": 2.579522779199303,
+      "gradNorm": 1.2617802619934082,
+      "lr": 0.00021052287103262264,
+      "timestamp": 1792736249032
+    },
+    {
+      "step": 2400,
+      "trainLoss": 2.538926124572754,
+      "smoothedLoss": 2.5754631137366486,
+      "gradNorm": 1.2617802619934082,
+      "lr": 0.00021052287103262264,
+      "valLoss": 2.9358754634857176,
+      "perplexity": 18.83798788877286,
+      "timestamp": 1792736252284
+    },
+    {
+      "step": 2425,
+      "trainLoss": 2.60557222366333,
+      "smoothedLoss": 2.5784740247293167,
+      "gradNorm": 1.1854327917099,
+      "lr": 0.0001950286488240967,
+      "timestamp": 1792736252286
+    },
+    {
+      "step": 2450,
+      "trainLoss": 2.60557222366333,
+      "smoothedLoss": 2.5811838446227178,
+      "gradNorm": 1.1854327917099,
+      "lr": 0.0001950286488240967,
+      "valLoss": 2.9347140789031982,
+      "perplexity": 18.816122439628618,
+      "timestamp": 1792736255586
+    },
+    {
+      "step": 2475,
+      "trainLoss": 2.492025852203369,
+      "smoothedLoss": 2.572268045380783,
+      "gradNorm": 1.3222076892852783,
+      "lr": 0.0001805756187493355,
+      "timestamp": 1792736255588
+    },
+    {
+      "step": 2500,
+      "trainLoss": 2.492025852203369,
+      "smoothedLoss": 2.564243826063042,
+      "gradNorm": 1.3222076892852783,
+      "lr": 0.0001805756187493355,
+      "valLoss": 2.925499773025513,
+      "perplexity": 18.64354126098177,
+      "timestamp": 1792736258830
+    },
+    {
+      "step": 2525,
+      "trainLoss": 2.5679831504821777,
+      "smoothedLoss": 2.5646177585049554,
+      "gradNorm": 1.3611767292022705,
+      "lr": 0.00016720617403577314,
+      "timestamp": 1792736258832
+    },
+    {
+      "step": 2550,
+      "trainLoss": 2.5679831504821777,
+      "smoothedLoss": 2.5649542977026774,
+      "gradNorm": 1.3611767292022705,
+      "lr": 0.00016720617403577314,
+      "valLoss": 2.920725917816162,
+      "perplexity": 18.554751797058394,
+      "timestamp": 1792736262067
+    },
+    {
+      "step": 2575,
+      "trainLoss": 2.6052541732788086,
+      "smoothedLoss": 2.568984285260291,
+      "gradNorm": 1.3167983293533325,
+      "lr": 0.00015495952956827956,
+      "timestamp": 1792736262069
+    },
+    {
+      "step": 2600,
+      "trainLoss": 2.6052541732788086,
+      "smoothedLoss": 2.572611274062143,
+      "gradNorm": 1.3167983293533325,
+      "lr": 0.00015495952956827956,
+      "valLoss": 2.923449897766113,
+      "perplexity": 18.605363470226205,
+      "timestamp": 1792736265311
+    },
+    {
+      "step": 2625,
+      "trainLoss": 2.580904960632324,
+      "smoothedLoss": 2.573440642719161,
+      "gradNorm": 1.2637637853622437,
+      "lr": 0.00014387160686514744,
+      "timestamp": 1792736265314
+    },
+    {
+      "step": 2650,
+      "trainLoss": 2.580904960632324,
+      "smoothedLoss": 2.5741870745104776,
+      "gradNorm": 1.2637637853622437,
+      "lr": 0.00014387160686514744,
+      "valLoss": 2.915212345123291,
+      "perplexity": 18.452730334053243,
+      "timestamp": 1792736268547
+    },
+    {
+      "step": 2675,
+      "trainLoss": 2.390263557434082,
+      "smoothedLoss": 2.5557947228028377,
+      "gradNorm": 1.2372175455093384,
+      "lr": 0.00013397492871408903,
+      "timestamp": 1792736268549
+    },
+    {
+      "step": 2700,
+      "trainLoss": 2.390263557434082,
+      "smoothedLoss": 2.539241606265962,
+      "gradNorm": 1.2372175455093384,
+      "lr": 0.00013397492871408903,
+      "valLoss": 2.909712791442871,
+      "perplexity": 18.35152709443024,
+      "timestamp": 1792736271769
+    },
+    {
+      "step": 2725,
+      "trainLoss": 2.5191564559936523,
+      "smoothedLoss": 2.5372330912387313,
+      "gradNorm": 1.2146267890930176,
+      "lr": 0.00012529852377729685,
+      "timestamp": 1792736271771
+    },
+    {
+      "step": 2750,
+      "trainLoss": 2.5191564559936523,
+      "smoothedLoss": 2.5354254277142236,
+      "gradNorm": 1.2146267890930176,
+      "lr": 0.00012529852377729685,
+      "valLoss": 2.912837600708008,
+      "perplexity": 18.40896180584874,
+      "timestamp": 1792736274999
+    },
+    {
+      "step": 2775,
+      "trainLoss": 2.4603495597839355,
+      "smoothedLoss": 2.527917840921195,
+      "gradNorm": 1.2685116529464722,
+      "lr": 0.00011786784144537563,
+      "timestamp": 1792736275001
+    },
+    {
+      "step": 2800,
+      "trainLoss": 2.4603495597839355,
+      "smoothedLoss": 2.521161012807469,
+      "gradNorm": 1.2685116529464722,
+      "lr": 0.00011786784144537563,
+      "valLoss": 2.908485746383667,
+      "perplexity": 18.329022753523947,
+      "timestamp": 1792736278243
+    },
+    {
+      "step": 2825,
+      "trainLoss": 2.4850096702575684,
+      "smoothedLoss": 2.517545878552479,
+      "gradNorm": 1.2493711709976196,
+      "lr": 0.0001117046771898947,
+      "timestamp": 1792736278245
+    },
+    {
+      "step": 2850,
+      "trainLoss": 2.4850096702575684,
+      "smoothedLoss": 2.514292257722988,
+      "gradNorm": 1.2493711709976196,
+      "lr": 0.0001117046771898947,
+      "valLoss": 2.908355379104614,
+      "perplexity": 18.326633404449723,
+      "timestamp": 1792736281473
+    },
+    {
+      "step": 2875,
+      "trainLoss": 2.5107688903808594,
+      "smoothedLoss": 2.5139399209887756,
+      "gradNorm": 1.2659245729446411,
+      "lr": 0.0001068271086335148,
+      "timestamp": 1792736281475
+    },
+    {
+      "step": 2900,
+      "trainLoss": 2.5107688903808594,
+      "smoothedLoss": 2.5136228179279843,
+      "gradNorm": 1.2659245729446411,
+      "lr": 0.0001068271086335148,
+      "valLoss": 2.9058248519897463,
+      "perplexity": 18.2803159901483,
+      "timestamp": 1792736284704
+    },
+    {
+      "step": 2925,
+      "trainLoss": 2.488554000854492,
+      "smoothedLoss": 2.511115936220635,
+      "gradNorm": 1.2630735635757446,
+      "lr": 0.00010324944252520584,
+      "timestamp": 1792736284706
+    },
+    {
+      "step": 2950,
+      "trainLoss": 2.488554000854492,
+      "smoothedLoss": 2.5088597426840207,
+      "gradNorm": 1.2630735635757446,
+      "lr": 0.00010324944252520584,
+      "valLoss": 2.901501512527466,
+      "perplexity": 18.2014545738167,
+      "timestamp": 1792736287933
+    },
+    {
+      "step": 2975,
+      "trainLoss": 2.4404430389404297,
+      "smoothedLoss": 2.5020180723096614,
+      "gradNorm": 1.2514005899429321,
+      "lr": 0.00010098217277608733,
+      "timestamp": 1792736287935
+    },
+    {
+      "step": 3000,
+      "trainLoss": 2.4404430389404297,
+      "smoothedLoss": 2.4958605689727382,
+      "gradNorm": 1.2514005899429321,
+      "lr": 0.00010098217277608733,
+      "valLoss": 2.8963178157806397,
+      "perplexity": 18.10734787397788,
+      "timestamp": 1792736291171
+    }
+  ],
+  "samples": {
+    "0": [
+      {
+        "prompt": "ROMEO:\n",
+        "text": "ROMEO:\n\nbearbear�]count�lyuse�DROMIOputESSolNaythem�houselygrforempententEnter\u0019\u0019\u0019\u0019USbrotherings\u001fass\u001bothercesOFIR�tytytyityWhatWhatWhat\u0015\u0001sweetmonightightdiddidCLEOPATRACLEOPATRAheartrich"
+      },
+      {
+        "prompt": "To be, or not to be",
+        "text": "To be, or not to bereas��DROMIO`from*motherdoneghtbefore�LANwarnewtuneveEnterh/MENPRINvesingsBwillwillwillwill�SC��twoHENir�\u0004youngthey\u0015\u0015\u0015reasturnturnturnenchive\u0015�owowshishiatteratter=SYRACUSEhonour"
+      },
+      {
+        "prompt": "First Citizen:\n",
+        "text": "First Citizen:\n\n��IfDROMIOgehownatueHehowalCLEOPAToldSYRACUSEANTIPHOLresgentleastICCahowtenansjOFfacefacefaceoseRA���did�WhenliIRCLEOPATRAtheytheytheyagainstmuwereenechRomeunthee//gentlegentleWhenWhen�didface"
+      }
+    ],
+    "500": [
+      {
+        "prompt": "ROMEO:\n",
+        "text": "ROMEO:\nSay the the of the the back, of be be to and of a s of to to of the of to to in of to to to the"
+      },
+      {
+        "prompt": "To be, or not to be",
+        "text": "To be, or not to be in to to of s and I and of and and to a of a in of and I of I I to the in I the the the of"
+      },
+      {
+        "prompt": "First Citizen:\n",
+        "text": "First Citizen:\nTo be of to the s s to bargre and the s.\nI I I I the I of I of s you to I of be of "
+      }
+    ],
+    "1500": [
+      {
+        "prompt": "ROMEO:\n",
+        "text": "ROMEO:\nSwe’s to the Senter, the of the King’s busin\nUpon his carbush. For that is you,\nFor I have the main"
+      },
+      {
+        "prompt": "To be, or not to be",
+        "text": "To be, or not to be beast in the past and to the King’s the\npaint and the Confild of my Countaint. For this carewell to\nnot "
+      },
+      {
+        "prompt": "First Citizen:\n",
+        "text": "First Citizen:\nAnd is a cream’d the mouch, and his battend,\nMay you you the penter and I do in you,\nAnd I have no "
+      }
+    ],
+    "3000": [
+      {
+        "prompt": "ROMEO:\n",
+        "text": "ROMEO:\nHe hath not burns to me.\n\nKING.\nI dare not no more.\n\nBELARIUS.\nI have not been to your sork of this a money"
+      },
+      {
+        "prompt": "To be, or not to be",
+        "text": "To be, or not to be not so a wish\nThat he will make him at my father’s good fallant,\nAnd I have not not sle together the world of his "
+      },
+      {
+        "prompt": "First Citizen:\n",
+        "text": "First Citizen:\nSince we have done, and I shall make you for him.\n\nBERTRAM.\nStand I have not not not a spose of his own busin"
+      }
+    ]
+  }
+}
