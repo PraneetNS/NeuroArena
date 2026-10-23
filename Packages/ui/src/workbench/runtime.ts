@@ -12,6 +12,8 @@ import {
   GraphState
 } from './types.js';
 
+export { RealRuntime } from './RealRuntime.js';
+
 export class MockRuntime implements WorkbenchRuntime {
   private listeners: Set<RuntimeListener> = new Set();
   private timer: number | null = null;
