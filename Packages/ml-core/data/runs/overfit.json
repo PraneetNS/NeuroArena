@@ -1,0 +1,87 @@
+{
+  "condition": "overfit",
+  "preset": "S",
+  "config": {
+    "vocabSize": 1024,
+    "dModel": 128,
+    "nLayers": 4,
+    "nHeads": 4,
+    "dFF": 512,
+    "contextLen": 128
+  },
+  "batchSize": 16,
+  "contextLen": 128,
+  "totalSteps": 1500,
+  "learningRate": 0.001,
+  "warmupSteps": 100,
+  "elapsedSeconds": 92.59666500000004,
+  "finalTrainLoss": 0.45898038148880005,
+  "finalSmoothedLoss": 6.407134380340576,
+  "finalValLoss": 4.924780559539795,
+  "finalPerplexity": 137.65913034527495,
+  "peakGpuMemoryMB": 35.8,
+  "metricHistory": [
+    {
+      "step": 1,
+      "trainLoss": 6.956865310668945,
+      "smoothedLoss": 6.956865310668945,
+      "gradNorm": 7.808043956756592,
+      "lr": 0.00001,
+      "timestamp": 1792736674317
+    },
+    {
+      "step": 25,
+      "trainLoss": 5.899202346801758,
+      "smoothedLoss": 6.851099014282227,
+      "gradNorm": 3.306062698364258,
+      "lr": 0.00025,
+      "timestamp": 1792736674317
+    },
+    {
+      "step": 50,
+      "trainLoss": 4.9227752685546875,
+      "smoothedLoss": 6.658266639709473,
+      "gradNorm": 2.9934027194976807,
+      "lr": 0.0005,
+      "timestamp": 1792736674317
+    },
+    {
+      "step": 75,
+      "trainLoss": 4.146944046020508,
+      "smoothedLoss": 6.407134380340576,
+      "gradNorm": 1.3653432130813599,
+      "lr": 0.00075,
+      "timestamp": 1792736674317
+    }
+  ],
+  "samples": {
+    "0": [
+      {
+        "prompt": "ROMEO:\n",
+        "text": "ROMEO:\n\nbearbear�]count�lyuse�DROMIOputESSolNaythem�houselygrforempententEnter\u0019\u0019\u0019\u0019USbrotherings\u001fass\u001bothercesOFIR�tytytyityWhatWhatWhat\u0015\u0001sweetmonightightdiddidCLEOPATRACLEOPATRAheartrich"
+      },
+      {
+        "prompt": "To be, or not to be",
+        "text": "To be, or not to bereas��DROMIO`from*motherdoneghtbefore�LANwarnewtuneveEnterh/MENPRINvesingsBwillwillwillwill�SC��twoHENir�\u0004youngthey\u0015\u0015\u0015reasturnturnturnenchive\u0015�owowshishiatteratter=SYRACUSEhonour"
+      },
+      {
+        "prompt": "First Citizen:\n",
+        "text": "First Citizen:\n\n��IfDROMIOgehownatueHehowalCLEOPAToldSYRACUSEANTIPHOLresgentleastICCahowtenansjOFfacefacefaceoseRA���did�WhenliIRCLEOPATRAtheytheytheyagainstmuwereenechRomeunthee//gentlegentleWhenWhen�didface"
+      }
+    ],
+    "1500": [
+      {
+        "prompt": "ROMEO:\n",
+        "text": "ROMEO:\n    THE LI AND TUS AD THEASIGHATET\n    THE TRAGEDY OF CORIOLANDY CRORS\n    METRAGEDY "
+      },
+      {
+        "prompt": "To be, or not to be",
+        "text": "To be, or not to beauty’s froan;\nTo foeleure by the my other,\nThe to that desire to rude, to thee,\nShall   mindowers the tim"
+      },
+      {
+        "prompt": "First Citizen:\n",
+        "text": "First Citizen:\nComon the st time that make the debare forming,\nWho he in one one so rich pleas ted:\nVa not do Of strong grace"
+      }
+    ]
+  }
+}
