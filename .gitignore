@@ -43,3 +43,6 @@ sysinfo.txt
 __pycache__/
 *.pyc
 
+# Scratch verification scripts
+scratch/
+
