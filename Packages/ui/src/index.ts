@@ -30,6 +30,7 @@ export * from './gallery/UILabGallery.js';
 // Game UI bindings
 export * from './components/hud.js';
 export * from './components/dataCurator.js';
+export * from './components/VaultPanel.js';
 export * from './components/trainingDashboard.js';
 export * from './components/chatTerminal.js';
 
