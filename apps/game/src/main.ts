@@ -35,6 +35,9 @@ import {
 } from './capability.js';
 import { TerrainStatsOverlay } from './statsOverlay.js';
 import { EnvironmentDebugPanel } from './environmentDebugPanel.js';
+import { VaultManager, Shard } from '@na/game-core';
+import { ShardWorld, ShardInteractionState } from './shardWorld.js';
+import { ShardHUD } from './shardHUD.js';
 
 class NeuroArenaGame {
   private canvasContainer: HTMLElement;
@@ -51,6 +54,20 @@ class NeuroArenaGame {
   private tokenizer: Tokenizer;
   private dataset: Dataset;
 
+  private vaultManager: VaultManager;
+  private shardWorld: ShardWorld;
+  private shardHudContainer: HTMLElement;
+  private shardHudRoot: ReactDOM.Root;
+  private isVaultOpen = false;
+  private lastInteractionState: ShardInteractionState = {
+    targetShard: null,
+    targetDistance: Infinity,
+    holdProgress: 0,
+    isHolding: false,
+    scanResult: null,
+    isScanMode: false
+  };
+
   private hud: HUD;
   private statsOverlay: TerrainStatsOverlay;
   private curatorModal: DataCuratorModal;
@@ -60,6 +77,10 @@ class NeuroArenaGame {
   private debugContainer!: HTMLElement;
   private debugRoot!: ReactDOM.Root;
   private isDebugPanelOpen = false;
+
+  private workbenchContainer: HTMLElement | null = null;
+  private workbenchRoot: ReactDOM.Root | null = null;
+  private isWorkbenchOpen = false;
 
   private collectedShards: HarvestedShardInfo[] = [];
   private activeNearbyTerminal: WorldTerminal | null = null;
@@ -137,11 +158,56 @@ class NeuroArenaGame {
       onTokenSound: () => this.audio.playTokenTick()
     });
 
-    // 4. Populate World
+    // 4. Initialize Vault Manager and Shard World
+    this.vaultManager = new VaultManager();
+    this.shardHudContainer = document.createElement('div');
+    this.shardHudContainer.id = 'app-shard-hud-container';
+    this.uiContainer.appendChild(this.shardHudContainer);
+    this.shardHudRoot = ReactDOM.createRoot(this.shardHudContainer);
+
+    this.shardWorld = new ShardWorld(
+      this.world.scene,
+      this.vaultManager,
+      (x, z) => (this.world.terrain ? this.world.terrain.getHeight(x, z) : 0),
+      (shard: Shard) => {
+        this.audio.playShardCollect();
+        // Sync kept tokens into active dataset
+        const stream = this.vaultManager.vaultToTokenStream(this.tokenizer);
+        this.dataset.setText(stream.rawText);
+        this.tokenizer.buildVocab(this.dataset.rawText);
+        this.curatorModal.setHarvestedShards(
+          this.vaultManager.getState().entries.map(e => ({
+            id: e.shardId,
+            title: `Shard ${e.shardId}`,
+            category: 'dataset',
+            sector: e.regionId || 'Unknown',
+            text: e.text
+          }))
+        );
+        this.updateHUD();
+      }
+    );
+
+    // Attach global debug commands in dev builds only
+    if (import.meta.env.DEV) {
+      (window as any).fillVaultDebug = (count = 20) => {
+        const added = this.vaultManager.fillRandomShards(count, this.shardWorld.worldState.shards);
+        const stream = this.vaultManager.vaultToTokenStream(this.tokenizer);
+        this.dataset.setText(stream.rawText);
+        this.tokenizer.buildVocab(this.dataset.rawText);
+        this.updateHUD();
+        console.log(`[NeuroArena Debug] Filled vault with ${added} random shards.`);
+        return added;
+      };
+      (window as any).vault = this.vaultManager;
+      (window as any).worldState = this.shardWorld.worldState;
+    }
+
+    // 5. Populate World
     this.spawnTerminals();
     this.spawnShards();
 
-    // 5. Setup Input Handlers
+    // 6. Setup Input Handlers
     this.setupKeybindings();
 
     // Auto-open capability report if specified in URL (#capability or ?report)
@@ -149,7 +215,7 @@ class NeuroArenaGame {
       setTimeout(() => this.openReport(), 250);
     }
 
-    // 6. Asynchronously initialize WebGPURenderer & Load 2 km Terrain
+    // 7. Asynchronously initialize WebGPURenderer & Load 2 km Terrain
     this.initGame();
   }
 
@@ -171,6 +237,9 @@ class NeuroArenaGame {
   private groundEntitiesOnTerrain(): void {
     if (!this.world.terrain) return;
     const terrain = this.world.terrain;
+
+    // Snap ShardWorld markers to elevation
+    this.shardWorld.updateElevation((x, z) => terrain.getHeight(x, z));
 
     // Ground player at starting position
     const startY = terrain.getHeight(this.player.position.x, this.player.position.z);
@@ -314,6 +383,19 @@ class NeuroArenaGame {
         return;
       }
 
+      // Vault modal toggle on Tab
+      if (e.code === 'Tab') {
+        e.preventDefault();
+        this.toggleVault();
+        return;
+      }
+
+      // Lens Scanner toggle on Key Q
+      if (e.code === 'KeyQ') {
+        this.shardWorld.toggleScanMode();
+        return;
+      }
+
       // Quality tier hotkeys: 1 = Low, 2 = Medium, 3 = High
       if (e.code === 'Digit1') {
         this.statsOverlay.selectTier('low');
@@ -332,7 +414,8 @@ class NeuroArenaGame {
         this.curatorModal.isOpen ||
         this.forgeModal.isOpen ||
         this.chatModal.isOpen ||
-        this.capabilityModal.isOpen;
+        this.capabilityModal.isOpen ||
+        this.isVaultOpen;
 
       if (isModalOpen) {
         if (e.code === 'Escape') {
@@ -372,6 +455,7 @@ class NeuroArenaGame {
 
       switch (e.code) {
         case 'KeyE':
+          this.shardWorld.isHoldingE = true;
           this.handleInteraction();
           break;
 
@@ -391,6 +475,14 @@ class NeuroArenaGame {
           this.toggleDebugPanel();
           break;
 
+        case 'KeyB':
+          if (this.isWorkbenchOpen) {
+            this.closeWorkbench();
+          } else {
+            this.openWorkbench();
+          }
+          break;
+
         case 'KeyU':
           window.location.href = '/ui-lab';
           break;
@@ -402,6 +494,10 @@ class NeuroArenaGame {
     });
 
     window.addEventListener('keyup', (e) => {
+      if (e.code === 'KeyE') {
+        this.shardWorld.isHoldingE = false;
+      }
+
       switch (e.code) {
         case 'KeyW':
         case 'ArrowUp':
@@ -439,7 +535,7 @@ class NeuroArenaGame {
     if (this.activeNearbyTerminal) {
       this.audio.playTerminalInteract();
       if (this.activeNearbyTerminal.type === 'forge') {
-        this.openForge();
+        this.openWorkbench();
       } else if (this.activeNearbyTerminal.type === 'curator') {
         this.openCurator();
       } else {
@@ -499,7 +595,38 @@ class NeuroArenaGame {
 
   private openForge(): void {
     this.closeAllModals();
-    this.forgeModal.open();
+    this.openWorkbench();
+  }
+
+  public openWorkbench(): void {
+    this.closeAllModals();
+    this.isWorkbenchOpen = true;
+
+    if (!this.workbenchContainer) {
+      this.workbenchContainer = document.createElement('div');
+      this.workbenchContainer.id = 'app-workbench-modal-container';
+      this.workbenchContainer.style.position = 'fixed';
+      this.workbenchContainer.style.inset = '0';
+      this.workbenchContainer.style.zIndex = '150';
+      this.workbenchContainer.style.backgroundColor = 'var(--na-surface)';
+      this.uiContainer.appendChild(this.workbenchContainer);
+      this.workbenchRoot = ReactDOM.createRoot(this.workbenchContainer);
+    }
+
+    this.workbenchContainer.style.display = 'block';
+    this.workbenchRoot!.render(
+      React.createElement(Workbench, {
+        vaultManager: this.vaultManager,
+        onClose: () => this.closeWorkbench()
+      })
+    );
+  }
+
+  public closeWorkbench(): void {
+    if (this.workbenchContainer) {
+      this.workbenchContainer.style.display = 'none';
+    }
+    this.isWorkbenchOpen = false;
   }
 
   private openChat(): void {
@@ -528,6 +655,7 @@ class NeuroArenaGame {
   }
 
   private closeAllModals(): void {
+    this.closeWorkbench();
     this.capabilityModal.close();
     this.curatorModal.close();
     this.forgeModal.close();
@@ -535,6 +663,31 @@ class NeuroArenaGame {
     if (this.isDebugPanelOpen) {
       this.toggleDebugPanel(false);
     }
+    if (this.isVaultOpen) {
+      this.toggleVault(false);
+    }
+  }
+
+  public toggleVault(open?: boolean): void {
+    this.isVaultOpen = open !== undefined ? open : !this.isVaultOpen;
+    this.renderShardHUD();
+  }
+
+  private renderShardHUD(): void {
+    this.shardHudRoot.render(
+      React.createElement(ShardHUD, {
+        interaction: this.lastInteractionState,
+        vault: this.vaultManager,
+        vaultState: this.vaultManager.getState(),
+        worldState: this.shardWorld.worldState,
+        isVaultOpen: this.isVaultOpen,
+        onCloseVault: () => this.toggleVault(false),
+        activeSignalKey: this.shardWorld.activeSignalKey,
+        onChangeSignalKey: (key) => {
+          this.shardWorld.activeSignalKey = key;
+        }
+      })
+    );
   }
 
   private updateHUD(): void {
@@ -544,8 +697,11 @@ class NeuroArenaGame {
     else if (p.z > 18) this.currentSector = 'Knowledge Vault';
     else this.currentSector = 'The Emerald Valley';
 
+    const vaultStats = this.vaultManager.getState().stats;
     let prompt: string | null = null;
-    if (this.activeNearbyShard && !this.activeNearbyShard.isCollected) {
+    if (this.lastInteractionState.targetShard) {
+      prompt = `HOLD [E] (0.6s) TO HARVEST SHARD ${this.lastInteractionState.targetShard.id.toUpperCase()}`;
+    } else if (this.activeNearbyShard && !this.activeNearbyShard.isCollected) {
       prompt = `PRESS [E] TO HARVEST ${this.activeNearbyShard.data.title.toUpperCase()}`;
     } else if (this.activeNearbyTerminal) {
       prompt = `PRESS [E] TO INTERACT WITH ${this.activeNearbyTerminal.title.toUpperCase()}`;
@@ -555,9 +711,9 @@ class NeuroArenaGame {
 
     this.hud.update({
       sector: this.currentSector,
-      shardsCollected: this.collectedShards.length,
-      totalShards: this.shards.length,
-      tokensHarvested: this.dataset.tokens.length,
+      shardsCollected: vaultStats.count,
+      totalShards: this.shardWorld.worldState.shards.length,
+      tokensHarvested: vaultStats.tokens,
       modelStatus,
       questStep: this.questStep,
       interactionPrompt: prompt
@@ -576,7 +732,10 @@ class NeuroArenaGame {
 
     // 1. Update Player (when not in modal and not in free-fly)
     const isModalOpen =
-      this.curatorModal.isOpen || this.forgeModal.isOpen || this.chatModal.isOpen;
+      this.curatorModal.isOpen ||
+      this.forgeModal.isOpen ||
+      this.chatModal.isOpen ||
+      this.isVaultOpen;
     if (!isModalOpen && !this.world.isFreeFly) {
       this.player.update(dt, this.world.cameraAngleY, groundFn);
     }
@@ -585,7 +744,10 @@ class NeuroArenaGame {
     // 2. Update Companion Drone
     this.companion.update(time, this.player.position);
 
-    // 3. Update Shards
+    // 3. Update ShardWorld instanced markers & interactions
+    this.lastInteractionState = this.shardWorld.update(dt, time, this.player.position);
+    this.renderShardHUD();
+
     this.activeNearbyShard = null;
     for (const shard of this.shards) {
       shard.update(time, this.player.position, (s) => this.collectShard(s));
@@ -655,7 +817,7 @@ window.addEventListener('DOMContentLoaded', () => {
       document.body.style.overflow = 'hidden';
 
       const root = ReactDOM.createRoot(uiContainer);
-      root.render(React.createElement(Workbench));
+      root.render(React.createElement(Workbench, { vaultManager: new VaultManager() }));
     }
   } else if (isUILabRoute()) {
     const canvasContainer = document.getElementById('app-canvas-container');
