@@ -320,7 +320,31 @@ NeuroArena features 12 specialized mathematical visualizers directly embedded in
 - **Simulated Quantum Annealing (SQA):** Employs Trotterized path-integral quantum Monte Carlo with transverse tunneling field $A(s)$ schedules for barrier penetration.
 
 ### Asynchronous Time-Warp Speculative Netcode Engine
-- **Jefferson Virtual Time Synchronization:** Implements optimistic discrete event simulation with Local Virtual Time (LVT) clocks.
+- **Jefferson Virtual Time Synchronization:** ImplemeIn packages/ml-core, build ONLY these pieces. Do not start the model yet.
+
+1. Seeded RNG: xoshiro128** with next(), nextFloat(), nextNormal()
+   (Box-Muller), and shuffle. Fully deterministic from a numeric seed.
+2. Tokenizers:
+   - CharTokenizer: builds vocab from text; encode/decode.
+   - ByteBPE: byte-level BPE trainer (target vocab 1024 or 2048),
+     encode, decode, toJSON/fromJSON. Pre-split text into words with a
+     simple regex so merges don't cross word boundaries. Encoding must
+     be fast enough for a 5 MB corpus in under 10 seconds.
+   Both expose: vocabSize, encode(string): Uint16Array,
+   decode(Uint16Array): string.
+3. DataLoader: takes Uint16Array tokens; contiguous 90/10 train/val
+   split; sampleBatch(B, T, split, rng) returns {inputs, targets} as
+   Int32Array of shape [B*T], where targets are inputs shifted by one.
+4. Bundle a public-domain text (Project Gutenberg, 1-3 MB, e.g. a
+   Shakespeare or Austen text) in packages/ml-core/data with its
+   license note.
+5. Script `pnpm --filter ml-core tokenize-demo`: trains ByteBPE on the
+   bundled text at vocab 1024, prints compression ratio
+   (chars per token), encodes then decodes the first 2000 characters,
+   and prints whether the round trip matches exactly.
+
+Report: files created, compression ratio, round-trip result, BPE
+training time. No tests.nts optimistic discrete event simulation with Local Virtual Time (LVT) clocks.
 - **Anti-Message Annihilation:** Emits negative anti-messages ($\bar{m}$) upon straggler arrival, canceling out invalid speculative messages ($m \oplus \bar{m} = \emptyset$) across peer queues.
 - **Fossil Collection:** Reclaims state checkpoints and processed messages older than Global Virtual Time (GVT).
 
