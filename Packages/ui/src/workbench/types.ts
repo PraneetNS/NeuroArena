@@ -23,33 +23,47 @@ export interface PortDefinition {
   description?: string;
 }
 
+// Signal histogram distribution
+export interface SignalDistribution {
+  min: number;
+  max: number;
+  mean: number;
+  std: number;
+  bins: number[]; // 5-bin histogram count
+}
+
 // Node specific data payloads
 export interface DatasetNodeData {
   sourceName: string;
   sampleCount: number;
-  quality: {
-    clean: number;
-    noisy: number;
-    duplicate: number;
-    contaminated: number;
-    unknown: number;
-  };
+  tokenCount: number;
   duplicateRate: number; // e.g. 0.08
+  fingerprint: string;
+  signalsHistogram?: Record<string, SignalDistribution>;
+  keptShardIds?: string[];
 }
 
 export interface CleanerNodeData {
   dedupeEnabled: boolean;
-  minTextLength: number;
-  maxTextLength: number;
-  languageFilter: string;
-  noiseFilterThreshold: number; // 0 to 1
+  nearDedupeThreshold: number; // 0.5 to 1.0, default 0.85
+  minDictionaryHitRate: number; // 0.0 to 1.0, default 0.90
+  maxNonAlphaRatio: number; // 0.0 to 1.0, default 0.35
+  maxUppercaseRatio: number; // 0.0 to 1.0, default 0.20
+  minTextLength: number; // default 1200
+  maxTextLength: number; // default 3800
   beforeCount: number;
   afterCount: number;
+  droppedCount: number;
+  beforeHistogram?: Record<string, SignalDistribution>;
+  afterHistogram?: Record<string, SignalDistribution>;
 }
 
 export interface TokenizerNodeData {
   vocabSize: number;
   isTrained: boolean;
+  compressionRatio: number; // bytes per token (e.g. 3.84)
+  totalTokens: number;
+  mergesCount: number;
   sampleInputText: string;
   tokenizedSpans: Array<{ text: string; id: number; colorIndex: number }>;
 }
@@ -64,6 +78,8 @@ export interface ModelNodeData {
   vocabSize: number;
   paramCount: number;
   estimatedMemoryMB: number;
+  tokensPerParam: number;
+  starvationChip: 'severely-starved' | 'data-starved' | 'adequate' | 'comfortable';
 }
 
 export interface TrainerNodeData {
@@ -73,16 +89,73 @@ export interface TrainerNodeData {
   warmupSteps: number;
   weightDecay: number;
   seed: number;
+  throttle: number; // 0 to 1
   currentStep: number;
   currentLoss: number;
+  currentValLoss?: number;
+  currentGradNorm?: number;
   etaSeconds: number;
+  elapsedSeconds?: number;
+  selectedCheckpointId?: string;
+  activeRunId?: string;
 }
 
 export interface EvaluatorNodeData {
   valLoss: number;
   perplexity: number;
   prompts: string[];
+  temperature: number;
+  topK: number;
+  topP: number;
   generations: Array<{ prompt: string; output: string }>;
+  heatmapText?: string;
+  heatmapItems?: Array<{ token: string; tokenId: number; loss: number }>;
+  memorizationRate?: number;
+}
+
+export interface GraphValidationError {
+  nodeId?: string;
+  type: 'vocab_mismatch' | 'empty_dataset' | 'context_length' | 'zero_lr' | 'stale_upstream' | 'disconnected_port';
+  title: string;
+  message: string;
+  suggestedFix?: string;
+}
+
+export interface AutopsyTagStat {
+  tag: string;
+  count: number;
+  meanLoss: number;
+  multiplier: number; // relative to clean
+  totalLoss: number;
+}
+
+export interface DetrimentalShard {
+  shardId: string;
+  tag: string;
+  meanLoss: number;
+  snippet: string;
+  regionId: string;
+}
+
+export interface AutopsyReport {
+  runId: string;
+  datasetFingerprint: string;
+  totalShards: number;
+  tagStats: AutopsyTagStat[];
+  detrimentalShards: DetrimentalShard[];
+  summaryVerdict: string;
+}
+
+export interface RunSummary {
+  runId: string;
+  preset: string;
+  datasetFingerprint?: string;
+  step: number;
+  finalTrainLoss?: number;
+  finalValLoss?: number;
+  finalPerplexity?: number;
+  timestamp: number;
+  hyperparameters?: any;
 }
 
 export type AnyNodeData =
@@ -133,6 +206,7 @@ export interface TrainingStepStats {
   tokensPerSec: number;
   elapsedSeconds: number;
   etaSeconds: number;
+  gradNorm?: number;
   annotations?: string[]; // e.g. ["Warmup ended", "Loss spiked"]
 }
 
@@ -148,6 +222,9 @@ export interface RuntimeListener {
   onStep?: (stats: TrainingStepStats) => void;
   onSample?: (sample: GeneratedSample) => void;
   onStateChange?: (state: 'idle' | 'running' | 'paused' | 'completed' | 'error', error?: string) => void;
+  onFinding?: (finding: any) => void;
+  onDiagnostics?: (findings: any[]) => void;
+  onToken?: (token: string, sampleId: string) => void;
 }
 
 export interface WorkbenchRuntime {
