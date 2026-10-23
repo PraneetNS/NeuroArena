@@ -5,16 +5,27 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./rng": "./src/rng.ts",
+    "./types": "./src/types.ts",
+    "./diagnostics": "./src/diagnostics.ts",
+    "./bpe": "./src/tokenizers/bpe.ts",
+    "./model": "./src/model.ts",
+    "./dataset": "./src/dataset.ts",
+    "./optimizer": "./src/optimizer.ts",
+    "./validation": "./src/validation.ts"
   },
   "scripts": {
     "build": "tsc --noEmit",
-    "demo": "npx tsx src/demo.ts",
-    "tokenize-demo": "npx tsx src/tokenizeDemo.ts",
-    "forward-demo": "npx tsx src/forwardDemo.ts"
+    "demo": "tsx src/demo.ts",
+    "tokenize-demo": "tsx src/tokenizeDemo.ts",
+    "forward-demo": "tsx src/forwardDemo.ts",
+    "diagnose-demo": "tsx src/diagnoseDemo.ts"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",
+    "@webgpu/types": "^0.1.74",
+    "tsx": "^4.19.2",
     "typescript": "^5.7.3"
   }
 }
