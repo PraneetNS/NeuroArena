@@ -1,0 +1,24 @@
+{
+  "name": "@na/game-core",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "inspect": "npx tsx src/inspect.ts",
+    "lens-report": "tsx src/lensReport.ts",
+    "walkthrough": "tsx src/walkthrough.ts"
+  },
+  "dependencies": {
+    "@na/ml-core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}
