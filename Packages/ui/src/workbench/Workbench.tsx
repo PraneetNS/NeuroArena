@@ -13,17 +13,114 @@ import {
   ModelNodeData,
   TrainerNodeData,
   EvaluatorNodeData,
-  AnyNodeData
+  AnyNodeData,
+  WorkbenchRuntime,
+  AutopsyReport,
+  RunSummary,
+  GraphValidationError
 } from './types.js';
-import { MockRuntime } from './runtime.js';
+import { RealRuntime } from './runtime.js';
 import { CanvasGrid } from './components/CanvasGrid.js';
 import { InspectorPanel } from './components/InspectorPanel.js';
 import { BottomDock } from './components/BottomDock.js';
 import { CommandPalette } from './components/CommandPalette.js';
 import { CodexStubModal } from './components/CodexStubModal.js';
+import { AutopsyModal } from './components/AutopsyModal.js';
+import { RunManagerModal } from './components/RunManagerModal.js';
 import { Button } from '../components/Button.js';
 import { Badge } from '../components/Badge.js';
 import { PlayIcon, PauseIcon, StopIcon } from '../icons/index.js';
+import { Finding, SuggestedFix } from '@na/ml-core';
+import { VaultManager } from '@na/game-core';
+
+export interface WorkbenchProps {
+  vaultManager?: VaultManager;
+  runtime?: WorkbenchRuntime;
+  onClose?: () => void;
+}
+
+// Educational Graph Validator
+export function validateGraphForTeaching(graph: GraphState): GraphValidationError[] {
+  const errors: GraphValidationError[] = [];
+
+  const datasetNode = graph.nodes.find((n) => n.kind === 'dataset');
+  const tokenizerNode = graph.nodes.find((n) => n.kind === 'tokenizer');
+  const modelNode = graph.nodes.find((n) => n.kind === 'model');
+  const trainerNode = graph.nodes.find((n) => n.kind === 'trainer');
+
+  // 1. Empty dataset check
+  if (datasetNode) {
+    const dsData = datasetNode.data as DatasetNodeData;
+    const shards = dsData.sampleCount ?? 0;
+    if (shards === 0) {
+      errors.push({
+        type: 'empty_dataset',
+        nodeId: datasetNode.id,
+        title: 'Empty Dataset: No Kept Shards in Vault',
+        message: 'The training corpus contains 0 shards. Training requires data to compute loss.',
+        suggestedFix: 'Collect shards in the world and keep them in your Vault'
+      });
+    }
+  }
+
+  // 2. Vocab size mismatch check
+  if (tokenizerNode && modelNode) {
+    const tokData = tokenizerNode.data as TokenizerNodeData;
+    const modelData = modelNode.data as ModelNodeData;
+    if (tokData.vocabSize && modelData.vocabSize && tokData.vocabSize !== modelData.vocabSize) {
+      errors.push({
+        type: 'vocab_mismatch',
+        nodeId: modelNode.id,
+        title: 'Vocabulary Dimension Mismatch',
+        message: `Tokenizer outputs vocab size ${tokData.vocabSize}, but Model expects ${modelData.vocabSize}.`,
+        suggestedFix: `Set model vocabSize to ${tokData.vocabSize}`
+      });
+    }
+  }
+
+  // 3. Context overflow beyond positional table
+  if (modelNode) {
+    const modelData = modelNode.data as ModelNodeData;
+    if (modelData.contextLen && modelData.contextLen > 512) {
+      errors.push({
+        type: 'context_length',
+        nodeId: modelNode.id,
+        title: 'Context Length Exceeds Position Table',
+        message: `Context length (${modelData.contextLen}) exceeds positional table limit (512).`,
+        suggestedFix: 'Reduce contextLen to 128'
+      });
+    }
+  }
+
+  // 4. Learning rate of 0
+  if (trainerNode) {
+    const trainerData = trainerNode.data as TrainerNodeData;
+    if (trainerData.learningRate !== undefined && trainerData.learningRate <= 0) {
+      errors.push({
+        type: 'zero_lr',
+        nodeId: trainerNode.id,
+        title: 'Learning Rate is Zero',
+        message: 'The learning rate is 0. Optimizer updates are disabled.',
+        suggestedFix: 'Set learningRate to 0.0003'
+      });
+    }
+  }
+
+  // 5. Stale upstream node warning
+  for (const n of graph.nodes) {
+    if (n.state === 'stale') {
+      errors.push({
+        type: 'stale_upstream',
+        nodeId: n.id,
+        title: `Stale Node: ${n.title}`,
+        message: 'Upstream parameters changed. Downstream cached outputs are outdated.',
+        suggestedFix: 'Re-execute or retrain this node'
+      });
+    }
+  }
+
+  return errors;
+}
 
 // Factory to create initial node payloads with defaults
 export function createDefaultNode(kind: NodeKind, x: number, y: number, idSuffix?: string): GraphNodeType {
@@ -34,7 +131,7 @@ export function createDefaultNode(kind: NodeKind, x: number, y: number, idSuffix
       return {
         id,
         kind: 'dataset',
-        title: 'Corpus Shard',
+        title: 'Vault Corpus',
         x,
         y,
         width: 200,
@@ -47,20 +144,19 @@ export function createDefaultNode(kind: NodeKind, x: number, y: number, idSuffix
             name: 'Dataset',
             type: 'Dataset',
             direction: 'output',
-            description: 'Raw documents stream'
+            description: 'Kept Vault shards stream'
           }
         ],
         data: {
-          sourceName: 'The Pile / FineWeb-Edu',
-          sampleCount: 100000,
-          quality: {
-            clean: 74200,
-            noisy: 12100,
-            duplicate: 8900,
-            contaminated: 3100,
-            unknown: 1700
-          },
-          duplicateRate: 0.089
+          sourceName: 'The Vault (Harvested Pages)',
+          sampleCount: 0,
+          shardCount: 0,
+          tokenCount: 0,
+          duplicateRate: 0.05,
+          duplicateEstimate: 0.05,
+          fingerprint: '0000000000000000',
+          datasetFingerprint: '0000000000000000',
+          quality: { clean: 0, noisy: 0, duplicate: 0, contaminated: 0, unknown: 0 }
         } as DatasetNodeData
       };
 
@@ -68,7 +164,7 @@ export function createDefaultNode(kind: NodeKind, x: number, y: number, idSuffix
       return {
         id,
         kind: 'cleaner',
-        title: 'Quality Guardrail',
+        title: 'Signal Guardrail',
         x,
         y,
         width: 200,
@@ -94,12 +190,15 @@ export function createDefaultNode(kind: NodeKind, x: number, y: number, idSuffix
         ],
         data: {
           dedupeEnabled: true,
-          minTextLength: 32,
-          maxTextLength: 4096,
-          languageFilter: 'English (en)',
-          noiseFilterThreshold: 0.85,
-          beforeCount: 100000,
-          afterCount: 81400
+          nearDedupeThreshold: 0.20,
+          minDictionaryHitRate: 0.60,
+          maxNonAlphaRatio: 0.25,
+          maxUppercaseRatio: 0.20,
+          minTextLength: 400,
+          maxTextLength: 4500,
+          beforeCount: 0,
+          afterCount: 0,
+          droppedCount: 0
         } as CleanerNodeData
       };
 
@@ -107,7 +206,7 @@ export function createDefaultNode(kind: NodeKind, x: number, y: number, idSuffix
       return {
         id,
         kind: 'tokenizer',
-        title: 'BPE Tokenizer',
+        title: 'ByteBPE Tokenizer',
         x,
         y,
         width: 200,
@@ -133,20 +232,12 @@ export function createDefaultNode(kind: NodeKind, x: number, y: number, idSuffix
         ],
         data: {
           vocabSize: 1024,
-          isTrained: true,
-          sampleInputText: 'The quick brown fox jumps over the neural network.',
-          tokenizedSpans: [
-            { text: 'The', id: 412, colorIndex: 0 },
-            { text: ' quick', id: 89, colorIndex: 1 },
-            { text: ' brown', id: 504, colorIndex: 2 },
-            { text: ' fox', id: 219, colorIndex: 3 },
-            { text: ' jumps', id: 671, colorIndex: 0 },
-            { text: ' over', id: 144, colorIndex: 1 },
-            { text: ' the', id: 28, colorIndex: 2 },
-            { text: ' neural', id: 832, colorIndex: 3 },
-            { text: ' network', id: 911, colorIndex: 0 },
-            { text: '.', id: 14, colorIndex: 1 }
-          ]
+          isTrained: false,
+          compressionRatio: 0,
+          totalTokens: 0,
+          mergesCount: 0,
+          sampleInputText: 'Shall I compare thee to a summer day?',
+          tokenizedSpans: []
         } as TokenizerNodeData
       };
 
@@ -186,8 +277,10 @@ export function createDefaultNode(kind: NodeKind, x: number, y: number, idSuffix
           dFF: 512,
           contextLen: 128,
           vocabSize: 1024,
-          paramCount: 841000,
-          estimatedMemoryMB: 6.8
+          paramCount: 1250000,
+          estimatedMemoryMB: 24,
+          tokensPerParam: 0,
+          starvationChip: 'data-starved'
         } as ModelNodeData
       };
 
@@ -195,7 +288,7 @@ export function createDefaultNode(kind: NodeKind, x: number, y: number, idSuffix
       return {
         id,
         kind: 'trainer',
-        title: 'AdamW Trainer',
+        title: 'WebGPU Trainer',
         x,
         y,
         width: 200,
@@ -234,15 +327,16 @@ export function createDefaultNode(kind: NodeKind, x: number, y: number, idSuffix
           }
         ],
         data: {
-          learningRate: 0.001,
+          learningRate: 0.0003,
           batchSize: 16,
-          maxSteps: 500,
+          maxSteps: 250,
           warmupSteps: 50,
           weightDecay: 0.01,
           seed: 42,
+          throttle: 0,
           currentStep: 0,
           currentLoss: 4.82,
-          etaSeconds: 50
+          etaSeconds: 30
         } as TrainerNodeData
       };
 
@@ -282,23 +376,17 @@ export function createDefaultNode(kind: NodeKind, x: number, y: number, idSuffix
           }
         ],
         data: {
-          valLoss: 4.89,
-          perplexity: 132.8,
+          valLoss: 0,
+          perplexity: 0,
           prompts: [
-            'In the beginning, the neural network',
-            'Once upon a gradient step',
-            'The loss function converged when'
+            'To be, or not to be',
+            'Shall I compare thee to a summer day?',
+            'What light through yonder window breaks?'
           ],
-          generations: [
-            {
-              prompt: 'In the beginning, the neural network',
-              output: ' learned random embeddings before cross-entropy dropped to steady decay.'
-            },
-            {
-              prompt: 'Once upon a gradient step',
-              output: ' the optimizer found a smooth basin and generalized gracefully.'
-            }
-          ]
+          temperature: 0.8,
+          topK: 40,
+          topP: 0.9,
+          generations: []
         } as EvaluatorNodeData
       };
   }
@@ -378,7 +466,7 @@ export function createDefaultGraph(): GraphState {
   };
 }
 
-export const Workbench: React.FC = () => {
+export const Workbench: React.FC<WorkbenchProps> = ({ vaultManager, runtime, onClose }) => {
   // Graph state & history stack for Undo/Redo
   const [graph, setGraph] = useState<GraphState>(() => createDefaultGraph());
   const [historyPast, setHistoryPast] = useState<GraphState[]>([]);
@@ -393,8 +481,21 @@ export const Workbench: React.FC = () => {
   const [codexModalNode, setCodexModalNode] = useState<GraphNodeType | null>(null);
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'info' | 'error' | 'success' } | null>(null);
 
-  // Runtime Seam: MockRuntime
-  const runtimeRef = useRef<MockRuntime>(new MockRuntime());
+  // Autopsy & Run Manager Modals
+  const [isAutopsyOpen, setIsAutopsyOpen] = useState(false);
+  const [isAutopsyLoading, setIsAutopsyLoading] = useState(false);
+  const [autopsyReport, setAutopsyReport] = useState<AutopsyReport | null>(null);
+
+  const [isRunManagerOpen, setIsRunManagerOpen] = useState(false);
+  const [storedRuns, setStoredRuns] = useState<RunSummary[]>([]);
+
+  // Findings & Validation
+  const [findings, setFindings] = useState<Finding[]>([]);
+  const [validationErrors, setValidationErrors] = useState<GraphValidationError[]>([]);
+
+  // RealRuntime Seam
+  const realVault = useRef<VaultManager>(vaultManager || new VaultManager());
+  const runtimeRef = useRef<WorkbenchRuntime>(runtime || new RealRuntime({ vaultManager: realVault.current }));
   const [isRunning, setIsRunning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [telemetryHistory, setTelemetryHistory] = useState<TrainingStepStats[]>([]);
@@ -424,6 +525,23 @@ export const Workbench: React.FC = () => {
     });
   }, []);
 
+  // Initial Sync from Real Vault on Mount
+  useEffect(() => {
+    const r = runtimeRef.current as any;
+    if (r && typeof r.syncDataset === 'function') {
+      setGraph((prev) => {
+        const nextNodes = prev.nodes.map((n) => {
+          if (n.kind === 'dataset') {
+            const syncData = r.syncDataset(n);
+            return { ...n, data: syncData };
+          }
+          return n;
+        });
+        return { ...prev, nodes: nextNodes };
+      });
+    }
+  }, []);
+
   // Undo / Redo handlers
   const handleUndo = useCallback(() => {
     if (historyPast.length === 0) return;
@@ -443,7 +561,7 @@ export const Workbench: React.FC = () => {
     showToast('Redo action', 'info');
   }, [historyFuture, graph]);
 
-  // Port Validation Logic (Requirement 2 & 4: Incompatible types refused with clear message)
+  // Port Validation Logic
   const validateConnection = (
     sourceNode: GraphNodeType,
     sourcePort: PortDefinition,
@@ -465,7 +583,6 @@ export const Workbench: React.FC = () => {
       };
     }
 
-    // Check if target input already has a connection
     const alreadyConnected = graph.edges.some(
       (e) => e.targetNodeId === targetNode.id && e.targetPortId === targetPort.id
     );
@@ -507,7 +624,6 @@ export const Workbench: React.FC = () => {
     };
 
     updateGraphWithHistory((prev) => {
-      // Validate downstream semantic rules (e.g. Model vocab size matches Tokenizer vocab size)
       const nextNodes = prev.nodes.map((n) => {
         if (n.id === targetNodeId) {
           return { ...n, state: 'ready' as const, errorMessage: undefined };
@@ -524,10 +640,9 @@ export const Workbench: React.FC = () => {
     showToast(`Connected ${sourcePort.type} port: ${sourceNode.title} → ${targetNode.title}`, 'success');
   };
 
-  // Update node data and propagate stale state to downstream nodes (Requirement 4)
+  // Update node data and propagate stale state to downstream nodes
   const handleUpdateNodeData = (nodeId: string, newData: AnyNodeData) => {
     updateGraphWithHistory((prev) => {
-      // Find all downstream dependent node IDs using BFS
       const downstreamIds = new Set<string>();
       const queue = [nodeId];
 
@@ -541,45 +656,71 @@ export const Workbench: React.FC = () => {
         }
       }
 
-      // Check for educational errors (e.g., Tokenizer vs Model vocab size mismatch)
-      let tokenizerVocab: number | null = null;
-      for (const n of prev.nodes) {
-        if (n.id === nodeId && n.kind === 'tokenizer') {
-          tokenizerVocab = (newData as TokenizerNodeData).vocabSize;
-        } else if (n.kind === 'tokenizer') {
-          tokenizerVocab = (n.data as TokenizerNodeData).vocabSize;
-        }
-      }
-
       return {
         ...prev,
         nodes: prev.nodes.map((n) => {
           if (n.id === nodeId) {
-            return { ...n, data: newData };
+            return { ...n, data: newData, state: 'ready' as const };
           }
           if (downstreamIds.has(n.id)) {
-            let errorMsg: string | undefined = undefined;
-            let nodeState: GraphNodeType['state'] = 'stale';
-
-            // Check if model node has vocab mismatch with tokenizer
-            if (n.kind === 'model' && tokenizerVocab) {
-              const modelData = n.data as ModelNodeData;
-              if (modelData.vocabSize !== tokenizerVocab) {
-                errorMsg = `Model vocab size (${modelData.vocabSize}) does not match tokenizer vocab (${tokenizerVocab}).`;
-                nodeState = 'error';
-              }
-            }
-
             return {
               ...n,
-              state: nodeState,
-              errorMessage: errorMsg
+              state: 'stale' as const
             };
           }
           return n;
         })
       };
     });
+  };
+
+  // Apply suggested fix from a finding card
+  const handleApplyFix = (fix: SuggestedFix, finding: Finding) => {
+    const param = fix.parameterChange?.parameter;
+    const value = fix.parameterChange?.suggestedValue;
+    if (!param || value === undefined) {
+      showToast(`Fix: ${fix.label}`, 'info');
+      return;
+    }
+
+    updateGraphWithHistory((prev) => ({
+      ...prev,
+      nodes: prev.nodes.map((n) => {
+        if (n.kind === 'trainer') {
+          const tData = n.data as TrainerNodeData;
+          if (param === 'learningRate') {
+            return { ...n, data: { ...tData, learningRate: Number(value) } };
+          }
+          if (param === 'batchSize') {
+            return { ...n, data: { ...tData, batchSize: Number(value) } };
+          }
+          if (param === 'warmupSteps') {
+            return { ...n, data: { ...tData, warmupSteps: Number(value) } };
+          }
+        }
+        if (n.kind === 'model') {
+          const mData = n.data as ModelNodeData;
+          if (param === 'preset') {
+            return { ...n, data: { ...mData, preset: value as any } };
+          }
+          if (param === 'contextLen') {
+            return { ...n, data: { ...mData, contextLen: Number(value) } };
+          }
+        }
+        if (n.kind === 'cleaner') {
+          const cData = n.data as CleanerNodeData;
+          if (param === 'nearDedupeThreshold') {
+            return { ...n, data: { ...cData, nearDedupeThreshold: Number(value) } };
+          }
+          if (param === 'minDictionaryHitRate') {
+            return { ...n, data: { ...cData, minDictionaryHitRate: Number(value) } };
+          }
+        }
+        return n;
+      })
+    }));
+
+    showToast(`Applied fix for [${finding.title}]: Set ${param} to ${value}`, 'success');
   };
 
   // Node position drag handler
@@ -614,7 +755,6 @@ export const Workbench: React.FC = () => {
 
   // Add new node from command palette
   const handleAddNode = (kind: NodeKind) => {
-    // Offset position near center of canvas
     const x = 300 + Math.floor(Math.random() * 80);
     const y = 200 + Math.floor(Math.random() * 80);
     const newNode = createDefaultNode(kind, x, y);
@@ -629,7 +769,7 @@ export const Workbench: React.FC = () => {
     showToast(`Added ${newNode.title} node`, 'success');
   };
 
-  // Duplicate selected nodes (Requirement 1: Ctrl+D)
+  // Duplicate selected nodes
   const handleDuplicateSelected = useCallback(() => {
     if (selectedNodeIds.length === 0) return;
 
@@ -655,7 +795,6 @@ export const Workbench: React.FC = () => {
         newNodes.push(dup);
       }
 
-      // Recreate internal edges between duplicated nodes
       const newEdges: GraphEdge[] = [];
       for (const edge of prev.edges) {
         if (idMap.has(edge.sourceNodeId) && idMap.has(edge.targetNodeId)) {
@@ -695,7 +834,7 @@ export const Workbench: React.FC = () => {
     showToast(`Deleted selected node(s)`, 'info');
   }, [selectedNodeIds, updateGraphWithHistory]);
 
-  // Auto-Layout Algorithm (Requirement 1: Auto-layout button)
+  // Auto-Layout Algorithm
   const handleAutoLayout = () => {
     const kindColumns: Record<NodeKind, number> = {
       dataset: 0,
@@ -707,44 +846,31 @@ export const Workbench: React.FC = () => {
     };
 
     updateGraphWithHistory((prev) => {
-      // Group nodes by their column slot
-      const colBuckets: Record<number, GraphNodeType[]> = {
-        0: [], 1: [], 2: [], 3: [], 4: [], 5: []
-      };
-
-      for (const node of prev.nodes) {
-        const col = kindColumns[node.kind] ?? 0;
-        colBuckets[col].push(node);
-      }
-
-      const colSpacingX = 260;
-      const nodeSpacingY = 160;
+      const colCounts: Record<number, number> = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+      const colWidth = 240;
+      const rowHeight = 160;
       const startX = 80;
-      const startY = 140;
-
-      const updatedNodes = prev.nodes.map((node) => {
-        const col = kindColumns[node.kind] ?? 0;
-        const indexInCol = colBuckets[col].findIndex((n) => n.id === node.id);
-        const totalInCol = colBuckets[col].length;
-        const centeredY = startY + (indexInCol - (totalInCol - 1) / 2) * nodeSpacingY;
-
-        return {
-          ...node,
-          x: startX + col * colSpacingX,
-          y: Math.max(80, centeredY)
-        };
-      });
+      const startY = 160;
 
       return {
         ...prev,
-        nodes: updatedNodes
+        nodes: prev.nodes.map((n) => {
+          const col = kindColumns[n.kind] ?? 0;
+          const row = colCounts[col] || 0;
+          colCounts[col] = row + 1;
+          return {
+            ...n,
+            x: startX + col * colWidth,
+            y: startY + row * rowHeight
+          };
+        })
       };
     });
 
-    showToast('Applied topological auto-layout', 'success');
+    showToast('Auto-layout applied across pipeline columns', 'info');
   };
 
-  // Save graph as JSON (Requirement 1)
+  // Save graph specification to JSON file
   const handleSaveGraph = () => {
     const jsonStr = JSON.stringify(graph, null, 2);
     const blob = new Blob([jsonStr], { type: 'application/json' });
@@ -779,7 +905,7 @@ export const Workbench: React.FC = () => {
       }
     };
     reader.readAsText(file);
-    e.target.value = ''; // Reset file input
+    e.target.value = '';
   };
 
   // Reset to default template
@@ -791,30 +917,26 @@ export const Workbench: React.FC = () => {
     showToast('Loaded canonical End-to-End training pipeline', 'success');
   };
 
-  // Keyboard navigation & accessibility (Requirement 8)
+  // Keyboard navigation & accessibility
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore if user is currently typing inside an input or textarea
       const target = e.target as HTMLElement;
       if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
         return;
       }
 
-      // Command palette trigger (Space or /)
       if (e.key === ' ' || e.key === '/') {
         e.preventDefault();
         setIsCommandPaletteOpen((open) => !open);
         return;
       }
 
-      // Undo: Ctrl+Z / Cmd+Z
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !e.shiftKey) {
         e.preventDefault();
         handleUndo();
         return;
       }
 
-      // Redo: Ctrl+Y or Ctrl+Shift+Z
       if (
         ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') ||
         ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'z')
@@ -824,21 +946,18 @@ export const Workbench: React.FC = () => {
         return;
       }
 
-      // Duplicate: Ctrl+D
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') {
         e.preventDefault();
         handleDuplicateSelected();
         return;
       }
 
-      // Delete / Backspace
       if (e.key === 'Delete' || e.key === 'Backspace') {
         e.preventDefault();
         handleDeleteSelected();
         return;
       }
 
-      // Tab navigation through nodes
       if (e.key === 'Tab') {
         e.preventDefault();
         if (graph.nodes.length === 0) return;
@@ -851,35 +970,11 @@ export const Workbench: React.FC = () => {
         setActiveInspectorNodeId(nextNode.id);
         return;
       }
-
-      // Arrow keys nudge selected node position
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
-        if (selectedNodeIds.length === 0) return;
-        e.preventDefault();
-        const step = e.shiftKey ? 40 : 10;
-        let dx = 0;
-        let dy = 0;
-        if (e.key === 'ArrowUp') dy = -step;
-        if (e.key === 'ArrowDown') dy = step;
-        if (e.key === 'ArrowLeft') dx = -step;
-        if (e.key === 'ArrowRight') dx = step;
-
-        for (const id of selectedNodeIds) {
-          handleMoveNode(id, dx, dy);
-        }
-      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [
-    graph.nodes,
-    selectedNodeIds,
-    handleUndo,
-    handleRedo,
-    handleDuplicateSelected,
-    handleDeleteSelected
-  ]);
+  }, [graph.nodes, selectedNodeIds, handleUndo, handleRedo, handleDuplicateSelected, handleDeleteSelected]);
 
   // Subscribe to Runtime Events
   useEffect(() => {
@@ -889,7 +984,6 @@ export const Workbench: React.FC = () => {
       onStep: (stats) => {
         setTelemetryHistory((prev) => [...prev.slice(-400), stats]);
 
-        // Reflect current trainer state on trainer node
         setGraph((g) => ({
           ...g,
           nodes: g.nodes.map((n) => {
@@ -926,6 +1020,16 @@ export const Workbench: React.FC = () => {
         setSampleHistory((prev) => [...prev, sample]);
         showToast(`Checkpoint ${sample.checkpointStep}: Generated autoregressive sample`, 'info');
       },
+      onFinding: (finding: Finding) => {
+        setFindings((prev) => {
+          const exists = prev.some((f) => f.id === finding.id || (f.conceptId && f.conceptId === finding.conceptId));
+          if (exists) {
+            return prev.map((f) => (f.id === finding.id || f.conceptId === finding.conceptId ? finding : f));
+          }
+          return [finding, ...prev];
+        });
+        showToast(`Finding: ${finding.title}`, finding.severity === 'critical' ? 'error' : 'info');
+      },
       onStateChange: (state, error) => {
         if (state === 'running') {
           setIsRunning(true);
@@ -944,7 +1048,7 @@ export const Workbench: React.FC = () => {
             ...g,
             nodes: g.nodes.map((n) => ({ ...n, state: 'ready' as const }))
           }));
-          showToast('Training run completed successfully!', 'success');
+          showToast('Training completed! Earned Reveal unlocked in Autopsy.', 'success');
         } else if (state === 'idle') {
           setIsRunning(false);
           setIsPaused(false);
@@ -964,17 +1068,19 @@ export const Workbench: React.FC = () => {
 
   // Execution controls
   const handleStartRun = async () => {
-    // Validate that trainer and model are present and connected
-    const hasTrainer = graph.nodes.some((n) => n.kind === 'trainer');
-    const hasModel = graph.nodes.some((n) => n.kind === 'model');
-    if (!hasTrainer || !hasModel) {
-      showToast('Graph must include at least one Model and one Trainer node to execute.', 'error');
+    // 1. Run teaching validation rules
+    const errors = validateGraphForTeaching(graph);
+    setValidationErrors(errors);
+
+    const fatalErrors = errors.filter((e) => e.type !== 'stale_upstream');
+    if (fatalErrors.length > 0) {
+      showToast(`Cannot start: ${fatalErrors[0].title}`, 'error');
       return;
     }
 
     try {
       await runtimeRef.current.start(graph);
-      showToast('Runtime started: Training Tiny GPT at 10 Hz telemetry', 'success');
+      showToast('Training started on RealRuntime pipeline', 'success');
     } catch (err: any) {
       showToast(err.message, 'error');
     }
@@ -995,6 +1101,59 @@ export const Workbench: React.FC = () => {
     showToast('Stopped training run', 'info');
   };
 
+  // Autopsy trigger
+  const handleOpenAutopsy = async (runId?: string) => {
+    setIsAutopsyOpen(true);
+    setIsAutopsyLoading(true);
+    try {
+      const r = runtimeRef.current as any;
+      if (r && typeof r.runAutopsy === 'function') {
+        const report = await r.runAutopsy(runId);
+        setAutopsyReport(report);
+      } else {
+        setAutopsyReport(null);
+      }
+    } catch (err: any) {
+      showToast(`Autopsy failed: ${err.message}`, 'error');
+    } finally {
+      setIsAutopsyLoading(false);
+    }
+  };
+
+  // Run Manager trigger
+  const handleOpenRunManager = async () => {
+    setIsRunManagerOpen(true);
+    try {
+      const r = runtimeRef.current as any;
+      if (r && typeof r.listRuns === 'function') {
+        const runs = await r.listRuns();
+        setStoredRuns(runs);
+      }
+    } catch (err: any) {
+      showToast(`Failed to list OPFS runs: ${err.message}`, 'error');
+    }
+  };
+
+  const handleDeleteRun = async (runId: string) => {
+    try {
+      const r = runtimeRef.current as any;
+      if (r && typeof r.deleteRun === 'function') {
+        await r.deleteRun(runId);
+        setStoredRuns((prev) => prev.filter((x) => x.runId !== runId));
+        showToast(`Deleted run ${runId} from OPFS`, 'info');
+      }
+    } catch (err: any) {
+      showToast(`Delete failed: ${err.message}`, 'error');
+    }
+  };
+
+  const handleDiscardShardFromVault = (shardId: string) => {
+    realVault.current.setEntryStatus(shardId, 'discard');
+    showToast(`Discarded shard ${shardId} from Vault`, 'success');
+    // Refresh autopsy
+    handleOpenAutopsy();
+  };
+
   // Active inspector node lookup
   const inspectorNode = graph.nodes.find((n) => n.id === activeInspectorNodeId) || null;
 
@@ -1003,9 +1162,9 @@ export const Workbench: React.FC = () => {
       {/* Top Header & Toolbar */}
       <header className="na-workbench-header">
         <div className="na-workbench-brand">
-          <span className="na-workbench-title">NeuroArena // Workbench</span>
+          <span className="na-workbench-title">NeuroArena // RealRuntime Workbench</span>
           <Badge variant={isRunning ? 'accent' : 'neutral'}>
-            {isRunning ? (isPaused ? 'PAUSED' : '10 HZ RUNNING') : 'STANDBY'}
+            {isRunning ? (isPaused ? 'PAUSED' : 'REAL GPU RUNNING') : 'STANDBY'}
           </Badge>
           <span style={{ fontSize: '12px', color: 'var(--na-muted)' }}>
             {graph.nodes.length} nodes · {graph.edges.length} edges
@@ -1020,7 +1179,7 @@ export const Workbench: React.FC = () => {
               size="sm"
               icon={<PlayIcon size={14} />}
               onClick={handleStartRun}
-              title="Start training run (Mock Runtime)"
+              title="Start training run on RealRuntime"
             >
               Start Run
             </Button>
@@ -1044,6 +1203,26 @@ export const Workbench: React.FC = () => {
               </Button>
             </>
           )}
+
+          <div style={{ width: '1px', height: '18px', backgroundColor: 'var(--na-line)', margin: '0 4px' }} />
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => handleOpenAutopsy()}
+            title="Inspect trained weights against ground-truth tags"
+          >
+            🔬 Autopsy
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleOpenRunManager}
+            title="Inspect and compare runs saved in OPFS"
+          >
+            📁 Run Manager
+          </Button>
 
           <div style={{ width: '1px', height: '18px', backgroundColor: 'var(--na-line)', margin: '0 4px' }} />
 
@@ -1122,6 +1301,12 @@ export const Workbench: React.FC = () => {
             style={{ display: 'none' }}
             onChange={handleLoadGraphFile}
           />
+
+          {onClose && (
+            <Button variant="ghost" size="sm" onClick={onClose} style={{ marginLeft: '6px' }}>
+              ✕ Close
+            </Button>
+          )}
         </div>
 
         {/* Right Info */}
@@ -1131,6 +1316,45 @@ export const Workbench: React.FC = () => {
           </span>
         </div>
       </header>
+
+      {/* Validation Errors Teaching Banner */}
+      {validationErrors.length > 0 && (
+        <div
+          style={{
+            backgroundColor: '#2A1818',
+            borderBottom: '1px solid #7F1D1D',
+            padding: '8px 20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '12px'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ fontSize: '16px' }}>⚠️</span>
+            <div>
+              <span style={{ fontWeight: 600, fontSize: '12px', color: '#FCA5A5' }}>
+                {validationErrors[0].title}: {validationErrors[0].message}
+              </span>
+              {validationErrors[0].suggestedFix && (
+                <span style={{ fontSize: '11px', color: '#E5E7EB', marginLeft: '8px' }}>
+                  (Hint: {validationErrors[0].suggestedFix})
+                </span>
+              )}
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setValidationErrors([])}
+              style={{ padding: '2px 6px', fontSize: '11px', color: '#9CA3AF' }}
+            >
+              ✕ Dismiss
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Main Graph Canvas Area with Integrated Inspector */}
       <div style={{ flex: 1, display: 'flex', position: 'relative', overflow: 'hidden' }}>
@@ -1155,11 +1379,13 @@ export const Workbench: React.FC = () => {
         />
       </div>
 
-      {/* Bottom Dock: Live Loss Chart & Checkpoint Sample Viewer */}
+      {/* Bottom Dock: Live Loss Chart, Checkpoint Sample Viewer & Findings Cards */}
       <BottomDock
         history={telemetryHistory}
         samples={sampleHistory}
+        findings={findings}
         isRunning={isRunning && !isPaused}
+        onApplyFix={handleApplyFix}
       />
 
       {/* Command Palette Modal */}
@@ -1174,6 +1400,24 @@ export const Workbench: React.FC = () => {
         node={codexModalNode}
         isOpen={codexModalNode !== null}
         onClose={() => setCodexModalNode(null)}
+      />
+
+      {/* Autopsy Modal (The Earned Reveal) */}
+      <AutopsyModal
+        isOpen={isAutopsyOpen}
+        onClose={() => setIsAutopsyOpen(false)}
+        report={autopsyReport}
+        isLoading={isAutopsyLoading}
+        onDiscardShard={handleDiscardShardFromVault}
+      />
+
+      {/* Run Manager Modal */}
+      <RunManagerModal
+        isOpen={isRunManagerOpen}
+        onClose={() => setIsRunManagerOpen(false)}
+        runs={storedRuns}
+        onDeleteRun={handleDeleteRun}
+        onRunAutopsy={(rId) => handleOpenAutopsy(rId)}
       />
 
       {/* Feedback Toast Notification */}
