@@ -1,6 +1,23 @@
 /**
- * Character-level Tokenizer with vocabulary builder, encode, decode, and JSON serialization.
+ * Maps curly quotes, dashes, ligatures, and accented characters to plain ASCII.
  */
+export function normalizeText(str: string): string {
+  return str
+    // Curly quotes & apostrophes -> standard '
+    .replace(/[\u2018\u2019\u201A\u201B\u00B4\u0060]/g, "'")
+    // Curly double quotes -> standard "
+    .replace(/[\u201C\u201D\u201E\u201F\u00AB\u00BB]/g, '"')
+    // Dashes (em-dash, en-dash, horizontal bar, minus) -> standard -
+    .replace(/[\u2013\u2014\u2015\u2212]/g, '-')
+    // Ligatures
+    .replace(/\u00E6/g, 'ae')
+    .replace(/\u00C6/g, 'AE')
+    .replace(/\u0153/g, 'oe')
+    .replace(/\u0152/g, 'OE')
+    // Accented characters to plain ASCII via NFD decomposition
+    .normalize('NFD')
+    .replace(/[\u0300-\u036F]/g, '');
+}
 
 export class CharTokenizer {
   public charToId: Map<string, number> = new Map();
@@ -19,7 +36,8 @@ export class CharTokenizer {
   /**
    * Builds vocabulary from training text corpus.
    */
-  public buildVocab(corpus: string): void {
+  public buildVocab(corpus: string, options?: { normalize?: boolean }): void {
+    const textToProcess = options?.normalize ? normalizeText(corpus) : corpus;
     this.charToId.clear();
     this.idToChar.clear();
 
@@ -27,7 +45,7 @@ export class CharTokenizer {
     this.idToChar.set(0, '<|unk|>');
 
     const charCounts = new Map<string, number>();
-    for (const char of corpus) {
+    for (const char of textToProcess) {
       charCounts.set(char, (charCounts.get(char) || 0) + 1);
     }
 
