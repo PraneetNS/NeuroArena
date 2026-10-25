@@ -54,7 +54,9 @@ import {
   countModelParams,
   leakageScore,
   GPTConfig,
-  DiagnosticsSnapshot
+  DiagnosticsSnapshot,
+  predictedValLoss,
+  getBaselinePosition
 } from '@na/ml-core';
 
 export class RealRuntime implements WorkbenchRuntime {
@@ -331,21 +333,25 @@ export class RealRuntime implements WorkbenchRuntime {
 
   public evaluateModelConfig(modelNode: GraphNode, tokenizerNode?: GraphNode): ModelNodeData {
     const d = modelNode.data as ModelNodeData;
-    const preset = d.preset || 'S';
-    let dModel = 128;
-    let nLayers = 4;
-    let nHeads = 4;
-    let dFF = 512;
+    const preset = d.preset || 'Scout';
+    let dModel = 96;
+    let nLayers = 3;
+    let nHeads = 3;
+    let dFF = 384;
     let contextLen = 128;
 
-    if (preset === 'C') {
+    if (preset === 'Scout') {
+      dModel = 96; nLayers = 3; nHeads = 3; dFF = 384; contextLen = 128;
+    } else if (preset === 'C') {
       dModel = 64; nLayers = 2; nHeads = 2; dFF = 256; contextLen = 64;
+    } else if (preset === 'S') {
+      dModel = 128; nLayers = 4; nHeads = 4; dFF = 512; contextLen = 128;
     } else if (preset === 'M') {
       dModel = 192; nLayers = 6; nHeads = 6; dFF = 768; contextLen = 256;
     } else if (preset === 'Custom') {
-      dModel = d.dModel || 128;
-      nLayers = d.nLayers || 4;
-      nHeads = d.nHeads || 4;
+      dModel = d.dModel || 96;
+      nLayers = d.nLayers || 3;
+      nHeads = d.nHeads || 3;
       dFF = d.dFF || (4 * dModel);
       contextLen = d.contextLen || 128;
     }
@@ -360,10 +366,28 @@ export class RealRuntime implements WorkbenchRuntime {
     const totalTokens = this.trainTokens.length || (tokenizerNode?.data as TokenizerNodeData)?.totalTokens || 350000;
     const tokensPerParam = Number((totalTokens / paramCount).toFixed(3));
 
+    // Data-starvation detector: fires on absolute tokens (below empirical scaling knee)
     let starvationChip: ModelNodeData['starvationChip'] = 'comfortable';
-    if (tokensPerParam < 1.0) starvationChip = 'severely-starved';
-    else if (tokensPerParam < 2.0) starvationChip = 'data-starved';
-    else if (tokensPerParam < 5.0) starvationChip = 'adequate';
+    let tokenHealthStatus: ModelNodeData['tokenHealthStatus'] = 'comfortable';
+    if (totalTokens < 100000) {
+      starvationChip = 'severely-starved';
+      tokenHealthStatus = 'severely-starved';
+    } else if (totalTokens < 400000) {
+      starvationChip = 'data-starved';
+      tokenHealthStatus = 'data-starved';
+    } else if (totalTokens < 1200000) {
+      starvationChip = 'workable';
+      tokenHealthStatus = 'adequate';
+    } else {
+      starvationChip = 'comfortable';
+      tokenHealthStatus = 'comfortable';
+    }
+
+    const predVal = predictedValLoss(preset, totalTokens);
+    const baseline = getBaselinePosition(predVal);
+    const scalingAdvice = totalTokens < 400000
+      ? 'more data helps a lot here'
+      : 'more steps help more than more data';
 
     const result: ModelNodeData = {
       preset,
@@ -376,7 +400,13 @@ export class RealRuntime implements WorkbenchRuntime {
       paramCount,
       estimatedMemoryMB,
       tokensPerParam,
-      starvationChip
+      totalTokens,
+      predictedValLoss: predVal,
+      baselineComparison: baseline.positionText,
+      baselineStatus: baseline.advice,
+      scalingAdvice: baseline.advice || scalingAdvice,
+      starvationChip,
+      tokenHealthStatus
     };
 
     modelNode.data = result;
@@ -863,6 +893,9 @@ export class RealRuntime implements WorkbenchRuntime {
       new Float32Array(100),
       undefined
     );
+
+    // Record completed run towards Vault capacity tier unlock
+    this.vaultManager.recordRunCompleted(manifest.finalValLoss);
   }
 
   // ==========================================================================
@@ -872,8 +905,9 @@ export class RealRuntime implements WorkbenchRuntime {
   public async runAutopsy(runId?: string): Promise<AutopsyReport> {
     const targetRunId = runId || this.activeRunId || (await this.storage.listRuns())[0] || 'run-latest';
 
-    // 1. Reveal tags via precondition-checked API
+    // 1. Reveal tags via precondition-checked API and record autopsy achievement
     await this.vaultManager.revealTagsFor(targetRunId);
+    this.vaultManager.recordAutopsyPerformed();
 
     const keptShards = this.vaultManager.getState().entries.filter(e => e.status === 'keep');
     const tagLossMap: Record<string, { totalLoss: number; count: number }> = {};
