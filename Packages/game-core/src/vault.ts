@@ -6,7 +6,7 @@
  * JSON export/import, IndexedDB persistence, and gated Autopsy tag reveal.
  */
 
-import { Shard, VaultEntry, VaultStats, VaultState } from './types.js';
+import { Shard, VaultEntry, VaultStats, VaultState, CapacityTier, VAULT_CAPACITY_TIERS } from './types.js';
 import { VALIDATION_CORPUS_TEXT } from './data/corpus.js';
 
 const DB_NAME = 'NeuroArenaVault';
@@ -41,6 +41,33 @@ export class VaultManager {
   private onUpdateCallbacks: Array<(state: VaultState) => void> = [];
   private db: IDBDatabase | null = null;
   private isDbReady = false;
+
+  private completedRunsCount = 0;
+  private hasPerformedAutopsy = false;
+  private bestValLoss = Infinity;
+
+  public recordRunCompleted(valLoss?: number): void {
+    this.completedRunsCount++;
+    if (valLoss !== undefined && valLoss < this.bestValLoss) {
+      this.bestValLoss = valLoss;
+    }
+    this.notify();
+  }
+
+  public recordAutopsyPerformed(): void {
+    this.hasPerformedAutopsy = true;
+    this.notify();
+  }
+
+  public getCapacityTier(): CapacityTier {
+    if (this.hasPerformedAutopsy || this.bestValLoss < 3.50) {
+      return VAULT_CAPACITY_TIERS[2]; // Tier 3: 1000 pages
+    }
+    if (this.completedRunsCount > 0) {
+      return VAULT_CAPACITY_TIERS[1]; // Tier 2: 400 pages
+    }
+    return VAULT_CAPACITY_TIERS[0]; // Tier 1: 150 pages
+  }
 
   constructor() {
     this.initDb();
@@ -139,9 +166,14 @@ export class VaultManager {
   /**
    * Harvests a shard and adds it to the vault.
    */
-  public harvest(shard: Shard): VaultEntry {
+  public harvest(shard: Shard): VaultEntry | null {
     const existing = this.entries.find(e => e.shardId === shard.id);
     if (existing) return existing;
+
+    const maxCapacity = this.getCapacityTier().maxPages;
+    if (this.entries.length >= maxCapacity) {
+      return null;
+    }
 
     const entry: VaultEntry = {
       shardId: shard.id,
@@ -348,6 +380,13 @@ export class VaultManager {
     }
 
     const fingerprint = computeDatasetFingerprint(this.entries);
+    const activeTier = this.getCapacityTier();
+    let nextTierUnlock: string | undefined = undefined;
+    if (activeTier.tier === 1) {
+      nextTierUnlock = 'Complete first training run to unlock Tier 2 (400 pages)';
+    } else if (activeTier.tier === 2) {
+      nextTierUnlock = 'Perform first Autopsy or reach val loss < 3.50 to unlock Tier 3 (1000 pages)';
+    }
 
     return {
       count: this.entries.length,
@@ -356,7 +395,11 @@ export class VaultManager {
       tokens: totalTokens,
       uniqueRatio: Number(uniqueRatio.toFixed(3)),
       sourceMix,
-      fingerprint
+      fingerprint,
+      maxCapacity: activeTier.maxPages,
+      tier: activeTier.tier,
+      tierTitle: activeTier.title,
+      nextTierUnlock
     };
   }
 
