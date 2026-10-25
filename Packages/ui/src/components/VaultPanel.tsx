@@ -177,6 +177,62 @@ export const VaultPanel: React.FC<VaultPanelProps> = ({
 
           {/* Top Running Stats Section */}
           <div style={{ padding: 'var(--na-space-4)', backgroundColor: 'var(--na-ink)', borderBottom: '1px solid var(--na-line)' }}>
+            {/* Vault Storage Capacity Bar */}
+            <div
+              style={{
+                marginBottom: 'var(--na-space-3)',
+                padding: 'var(--na-space-3)',
+                background: 'rgba(15, 23, 42, 0.65)',
+                border: '1px solid var(--na-line)',
+                borderRadius: 'var(--na-radius-base)'
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: 'var(--na-text-xs)', fontWeight: 600, color: 'var(--na-muted)', letterSpacing: '0.5px' }}>
+                    VAULT CAPACITY
+                  </span>
+                  <Badge variant={stats.tier === 3 ? 'accent' : 'neutral'}>
+                    Tier {stats.tier || 1}: {stats.tierTitle || 'Novice Ledger'}
+                  </Badge>
+                </div>
+                <div style={{ fontFamily: 'var(--na-font-mono)', fontSize: 'var(--na-text-xs)', color: 'var(--na-text)' }}>
+                  <span style={{ fontWeight: 600, color: (stats.count / (stats.maxCapacity || 150)) > 0.9 ? '#ef4444' : 'var(--na-accent)' }}>
+                    {stats.count}
+                  </span>
+                  {' '}/ {stats.maxCapacity || 150} Pages ({Math.min(100, Math.round((stats.count / (stats.maxCapacity || 150)) * 100))}%)
+                </div>
+              </div>
+              <div
+                style={{
+                  height: '8px',
+                  width: '100%',
+                  backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                  borderRadius: '4px',
+                  overflow: 'hidden'
+                }}
+              >
+                <div
+                  style={{
+                    height: '100%',
+                    width: `${Math.min(100, (stats.count / (stats.maxCapacity || 150)) * 100)}%`,
+                    backgroundColor:
+                      (stats.count / (stats.maxCapacity || 150)) > 0.9
+                        ? '#ef4444'
+                        : (stats.count / (stats.maxCapacity || 150)) > 0.75
+                        ? '#f59e0b'
+                        : '#00f3ff',
+                    transition: 'width 0.3s ease'
+                  }}
+                />
+              </div>
+              {stats.nextTierUnlock && (
+                <div style={{ fontSize: '11px', color: 'var(--na-muted)', marginTop: '6px' }}>
+                  🔒 {stats.nextTierUnlock}
+                </div>
+              )}
+            </div>
+
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 'var(--na-space-3)', marginBottom: 'var(--na-space-3)' }}>
               <div className="na-stat-card" style={{ padding: 'var(--na-space-2) var(--na-space-3)', background: 'var(--na-surface)', borderRadius: 'var(--na-radius-base)' }}>
                 <div style={{ fontSize: 'var(--na-text-xs)', color: 'var(--na-muted)' }}>ACTIVE TOKENS</div>
