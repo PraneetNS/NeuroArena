@@ -21,15 +21,15 @@ export const REGIONS: RegionDef[] = [
     id: 'meadow_of_verse',
     name: 'Meadow of Verse',
     center: { x: -400, z: -350 },
-    radius: 260,
-    targetQuota: 200,
+    radius: 350,
+    targetQuota: 400,
     qualityMix: {
-      clean: 0.75,       // 150
-      duplicate: 0.125,   // 25
-      boilerplate: 0.06,  // 12
-      ocr_noise: 0.05,    // 10
-      leaked_val: 0.015,  // 3
-      off_domain: 0.0     // 0
+      clean: 0.88,       // 352 clean shards
+      duplicate: 0.05,   // 20
+      ocr_noise: 0.04,   // 16
+      boilerplate: 0.02, // 8
+      leaked_val: 0.01,  // 4
+      off_domain: 0.0
     },
     description: 'Rolling green pasture preserving classical lyrical verse in pristine condition.',
     themeColor: 0x10b981,
@@ -40,13 +40,13 @@ export const REGIONS: RegionDef[] = [
     id: 'weathered_archive',
     name: 'Weathered Archive',
     center: { x: 420, z: -380 },
-    radius: 250,
-    targetQuota: 200,
+    radius: 340,
+    targetQuota: 385,
     qualityMix: {
-      ocr_noise: 0.65,    // 130
-      clean: 0.20,        // 40
-      boilerplate: 0.10,  // 20
-      duplicate: 0.05,    // 10
+      clean: 0.69,        // 266 clean shards
+      ocr_noise: 0.21,    // 81
+      duplicate: 0.06,    // 23
+      boilerplate: 0.04,  // 15
       leaked_val: 0.0,
       off_domain: 0.0
     },
@@ -59,13 +59,13 @@ export const REGIONS: RegionDef[] = [
     id: 'echo_hollow',
     name: 'Echo Hollow',
     center: { x: -450, z: 380 },
-    radius: 250,
-    targetQuota: 200,
+    radius: 340,
+    targetQuota: 385,
     qualityMix: {
-      duplicate: 0.625,   // 125
-      clean: 0.175,       // 35
-      ocr_noise: 0.125,   // 25
-      leaked_val: 0.075,  // 15
+      clean: 0.69,        // 266 clean shards
+      duplicate: 0.21,    // 81
+      leaked_val: 0.06,   // 23
+      ocr_noise: 0.04,    // 15
       boilerplate: 0.0,
       off_domain: 0.0
     },
@@ -78,13 +78,13 @@ export const REGIONS: RegionDef[] = [
     id: 'billboard_flats',
     name: 'Billboard Flats',
     center: { x: 380, z: 360 },
-    radius: 260,
-    targetQuota: 200,
+    radius: 340,
+    targetQuota: 385,
     qualityMix: {
-      boilerplate: 0.65,  // 130
-      clean: 0.20,        // 40
-      duplicate: 0.10,    // 20
-      off_domain: 0.05,   // 10
+      clean: 0.69,        // 266 clean shards
+      boilerplate: 0.21,  // 81
+      duplicate: 0.06,    // 23
+      off_domain: 0.04,   // 15
       leaked_val: 0.0,
       ocr_noise: 0.0
     },
@@ -97,13 +97,13 @@ export const REGIONS: RegionDef[] = [
     id: 'foreign_shore',
     name: 'Foreign Shore',
     center: { x: 20, z: 620 },
-    radius: 260,
-    targetQuota: 200,
+    radius: 340,
+    targetQuota: 385,
     qualityMix: {
-      off_domain: 0.675,  // 135
-      clean: 0.175,       // 35
-      leaked_val: 0.10,   // 20
-      boilerplate: 0.05,  // 10
+      clean: 0.69,        // 266 clean shards
+      off_domain: 0.21,   // 81
+      leaked_val: 0.06,   // 23
+      boilerplate: 0.04,  // 15
       duplicate: 0.0,
       ocr_noise: 0.0
     },
@@ -141,7 +141,7 @@ export function createWorldState(
       region.center.z,
       region.radius,
       quota,
-      18.0, // Minimum 18m blue-noise spacing
+      12.0, // Minimum 12m spacing (enables realistic 18m Sweep Net cluster harvesting)
       groundSampler,
       rng,
       region.name,

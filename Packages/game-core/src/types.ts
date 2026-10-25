@@ -124,24 +124,24 @@ export interface CapacityTier {
 export const VAULT_CAPACITY_TIERS: CapacityTier[] = [
   {
     tier: 1,
-    maxPages: 150,
+    maxPages: 350,
     title: 'Novice Ledger',
     conditionDescription: 'Initial unlocked vault capacity',
     unlockCondition: { type: 'initial' }
   },
   {
     tier: 2,
-    maxPages: 400,
+    maxPages: 1000,
     title: 'Journeyman Vault',
-    conditionDescription: 'Complete your first model training run',
-    unlockCondition: { type: 'first_completed_run' }
+    conditionDescription: 'Beat BIGRAM baseline on VAL (val loss ≤ 3.286)',
+    unlockCondition: { type: 'val_loss_threshold', targetValLoss: 3.286 }
   },
   {
     tier: 3,
-    maxPages: 1000,
+    maxPages: 2000,
     title: 'Grand Archive',
-    conditionDescription: 'Complete first Autopsy or achieve val loss < 3.50',
-    unlockCondition: { type: 'val_loss_threshold', targetValLoss: 3.50 }
+    conditionDescription: 'Beat TRIGRAM baseline on VAL (val loss ≤ 2.834)',
+    unlockCondition: { type: 'val_loss_threshold', targetValLoss: 2.834 }
   }
 ];
 

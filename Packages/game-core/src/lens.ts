@@ -30,7 +30,11 @@ export function extractWord3Grams(text: string): Set<string> {
 /**
  * Computes the 6 real Lens Signals for a given shard.
  */
-export function computeLensSignals(shard: Shard | { text: string }, vaultState?: VaultState): LensSignals {
+export function computeLensSignals(
+  shard: Shard | { text: string },
+  vaultState?: VaultState,
+  vault3GramsCache?: Set<string>
+): LensSignals {
   const text = shard.text;
   const len = text.length;
   if (len === 0) {
@@ -77,7 +81,18 @@ export function computeLensSignals(shard: Shard | { text: string }, vaultState?:
 
   // 6. Repetition Score (overlap with vault entries)
   let repetitionScore = 0;
-  if (vaultState && vaultState.entries.length > 0) {
+  if (vault3GramsCache && vault3GramsCache.size > 0) {
+    const shardGrams = extractWord3Grams(text);
+    if (shardGrams.size > 0) {
+      let matched = 0;
+      for (const g of shardGrams) {
+        if (vault3GramsCache.has(g)) {
+          matched++;
+        }
+      }
+      repetitionScore = matched / shardGrams.size;
+    }
+  } else if (vaultState && vaultState.entries.length > 0) {
     const shardGrams = extractWord3Grams(text);
     if (shardGrams.size > 0) {
       const vaultGrams = new Set<string>();
@@ -114,8 +129,8 @@ export function computeLensSignals(shard: Shard | { text: string }, vaultState?:
  * Scans a shard for the player HUD and computes all 6 signals,
  * identifying the dominant signal and qualitative surprise rating.
  */
-export function scanShard(shard: Shard, vaultState?: VaultState): ScanResult {
-  const signals = computeLensSignals(shard, vaultState);
+export function scanShard(shard: Shard, vaultState?: VaultState, vault3GramsCache?: Set<string>): ScanResult {
+  const signals = computeLensSignals(shard, vaultState, vault3GramsCache);
 
   // Determine dominant signal (highest normalized divergence from normal baseline)
   let dominantSignal: keyof LensSignals = 'surpriseScore';

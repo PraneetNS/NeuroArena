@@ -92,7 +92,7 @@ export const BottomDock: React.FC<BottomDockProps> = ({
     }
 
     minLoss = Math.max(0.1, minLoss * 0.9);
-    maxLoss = Math.max(minLoss + 0.5, maxLoss * 1.1);
+    maxLoss = Math.max(minLoss + 0.5, maxLoss * 1.1, 4.6);
 
     const getY = (loss: number) => {
       let norm: number;
@@ -131,6 +131,33 @@ export const BottomDock: React.FC<BottomDockProps> = ({
       prevV = smoothing * prevV + (1 - smoothing) * h.valLoss;
       smoothedTrain.push(prevT);
       smoothedVal.push(prevV);
+    }
+
+    // Draw Baseline Target Lines (Unigram 4.472, Bigram 3.286 [Tier 2], Trigram 2.834 [Tier 3])
+    const baselines = [
+      { name: 'TRIGRAM (Tier 3 Gate)', val: 2.834, color: '#38BDF8' },
+      { name: 'BIGRAM (Tier 2 Gate)', val: 3.286, color: '#F59E0B' },
+      { name: 'UNIGRAM', val: 4.472, color: '#94A3B8' }
+    ];
+
+    for (const b of baselines) {
+      if (b.val >= minLoss && b.val <= maxLoss) {
+        const y = getY(b.val);
+        ctx.strokeStyle = b.color;
+        ctx.setLineDash([5, 4]);
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(padLeft, y);
+        ctx.lineTo(padLeft + plotW, y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Label on the right
+        ctx.fillStyle = b.color;
+        ctx.font = '9px "IBM Plex Mono", monospace';
+        ctx.textAlign = 'right';
+        ctx.fillText(`${b.name} ${b.val.toFixed(3)}`, padLeft + plotW - 4, y - 3);
+      }
     }
 
     // Draw Raw Train Loss Line (faint)

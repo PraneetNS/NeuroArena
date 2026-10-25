@@ -46,6 +46,14 @@ export class VaultManager {
   private hasPerformedAutopsy = false;
   private bestValLoss = Infinity;
 
+  public getCompletedRunsCount(): number {
+    return this.completedRunsCount;
+  }
+
+  public getHasPerformedAutopsy(): boolean {
+    return this.hasPerformedAutopsy;
+  }
+
   public recordRunCompleted(valLoss?: number): void {
     this.completedRunsCount++;
     if (valLoss !== undefined && valLoss < this.bestValLoss) {
@@ -60,13 +68,13 @@ export class VaultManager {
   }
 
   public getCapacityTier(): CapacityTier {
-    if (this.hasPerformedAutopsy || this.bestValLoss < 3.50) {
-      return VAULT_CAPACITY_TIERS[2]; // Tier 3: 1000 pages
+    if (this.bestValLoss <= 2.834) {
+      return VAULT_CAPACITY_TIERS[2]; // Tier 3: Grand Archive (beats Trigram 2.834)
     }
-    if (this.completedRunsCount > 0) {
-      return VAULT_CAPACITY_TIERS[1]; // Tier 2: 400 pages
+    if (this.bestValLoss <= 3.286) {
+      return VAULT_CAPACITY_TIERS[1]; // Tier 2: Journeyman Vault (beats Bigram 3.286)
     }
-    return VAULT_CAPACITY_TIERS[0]; // Tier 1: 150 pages
+    return VAULT_CAPACITY_TIERS[0]; // Tier 1: Novice Ledger (350 pages)
   }
 
   constructor() {
@@ -383,9 +391,9 @@ export class VaultManager {
     const activeTier = this.getCapacityTier();
     let nextTierUnlock: string | undefined = undefined;
     if (activeTier.tier === 1) {
-      nextTierUnlock = 'Complete first training run to unlock Tier 2 (400 pages)';
+      nextTierUnlock = `Beat BIGRAM baseline on VAL (val loss ≤ 3.286) to unlock Tier 2 (${VAULT_CAPACITY_TIERS[1].maxPages} pages)`;
     } else if (activeTier.tier === 2) {
-      nextTierUnlock = 'Perform first Autopsy or reach val loss < 3.50 to unlock Tier 3 (1000 pages)';
+      nextTierUnlock = `Beat TRIGRAM baseline on VAL (val loss ≤ 2.834) to unlock Tier 3 (${VAULT_CAPACITY_TIERS[2].maxPages} pages)`;
     }
 
     return {

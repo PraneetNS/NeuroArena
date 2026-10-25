@@ -224,6 +224,32 @@ export class TrainingDashboard {
     const minLoss = Math.min(0.5, ...this.lossHistory);
     const range = maxLoss - minLoss || 1;
 
+    // Draw Baselines (Unigram 4.472, Bigram 3.286 [Tier 2 Gate], Trigram 2.834 [Tier 3 Gate])
+    const baselines = [
+      { name: 'TRIGRAM (Tier 3 Gate)', val: 2.834, color: '#38bdf8' },
+      { name: 'BIGRAM (Tier 2 Gate)', val: 3.286, color: '#f59e0b' },
+      { name: 'UNIGRAM', val: 4.472, color: '#94a3b8' }
+    ];
+
+    for (const b of baselines) {
+      if (b.val >= minLoss && b.val <= maxLoss) {
+        const y = h - ((b.val - minLoss) / range) * (h - 20) - 10;
+        ctx.strokeStyle = b.color;
+        ctx.setLineDash([4, 4]);
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(10, y);
+        ctx.lineTo(w - 10, y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = b.color;
+        ctx.font = '9px monospace';
+        ctx.textAlign = 'right';
+        ctx.fillText(`${b.name} ${b.val.toFixed(3)}`, w - 14, y - 3);
+      }
+    }
+
     // Draw raw loss curve
     ctx.strokeStyle = 'rgba(0, 243, 255, 0.4)';
     ctx.lineWidth = 1.5;

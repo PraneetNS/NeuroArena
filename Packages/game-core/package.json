@@ -12,7 +12,8 @@
     "inspect": "npx tsx src/inspect.ts",
     "lens-report": "tsx src/lensReport.ts",
     "walkthrough": "tsx src/walkthrough.ts",
-    "sweep-calc": "tsx src/sweepCalc.ts"
+    "sweep-calc": "tsx src/sweepCalc.ts",
+    "pacing-sim": "tsx src/pacingSim.ts"
   },
   "dependencies": {
     "@na/ml-core": "workspace:*"
