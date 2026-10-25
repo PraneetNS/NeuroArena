@@ -172,31 +172,41 @@ export const GraphNode: React.FC<GraphNodeProps> = ({
         );
 
       case 'model': {
-        const status = data.tokenHealthStatus || (data.tokensPerParam < 2 ? 'data-starved' : 'comfortable');
-        const chipColor = status === 'severely-starved' ? '#ef4444' : status === 'data-starved' ? '#f59e0b' : '#10b981';
+        const tokens = data.totalTokens || 350000;
+        const predVal = data.predictedValLoss ?? 3.12;
+        const chip = data.starvationChip || (tokens < 100000 ? 'severely-starved' : tokens < 400000 ? 'data-starved' : 'comfortable');
+        const chipColor = chip === 'starved' || chip === 'severely-starved' ? '#ef4444' : chip === 'workable' || chip === 'data-starved' ? '#f59e0b' : '#10b981';
+        const advice = data.scalingAdvice || (tokens < 400000 ? 'more data helps a lot here' : 'more steps help more than more data');
+        const baseline = data.baselineComparison || (predVal < 2.834 ? 'Beats Trigram (2.834)' : predVal < 3.286 ? 'Beats Bigram (3.286)' : 'Above Bigram');
+
         return (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ color: 'var(--na-muted)' }}>Preset:</span>
               <span style={{ fontFamily: 'var(--na-font-mono)' }}>
                 {data.preset} ({(data.paramCount / 1000).toFixed(0)}k)
               </span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ color: 'var(--na-muted)' }}>Data Ratio:</span>
-              <span
-                style={{
-                  fontSize: '9px',
-                  padding: '1px 5px',
-                  borderRadius: '3px',
-                  backgroundColor: 'var(--na-ink)',
-                  color: chipColor,
-                  fontWeight: 600,
-                  border: `1px solid ${chipColor}40`
-                }}
-              >
-                {status}
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ color: 'var(--na-muted)' }}>Tokens:</span>
+              <span style={{ fontFamily: 'var(--na-font-mono)', fontWeight: 600 }}>
+                {tokens >= 1000000 ? `${(tokens / 1000000).toFixed(2)}M` : `${Math.round(tokens / 1000)}k`}
+                <span style={{ fontSize: '9px', color: 'var(--na-muted)', marginLeft: '4px' }}>
+                  ({data.tokensPerParam.toFixed(1)} t/p)
+                </span>
               </span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ color: 'var(--na-muted)' }}>Pred Val:</span>
+              <span style={{ fontFamily: 'var(--na-font-mono)', color: 'var(--na-accent)', fontWeight: 600 }}>
+                {predVal.toFixed(3)}
+              </span>
+            </div>
+            <div style={{ fontSize: '9px', color: chipColor, fontWeight: 600, marginTop: '2px' }}>
+              ● {baseline}
+            </div>
+            <div style={{ fontSize: '8.5px', color: 'var(--na-muted)', fontStyle: 'italic', marginTop: '1px' }}>
+              "{advice}"
             </div>
           </div>
         );
