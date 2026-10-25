@@ -270,17 +270,17 @@ export function createDefaultNode(kind: NodeKind, x: number, y: number, idSuffix
           }
         ],
         data: {
-          preset: 'S',
-          dModel: 128,
-          nLayers: 4,
-          nHeads: 4,
-          dFF: 512,
+          preset: 'Scout',
+          dModel: 96,
+          nLayers: 3,
+          nHeads: 3,
+          dFF: 384,
           contextLen: 128,
           vocabSize: 1024,
-          paramCount: 1250000,
-          estimatedMemoryMB: 24,
+          paramCount: 446304,
+          estimatedMemoryMB: 12,
           tokensPerParam: 0,
-          starvationChip: 'data-starved'
+          starvationChip: 'starved'
         } as ModelNodeData
       };
 
