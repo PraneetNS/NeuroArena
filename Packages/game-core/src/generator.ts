@@ -202,6 +202,10 @@ export class ShardGenerator {
       }
     }
 
+    if (!text) {
+      throw new Error(`Text is undefined for tag=${tag}, valPages=${this.valPages?.length}, trainPages=${this.trainPages?.length}, austenPages=${this.austenPages?.length}`);
+    }
+
     if (text.length < 1500) {
       text = text.padEnd(1510, ' ');
     } else if (text.length > 3500) {
