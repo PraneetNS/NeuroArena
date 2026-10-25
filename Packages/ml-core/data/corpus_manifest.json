@@ -1,0 +1,47 @@
+{
+  "title": "The Complete Works of William Shakespeare",
+  "edition": "Project Gutenberg eBook #100",
+  "heldOutWorks": [
+    {
+      "title": "THE COMEDY OF ERRORS",
+      "genre": "comedy",
+      "characters": 88328
+    },
+    {
+      "title": "ALL’S WELL THAT ENDS WELL",
+      "genre": "comedy",
+      "characters": 134619
+    },
+    {
+      "title": "THE TRAGEDY OF ANTONY AND CLEOPATRA",
+      "genre": "tragedy",
+      "characters": 152395
+    },
+    {
+      "title": "THE LIFE AND DEATH OF KING JOHN",
+      "genre": "history",
+      "characters": 121394
+    }
+  ],
+  "trainWorksCount": 40,
+  "valWorksCount": 4,
+  "statistics": {
+    "fileBytes": 5422619,
+    "gzippedBytes": 2090578,
+    "characters": {
+      "total": 5359342,
+      "train": 4862508,
+      "val": 496745
+    },
+    "bpe1024Tokens": {
+      "train": 2680959,
+      "val": 276867,
+      "total": 2957826
+    },
+    "charsPerToken": {
+      "train": 1.814,
+      "val": 1.794,
+      "overall": 1.812
+    }
+  }
+}
