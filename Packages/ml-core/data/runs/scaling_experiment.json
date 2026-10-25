@@ -1,238 +1,208 @@
 {
-  "timestamp": "2026-10-23T12:00:37.011Z",
-  "config": {
-    "steps": 60,
-    "batchSize": 4,
-    "seqLen": 64
+  "timestamp": "2026-10-25T10:16:49.756Z",
+  "protocol": {
+    "steps": 2000,
+    "batchSize": 16,
+    "contextLen": 128,
+    "warmup": 100,
+    "valBatches": 50,
+    "seedsPerCell": 3,
+    "lrCandidates": [
+      0.0003,
+      0.001,
+      0.003
+    ]
   },
   "table": [
     {
       "preset": "Scout",
-      "tokens": 10000,
-      "tokensPerParam": 0.022,
-      "finalTrainLoss": null,
-      "valLoss": null,
-      "gap": null,
+      "params": 446304,
+      "tokens": 25000,
+      "tokensPerParam": 0.056,
+      "train": 3.2966,
+      "val": 4.596,
+      "gap": 1.2995,
+      "std": 0.0207,
+      "bestLR": 0.0003,
+      "trigram": 2.8335,
       "memorizationProbeRate": 0,
       "samples": [
         {
           "prompt": "The ",
-          "text": ""
+          "text": "The unlves beauty to in win w bright,\nTo thy I wetermat bin"
         },
         {
           "prompt": "Shall ",
-          "text": ""
+          "text": "Shall but of pimage cond thee,\nFor thy I thy that in in me so ws"
         },
         {
           "prompt": "To ",
-          "text": ""
+          "text": "To all love’s my thou founded love decay,\nWhen for not thee I barrough"
         }
       ]
     },
     {
       "preset": "Scout",
-      "tokens": 50000,
-      "tokensPerParam": 0.112,
-      "finalTrainLoss": null,
-      "valLoss": null,
-      "gap": null,
+      "params": 446304,
+      "tokens": 100000,
+      "tokensPerParam": 0.224,
+      "train": 2.9156,
+      "val": 3.5835,
+      "gap": 0.6679,
+      "std": 0.0137,
+      "bestLR": 0.001,
+      "trigram": 2.8335,
       "memorizationProbeRate": 0,
-      "samples": [
-        {
-          "prompt": "The ",
-          "text": ""
-        },
-        {
-          "prompt": "Shall ",
-          "text": ""
-        },
-        {
-          "prompt": "To ",
-          "text": ""
-        }
-      ]
+      "samples": []
     },
     {
       "preset": "Scout",
-      "tokens": 200000,
-      "tokensPerParam": 0.448,
-      "finalTrainLoss": null,
-      "valLoss": null,
-      "gap": null,
+      "params": 446304,
+      "tokens": 400000,
+      "tokensPerParam": 0.896,
+      "train": 2.4462,
+      "val": 3.1183,
+      "gap": 0.6721,
+      "std": 0.0305,
+      "bestLR": 0.003,
+      "trigram": 2.8335,
       "memorizationProbeRate": 0,
-      "samples": [
-        {
-          "prompt": "The ",
-          "text": ""
-        },
-        {
-          "prompt": "Shall ",
-          "text": ""
-        },
-        {
-          "prompt": "To ",
-          "text": ""
-        }
-      ]
+      "samples": []
     },
     {
       "preset": "Scout",
-      "tokens": 600000,
-      "tokensPerParam": 1.344,
-      "finalTrainLoss": null,
-      "valLoss": null,
-      "gap": null,
+      "params": 446304,
+      "tokens": 1200000,
+      "tokensPerParam": 2.689,
+      "train": 2.6134,
+      "val": 3.0446,
+      "gap": 0.4312,
+      "std": 0.0051,
+      "bestLR": 0.003,
+      "trigram": 2.8335,
       "memorizationProbeRate": 0,
-      "samples": [
-        {
-          "prompt": "The ",
-          "text": ""
-        },
-        {
-          "prompt": "Shall ",
-          "text": ""
-        },
-        {
-          "prompt": "To ",
-          "text": ""
-        }
-      ]
+      "samples": []
     },
     {
       "preset": "Scout",
-      "tokens": 1300000,
-      "tokensPerParam": 2.913,
-      "finalTrainLoss": null,
-      "valLoss": null,
-      "gap": null,
+      "params": 446304,
+      "tokens": 2683677,
+      "tokensPerParam": 6.013,
+      "train": 2.7108,
+      "val": 2.9779,
+      "gap": 0.2671,
+      "std": 0.0141,
+      "bestLR": 0.003,
+      "trigram": 2.8335,
       "memorizationProbeRate": 0,
       "samples": [
         {
           "prompt": "The ",
-          "text": ""
+          "text": "The Maduo\nAnd be barned of this in the founds.\n\nFIRST CY.\nThe "
         },
         {
           "prompt": "Shall ",
-          "text": ""
+          "text": "Shall fruty.\n\nSUMNTENIUS.\nHe shall be soldious with her hand\nThat will"
         },
         {
           "prompt": "To ",
-          "text": ""
+          "text": "To his heart. What is in a crowned\nThat the King of Hibin, Limons"
         }
       ]
     },
     {
       "preset": "S",
-      "tokens": 10000,
-      "tokensPerParam": 0.011,
-      "finalTrainLoss": null,
-      "valLoss": null,
-      "gap": null,
+      "params": 940800,
+      "tokens": 25000,
+      "tokensPerParam": 0.027,
+      "train": 2.3675,
+      "val": 4.6047,
+      "gap": 2.2372,
+      "std": 0.0404,
+      "bestLR": 0.0003,
+      "trigram": 2.8335,
       "memorizationProbeRate": 0,
       "samples": [
         {
           "prompt": "The ",
-          "text": ""
+          "text": "The do doth so doth is decain,\nThe I beauty on formir with thee thee\n"
         },
         {
           "prompt": "Shall ",
-          "text": ""
+          "text": "Shall for me this sunump of to me.\n  But I you thy thee so to thee w"
         },
         {
           "prompt": "To ",
-          "text": ""
+          "text": "To sublavest the mow the found\nO mmer’s his tiquite on my ws"
         }
       ]
     },
     {
       "preset": "S",
-      "tokens": 50000,
-      "tokensPerParam": 0.053,
-      "finalTrainLoss": null,
-      "valLoss": null,
-      "gap": null,
+      "params": 940800,
+      "tokens": 100000,
+      "tokensPerParam": 0.106,
+      "train": 2.883,
+      "val": 3.5823,
+      "gap": 0.6993,
+      "std": 0.0052,
+      "bestLR": 0.0003,
+      "trigram": 2.8335,
       "memorizationProbeRate": 0,
-      "samples": [
-        {
-          "prompt": "The ",
-          "text": ""
-        },
-        {
-          "prompt": "Shall ",
-          "text": ""
-        },
-        {
-          "prompt": "To ",
-          "text": ""
-        }
-      ]
+      "samples": []
     },
     {
       "preset": "S",
-      "tokens": 200000,
-      "tokensPerParam": 0.213,
-      "finalTrainLoss": null,
-      "valLoss": null,
-      "gap": null,
+      "params": 940800,
+      "tokens": 400000,
+      "tokensPerParam": 0.425,
+      "train": 2.3213,
+      "val": 3.0735,
+      "gap": 0.7522,
+      "std": 0.0198,
+      "bestLR": 0.003,
+      "trigram": 2.8335,
       "memorizationProbeRate": 0,
-      "samples": [
-        {
-          "prompt": "The ",
-          "text": ""
-        },
-        {
-          "prompt": "Shall ",
-          "text": ""
-        },
-        {
-          "prompt": "To ",
-          "text": ""
-        }
-      ]
+      "samples": []
     },
     {
       "preset": "S",
-      "tokens": 600000,
-      "tokensPerParam": 0.638,
-      "finalTrainLoss": null,
-      "valLoss": null,
-      "gap": null,
+      "params": 940800,
+      "tokens": 1200000,
+      "tokensPerParam": 1.276,
+      "train": 2.4628,
+      "val": 2.963,
+      "gap": 0.5003,
+      "std": 0.0082,
+      "bestLR": 0.003,
+      "trigram": 2.8335,
       "memorizationProbeRate": 0,
-      "samples": [
-        {
-          "prompt": "The ",
-          "text": ""
-        },
-        {
-          "prompt": "Shall ",
-          "text": ""
-        },
-        {
-          "prompt": "To ",
-          "text": ""
-        }
-      ]
+      "samples": []
     },
     {
       "preset": "S",
-      "tokens": 1300000,
-      "tokensPerParam": 1.382,
-      "finalTrainLoss": null,
-      "valLoss": null,
-      "gap": null,
+      "params": 940800,
+      "tokens": 2683677,
+      "tokensPerParam": 2.853,
+      "train": 2.6064,
+      "val": 2.887,
+      "gap": 0.2805,
+      "std": 0.0162,
+      "bestLR": 0.003,
+      "trigram": 2.8335,
       "memorizationProbeRate": 0,
       "samples": [
         {
           "prompt": "The ",
-          "text": ""
+          "text": "The Quildrant and Michard, and send him and be gone.\nFor thou art with"
         },
         {
           "prompt": "Shall ",
-          "text": ""
+          "text": "Shall pair from my hour,\nAnd in a sun of our own fittening by me "
         },
         {
           "prompt": "To ",
-          "text": ""
+          "text": "To refit\nFrom to her pardon in the wind of this went,\nTo do this"
         }
       ]
     }
