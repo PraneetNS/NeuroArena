@@ -70,6 +70,81 @@ export interface VaultEntry {
   isRevealed?: boolean;
 }
 
+export interface LensRule {
+  id: string;
+  name: string;
+  description?: string;
+  minDictionaryHitRate?: number; // e.g. 0.90
+  maxNonAlphaRatio?: number;     // e.g. 0.30
+  maxRepetitionScore?: number;   // e.g. 0.40
+  maxUppercaseRatio?: number;    // e.g. 0.20
+  minSurpriseScore?: number;
+  maxSurpriseScore?: number;
+}
+
+export const DEFAULT_LENS_RULES: LensRule[] = [
+  {
+    id: 'clean_english',
+    name: 'Clean English',
+    description: 'Dict ≥ 0.90, NonAlpha ≤ 0.30, Repetition ≤ 0.40',
+    minDictionaryHitRate: 0.90,
+    maxNonAlphaRatio: 0.30,
+    maxRepetitionScore: 0.40
+  },
+  {
+    id: 'strict_curator',
+    name: 'Strict Curator',
+    description: 'Dict ≥ 0.95, NonAlpha ≤ 0.15, Repetition ≤ 0.30, Uppercase ≤ 0.15',
+    minDictionaryHitRate: 0.95,
+    maxNonAlphaRatio: 0.15,
+    maxRepetitionScore: 0.30,
+    maxUppercaseRatio: 0.15
+  },
+  {
+    id: 'liberal_sweep',
+    name: 'Liberal Sweep',
+    description: 'Dict ≥ 0.70, NonAlpha ≤ 0.50, Repetition ≤ 0.60',
+    minDictionaryHitRate: 0.70,
+    maxNonAlphaRatio: 0.50,
+    maxRepetitionScore: 0.60
+  }
+];
+
+export interface CapacityTier {
+  tier: 1 | 2 | 3;
+  maxPages: number; // 150, 400, 1000
+  title: string;
+  conditionDescription: string;
+  unlockCondition: {
+    type: 'initial' | 'first_completed_run' | 'first_autopsy' | 'val_loss_threshold';
+    targetValLoss?: number;
+  };
+}
+
+export const VAULT_CAPACITY_TIERS: CapacityTier[] = [
+  {
+    tier: 1,
+    maxPages: 150,
+    title: 'Novice Ledger',
+    conditionDescription: 'Initial unlocked vault capacity',
+    unlockCondition: { type: 'initial' }
+  },
+  {
+    tier: 2,
+    maxPages: 400,
+    title: 'Journeyman Vault',
+    conditionDescription: 'Complete your first model training run',
+    unlockCondition: { type: 'first_completed_run' }
+  },
+  {
+    tier: 3,
+    maxPages: 1000,
+    title: 'Grand Archive',
+    conditionDescription: 'Complete first Autopsy or achieve val loss < 3.50',
+    unlockCondition: { type: 'val_loss_threshold', targetValLoss: 3.50 }
+  }
+];
+
 export interface VaultStats {
   count: number;
   keptCount: number;
@@ -78,6 +153,10 @@ export interface VaultStats {
   uniqueRatio: number;
   sourceMix: Record<string, number>;
   fingerprint: string;
+  maxCapacity: number;
+  tier: 1 | 2 | 3;
+  tierTitle: string;
+  nextTierUnlock?: string;
 }
 
 export interface VaultState {
