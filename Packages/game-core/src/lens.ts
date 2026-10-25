@@ -10,7 +10,7 @@
  * 6. dictionaryHitRate: fraction of words found in clean TRAIN split vocabulary
  */
 
-import { Shard, LensSignals, ScanResult, VaultState } from './types.js';
+import { Shard, LensSignals, ScanResult, VaultState, LensRule } from './types.js';
 import { defaultBigramModel } from './bigram.js';
 import { shakespeareDictionary } from './dictionary.js';
 
@@ -174,4 +174,30 @@ export function computeAUC(cleanVals: number[], tagVals: number[], higherIsAnoma
     }
   }
   return (wins + 0.5 * ties) / (cleanVals.length * tagVals.length);
+}
+
+/**
+ * Evaluates whether a shard's LensSignals pass a given LensRule.
+ * Acts solely on computed analytical signals, NEVER on hidden tags.
+ */
+export function evaluateLensRule(signals: LensSignals, rule: LensRule): boolean {
+  if (rule.minDictionaryHitRate !== undefined && signals.dictionaryHitRate < rule.minDictionaryHitRate) {
+    return false;
+  }
+  if (rule.maxNonAlphaRatio !== undefined && signals.nonAlphabeticRatio > rule.maxNonAlphaRatio) {
+    return false;
+  }
+  if (rule.maxRepetitionScore !== undefined && signals.repetitionScore > rule.maxRepetitionScore) {
+    return false;
+  }
+  if (rule.maxUppercaseRatio !== undefined && signals.uppercaseRatio > rule.maxUppercaseRatio) {
+    return false;
+  }
+  if (rule.minSurpriseScore !== undefined && signals.surpriseScore < rule.minSurpriseScore) {
+    return false;
+  }
+  if (rule.maxSurpriseScore !== undefined && signals.surpriseScore > rule.maxSurpriseScore) {
+    return false;
+  }
+  return true;
 }
