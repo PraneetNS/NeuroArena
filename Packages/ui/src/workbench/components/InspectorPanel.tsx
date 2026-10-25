@@ -419,14 +419,16 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
                 ARCHITECTURE PRESET
               </div>
               <div style={{ display: 'flex', gap: '4px' }}>
-                {(['C', 'S', 'M', 'Custom'] as const).map((p) => (
+                {(['Scout', 'C', 'S', 'M', 'Custom'] as const).map((p) => (
                   <Button
                     key={p}
                     variant={data.preset === p ? 'primary' : 'secondary'}
                     size="sm"
                     style={{ flex: 1 }}
                     onClick={() => {
-                      if (p === 'C') {
+                      if (p === 'Scout') {
+                        update({ preset: 'Scout', dModel: 96, nLayers: 3, nHeads: 3, dFF: 384, contextLen: 128, paramCount: 446304, vramMb: 12 });
+                      } else if (p === 'C') {
                         update({ preset: 'C', dModel: 64, nLayers: 2, nHeads: 2, dFF: 256, contextLen: 64, paramCount: 320000, vramMb: 8 });
                       } else if (p === 'S') {
                         update({ preset: 'S', dModel: 128, nLayers: 4, nHeads: 4, dFF: 512, contextLen: 128, paramCount: 1250000, vramMb: 24 });
@@ -502,10 +504,10 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
               </div>
             </div>
 
-            {/* Tokens-per-parameter Meter */}
-            <div style={{ backgroundColor: 'var(--na-raised)', padding: '10px', borderRadius: '4px', border: '1px solid var(--na-line)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                <span style={{ fontSize: 'var(--na-text-xs)', color: 'var(--na-muted)' }}>Tokens per Parameter:</span>
+            {/* Data Scaling & Prediction Meter */}
+            <div style={{ backgroundColor: 'var(--na-raised)', padding: '10px', borderRadius: '4px', border: '1px solid var(--na-line)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: 'var(--na-text-xs)', color: 'var(--na-muted)' }}>Dataset Volume:</span>
                 <span
                   style={{
                     fontSize: '10px',
@@ -513,27 +515,51 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
                     borderRadius: '4px',
                     backgroundColor: 'var(--na-ink)',
                     color:
-                      data.tokenHealthStatus === 'severely-starved' ? '#ef4444' :
-                      data.tokenHealthStatus === 'data-starved' ? '#f59e0b' :
-                      data.tokenHealthStatus === 'adequate' ? '#38bdf8' : '#10b981',
+                      data.starvationChip === 'severely-starved' || data.tokenHealthStatus === 'severely-starved' ? '#ef4444' :
+                      data.starvationChip === 'data-starved' || data.tokenHealthStatus === 'data-starved' ? '#f59e0b' : '#10b981',
                     fontWeight: 600,
                     border: '1px solid currentColor'
                   }}
                 >
-                  {(data.tokenHealthStatus || 'comfortable').toUpperCase()}
+                  {(data.tokenHealthStatus || data.starvationChip || 'comfortable').toUpperCase()}
                 </span>
               </div>
-              <div style={{ fontFamily: 'var(--na-font-mono)', fontSize: '13px', fontWeight: 600, color: 'var(--na-text)' }}>
-                {(data.tokensPerParam ?? 12.5).toFixed(2)} tok/param
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                <div style={{ fontFamily: 'var(--na-font-mono)', fontSize: '15px', fontWeight: 700, color: 'var(--na-text)' }}>
+                  {((data.totalTokens ?? 350000) >= 1000000)
+                    ? `${((data.totalTokens ?? 350000) / 1000000).toFixed(2)}M tokens`
+                    : `${Math.round((data.totalTokens ?? 350000) / 1000).toLocaleString()}k tokens`}
+                </div>
+                <div style={{ fontFamily: 'var(--na-font-mono)', fontSize: '11px', color: 'var(--na-muted)' }}>
+                  {(data.tokensPerParam ?? 12.5).toFixed(2)} tok/param
+                </div>
               </div>
-              <div style={{ height: '4px', backgroundColor: 'var(--na-line)', borderRadius: '2px', overflow: 'hidden', marginTop: '6px' }}>
+
+              {/* Progress toward empirical scaling knee (1.2M tokens) */}
+              <div style={{ height: '4px', backgroundColor: 'var(--na-line)', borderRadius: '2px', overflow: 'hidden' }}>
                 <div
                   style={{
                     height: '100%',
-                    width: `${Math.min(100, ((data.tokensPerParam ?? 12.5) / 20) * 100)}%`,
-                    backgroundColor: (data.tokensPerParam ?? 12.5) < 2 ? '#f59e0b' : '#10b981'
+                    width: `${Math.min(100, (((data.totalTokens ?? 350000) / 1200000) * 100))}%`,
+                    backgroundColor: (data.totalTokens ?? 350000) < 100000 ? '#ef4444' : (data.totalTokens ?? 350000) < 400000 ? '#f59e0b' : '#10b981'
                   }}
                 />
+              </div>
+
+              {/* Predicted Val Loss & Baseline Comparison */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '4px', borderTop: '1px solid var(--na-line)' }}>
+                <span style={{ fontSize: 'var(--na-text-xs)', color: 'var(--na-muted)' }}>Predicted Val Loss:</span>
+                <span style={{ fontFamily: 'var(--na-font-mono)', fontSize: '13px', fontWeight: 700, color: 'var(--na-accent)' }}>
+                  {(data.predictedValLoss ?? 3.118).toFixed(3)}
+                </span>
+              </div>
+              <div style={{ fontSize: '10px', color: 'var(--na-text)', fontWeight: 600 }}>
+                ● {data.baselineComparison || 'Beats Bigram Baseline (3.286)'}
+              </div>
+
+              {/* One-line advice */}
+              <div style={{ fontSize: '10.5px', color: 'var(--na-muted)', fontStyle: 'italic', backgroundColor: 'var(--na-ink)', padding: '4px 6px', borderRadius: '3px' }}>
+                "{data.scalingAdvice || ((data.totalTokens ?? 350000) < 400000 ? 'more data helps a lot here' : 'more steps help more than more data')}"
               </div>
             </div>
           </div>
