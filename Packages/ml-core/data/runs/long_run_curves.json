@@ -1,0 +1,477 @@
+{
+  "presets": {
+    "Scout": {
+      "steps": [
+        {
+          "preset": "Scout",
+          "step": 500,
+          "lr": 0.0029952658304406637,
+          "trainLoss": 6.4286,
+          "valLoss": 3.4665,
+          "elapsedSec": 14.73,
+          "tokensPerSec": 69497
+        },
+        {
+          "preset": "Scout",
+          "step": 1000,
+          "lr": 0.002966444033879532,
+          "trainLoss": 3.318,
+          "valLoss": 3.1974,
+          "elapsedSec": 29.02,
+          "tokensPerSec": 70568
+        },
+        {
+          "preset": "Scout",
+          "step": 1500,
+          "lr": 0.0029119398960064844,
+          "trainLoss": 3.0587,
+          "valLoss": 3.0792,
+          "elapsedSec": 43.34,
+          "tokensPerSec": 70884
+        },
+        {
+          "preset": "Scout",
+          "step": 2000,
+          "lr": 0.0028327178314590086,
+          "trainLoss": 2.7971,
+          "valLoss": 3.0235,
+          "elapsedSec": 57.66,
+          "tokensPerSec": 71039
+        },
+        {
+          "preset": "Scout",
+          "step": 2500,
+          "lr": 0.002730179622223631,
+          "trainLoss": 2.7047,
+          "valLoss": 2.9465,
+          "elapsedSec": 72.11,
+          "tokensPerSec": 71007
+        },
+        {
+          "preset": "Scout",
+          "step": 3000,
+          "lr": 0.002606139614031655,
+          "trainLoss": 2.6086,
+          "valLoss": 2.925,
+          "elapsedSec": 86.56,
+          "tokensPerSec": 70981
+        },
+        {
+          "preset": "Scout",
+          "step": 3500,
+          "lr": 0.002462792612712558,
+          "trainLoss": 2.5738,
+          "valLoss": 2.8852,
+          "elapsedSec": 100.89,
+          "tokensPerSec": 71049
+        },
+        {
+          "preset": "Scout",
+          "step": 4000,
+          "lr": 0.0023026750485578176,
+          "trainLoss": 2.4493,
+          "valLoss": 2.8695,
+          "elapsedSec": 115.08,
+          "tokensPerSec": 71183
+        },
+        {
+          "preset": "Scout",
+          "step": 4500,
+          "lr": 0.0021286200958660416,
+          "trainLoss": 2.481,
+          "valLoss": 2.8341,
+          "elapsedSec": 129.62,
+          "tokensPerSec": 71098
+        },
+        {
+          "preset": "Scout",
+          "step": 5000,
+          "lr": 0.0019437075417993372,
+          "trainLoss": 2.3922,
+          "valLoss": 2.8153,
+          "elapsedSec": 144.08,
+          "tokensPerSec": 71070
+        },
+        {
+          "preset": "Scout",
+          "step": 5500,
+          "lr": 0.001751209291588322,
+          "trainLoss": 2.4587,
+          "valLoss": 2.7989,
+          "elapsedSec": 158.73,
+          "tokensPerSec": 70962
+        },
+        {
+          "preset": "Scout",
+          "step": 6000,
+          "lr": 0.0015545314743350958,
+          "trainLoss": 2.4144,
+          "valLoss": 2.7956,
+          "elapsedSec": 173.14,
+          "tokensPerSec": 70973
+        },
+        {
+          "preset": "Scout",
+          "step": 6500,
+          "lr": 0.0013571541738136626,
+          "trainLoss": 2.4009,
+          "valLoss": 2.768,
+          "elapsedSec": 187.63,
+          "tokensPerSec": 70949
+        },
+        {
+          "preset": "Scout",
+          "step": 7000,
+          "lr": 0.0011625698506913945,
+          "trainLoss": 2.3303,
+          "valLoss": 2.762,
+          "elapsedSec": 202.32,
+          "tokensPerSec": 70858
+        },
+        {
+          "preset": "Scout",
+          "step": 7500,
+          "lr": 0.000974221545749559,
+          "trainLoss": 2.421,
+          "valLoss": 2.7509,
+          "elapsedSec": 216.68,
+          "tokensPerSec": 70887
+        },
+        {
+          "preset": "Scout",
+          "step": 8000,
+          "lr": 0.0007954419575560145,
+          "trainLoss": 2.3323,
+          "valLoss": 2.7314,
+          "elapsedSec": 230.97,
+          "tokensPerSec": 70936
+        },
+        {
+          "preset": "Scout",
+          "step": 8500,
+          "lr": 0.0006293944725703252,
+          "trainLoss": 2.2991,
+          "valLoss": 2.7262,
+          "elapsedSec": 245.24,
+          "tokensPerSec": 70983
+        },
+        {
+          "preset": "Scout",
+          "step": 9000,
+          "lr": 0.0004790171911145479,
+          "trainLoss": 2.2564,
+          "valLoss": 2.713,
+          "elapsedSec": 259.59,
+          "tokensPerSec": 71003
+        },
+        {
+          "preset": "Scout",
+          "step": 9500,
+          "lr": 0.000346970939633076,
+          "trainLoss": 2.3556,
+          "valLoss": 2.6964,
+          "elapsedSec": 273.82,
+          "tokensPerSec": 71055
+        },
+        {
+          "preset": "Scout",
+          "step": 10000,
+          "lr": 0.00023559218913019782,
+          "trainLoss": 2.2567,
+          "valLoss": 2.6935,
+          "elapsedSec": 287.96,
+          "tokensPerSec": 71120
+        },
+        {
+          "preset": "Scout",
+          "step": 10500,
+          "lr": 0.00014685171286243676,
+          "trainLoss": 2.2654,
+          "valLoss": 2.6846,
+          "elapsedSec": 302.23,
+          "tokensPerSec": 71151
+        },
+        {
+          "preset": "Scout",
+          "step": 11000,
+          "lr": 0.00008231971481044385,
+          "trainLoss": 2.1916,
+          "valLoss": 2.6798,
+          "elapsedSec": 316.31,
+          "tokensPerSec": 71220
+        },
+        {
+          "preset": "Scout",
+          "step": 11500,
+          "lr": 0.00004313804595904948,
+          "trainLoss": 2.235,
+          "valLoss": 2.6776,
+          "elapsedSec": 330.44,
+          "tokensPerSec": 71276
+        },
+        {
+          "preset": "Scout",
+          "step": 12000,
+          "lr": 0.00003,
+          "trainLoss": 2.2286,
+          "valLoss": 2.6763,
+          "elapsedSec": 344.38,
+          "tokensPerSec": 71363
+        }
+      ],
+      "crossing": {
+        "bigram": {
+          "step": 1000,
+          "wallClockSeconds": 29.02,
+          "tokensPerSec": 70568,
+          "valLoss": 3.1974
+        },
+        "trigram": {
+          "step": 5000,
+          "wallClockSeconds": 144.08,
+          "tokensPerSec": 71070,
+          "valLoss": 2.8153
+        }
+      }
+    },
+    "S": {
+      "steps": [
+        {
+          "preset": "S",
+          "step": 500,
+          "lr": 0.0009984219434802212,
+          "trainLoss": 6.4482,
+          "valLoss": 3.5003,
+          "elapsedSec": 30.4,
+          "tokensPerSec": 33682
+        },
+        {
+          "preset": "S",
+          "step": 1000,
+          "lr": 0.000988814677959844,
+          "trainLoss": 3.3669,
+          "valLoss": 3.2207,
+          "elapsedSec": 61.97,
+          "tokensPerSec": 33048
+        },
+        {
+          "preset": "S",
+          "step": 1500,
+          "lr": 0.0009706466320021616,
+          "trainLoss": 3.0894,
+          "valLoss": 3.0768,
+          "elapsedSec": 93.77,
+          "tokensPerSec": 32763
+        },
+        {
+          "preset": "S",
+          "step": 2000,
+          "lr": 0.000944239277153003,
+          "trainLoss": 2.8225,
+          "valLoss": 2.9946,
+          "elapsedSec": 125.51,
+          "tokensPerSec": 32634
+        },
+        {
+          "preset": "S",
+          "step": 2500,
+          "lr": 0.0009100598740745436,
+          "trainLoss": 2.698,
+          "valLoss": 2.9096,
+          "elapsedSec": 157.33,
+          "tokensPerSec": 32544
+        },
+        {
+          "preset": "S",
+          "step": 3000,
+          "lr": 0.0008687132046772183,
+          "trainLoss": 2.5869,
+          "valLoss": 2.8713,
+          "elapsedSec": 189.09,
+          "tokensPerSec": 32493
+        },
+        {
+          "preset": "S",
+          "step": 3500,
+          "lr": 0.000820930870904186,
+          "trainLoss": 2.5052,
+          "valLoss": 2.8277,
+          "elapsedSec": 220.78,
+          "tokensPerSec": 32466
+        },
+        {
+          "preset": "S",
+          "step": 4000,
+          "lr": 0.0007675583495192725,
+          "trainLoss": 2.3863,
+          "valLoss": 2.7938,
+          "elapsedSec": 252.54,
+          "tokensPerSec": 32438
+        },
+        {
+          "preset": "S",
+          "step": 4500,
+          "lr": 0.0007095400319553472,
+          "trainLoss": 2.4016,
+          "valLoss": 2.7567,
+          "elapsedSec": 284.21,
+          "tokensPerSec": 32426
+        },
+        {
+          "preset": "S",
+          "step": 5000,
+          "lr": 0.0006479025139331124,
+          "trainLoss": 2.2852,
+          "valLoss": 2.7349,
+          "elapsedSec": 315.92,
+          "tokensPerSec": 32413
+        },
+        {
+          "preset": "S",
+          "step": 5500,
+          "lr": 0.0005837364305294406,
+          "trainLoss": 2.3601,
+          "valLoss": 2.7165,
+          "elapsedSec": 347.72,
+          "tokensPerSec": 32394
+        },
+        {
+          "preset": "S",
+          "step": 6000,
+          "lr": 0.0005181771581116985,
+          "trainLoss": 2.2961,
+          "valLoss": 2.6866,
+          "elapsedSec": 379.43,
+          "tokensPerSec": 32386
+        },
+        {
+          "preset": "S",
+          "step": 6500,
+          "lr": 0.0004523847246045542,
+          "trainLoss": 2.2831,
+          "valLoss": 2.6844,
+          "elapsedSec": 411.14,
+          "tokensPerSec": 32378
+        },
+        {
+          "preset": "S",
+          "step": 7000,
+          "lr": 0.00038752328356379817,
+          "trainLoss": 2.2146,
+          "valLoss": 2.6727,
+          "elapsedSec": 443,
+          "tokensPerSec": 32361
+        },
+        {
+          "preset": "S",
+          "step": 7500,
+          "lr": 0.00032474051524985305,
+          "trainLoss": 2.2827,
+          "valLoss": 2.6593,
+          "elapsedSec": 474.85,
+          "tokensPerSec": 32347
+        },
+        {
+          "preset": "S",
+          "step": 8000,
+          "lr": 0.00026514731918533824,
+          "trainLoss": 2.2112,
+          "valLoss": 2.6456,
+          "elapsedSec": 506.48,
+          "tokensPerSec": 32349
+        },
+        {
+          "preset": "S",
+          "step": 8500,
+          "lr": 0.00020979815752344175,
+          "trainLoss": 2.1606,
+          "valLoss": 2.6421,
+          "elapsedSec": 538.27,
+          "tokensPerSec": 32340
+        },
+        {
+          "preset": "S",
+          "step": 9000,
+          "lr": 0.0001596723970381826,
+          "trainLoss": 2.1522,
+          "valLoss": 2.6275,
+          "elapsedSec": 569.97,
+          "tokensPerSec": 32338
+        },
+        {
+          "preset": "S",
+          "step": 9500,
+          "lr": 0.00011565697987769197,
+          "trainLoss": 2.2136,
+          "valLoss": 2.6135,
+          "elapsedSec": 601.61,
+          "tokensPerSec": 32340
+        },
+        {
+          "preset": "S",
+          "step": 10000,
+          "lr": 0.00007853072971006594,
+          "trainLoss": 2.1277,
+          "valLoss": 2.6072,
+          "elapsedSec": 633.4,
+          "tokensPerSec": 32333
+        },
+        {
+          "preset": "S",
+          "step": 10500,
+          "lr": 0.00004895057095414558,
+          "trainLoss": 2.1416,
+          "valLoss": 2.6047,
+          "elapsedSec": 666.75,
+          "tokensPerSec": 32252
+        },
+        {
+          "preset": "S",
+          "step": 11000,
+          "lr": 0.000027439904936814617,
+          "trainLoss": 2.0863,
+          "valLoss": 2.5995,
+          "elapsedSec": 700.34,
+          "tokensPerSec": 32167
+        },
+        {
+          "preset": "S",
+          "step": 11500,
+          "lr": 0.000014379348653016494,
+          "trainLoss": 2.1225,
+          "valLoss": 2.5955,
+          "elapsedSec": 732.28,
+          "tokensPerSec": 32163
+        },
+        {
+          "preset": "S",
+          "step": 12000,
+          "lr": 0.00001,
+          "trainLoss": 2.1159,
+          "valLoss": 2.5959,
+          "elapsedSec": 764.14,
+          "tokensPerSec": 32162
+        }
+      ],
+      "crossing": {
+        "bigram": {
+          "step": 1000,
+          "wallClockSeconds": 61.97,
+          "tokensPerSec": 33048,
+          "valLoss": 3.2207
+        },
+        "trigram": {
+          "step": 3500,
+          "wallClockSeconds": 220.78,
+          "tokensPerSec": 32466,
+          "valLoss": 2.8277
+        }
+      }
+    }
+  },
+  "baselines": {
+    "unigram": 4.7477,
+    "bigram": 3.2863,
+    "trigram": 2.8335
+  }
+}
