@@ -11,7 +11,8 @@
     "build": "tsc --noEmit",
     "inspect": "npx tsx src/inspect.ts",
     "lens-report": "tsx src/lensReport.ts",
-    "walkthrough": "tsx src/walkthrough.ts"
+    "walkthrough": "tsx src/walkthrough.ts",
+    "sweep-calc": "tsx src/sweepCalc.ts"
   },
   "dependencies": {
     "@na/ml-core": "workspace:*"
