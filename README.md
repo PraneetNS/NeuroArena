@@ -754,6 +754,46 @@ NeuroArena/
 
 ---
 
+## 🔬 WebGPU Deep Learning Benchmarks & Empirical Scaling Findings
+
+NeuroArena includes a pure, zero-dependency WebGPU transformer training engine running directly inside modern browsers over WGSL compute shaders.
+
+### 1. 12,000-Step Long-Run Training Curves
+
+Both **Scout** and **Preset S** were trained on the full Shakespeare corpus (**2,683,912 tokens**, ByteBPE-1024 vocabulary) with batch size $B=16$, context length $T=128$, cosine learning rate decay, 200 warmup steps, and 50 fixed validation batches.
+
+| Preset | Parameters | Batch Speed | Throughput | Bigram Crossing (< 3.286) | Trigram Crossing (< 2.834) | Final Val Loss (12k steps) | Final Train Loss | Total Time |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **Scout** | 446k | 28.7 ms/step | **71,363 tok/s** | **Step 1,000** (29.0s, val 3.1974) | **Step 5,000** (144.1s, val 2.8153) | **2.6763** | 2.2286 | **344.4s** (5m 44s) |
+| **Preset S** | 940k | 63.6 ms/step | **32,162 tok/s** | **Step 1,000** (62.0s, val 3.2207) | **Step 3,500** (220.8s, val 2.8277) | **2.5959** | 2.1159 | **764.1s** (12m 44s) |
+
+> **Key Finding**: Preset S beats the analytical Trigram baseline (2.8335) in just **3,500 steps** (220.8s), comfortably surmounting both unigram and n-gram statistical ceilings.
+
+### 2. Analytical Loss Baselines
+
+Calculated over the 274,386-token validation partition:
+- **Unigram Baseline**: $4.4716$
+- **Bigram Baseline**: $3.2863$
+- **Trigram Baseline**: $2.8335$
+
+### 3. Memorization Probe Validation
+
+To verify the memorization detection system, a 32-token prefix-completion test was conducted (prompting models with the first 32 tokens of a training chunk, and measuring exact recovery of the subsequent 32 tokens):
+
+| Model Condition | Dataset Tokens | Steps | Weight Decay | Val Loss | Original 20-Token Window Probe ($T=0.3$) | Prefix Completion Token Accuracy ($T=0.3$) | Exact 32-Token Sequence Match Rate |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **Memorizing Model** | 25,000 | 3,000 | $0.0$ | 7.5916 | **36.60%** | **100.00%** | **100.00%** |
+| **Healthy Model** | 2,683,912 | 3,000 | $0.1$ | 2.8863 | **0.00%** | **11.88%** | **0.00%** |
+
+### 4. Data-Size Knee & Starvation Detector
+
+The empirical scaling curves reveal a sharp data-starvation knee:
+- **Severe Data Starvation** ($< 100\text{k}$ tokens): High validation loss and overfitting with small learning rates; divergence at higher learning rates.
+- **Data Starved** ($< 400\text{k}$ tokens): Model benefits significantly more from additional data tokens than additional training steps.
+- **Scaling Knee** ($\ge 400\text{k}$ to $1.2\text{M}$ tokens): Transition to compute-bound regime where additional training steps yield higher loss reduction than token count scaling.
+
+---
+
 <div align="center">
   <sub>Built with ⚡ by the NeuroArena Open-Source Team. Engineered for educational clarity, zero black boxes, and uncompromising performance.</sub>
 </div>
