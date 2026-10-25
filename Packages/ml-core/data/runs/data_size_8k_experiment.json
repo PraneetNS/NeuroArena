@@ -1,0 +1,102 @@
+{
+  "runs": [
+    {
+      "preset": "Scout",
+      "tokens": 2683912,
+      "seed": 42,
+      "steps": 8000,
+      "lr": 0.003,
+      "valLoss": 2.7314,
+      "wallClockSeconds": 230.97
+    },
+    {
+      "preset": "S",
+      "tokens": 2683912,
+      "seed": 42,
+      "steps": 8000,
+      "lr": 0.001,
+      "valLoss": 2.6456,
+      "wallClockSeconds": 506.48
+    },
+    {
+      "preset": "Scout",
+      "tokens": 100000,
+      "seed": 42,
+      "steps": 8000,
+      "lr": 0.001,
+      "valLoss": 6.181,
+      "wallClockSeconds": 218.8
+    },
+    {
+      "preset": "Scout",
+      "tokens": 100000,
+      "seed": 43,
+      "steps": 8000,
+      "lr": 0.001,
+      "valLoss": 6.0781,
+      "wallClockSeconds": 220.7
+    }
+  ],
+  "summary": {
+    "Scout": {
+      "100000": {
+        "meanValLoss": 6.1296,
+        "meanWallClockSeconds": 219.8,
+        "seeds": [
+          {
+            "seed": 42,
+            "valLoss": 6.181,
+            "wallClockSeconds": 218.8
+          },
+          {
+            "seed": 43,
+            "valLoss": 6.0781,
+            "wallClockSeconds": 220.7
+          }
+        ]
+      },
+      "2683912": {
+        "meanValLoss": 2.7314,
+        "meanWallClockSeconds": 231,
+        "seeds": [
+          {
+            "seed": 42,
+            "valLoss": 2.7314,
+            "wallClockSeconds": 230.97
+          }
+        ]
+      }
+    },
+    "S": {
+      "2683912": {
+        "meanValLoss": 2.6456,
+        "meanWallClockSeconds": 506.5,
+        "seeds": [
+          {
+            "seed": 42,
+            "valLoss": 2.6456,
+            "wallClockSeconds": 506.48
+          }
+        ]
+      }
+    }
+  },
+  "interpolation": {
+    "Scout": [
+      {
+        "tokens": 100000,
+        "valLoss": 6.1296
+      },
+      {
+        "tokens": 2683912,
+        "valLoss": 2.7314
+      }
+    ],
+    "S": [
+      {
+        "tokens": 2683912,
+        "valLoss": 2.6456
+      }
+    ]
+  }
+}
