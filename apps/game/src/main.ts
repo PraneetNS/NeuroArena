@@ -459,6 +459,14 @@ class NeuroArenaGame {
           this.handleInteraction();
           break;
 
+        case 'KeyF':
+          this.shardWorld.triggerSweepNet(this.player.position);
+          break;
+
+        case 'KeyQ':
+          this.shardWorld.toggleScanMode();
+          break;
+
         case 'KeyC':
           this.openCurator();
           break;
@@ -682,9 +690,29 @@ class NeuroArenaGame {
         worldState: this.shardWorld.worldState,
         isVaultOpen: this.isVaultOpen,
         onCloseVault: () => this.toggleVault(false),
+        onOpenVault: () => this.toggleVault(true),
+        onOpenWorkbench: () => this.openWorkbench(),
         activeSignalKey: this.shardWorld.activeSignalKey,
         onChangeSignalKey: (key) => {
           this.shardWorld.activeSignalKey = key;
+        },
+        onTriggerSweep: () => {
+          this.shardWorld.triggerSweepNet(this.player.position);
+        },
+        onCancelSweep: () => {
+          this.shardWorld.cancelSweep();
+        },
+        onSetLensRule: (rule) => {
+          this.shardWorld.setLensRule(rule);
+        },
+        onSaveLensRule: (rule) => {
+          this.shardWorld.saveLensRule(rule);
+        },
+        onSelectTool: (toolId) => {
+          this.shardWorld.setSelectedTool(toolId);
+        },
+        onToggleScan: () => {
+          this.shardWorld.toggleScanMode();
         }
       })
     );
