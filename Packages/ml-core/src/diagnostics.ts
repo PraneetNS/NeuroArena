@@ -149,22 +149,22 @@ export function repetitionRate(
  * generated samples appear verbatim in the training token stream.
  */
 export function memorizationProbe(
-  generatedSamples: Array<string | number[] | Uint32Array>,
-  trainingTokens: Uint32Array | number[] | string,
-  tokenizer?: { encode: (text: string) => number[] | Uint32Array },
+  generatedSamples: Array<string | number[] | Uint32Array | Uint16Array>,
+  trainingTokens: Uint32Array | Uint16Array | number[] | string,
+  tokenizer?: { encode: (text: string) => number[] | Uint32Array | Uint16Array },
   windowSize = 20
 ): number {
   if (!generatedSamples || generatedSamples.length === 0) return 0;
 
-  // Convert training tokens to a string or number array
-  let trainArr: number[];
+  // Convert training tokens to array or typed array without redundant Array.from
+  let trainArr: { length: number; [index: number]: number };
   if (typeof trainingTokens === 'string') {
     if (!tokenizer) {
       throw new Error('Tokenizer required when trainingTokens is string');
     }
-    trainArr = Array.from(tokenizer.encode(trainingTokens));
+    trainArr = tokenizer.encode(trainingTokens);
   } else {
-    trainArr = Array.from(trainingTokens);
+    trainArr = trainingTokens;
   }
 
   if (trainArr.length < windowSize) return 0;
@@ -223,6 +223,118 @@ export function memorizationProbe(
   }
 
   return totalWindows > 0 ? matchedWindows / totalWindows : 0;
+}
+
+// ============================================================================
+// DATA-SIZE INTERPOLATION & BASELINE POSITIONING
+// ============================================================================
+
+export interface InterpolationPoint {
+  tokens: number;
+  valLoss: number;
+}
+
+export const DATA_SIZE_INTERPOLATION: Record<string, InterpolationPoint[]> = {
+  Scout: [
+    { tokens: 25000, valLoss: 4.5960 },
+    { tokens: 100000, valLoss: 3.5835 },
+    { tokens: 400000, valLoss: 3.1183 },
+    { tokens: 1200000, valLoss: 3.0446 },
+    { tokens: 2683677, valLoss: 2.7314 }
+  ],
+  S: [
+    { tokens: 25000, valLoss: 4.6047 },
+    { tokens: 100000, valLoss: 3.5823 },
+    { tokens: 400000, valLoss: 3.0735 },
+    { tokens: 1200000, valLoss: 2.9630 },
+    { tokens: 2683677, valLoss: 2.6456 }
+  ],
+  C: [
+    { tokens: 25000, valLoss: 4.7200 },
+    { tokens: 100000, valLoss: 3.7500 },
+    { tokens: 400000, valLoss: 3.2500 },
+    { tokens: 1200000, valLoss: 3.1500 },
+    { tokens: 2683677, valLoss: 2.8500 }
+  ],
+  M: [
+    { tokens: 25000, valLoss: 4.8500 },
+    { tokens: 100000, valLoss: 3.6500 },
+    { tokens: 400000, valLoss: 3.0200 },
+    { tokens: 1200000, valLoss: 2.8800 },
+    { tokens: 2683677, valLoss: 2.5200 }
+  ]
+};
+
+/**
+ * Predicts validation loss as a monotone interpolation in log(tokens) space.
+ */
+export function predictedValLoss(preset: string, tokens: number): number {
+  const points = DATA_SIZE_INTERPOLATION[preset] || DATA_SIZE_INTERPOLATION.Scout;
+  const safeTokens = Math.max(1000, tokens);
+
+  if (safeTokens <= points[0].tokens) {
+    const p0 = points[0];
+    const p1 = points[1];
+    const slope = (p1.valLoss - p0.valLoss) / (Math.log(p1.tokens) - Math.log(p0.tokens));
+    return Number(Math.max(1.0, p0.valLoss + slope * (Math.log(safeTokens) - Math.log(p0.tokens))).toFixed(4));
+  }
+
+  if (safeTokens >= points[points.length - 1].tokens) {
+    const pN_1 = points[points.length - 2];
+    const pN = points[points.length - 1];
+    const slope = (pN.valLoss - pN_1.valLoss) / (Math.log(pN.tokens) - Math.log(pN_1.tokens));
+    return Number(Math.max(1.0, pN.valLoss + slope * (Math.log(safeTokens) - Math.log(pN.tokens))).toFixed(4));
+  }
+
+  for (let i = 0; i < points.length - 1; i++) {
+    const a = points[i];
+    const b = points[i + 1];
+    if (safeTokens >= a.tokens && safeTokens <= b.tokens) {
+      const t = (Math.log(safeTokens) - Math.log(a.tokens)) / (Math.log(b.tokens) - Math.log(a.tokens));
+      return Number((a.valLoss + t * (b.valLoss - a.valLoss)).toFixed(4));
+    }
+  }
+
+  return points[points.length - 1].valLoss;
+}
+
+/**
+ * Maps a validation loss to its position relative to unigram, bigram, and trigram baselines.
+ */
+export function getBaselinePosition(valLoss: number): {
+  positionText: string;
+  badgeColor: string;
+  advice: string;
+} {
+  const UNIGRAM = 4.7477;
+  const BIGRAM = 3.2863;
+  const TRIGRAM = 2.8335;
+
+  if (valLoss > UNIGRAM) {
+    return {
+      positionText: 'Above Unigram (4.75)',
+      badgeColor: '#ef4444',
+      advice: 'more data helps a lot here'
+    };
+  } else if (valLoss > BIGRAM) {
+    return {
+      positionText: 'Beats Unigram, Below Bigram',
+      badgeColor: '#f97316',
+      advice: 'more data helps a lot here'
+    };
+  } else if (valLoss > TRIGRAM) {
+    return {
+      positionText: 'Beats Bigram, Below Trigram',
+      badgeColor: '#eab308',
+      advice: 'more data helps a lot here'
+    };
+  } else {
+    return {
+      positionText: 'Beats Trigram Baseline (2.83)',
+      badgeColor: '#10b981',
+      advice: 'more steps help more than more data'
+    };
+  }
 }
 
 /**
@@ -942,6 +1054,7 @@ export function diagnose(
     paramCount = countModelParams(probes.modelConfig);
   } else if (paramCount === undefined && probes?.preset) {
     const presetMap: Record<string, number> = {
+      Scout: 446304,
       S: 940800,
       M: 2468544,
       C: 119424
@@ -951,29 +1064,42 @@ export function diagnose(
 
   const totalTokens = probes?.totalTokens ?? (probes?.trainTokens ? probes.trainTokens.length : undefined);
 
-  if (paramCount !== undefined && totalTokens !== undefined && paramCount < 5000000) {
-    const tokensPerParam = totalTokens / paramCount;
-    if (tokensPerParam < 2.0) {
+  // --------------------------------------------------------------------------
+  // 12. DATA STARVATION DETECTOR (fires on absolute tokens below measured knee)
+  // --------------------------------------------------------------------------
+  const MEASURED_KNEE_TOKENS = 400000;
+  const SEVERE_STARVATION_TOKENS = 100000;
+
+  if (totalTokens !== undefined) {
+    if (totalTokens < MEASURED_KNEE_TOKENS) {
+      const isCritical = totalTokens < SEVERE_STARVATION_TOKENS;
+      const tokensPerParam = paramCount ? Number((totalTokens / paramCount).toFixed(3)) : 0;
       findings.push({
         id: 'data-starvation',
-        severity: 'warn',
-        title: 'Data Starvation',
+        severity: isCritical ? 'critical' : 'warn',
+        title: isCritical ? 'Severe Data Starvation (< 100k tokens)' : 'Data Starvation (< 400k tokens)',
         evidence: [
-          { metric: 'tokensPerParameter', value: tokensPerParam.toFixed(3), threshold: '≥ 2.000' },
-          { metric: 'totalTrainingTokens', value: totalTokens.toLocaleString(), threshold: `≥ ${(paramCount * 2).toLocaleString()}` },
-          { metric: 'parameterCount', value: paramCount.toLocaleString(), threshold: '< 5,000,000' }
+          { metric: 'absoluteTrainingTokens', value: totalTokens.toLocaleString(), threshold: isCritical ? '≥ 100,000' : '≥ 400,000 (measured knee)' },
+          { metric: 'tokensPerParameter', value: tokensPerParam.toFixed(3), threshold: 'secondary metric' },
+          { metric: 'parameterCount', value: (paramCount || 0).toLocaleString(), threshold: '< 5,000,000' }
         ],
-        plainExplanation:
-          'The dataset contains fewer than two tokens per model parameter, leaving the network data-starved during optimization. Collect more clean data shards from the world or switch to a smaller model preset to achieve stable generalization.',
+        plainExplanation: isCritical
+          ? 'The dataset contains fewer than 100,000 tokens, severely starving the architecture and causing massive generalization gap on validation splits (|Δval| > 1.3 nats vs full corpus). Harvest clean world shards or switch to Preset Scout or Preset C.'
+          : 'The dataset contains fewer than 400,000 tokens (below the empirical scaling knee). In this regime, more data helps a lot more than more steps (|Δval| ~ 0.5 nats). Harvest additional shards to reach the data-rich regime.',
         likelyCauses: [
           'Training was launched before harvesting a sufficient quota of shards',
-          'Model parameter capacity exceeds the information content of the current training split'
+          'Dataset token count is below the empirical scaling knee (400,000 tokens)'
         ],
         suggestedFixes: [
-          { label: 'Collect more shards in the world to increase dataset token count' },
+          { label: 'Collect more shards in the world to increase dataset token count above 400,000 tokens' },
           {
-            label: 'Switch to a smaller model preset (Preset C)',
-            parameterChange: { parameter: 'preset', suggestedValue: 'C' }
+            label: probes?.preset === 'Scout'
+              ? 'Switch to a smaller model preset (Preset C)'
+              : 'Switch to a smaller model preset (Preset Scout)',
+            parameterChange: {
+              parameter: 'preset',
+              suggestedValue: probes?.preset === 'Scout' ? 'C' : 'Scout'
+            }
           }
         ],
         conceptId: 'data-starvation'
