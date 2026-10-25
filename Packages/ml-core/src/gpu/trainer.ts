@@ -120,8 +120,8 @@ export class GpuTrainer {
    * Executes a single end-to-end training step encoded in ONE command buffer.
    */
   public async step(
-    batchInputs: Uint16Array | number[],
-    batchTargets: Uint16Array | number[]
+    batchInputs: Uint32Array | Uint16Array | number[],
+    batchTargets: Uint32Array | Uint16Array | number[]
   ): Promise<TrainingMetrics | null> {
     this.stepCount++;
     const currentStep = this.stepCount;
@@ -138,14 +138,10 @@ export class GpuTrainer {
     const uploadSlot = this.uploadRing[this.uploadRingIndex];
     this.uploadRingIndex = (this.uploadRingIndex + 1) % this.options.ringSize;
 
-    const u32Inputs = new Uint32Array(M);
-    const u32Targets = new Uint32Array(M);
-    for (let i = 0; i < M; i++) {
-      u32Inputs[i] = batchInputs[i];
-      u32Targets[i] = batchTargets[i];
-    }
-    device.queue.writeBuffer(uploadSlot.inputs, 0, u32Inputs);
-    device.queue.writeBuffer(uploadSlot.targets, 0, u32Targets);
+    const u32Inputs = batchInputs instanceof Uint32Array ? batchInputs : new Uint32Array(batchInputs);
+    const u32Targets = batchTargets instanceof Uint32Array ? batchTargets : new Uint32Array(batchTargets);
+    device.queue.writeBuffer(uploadSlot.inputs, 0, u32Inputs as unknown as BufferSource);
+    device.queue.writeBuffer(uploadSlot.targets, 0, u32Targets as unknown as BufferSource);
 
     // 3. Encode everything into ONE Command Buffer
     const encoder = device.createCommandEncoder({ label: `TrainStep_${currentStep}_Encoder` });
