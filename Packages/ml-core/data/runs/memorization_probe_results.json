@@ -1,0 +1,37 @@
+{
+  "timestamp": "2026-10-25T11:11:51.422Z",
+  "memorizingRun": {
+    "preset": "S",
+    "tokens": 25000,
+    "steps": 3000,
+    "weightDecay": 0,
+    "valLoss": 7.5916,
+    "wallClockSeconds": 195.1,
+    "originalWindowProbeT03": 36.6,
+    "prefixCompletionT03": {
+      "tokenAccuracy": 100.0,
+      "exact32WindowRate": 100.0
+    },
+    "prefixCompletionGreedy": {
+      "tokenAccuracy": 100.0,
+      "exact32WindowRate": 100.0
+    }
+  },
+  "healthyRun": {
+    "preset": "S",
+    "tokens": 2683912,
+    "steps": 3000,
+    "weightDecay": 0.1,
+    "valLoss": 2.8863,
+    "wallClockSeconds": 189.9,
+    "originalWindowProbeT03": 0.0,
+    "prefixCompletionT03": {
+      "tokenAccuracy": 11.88,
+      "exact32WindowRate": 0.0
+    },
+    "prefixCompletionGreedy": {
+      "tokenAccuracy": 12.00,
+      "exact32WindowRate": 0.0
+    }
+  }
+}
