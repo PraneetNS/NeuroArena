@@ -69,7 +69,7 @@ export interface TokenizerNodeData {
 }
 
 export interface ModelNodeData {
-  preset: 'S' | 'M' | 'C' | 'Custom';
+  preset: 'Scout' | 'S' | 'M' | 'C' | 'Custom';
   dModel: number;
   nLayers: number;
   nHeads: number;
@@ -79,7 +79,13 @@ export interface ModelNodeData {
   paramCount: number;
   estimatedMemoryMB: number;
   tokensPerParam: number;
-  starvationChip: 'severely-starved' | 'data-starved' | 'adequate' | 'comfortable';
+  totalTokens?: number;
+  predictedValLoss?: number;
+  baselineComparison?: string;
+  baselineStatus?: string;
+  scalingAdvice?: string;
+  starvationChip: 'starved' | 'workable' | 'comfortable' | 'severely-starved' | 'data-starved' | 'adequate';
+  tokenHealthStatus?: 'severely-starved' | 'data-starved' | 'adequate' | 'comfortable';
 }
 
 export interface TrainerNodeData {
