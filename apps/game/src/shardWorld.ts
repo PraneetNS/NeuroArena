@@ -12,8 +12,18 @@ import {
   RegionDef,
   VaultManager,
   scanShard,
-  ScanResult
+  ScanResult,
+  LensRule,
+  DEFAULT_LENS_RULES,
+  evaluateLensRule
 } from '@na/game-core';
+
+export interface SweepSummary {
+  collected: number;
+  skipped: number;
+  tokens: number;
+  fingerprint: string;
+}
 
 export interface ShardInteractionState {
   targetShard: Shard | null;
@@ -22,6 +32,17 @@ export interface ShardInteractionState {
   isHolding: boolean;
   scanResult: ScanResult | null;
   isScanMode: boolean;
+
+  // Sweep Net & Lens Rules state
+  isSweeping: boolean;
+  sweepProgress: number; // 0 to 100
+  sweepDuration: number;
+  sweepCooldown: number; // seconds remaining
+  sweepCandidatesCount: number;
+  activeRule: LensRule;
+  allRules: LensRule[];
+  lastSweepSummary: SweepSummary | null;
+  selectedToolId: string;
 }
 
 interface ActivePickup {
@@ -99,6 +120,21 @@ export class ShardWorld {
   private currentTargetShard: Shard | null = null;
   private currentTargetDist = Infinity;
   private currentScanResult: ScanResult | null = null;
+
+  // Sweep Net & Lens Rules state
+  public readonly SWEEP_RADIUS = 18.0; // 18m radius
+  public readonly SWEEP_COOLDOWN = 8.0; // 8s cooldown
+  public sweepCooldownTimer = 0.0;
+  public isSweeping = false;
+  public sweepTimer = 0.0;
+  public sweepDuration = 1.0;
+  public sweepStartPos = new THREE.Vector3();
+  public sweepCandidateShards: Shard[] = [];
+  public activeRule: LensRule = DEFAULT_LENS_RULES[0];
+  public savedRules: LensRule[] = [...DEFAULT_LENS_RULES];
+  public lastSweepSummary: SweepSummary | null = null;
+  public sweepToastTimer = 0.0;
+  public selectedToolId = 'sweep_net';
 
   private onHarvestCallback?: (shard: Shard) => void;
 
@@ -308,6 +344,62 @@ export class ShardWorld {
       if (colorNeedsUpdate && instancedMesh.instanceColor) instancedMesh.instanceColor.needsUpdate = true;
     }
 
+    // Sweep cooldown and toast timers decay
+    if (this.sweepCooldownTimer > 0) {
+      this.sweepCooldownTimer = Math.max(0, this.sweepCooldownTimer - dt);
+    }
+    if (this.sweepToastTimer > 0) {
+      this.sweepToastTimer = Math.max(0, this.sweepToastTimer - dt);
+      if (this.sweepToastTimer <= 0) {
+        this.lastSweepSummary = null;
+      }
+    }
+
+    // Handle ongoing Sweep Net channel
+    if (this.isSweeping) {
+      // Movement cancellation: if player moved > 0.5m from activation point
+      const moveDist = playerPos.distanceTo(this.sweepStartPos);
+      if (moveDist > 0.5) {
+        this.cancelSweep();
+      } else {
+        this.sweepTimer += dt;
+        if (this.sweepTimer >= this.sweepDuration) {
+          // Execute Sweep Net Harvest
+          let collected = 0;
+          let skipped = 0;
+          let tokensAdded = 0;
+
+          for (const shard of this.sweepCandidateShards) {
+            const scan = scanShard(shard, this.vault.getState());
+            const passes = evaluateLensRule(scan.signals, this.activeRule);
+            if (passes) {
+              const entry = this.vault.harvest(shard);
+              if (entry) {
+                collected++;
+                tokensAdded += Math.max(1, Math.round(shard.text.length / 4));
+                this.triggerHarvest(shard, playerPos);
+              } else {
+                skipped++; // Vault at maximum page capacity
+              }
+            } else {
+              skipped++;
+            }
+          }
+
+          this.isSweeping = false;
+          this.sweepTimer = 0.0;
+          this.sweepCooldownTimer = this.SWEEP_COOLDOWN; // 8.0s cooldown
+          this.lastSweepSummary = {
+            collected,
+            skipped,
+            tokens: tokensAdded,
+            fingerprint: this.vault.getState().stats.fingerprint
+          };
+          this.sweepToastTimer = 5.0; // Display collection summary toast for 5 seconds
+        }
+      }
+    }
+
     // 4. Update Active Pickups (flying and dissolving)
     this.updatePickups(dt, time, playerPos);
 
@@ -317,8 +409,67 @@ export class ShardWorld {
       holdProgress,
       isHolding: this.isHoldingE,
       scanResult: this.currentScanResult,
-      isScanMode: this.isScanMode
+      isScanMode: this.isScanMode,
+      isSweeping: this.isSweeping,
+      sweepProgress: this.sweepDuration > 0 ? Math.min(100, (this.sweepTimer / this.sweepDuration) * 100) : 0,
+      sweepDuration: this.sweepDuration,
+      sweepCooldown: this.sweepCooldownTimer,
+      sweepCandidatesCount: this.sweepCandidateShards.length,
+      activeRule: this.activeRule,
+      allRules: this.savedRules,
+      lastSweepSummary: this.lastSweepSummary,
+      selectedToolId: this.selectedToolId
     };
+  }
+
+  public triggerSweepNet(playerPos: THREE.Vector3): boolean {
+    if (this.sweepCooldownTimer > 0 || this.isSweeping) return false;
+
+    // Find all uncollected shards within 18m
+    const candidates = this.worldState.spatialGrid.queryRadius(
+      playerPos.x,
+      playerPos.z,
+      this.SWEEP_RADIUS
+    ).filter(s => {
+      if (this.vault.hasShard(s.id)) return false;
+      const dx = s.position.x - playerPos.x;
+      const dz = s.position.z - playerPos.z;
+      return Math.sqrt(dx * dx + dz * dz) <= this.SWEEP_RADIUS;
+    });
+
+    this.sweepCandidateShards = candidates;
+    this.sweepStartPos.copy(playerPos);
+    // Duration scales with candidate shard count: base 1.0s + 0.15s per shard
+    this.sweepDuration = Math.max(1.0, 0.8 + candidates.length * 0.15);
+    this.sweepTimer = 0.0;
+    this.isSweeping = true;
+    return true;
+  }
+
+  public cancelSweep(): void {
+    if (this.isSweeping) {
+      this.isSweeping = false;
+      this.sweepTimer = 0.0;
+      this.sweepCandidateShards = [];
+    }
+  }
+
+  public setLensRule(rule: LensRule): void {
+    this.activeRule = { ...rule };
+  }
+
+  public saveLensRule(rule: LensRule): void {
+    const existingIdx = this.savedRules.findIndex(r => r.id === rule.id);
+    if (existingIdx !== -1) {
+      this.savedRules[existingIdx] = { ...rule };
+    } else {
+      this.savedRules.push({ ...rule });
+    }
+    this.activeRule = { ...rule };
+  }
+
+  public setSelectedTool(toolId: string): void {
+    this.selectedToolId = toolId;
   }
 
   /**
