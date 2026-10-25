@@ -1520,22 +1520,20 @@ export class GpuModel {
    * Full forward + backward pass execution with optional optimizer step.
    */
   public async forward(
-    ids: Uint16Array | number[],
-    targets?: Uint16Array | number[] | null,
+    ids: Uint32Array | Uint16Array | number[],
+    targets?: Uint32Array | Uint16Array | number[] | null,
     options: GpuForwardOptions = {}
   ): Promise<GpuForwardResult> {
     const M = this.B * this.T;
     const device = this.context.device;
 
-    const u32Ids = new Uint32Array(M);
-    for (let i = 0; i < M; i++) u32Ids[i] = ids[i];
-    device.queue.writeBuffer(this.inputIdsBuffer, 0, u32Ids);
+    const u32Ids = ids instanceof Uint32Array ? ids : new Uint32Array(ids);
+    device.queue.writeBuffer(this.inputIdsBuffer, 0, u32Ids as unknown as BufferSource);
 
     const hasTargets = Boolean(targets && targets.length >= M);
     if (hasTargets) {
-      const u32Targets = new Uint32Array(M);
-      for (let i = 0; i < M; i++) u32Targets[i] = targets![i];
-      device.queue.writeBuffer(this.targetsBuffer, 0, u32Targets);
+      const u32Targets = targets instanceof Uint32Array ? targets : new Uint32Array(targets!);
+      device.queue.writeBuffer(this.targetsBuffer, 0, u32Targets as unknown as BufferSource);
     }
 
     const encoder = device.createCommandEncoder({ label: 'GpuForwardEncoder' });
