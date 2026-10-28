@@ -1,0 +1,112 @@
+{
+  "timeSeries": [
+    {
+      "elapsedSec": 10,
+      "fps": 35.6,
+      "throttleFraction": 0,
+      "delayMs": 0,
+      "tokensPerSec": 131945,
+      "dpr": 1,
+      "state": "NORMAL"
+    },
+    {
+      "elapsedSec": 29,
+      "fps": 36.2,
+      "throttleFraction": 0,
+      "delayMs": 0,
+      "tokensPerSec": 133386,
+      "dpr": 1,
+      "state": "NORMAL"
+    },
+    {
+      "elapsedSec": 48,
+      "fps": 16.5,
+      "throttleFraction": 0.65,
+      "delayMs": 39,
+      "tokensPerSec": 72669,
+      "dpr": 1.55,
+      "state": "HEAVY_LOAD"
+    },
+    {
+      "elapsedSec": 58,
+      "fps": 16.5,
+      "throttleFraction": 0.65,
+      "delayMs": 39,
+      "tokensPerSec": 43866,
+      "dpr": 0.75,
+      "state": "HEAVY_LOAD"
+    },
+    {
+      "elapsedSec": 68,
+      "fps": 16.5,
+      "throttleFraction": 0.65,
+      "delayMs": 39,
+      "tokensPerSec": 43695,
+      "dpr": 0.75,
+      "state": "HEAVY_LOAD"
+    },
+    {
+      "elapsedSec": 78,
+      "fps": 16.5,
+      "throttleFraction": 0.65,
+      "delayMs": 39,
+      "tokensPerSec": 43704,
+      "dpr": 0.75,
+      "state": "HEAVY_LOAD"
+    },
+    {
+      "elapsedSec": 88,
+      "fps": 16.5,
+      "throttleFraction": 0.65,
+      "delayMs": 39,
+      "tokensPerSec": 43758,
+      "dpr": 0.75,
+      "state": "HEAVY_LOAD"
+    },
+    {
+      "elapsedSec": 98,
+      "fps": 16.5,
+      "throttleFraction": 0.65,
+      "delayMs": 39,
+      "tokensPerSec": 43780,
+      "dpr": 0.75,
+      "state": "HEAVY_LOAD"
+    },
+    {
+      "elapsedSec": 108,
+      "fps": 16.5,
+      "throttleFraction": 0.65,
+      "delayMs": 39,
+      "tokensPerSec": 43568,
+      "dpr": 0.75,
+      "state": "HEAVY_LOAD"
+    },
+    {
+      "elapsedSec": 118,
+      "fps": 16.5,
+      "throttleFraction": 0.65,
+      "delayMs": 39,
+      "tokensPerSec": 43635,
+      "dpr": 0.75,
+      "state": "HEAVY_LOAD"
+    },
+    {
+      "elapsedSec": 128,
+      "fps": 16.5,
+      "throttleFraction": 0.65,
+      "delayMs": 39,
+      "tokensPerSec": 43815,
+      "dpr": 0.75,
+      "state": "HEAVY_LOAD"
+    },
+    {
+      "elapsedSec": 138,
+      "fps": 16.5,
+      "throttleFraction": 0.65,
+      "delayMs": 39,
+      "tokensPerSec": 44032,
+      "dpr": 0.75,
+      "state": "HEAVY_LOAD"
+    }
+  ]
+}
