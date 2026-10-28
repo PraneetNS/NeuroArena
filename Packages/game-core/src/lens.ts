@@ -14,18 +14,8 @@ import { Shard, LensSignals, ScanResult, VaultState, LensRule } from './types.js
 import { defaultBigramModel } from './bigram.js';
 import { shakespeareDictionary } from './dictionary.js';
 
-export function extractWord3Grams(text: string): Set<string> {
-  const words = text.toLowerCase().match(/[a-zA-Z0-9]+/g) || [];
-  const set = new Set<string>();
-  if (words.length < 3) {
-    if (words.length > 0) set.add(words.join(' '));
-    return set;
-  }
-  for (let i = 0; i <= words.length - 3; i++) {
-    set.add(`${words[i]} ${words[i + 1]} ${words[i + 2]}`);
-  }
-  return set;
-}
+import { extract3Grams } from './shingles.js';
+export const extractWord3Grams = extract3Grams;
 
 /**
  * Computes the 6 real Lens Signals for a given shard.
