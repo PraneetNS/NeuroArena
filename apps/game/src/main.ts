@@ -15,9 +15,18 @@ import {
   ShardData,
   WorldTerminal,
   CompanionDrone,
-  QualityTier
+  LumenCompanion,
+  QualityTier,
+  CampScene,
+  CameraMode,
+  FpsTargetSetting
 } from '@na/engine';
+import * as mlCore from '@na/ml-core';
 import { Tokenizer, Dataset, TinyGPT, PRESET_CORPORA } from '@na/ml-core';
+
+(window as any).__THREE = THREE;
+(window as any).__CampScene = CampScene;
+(window as any).__mlCore = mlCore;
 import {
   HUD,
   DataCuratorModal,
@@ -25,7 +34,12 @@ import {
   ChatTerminalModal,
   HarvestedShardInfo,
   UILabGallery,
-  Workbench
+  Workbench,
+  CampOverlay,
+  RealRuntime,
+  ComputeGraph,
+  LumenSubtitles,
+  CodexModal
 } from '@na/ui';
 import '@na/ui/styles';
 import {
@@ -35,7 +49,7 @@ import {
 } from './capability.js';
 import { TerrainStatsOverlay } from './statsOverlay.js';
 import { EnvironmentDebugPanel } from './environmentDebugPanel.js';
-import { VaultManager, Shard } from '@na/game-core';
+import { VaultManager, Shard, TutorialDirector, TutorialBot, TutorialStepId, CodexConceptId } from '@na/game-core';
 import { ShardWorld, ShardInteractionState } from './shardWorld.js';
 import { ShardHUD } from './shardHUD.js';
 
@@ -59,6 +73,17 @@ class NeuroArenaGame {
   private shardHudContainer: HTMLElement;
   private shardHudRoot: ReactDOM.Root;
   private isVaultOpen = false;
+
+  // Tutorial Director, Lumen Spirit & Codex Journal
+  private lumen: LumenCompanion;
+  private director: TutorialDirector;
+  private lumenSubtitlesContainer: HTMLElement;
+  private lumenSubtitlesRoot: ReactDOM.Root;
+  private codexContainer: HTMLElement;
+  private codexRoot: ReactDOM.Root;
+  private isCodexOpen = false;
+  private codexInitialEntry: CodexConceptId = 'token';
+
   private lastInteractionState: ShardInteractionState = {
     targetShard: null,
     targetDistance: Infinity,
@@ -81,6 +106,18 @@ class NeuroArenaGame {
   private workbenchContainer: HTMLElement | null = null;
   private workbenchRoot: ReactDOM.Root | null = null;
   private isWorkbenchOpen = false;
+
+  // The Camp State & Subsystems
+  private campScene: CampScene | null = null;
+  public isCampActive = false;
+  private activeRuntime: RealRuntime | null = null;
+  private campOverlayContainer: HTMLElement | null = null;
+  private campOverlayRoot: ReactDOM.Root | null = null;
+  private campCinematicOverlay: HTMLElement | null = null;
+  private campUnsubscribe: (() => void) | null = null;
+  private latestStepStats: any = null;
+  private latestSample: any = null;
+  private isTrainingCompleted = false;
 
   private collectedShards: HarvestedShardInfo[] = [];
   private activeNearbyTerminal: WorldTerminal | null = null;
@@ -185,8 +222,28 @@ class NeuroArenaGame {
           }))
         );
         this.updateHUD();
+        this.director.handleEvent({
+          type: 'shard_harvested',
+          payload: { keptCount: this.vaultManager.getState().stats.count, shardId: shard.id }
+        });
       }
     );
+
+    // 5. Initialize Lumen Companion & Tutorial Director
+    this.lumen = new LumenCompanion();
+    this.world.scene.add(this.lumen.group);
+
+    this.director = new TutorialDirector();
+    this.lumenSubtitlesContainer = document.createElement('div');
+    this.lumenSubtitlesContainer.id = 'app-lumen-subtitles-container';
+    this.uiContainer.appendChild(this.lumenSubtitlesContainer);
+    this.lumenSubtitlesRoot = ReactDOM.createRoot(this.lumenSubtitlesContainer);
+    this.renderLumenSubtitles();
+
+    this.codexContainer = document.createElement('div');
+    this.codexContainer.id = 'app-codex-container';
+    this.uiContainer.appendChild(this.codexContainer);
+    this.codexRoot = ReactDOM.createRoot(this.codexContainer);
 
     // Attach global debug commands in dev builds only
     if (import.meta.env.DEV) {
@@ -201,6 +258,16 @@ class NeuroArenaGame {
       };
       (window as any).vault = this.vaultManager;
       (window as any).worldState = this.shardWorld.worldState;
+      (window as any).__tutorialDirector = this.director;
+      (window as any).__tutorialBot = new TutorialBot(this.director);
+      (window as any).__runTutorialBot = async () => {
+        const report = await (window as any).__tutorialBot.runFullTutorialHeadless();
+        console.log('[TutorialBot Report]', report);
+        return report;
+      };
+      (window as any).__skipToStep = (stepId: TutorialStepId) => {
+        this.director.advanceToStep(stepId);
+      };
     }
 
     // 5. Populate World
@@ -410,12 +477,19 @@ class NeuroArenaGame {
         return;
       }
 
+      // Codex Journal toggle on Key J
+      if (e.code === 'KeyJ') {
+        this.toggleCodex();
+        return;
+      }
+
       const isModalOpen =
         this.curatorModal.isOpen ||
         this.forgeModal.isOpen ||
         this.chatModal.isOpen ||
         this.capabilityModal.isOpen ||
-        this.isVaultOpen;
+        this.isVaultOpen ||
+        this.isCodexOpen;
 
       if (isModalOpen) {
         if (e.code === 'Escape') {
@@ -430,18 +504,22 @@ class NeuroArenaGame {
           case 'KeyW':
           case 'ArrowUp':
             this.player.controls.forward = true;
+            this.director.handleEvent({ type: 'player_moved' });
             break;
           case 'KeyS':
           case 'ArrowDown':
             this.player.controls.backward = true;
+            this.director.handleEvent({ type: 'player_moved' });
             break;
           case 'KeyA':
           case 'ArrowLeft':
             this.player.controls.left = true;
+            this.director.handleEvent({ type: 'player_moved' });
             break;
           case 'KeyD':
           case 'ArrowRight':
             this.player.controls.right = true;
+            this.director.handleEvent({ type: 'player_moved' });
             break;
           case 'ShiftLeft':
           case 'ShiftRight':
@@ -461,10 +539,16 @@ class NeuroArenaGame {
 
         case 'KeyF':
           this.shardWorld.triggerSweepNet(this.player.position);
+          this.director.handleEvent({ type: 'cache_swept' });
           break;
 
         case 'KeyQ':
           this.shardWorld.toggleScanMode();
+          this.director.handleEvent({ type: 'lens_scanned' });
+          break;
+
+        case 'KeyJ':
+          this.toggleCodex();
           break;
 
         case 'KeyC':
@@ -496,7 +580,11 @@ class NeuroArenaGame {
           break;
 
         case 'Escape':
-          this.closeAllModals();
+          if (this.isCampActive) {
+            this.exitCamp();
+          } else {
+            this.closeAllModals();
+          }
           break;
       }
     });
@@ -609,6 +697,7 @@ class NeuroArenaGame {
   public openWorkbench(): void {
     this.closeAllModals();
     this.isWorkbenchOpen = true;
+    this.director.handleEvent({ type: 'workbench_opened' });
 
     if (!this.workbenchContainer) {
       this.workbenchContainer = document.createElement('div');
@@ -625,7 +714,8 @@ class NeuroArenaGame {
     this.workbenchRoot!.render(
       React.createElement(Workbench, {
         vaultManager: this.vaultManager,
-        onClose: () => this.closeWorkbench()
+        onClose: () => this.closeWorkbench(),
+        onStartCamp: (runtime: any, graph: any) => this.enterCamp(runtime, graph)
       })
     );
   }
@@ -635,6 +725,144 @@ class NeuroArenaGame {
       this.workbenchContainer.style.display = 'none';
     }
     this.isWorkbenchOpen = false;
+  }
+
+  public enterCamp(runtime: RealRuntime, graph: any): void {
+    this.closeWorkbench();
+    this.closeAllModals();
+    this.activeRuntime = runtime;
+    this.director.handleEvent({ type: 'training_started' });
+
+    const modelNode = graph?.nodes?.find((n: any) => n.kind === 'model');
+    const nLayers = modelNode?.data?.nLayers ?? 3;
+
+    if (this.campScene) {
+      this.campScene.dispose();
+    }
+
+    this.campScene = new CampScene(nLayers, (fraction: number, _delayMs: number) => {
+      // TrainingClient.setThrottle: 1.0 is full speed, fraction is amount yielded to rendering
+      runtime.setThrottle(1.0 - fraction);
+    });
+    this.campScene.enterCamp(nLayers);
+
+    // Setup overlay container if needed
+    if (!this.campOverlayContainer) {
+      this.campOverlayContainer = document.createElement('div');
+      this.campOverlayContainer.id = 'app-camp-overlay-container';
+      this.campOverlayContainer.style.position = 'fixed';
+      this.campOverlayContainer.style.inset = '0';
+      this.campOverlayContainer.style.zIndex = '140';
+      this.campOverlayContainer.style.pointerEvents = 'none';
+      this.uiContainer.appendChild(this.campOverlayContainer);
+      this.campOverlayRoot = ReactDOM.createRoot(this.campOverlayContainer);
+    }
+    this.campOverlayContainer.style.display = 'block';
+
+    // Cinematic fade overlay (1.5s transition)
+    if (!this.campCinematicOverlay) {
+      this.campCinematicOverlay = document.createElement('div');
+      this.campCinematicOverlay.id = 'app-camp-cinematic-overlay';
+      this.campCinematicOverlay.style.position = 'fixed';
+      this.campCinematicOverlay.style.inset = '0';
+      this.campCinematicOverlay.style.zIndex = '145';
+      this.campCinematicOverlay.style.backgroundColor = '#070a13';
+      this.campCinematicOverlay.style.pointerEvents = 'none';
+      this.campCinematicOverlay.style.transition = 'opacity 0.75s ease-in-out';
+      this.campCinematicOverlay.style.opacity = '1';
+      this.uiContainer.appendChild(this.campCinematicOverlay);
+    } else {
+      this.campCinematicOverlay.style.opacity = '1';
+    }
+
+    setTimeout(() => {
+      if (this.campCinematicOverlay) {
+        this.campCinematicOverlay.style.opacity = '0';
+      }
+    }, 100);
+
+    if (this.campUnsubscribe) {
+      this.campUnsubscribe();
+    }
+
+    this.latestStepStats = null;
+    this.latestSample = null;
+    this.isTrainingCompleted = false;
+
+    this.campUnsubscribe = runtime.subscribe({
+      onStep: (stats) => {
+        this.latestStepStats = stats;
+        this.campScene?.onTrainingStep(stats);
+      },
+      onSample: (sample) => {
+        this.latestSample = sample;
+        this.campScene?.onSampleGenerated(sample);
+      },
+      onFinding: (finding) => {
+        this.campScene?.onDiagnosticsFindings([finding]);
+        this.director.handleEvent({ type: 'divergence_observed', payload: finding });
+      },
+      onDiagnostics: (findings) => {
+        this.campScene?.onDiagnosticsFindings(findings);
+        if (findings && findings.length > 0) {
+          this.director.handleEvent({ type: 'divergence_observed', payload: findings[0] });
+        }
+      },
+      onStateChange: (state) => {
+        if (state === 'completed') {
+          this.isTrainingCompleted = true;
+          this.campScene?.onTrainingFinished();
+          this.renderCampOverlay();
+          this.director.handleEvent({ type: 'model_trained', payload: this.latestStepStats });
+        }
+      }
+    });
+
+    this.isCampActive = true;
+    this.renderCampOverlay();
+  }
+
+  public exitCamp(): void {
+    if (!this.isCampActive) return;
+
+    if (this.campCinematicOverlay) {
+      this.campCinematicOverlay.style.opacity = '1';
+      setTimeout(() => {
+        if (this.campCinematicOverlay) {
+          this.campCinematicOverlay.style.opacity = '0';
+        }
+      }, 750);
+    }
+
+    this.isCampActive = false;
+    if (this.campScene) {
+      this.campScene.audio.stop();
+    }
+    if (this.campOverlayContainer) {
+      this.campOverlayContainer.style.display = 'none';
+    }
+  }
+
+  private renderCampOverlay(): void {
+    if (!this.isCampActive || !this.campScene || !this.campOverlayRoot) return;
+
+    this.campOverlayRoot.render(
+      React.createElement(CampOverlay, {
+        throttleState: this.campScene.getThrottleState(),
+        latestStats: this.latestStepStats,
+        latestSample: this.latestSample,
+        findings: this.campScene.mentorsNotes?.findings || [],
+        isCompleted: this.isTrainingCompleted,
+        onReturnToWorld: () => this.exitCamp(),
+        onChangeCameraMode: (mode: CameraMode) => this.campScene?.setCameraMode(mode),
+        onChangeFpsTarget: (target: FpsTargetSetting) => this.campScene?.setFpsTarget(target),
+        onToggleMute: (mute: boolean) => this.campScene?.audio.setMuted(mute),
+        onOpenAutopsy: () => {
+          this.exitCamp();
+          this.openWorkbench();
+        }
+      })
+    );
   }
 
   private openChat(): void {
@@ -679,6 +907,38 @@ class NeuroArenaGame {
   public toggleVault(open?: boolean): void {
     this.isVaultOpen = open !== undefined ? open : !this.isVaultOpen;
     this.renderShardHUD();
+  }
+
+  public toggleCodex(open?: boolean, entryId?: CodexConceptId): void {
+    this.isCodexOpen = open !== undefined ? open : !this.isCodexOpen;
+    if (entryId) {
+      this.codexInitialEntry = entryId;
+    }
+    if (this.isCodexOpen) {
+      this.director.handleEvent({ type: 'codex_opened' });
+    }
+    this.renderCodex();
+  }
+
+  private renderCodex(): void {
+    this.codexRoot.render(
+      React.createElement(CodexModal, {
+        isOpen: this.isCodexOpen,
+        initialEntryId: this.codexInitialEntry,
+        completedStepIds: this.director.getState().progress.completedStepIds,
+        onClose: () => this.toggleCodex(false)
+      })
+    );
+  }
+
+  private renderLumenSubtitles(): void {
+    this.lumenSubtitlesRoot.render(
+      React.createElement(LumenSubtitles, {
+        director: this.director,
+        onOpenCodex: (entryId?: string) => this.toggleCodex(true, entryId as CodexConceptId),
+        onExportTelemetry: () => this.director.getTelemetry().downloadTelemetryReport()
+      })
+    );
   }
 
   private renderShardHUD(): void {
@@ -754,6 +1014,17 @@ class NeuroArenaGame {
     const dt = Math.min(0.1, this.clock.getDelta());
     const time = this.clock.getElapsedTime();
 
+    // If The Camp is active, render Camp scene with 30fps budget & auto-throttling
+    if (this.isCampActive && this.campScene) {
+      const nowMs = performance.now();
+      if (this.campScene.shouldRenderFrame(nowMs)) {
+        this.campScene.update(dt);
+        this.world.renderer.render(this.campScene.scene, this.campScene.camera);
+        this.renderCampOverlay();
+      }
+      return;
+    }
+
     // Ground sampling function on CPU
     const groundFn = (x: number, z: number) =>
       this.world.terrain ? this.world.terrain.getHeight(x, z) : 0;
@@ -763,14 +1034,19 @@ class NeuroArenaGame {
       this.curatorModal.isOpen ||
       this.forgeModal.isOpen ||
       this.chatModal.isOpen ||
-      this.isVaultOpen;
+      this.isVaultOpen ||
+      this.isCodexOpen;
     if (!isModalOpen && !this.world.isFreeFly) {
       this.player.update(dt, this.world.cameraAngleY, groundFn);
     }
     this.world.updateCamera(this.player);
 
-    // 2. Update Companion Drone
+    // 2. Update Companion Drone & Lumen Spirit
     this.companion.update(time, this.player.position);
+    this.lumen.update(time, this.player.position);
+    const tutState = this.director.getState();
+    this.lumen.setMood(tutState.lumenMood);
+    this.lumen.pointAt(tutState.lumenTargetPos || null);
 
     // 3. Update ShardWorld instanced markers & interactions
     this.lastInteractionState = this.shardWorld.update(dt, time, this.player.position);
@@ -845,7 +1121,113 @@ window.addEventListener('DOMContentLoaded', () => {
       document.body.style.overflow = 'hidden';
 
       const root = ReactDOM.createRoot(uiContainer);
-      root.render(React.createElement(Workbench, { vaultManager: new VaultManager() }));
+      let campScene: CampScene | null = null;
+      let renderer: THREE.WebGPURenderer | null = null;
+      let isCampActive = false;
+      let overlayContainer: HTMLElement | null = null;
+      let overlayRoot: ReactDOM.Root | null = null;
+
+      root.render(React.createElement(Workbench, {
+        vaultManager: new VaultManager(),
+        onStartCamp: async (runtime: any, graph: any) => {
+          if (!canvasContainer) return;
+          canvasContainer.style.display = 'block';
+
+          if (!renderer) {
+            renderer = new THREE.WebGPURenderer({ antialias: true, powerPreference: 'high-performance' });
+            await renderer.init();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.0));
+            canvasContainer.appendChild(renderer.domElement);
+          }
+
+          const modelNode = graph?.nodes?.find((n: any) => n.kind === 'model');
+          const nLayers = modelNode?.data?.nLayers ?? 3;
+          campScene = new CampScene(nLayers, (fraction: number) => {
+            runtime.setThrottle(1.0 - fraction);
+          });
+          campScene.enterCamp(nLayers);
+
+          uiContainer.style.display = 'none';
+
+          if (!overlayContainer) {
+            overlayContainer = document.createElement('div');
+            overlayContainer.id = 'camp-standalone-overlay';
+            overlayContainer.style.position = 'fixed';
+            overlayContainer.style.inset = '0';
+            overlayContainer.style.zIndex = '140';
+            overlayContainer.style.pointerEvents = 'none';
+            document.body.appendChild(overlayContainer);
+            overlayRoot = ReactDOM.createRoot(overlayContainer);
+          }
+          overlayContainer.style.display = 'block';
+
+          let latestStats: any = null;
+          let latestSample: any = null;
+          let isCompleted = false;
+
+          const renderOverlay = () => {
+            if (!overlayRoot || !campScene) return;
+            overlayRoot.render(React.createElement(CampOverlay, {
+              throttleState: campScene.getThrottleState(),
+              latestStats,
+              latestSample,
+              findings: campScene.mentorsNotes?.findings || [],
+              isCompleted,
+              onReturnToWorld: () => {
+                isCampActive = false;
+                campScene?.audio.stop();
+                if (overlayContainer) overlayContainer.style.display = 'none';
+                if (canvasContainer) canvasContainer.style.display = 'none';
+                uiContainer.style.display = 'block';
+              },
+              onChangeCameraMode: (m: CameraMode) => campScene?.setCameraMode(m),
+              onChangeFpsTarget: (t: FpsTargetSetting) => campScene?.setFpsTarget(t),
+              onToggleMute: (mu: boolean) => campScene?.audio.setMuted(mu),
+              onOpenAutopsy: () => {
+                isCampActive = false;
+                campScene?.audio.stop();
+                if (overlayContainer) overlayContainer.style.display = 'none';
+                if (canvasContainer) canvasContainer.style.display = 'none';
+                uiContainer.style.display = 'block';
+              }
+            }));
+          };
+
+          runtime.subscribe({
+            onStep: (s: any) => { latestStats = s; campScene?.onTrainingStep(s); },
+            onSample: (sm: any) => { latestSample = sm; campScene?.onSampleGenerated(sm); },
+            onFinding: (f: any) => { campScene?.onDiagnosticsFindings([f]); },
+            onDiagnostics: (fs: any) => { campScene?.onDiagnosticsFindings(fs); },
+            onStateChange: (st: string) => {
+              if (st === 'completed') {
+                isCompleted = true;
+                campScene?.onTrainingFinished();
+                renderOverlay();
+              }
+            }
+          });
+
+          isCampActive = true;
+          renderOverlay();
+
+          let lastTime = performance.now();
+          const loop = () => {
+            if (isCampActive && campScene && renderer) {
+              requestAnimationFrame(loop);
+              const now = performance.now();
+              const loopDt = Math.min(0.1, (now - lastTime) / 1000);
+              lastTime = now;
+              if (campScene.shouldRenderFrame(now)) {
+                campScene.update(loopDt);
+                renderer.render(campScene.scene, campScene.camera);
+                renderOverlay();
+              }
+            }
+          };
+          requestAnimationFrame(loop);
+        }
+      }));
     }
   } else if (isUILabRoute()) {
     const canvasContainer = document.getElementById('app-canvas-container');
