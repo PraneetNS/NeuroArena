@@ -263,6 +263,9 @@ export class GpuTrainer {
 
             this.lastDiagnosticsSnapshot = snapshot;
             this.diagnosticsHistory.push(snapshot);
+            if (this.diagnosticsHistory.length > 100) {
+              this.diagnosticsHistory.shift();
+            }
             if (this.options.onDiagnostics) {
               this.options.onDiagnostics(snapshot);
             }
@@ -276,6 +279,9 @@ export class GpuTrainer {
             };
             this.lastLoggedMetrics = metrics;
             this.metricsHistory.push(metrics);
+            if (this.metricsHistory.length > 1000) {
+              this.metricsHistory.shift();
+            }
             if (this.options.onLog) {
               this.options.onLog(metrics);
             }
@@ -289,6 +295,9 @@ export class GpuTrainer {
             };
             this.lastLoggedMetrics = metrics;
             this.metricsHistory.push(metrics);
+            if (this.metricsHistory.length > 1000) {
+              this.metricsHistory.shift();
+            }
             if (this.options.onLog) {
               this.options.onLog(metrics);
             }
