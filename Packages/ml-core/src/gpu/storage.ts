@@ -156,29 +156,21 @@ export class OpfsCheckpointStorage {
 
     const manifestJson = JSON.stringify(manifest, null, 2);
 
-    // 1. Write step_<step>
+    // 1. Write step_<step> with full weights and optimizer
     await this.writeFile(stepPath, 'manifest.json', manifestJson);
     await this.writeFile(stepPath, 'weights.bin', weightsBytes);
     if (optBytes) {
       await this.writeFile(stepPath, 'optimizer.bin', optBytes);
     }
 
-    // 2. If best-by-val-loss, write to best/
+    // 2. If best-by-val-loss, update manifest in best/ (references step folder)
     if (manifest.bestStep === step) {
       const bestPath = [...runPath, 'best'];
       await this.writeFile(bestPath, 'manifest.json', manifestJson);
-      await this.writeFile(bestPath, 'weights.bin', weightsBytes);
-      if (optBytes) {
-        await this.writeFile(bestPath, 'optimizer.bin', optBytes);
-      }
     }
 
-    // 3. Write latest to run root
+    // 3. Update latest manifest in run root
     await this.writeFile(runPath, 'manifest.json', manifestJson);
-    await this.writeFile(runPath, 'weights.bin', weightsBytes);
-    if (optBytes) {
-      await this.writeFile(runPath, 'optimizer.bin', optBytes);
-    }
 
     // 4. Prune older checkpoints (keep last K plus best)
     await this.pruneCheckpoints(runId, manifest);
@@ -253,7 +245,11 @@ export class OpfsCheckpointStorage {
     const manifestText = new TextDecoder().decode(manifestBytes);
     const manifest: RunManifest = JSON.parse(manifestText);
 
-    const weightsBytes = await this.readFile(targetPath, 'weights.bin');
+    let weightsBytes = await this.readFile(targetPath, 'weights.bin');
+    if (!weightsBytes) {
+      const stepPath = [...runPath, `step_${manifest.step}`];
+      weightsBytes = await this.readFile(stepPath, 'weights.bin');
+    }
     if (!weightsBytes) return null;
 
     const weights = new Float32Array(
@@ -264,7 +260,11 @@ export class OpfsCheckpointStorage {
     );
 
     let optimizer: Float32Array | undefined;
-    const optBytes = await this.readFile(targetPath, 'optimizer.bin');
+    let optBytes = await this.readFile(targetPath, 'optimizer.bin');
+    if (!optBytes) {
+      const stepPath = [...runPath, `step_${manifest.step}`];
+      optBytes = await this.readFile(stepPath, 'optimizer.bin');
+    }
     if (optBytes) {
       optimizer = new Float32Array(
         optBytes.buffer.slice(
