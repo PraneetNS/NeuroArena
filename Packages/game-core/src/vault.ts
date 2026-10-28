@@ -59,11 +59,22 @@ export class VaultManager {
     if (valLoss !== undefined && valLoss < this.bestValLoss) {
       this.bestValLoss = valLoss;
     }
+    if (typeof localStorage !== 'undefined') {
+      try {
+        localStorage.setItem('na_vault_best_val_loss', String(this.bestValLoss));
+        localStorage.setItem('na_vault_completed_runs', String(this.completedRunsCount));
+      } catch {}
+    }
     this.notify();
   }
 
   public recordAutopsyPerformed(): void {
     this.hasPerformedAutopsy = true;
+    if (typeof localStorage !== 'undefined') {
+      try {
+        localStorage.setItem('na_vault_autopsy_performed', 'true');
+      } catch {}
+    }
     this.notify();
   }
 
@@ -78,6 +89,16 @@ export class VaultManager {
   }
 
   constructor() {
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const savedLoss = localStorage.getItem('na_vault_best_val_loss');
+        if (savedLoss) this.bestValLoss = parseFloat(savedLoss);
+        const savedRuns = localStorage.getItem('na_vault_completed_runs');
+        if (savedRuns) this.completedRunsCount = parseInt(savedRuns, 10);
+        const savedAutopsy = localStorage.getItem('na_vault_autopsy_performed');
+        if (savedAutopsy) this.hasPerformedAutopsy = savedAutopsy === 'true';
+      } catch {}
+    }
     this.initDb();
   }
 
