@@ -24,7 +24,7 @@ import { CanvasGrid } from './components/CanvasGrid.js';
 import { InspectorPanel } from './components/InspectorPanel.js';
 import { BottomDock } from './components/BottomDock.js';
 import { CommandPalette } from './components/CommandPalette.js';
-import { CodexStubModal } from './components/CodexStubModal.js';
+import { CodexModal } from '../codex/CodexModal.js';
 import { AutopsyModal } from './components/AutopsyModal.js';
 import { RunManagerModal } from './components/RunManagerModal.js';
 import { Button } from '../components/Button.js';
@@ -37,6 +37,7 @@ export interface WorkbenchProps {
   vaultManager?: VaultManager;
   runtime?: WorkbenchRuntime;
   onClose?: () => void;
+  onStartCamp?: (runtime: WorkbenchRuntime, graph: GraphState) => void;
 }
 
 // Educational Graph Validator
@@ -466,7 +467,7 @@ export function createDefaultGraph(): GraphState {
   };
 }
 
-export const Workbench: React.FC<WorkbenchProps> = ({ vaultManager, runtime, onClose }) => {
+export const Workbench: React.FC<WorkbenchProps> = ({ vaultManager, runtime, onClose, onStartCamp }) => {
   // Graph state & history stack for Undo/Redo
   const [graph, setGraph] = useState<GraphState>(() => createDefaultGraph());
   const [historyPast, setHistoryPast] = useState<GraphState[]>([]);
@@ -1081,6 +1082,9 @@ export const Workbench: React.FC<WorkbenchProps> = ({ vaultManager, runtime, onC
     try {
       await runtimeRef.current.start(graph);
       showToast('Training started on RealRuntime pipeline', 'success');
+      if (onStartCamp) {
+        onStartCamp(runtimeRef.current, graph);
+      }
     } catch (err: any) {
       showToast(err.message, 'error');
     }
@@ -1396,9 +1400,21 @@ export const Workbench: React.FC<WorkbenchProps> = ({ vaultManager, runtime, onC
       />
 
       {/* Codex Reference Specification Modal */}
-      <CodexStubModal
-        node={codexModalNode}
+      <CodexModal
         isOpen={codexModalNode !== null}
+        initialEntryId={
+          codexModalNode?.kind === 'dataset'
+            ? 'dataset'
+            : codexModalNode?.kind === 'cleaner'
+            ? 'validation_split'
+            : codexModalNode?.kind === 'tokenizer'
+            ? 'token'
+            : codexModalNode?.kind === 'model'
+            ? 'vocabulary'
+            : codexModalNode?.kind === 'trainer'
+            ? 'learning_rate'
+            : 'baseline'
+        }
         onClose={() => setCodexModalNode(null)}
       />
 

@@ -1011,6 +1011,12 @@ export class RealRuntime implements WorkbenchRuntime {
     this.emitState('idle');
   }
 
+  public setThrottle(throttle: number): void {
+    if (this.client) {
+      this.client.setThrottle(throttle);
+    }
+  }
+
   public reset(): void {
     this.stop();
     this.history = [];

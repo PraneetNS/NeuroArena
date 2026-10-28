@@ -39,3 +39,12 @@ export * from './workbench/types.js';
 export * from './workbench/runtime.js';
 export * from './workbench/Workbench.js';
 
+// The Camp Overlay
+export * from './camp/CampOverlay.js';
+export * from './workbench/RealRuntime.js';
+
+// Tutorial & Codex
+export * from './tutorial/LumenSubtitles.js';
+export * from './codex/CodexModal.js';
+
+
