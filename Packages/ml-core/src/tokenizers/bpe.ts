@@ -235,6 +235,9 @@ export class ByteBPE {
       tokens = nextTokens;
     }
 
+    if (this.wordCache.size >= 10000) {
+      this.wordCache.clear();
+    }
     this.wordCache.set(word, tokens);
     return tokens;
   }
