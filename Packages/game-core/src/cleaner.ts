@@ -25,25 +25,8 @@ export interface CleanerResult {
   removed: Array<{ shard: Shard; reason: string }>;
 }
 
-export function extract3Grams(text: string): Set<string> {
-  const words = text.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(Boolean);
-  const set = new Set<string>();
-  for (let i = 0; i <= words.length - 3; i++) {
-    set.add(`${words[i]} ${words[i + 1]} ${words[i + 2]}`);
-  }
-  return set;
-}
-
-export function jaccardSimilarity(a: Set<string>, b: Set<string>): number {
-  if (a.size === 0 && b.size === 0) return 1.0;
-  if (a.size === 0 || b.size === 0) return 0.0;
-  let intersection = 0;
-  for (const item of a) {
-    if (b.has(item)) intersection++;
-  }
-  const union = a.size + b.size - intersection;
-  return union > 0 ? intersection / union : 0;
-}
+import { extract3Grams, jaccardSimilarity } from './shingles.js';
+export { extract3Grams, jaccardSimilarity };
 
 export function cleanShards(
   shards: Shard[],
@@ -61,6 +44,7 @@ export function cleanShards(
   const kept: Shard[] = [];
   const removed: Array<{ shard: Shard; reason: string }> = [];
   const accepted3Grams: Set<string>[] = [];
+  const gramIndex = new Map<string, number[]>();
 
   for (const shard of shards) {
     // 1. Text length filter
@@ -84,24 +68,54 @@ export function cleanShards(
       continue;
     }
 
-    // 3. Near-duplicate 3-gram shingle filter
+    // 3. Near-duplicate 3-gram shingle filter with inverted index
     if (dedupeEnabled) {
       const grams = extract3Grams(shard.text);
       let isDup = false;
       let dupSim = 0;
-      for (const existing of accepted3Grams) {
-        const sim = jaccardSimilarity(grams, existing);
-        if (sim >= nearDedupeThreshold) {
-          isDup = true;
-          dupSim = sim;
-          break;
+
+      if (grams.size > 0 && accepted3Grams.length > 0) {
+        // Collect candidates that share 3-grams
+        const matchCounts = new Map<number, number>();
+        for (const g of grams) {
+          const list = gramIndex.get(g);
+          if (list) {
+            for (let i = 0; i < list.length; i++) {
+              const idx = list[i];
+              matchCounts.set(idx, (matchCounts.get(idx) || 0) + 1);
+            }
+          }
+        }
+
+        // Only compute full Jaccard for candidates that share enough grams to meet threshold
+        const minShared = Math.ceil((nearDedupeThreshold / (1 + nearDedupeThreshold)) * grams.size);
+        for (const [candIdx, count] of matchCounts.entries()) {
+          if (count >= minShared) {
+            const sim = jaccardSimilarity(grams, accepted3Grams[candIdx]);
+            if (sim >= nearDedupeThreshold) {
+              isDup = true;
+              dupSim = sim;
+              break;
+            }
+          }
         }
       }
+
       if (isDup) {
         removed.push({ shard, reason: `Near duplicate (similarity ${(dupSim * 100).toFixed(1)}% >= ${(nearDedupeThreshold * 100).toFixed(1)}%)` });
         continue;
       }
+
+      const newIdx = accepted3Grams.length;
       accepted3Grams.push(grams);
+      for (const g of grams) {
+        let list = gramIndex.get(g);
+        if (!list) {
+          list = [];
+          gramIndex.set(g, list);
+        }
+        list.push(newIdx);
+      }
     }
 
     kept.push(shard);
