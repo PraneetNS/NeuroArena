@@ -92,9 +92,15 @@ importers:
         specifier: ^0.170.0
         version: 0.170.0
     devDependencies:
+      '@types/node':
+        specifier: ^26.6.5
+        version: 26.6.5
       '@types/three':
         specifier: ^0.170.0
         version: 0.170.0
+      '@webgpu/types':
+        specifier: ^0.1.74
+        version: 0.1.74
       typescript:
         specifier: ^5.7.3
         version: 5.9.3
