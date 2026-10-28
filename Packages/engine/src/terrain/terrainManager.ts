@@ -196,7 +196,8 @@ export class TerrainManager {
 
     // 3. Dispatch chunk build requests (sorted closest first)
     chunksToBuild.sort((a, b) => a.dist - b.dist);
-    const buildBatch = chunksToBuild.slice(0, this.quality.maxChunksPerFrame);
+    const maxChunks = this.worker ? this.quality.maxChunksPerFrame : 1;
+    const buildBatch = chunksToBuild.slice(0, maxChunks);
 
     for (const item of buildBatch) {
       this.dispatchChunkBuild(item.chunk, item.lod);
