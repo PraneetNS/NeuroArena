@@ -16,3 +16,5 @@ export * from './lens.js';
 export * from './regions.js';
 export * from './vault.js';
 export * from './cleaner.js';
+export * from './shingles.js';
+export * from './tutorial/index.js';
