@@ -136,10 +136,10 @@ export const CODEX_ENTRIES: Record<CodexConceptId, CodexEntryDef> = {
     category: 'Evaluation // Benchmarks',
     unlockedAtStep: 'evaluator_inspection',
     paragraphs: [
-      'A loss value is meaningless without reference points. Uniform random guessing on a 1,024-token vocabulary yields a baseline loss of ln(1024) ≈ 6.93. A simple bigram frequency table yields ~3.28.',
-      'Before celebrating a neural model, verify that it beats simple n-gram statistics. Beating the bigram unlocks the Journeyman Vault; beating the trigram unlocks the Grand Archive.'
+      'A loss value is meaningless without reference points. Uniform random guessing on a 1,024-token vocabulary yields ln(1024) ≈ 6.931. An empirical unigram frequency baseline yields 4.472.',
+      'Beating the unigram gate clears the Tutorial. The bigram gate (3.284) awaits in Region 1 to unlock the Journeyman Vault; the trigram gate (2.834) unlocks the Grand Archive.'
     ],
-    formulaPlain: 'Uniform_Loss = ln(Vocabulary_Size)',
+    formulaPlain: 'Tutorial_Gate: Val_Loss < 4.472 (Unigram)',
     widgetType: 'baseline_bars'
   }
 };
