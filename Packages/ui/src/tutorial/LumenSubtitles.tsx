@@ -9,24 +9,24 @@ export interface LumenSubtitlesProps {
 
 const MOOD_GLOW: Record<string, { border: string; glow: string; badge: string }> = {
   calm: {
-    border: 'rgba(0, 243, 255, 0.4)',
-    glow: '0 0 24px rgba(0, 243, 255, 0.18)',
-    badge: '#00f3ff'
+    border: 'rgba(79, 179, 169, 0.4)',
+    glow: '0 0 24px rgba(79, 179, 169, 0.18)',
+    badge: '#4FB3A9'
   },
   guiding: {
-    border: 'rgba(245, 158, 11, 0.45)',
-    glow: '0 0 24px rgba(245, 158, 11, 0.22)',
-    badge: '#f59e0b'
+    border: 'rgba(232, 163, 61, 0.45)',
+    glow: '0 0 24px rgba(232, 163, 61, 0.22)',
+    badge: '#E8A33D'
   },
   alert: {
-    border: 'rgba(239, 68, 68, 0.55)',
-    glow: '0 0 32px rgba(239, 68, 68, 0.3)',
-    badge: '#ef4444'
+    border: 'rgba(217, 86, 74, 0.55)',
+    glow: '0 0 32px rgba(217, 86, 74, 0.3)',
+    badge: '#D9564A'
   },
   success: {
-    border: 'rgba(16, 185, 129, 0.5)',
-    glow: '0 0 28px rgba(16, 185, 129, 0.25)',
-    badge: '#10b981'
+    border: 'rgba(107, 191, 122, 0.5)',
+    glow: '0 0 28px rgba(107, 191, 122, 0.25)',
+    badge: '#6BBF7A'
   }
 };
 
@@ -118,7 +118,7 @@ export const LumenSubtitles: React.FC<LumenSubtitlesProps> = ({
           <button
             onClick={handleClaimMentorCheckpoint}
             style={{
-              background: '#f59e0b',
+              background: '#E8A33D',
               color: '#0f172a',
               border: 'none',
               padding: '6px 14px',
@@ -186,11 +186,11 @@ export const LumenSubtitles: React.FC<LumenSubtitlesProps> = ({
               <span
                 style={{
                   fontSize: '10.5px',
-                  background: 'rgba(245, 158, 11, 0.2)',
-                  color: '#fbbf24',
+                  background: 'rgba(224, 176, 74, 0.2)',
+                  color: '#E0B04A',
                   padding: '2px 8px',
                   borderRadius: '4px',
-                  border: '1px solid rgba(245, 158, 11, 0.3)'
+                  border: '1px solid rgba(224, 176, 74, 0.3)'
                 }}
               >
                 Hint
