@@ -163,7 +163,9 @@ export class GpuTrainer {
     );
 
     // 4. Asynchronous Metrics & Diagnostics Readback via download staging ring
-    const shouldDiag = currentStep % this.options.diagInterval === 0 || currentStep === 1;
+    // During the first 150 steps run diagnostics every 5 steps so Findings appear within seconds
+    const effectiveDiagInterval = currentStep <= 150 ? Math.min(5, this.options.diagInterval) : this.options.diagInterval;
+    const shouldDiag = currentStep % effectiveDiagInterval === 0 || currentStep === 1;
     const shouldLog = shouldDiag || (currentStep % this.options.logInterval === 0);
     let activeDownloadSlot: (typeof this.downloadRing)[0] | null = null;
 

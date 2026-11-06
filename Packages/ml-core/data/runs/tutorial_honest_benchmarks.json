@@ -1,0 +1,430 @@
+{
+  "adapter": {
+    "vendor": "amd",
+    "architecture": "rdna-2",
+    "device": "",
+    "description": ""
+  },
+  "part1": {
+    "300": [
+      {
+        "seed": 42,
+        "totalSteps": 300,
+        "valLoss": 999,
+        "wallSec": 9.02,
+        "samples": [
+          "The \u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
+          "The \u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
+          "The \u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+        ]
+      },
+      {
+        "seed": 101,
+        "totalSteps": 300,
+        "valLoss": 999,
+        "wallSec": 8.01,
+        "samples": []
+      },
+      {
+        "seed": 777,
+        "totalSteps": 300,
+        "valLoss": 999,
+        "wallSec": 8.01,
+        "samples": []
+      },
+      {
+        "seed": 1337,
+        "totalSteps": 300,
+        "valLoss": 999,
+        "wallSec": 8.02,
+        "samples": []
+      },
+      {
+        "seed": 2026,
+        "totalSteps": 300,
+        "valLoss": 999,
+        "wallSec": 8.03,
+        "samples": []
+      }
+    ],
+    "600": [
+      {
+        "seed": 42,
+        "totalSteps": 600,
+        "valLoss": 999,
+        "wallSec": 15.97,
+        "samples": [
+          "The \u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
+          "The \u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
+          "The \u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+        ]
+      },
+      {
+        "seed": 101,
+        "totalSteps": 600,
+        "valLoss": 999,
+        "wallSec": 16.07,
+        "samples": []
+      },
+      {
+        "seed": 777,
+        "totalSteps": 600,
+        "valLoss": 999,
+        "wallSec": 15.96,
+        "samples": []
+      },
+      {
+        "seed": 1337,
+        "totalSteps": 600,
+        "valLoss": 999,
+        "wallSec": 15.99,
+        "samples": []
+      },
+      {
+        "seed": 2026,
+        "totalSteps": 600,
+        "valLoss": 999,
+        "wallSec": 16.13,
+        "samples": []
+      }
+    ],
+    "1000": [
+      {
+        "seed": 42,
+        "totalSteps": 1000,
+        "valLoss": 999,
+        "wallSec": 26.54,
+        "samples": [
+          "The \u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
+          "The \u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
+          "The \u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+        ]
+      },
+      {
+        "seed": 101,
+        "totalSteps": 1000,
+        "valLoss": 999,
+        "wallSec": 26.29,
+        "samples": []
+      },
+      {
+        "seed": 777,
+        "totalSteps": 1000,
+        "valLoss": 999,
+        "wallSec": 26.25,
+        "samples": []
+      },
+      {
+        "seed": 1337,
+        "totalSteps": 1000,
+        "valLoss": 999,
+        "wallSec": 26.15,
+        "samples": []
+      },
+      {
+        "seed": 2026,
+        "totalSteps": 1000,
+        "valLoss": 999,
+        "wallSec": 26.22,
+        "samples": []
+      }
+    ],
+    "1500": [
+      {
+        "seed": 42,
+        "totalSteps": 1500,
+        "valLoss": 999,
+        "wallSec": 39.1,
+        "samples": [
+          "The \u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
+          "The \u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
+          "The \u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+        ]
+      },
+      {
+        "seed": 101,
+        "totalSteps": 1500,
+        "valLoss": 999,
+        "wallSec": 39.11,
+        "samples": []
+      },
+      {
+        "seed": 777,
+        "totalSteps": 1500,
+        "valLoss": 999,
+        "wallSec": 39.26,
+        "samples": []
+      },
+      {
+        "seed": 1337,
+        "totalSteps": 1500,
+        "valLoss": 999,
+        "wallSec": 39.55,
+        "samples": []
+      },
+      {
+        "seed": 2026,
+        "totalSteps": 1500,
+        "valLoss": 999,
+        "wallSec": 39.35,
+        "samples": []
+      }
+    ]
+  },
+  "part2": {
+    "0.3": [
+      {
+        "seed": 42,
+        "failed": false,
+        "failedAtStep": null,
+        "failureMode": null,
+        "finding": "divergence"
+      },
+      {
+        "seed": 101,
+        "failed": false,
+        "failedAtStep": null,
+        "failureMode": null,
+        "finding": "divergence"
+      },
+      {
+        "seed": 777,
+        "failed": false,
+        "failedAtStep": null,
+        "failureMode": null,
+        "finding": "divergence"
+      },
+      {
+        "seed": 1337,
+        "failed": false,
+        "failedAtStep": null,
+        "failureMode": null,
+        "finding": "divergence"
+      },
+      {
+        "seed": 2026,
+        "failed": false,
+        "failedAtStep": null,
+        "failureMode": null,
+        "finding": "divergence"
+      }
+    ],
+    "0.1": [
+      {
+        "seed": 42,
+        "failed": false,
+        "failedAtStep": null,
+        "failureMode": null,
+        "finding": "divergence"
+      },
+      {
+        "seed": 101,
+        "failed": false,
+        "failedAtStep": null,
+        "failureMode": null,
+        "finding": "divergence"
+      },
+      {
+        "seed": 777,
+        "failed": false,
+        "failedAtStep": null,
+        "failureMode": null,
+        "finding": "divergence"
+      },
+      {
+        "seed": 1337,
+        "failed": false,
+        "failedAtStep": null,
+        "failureMode": null,
+        "finding": "divergence"
+      },
+      {
+        "seed": 2026,
+        "failed": false,
+        "failedAtStep": null,
+        "failureMode": null,
+        "finding": "divergence"
+      }
+    ],
+    "0.05": [
+      {
+        "seed": 42,
+        "failed": false,
+        "failedAtStep": null,
+        "failureMode": null,
+        "finding": "divergence"
+      },
+      {
+        "seed": 101,
+        "failed": false,
+        "failedAtStep": null,
+        "failureMode": null,
+        "finding": "divergence"
+      },
+      {
+        "seed": 777,
+        "failed": false,
+        "failedAtStep": null,
+        "failureMode": null,
+        "finding": "divergence"
+      },
+      {
+        "seed": 1337,
+        "failed": false,
+        "failedAtStep": null,
+        "failureMode": null,
+        "finding": "divergence"
+      },
+      {
+        "seed": 2026,
+        "failed": false,
+        "failedAtStep": null,
+        "failureMode": null,
+        "finding": "divergence"
+      }
+    ],
+    "0.03": [
+      {
+        "seed": 42,
+        "failed": false,
+        "failedAtStep": null,
+        "failureMode": null,
+        "finding": "divergence"
+      },
+      {
+        "seed": 101,
+        "failed": false,
+        "failedAtStep": null,
+        "failureMode": null,
+        "finding": "divergence"
+      },
+      {
+        "seed": 777,
+        "failed": false,
+        "failedAtStep": null,
+        "failureMode": null,
+        "finding": "divergence"
+      },
+      {
+        "seed": 1337,
+        "failed": false,
+        "failedAtStep": null,
+        "failureMode": null,
+        "finding": "divergence"
+      },
+      {
+        "seed": 2026,
+        "failed": false,
+        "failedAtStep": null,
+        "failureMode": null,
+        "finding": "divergence"
+      }
+    ],
+    "0.02": [
+      {
+        "seed": 42,
+        "failed": false,
+        "failedAtStep": null,
+        "failureMode": null,
+        "finding": "divergence"
+      },
+      {
+        "seed": 101,
+        "failed": false,
+        "failedAtStep": null,
+        "failureMode": null,
+        "finding": "divergence"
+      },
+      {
+        "seed": 777,
+        "failed": false,
+        "failedAtStep": null,
+        "failureMode": null,
+        "finding": "divergence"
+      },
+      {
+        "seed": 1337,
+        "failed": false,
+        "failedAtStep": null,
+        "failureMode": null,
+        "finding": "divergence"
+      },
+      {
+        "seed": 2026,
+        "failed": false,
+        "failedAtStep": null,
+        "failureMode": null,
+        "finding": "divergence"
+      }
+    ],
+    "0.01": [
+      {
+        "seed": 42,
+        "failed": false,
+        "failedAtStep": null,
+        "failureMode": null,
+        "finding": "divergence"
+      },
+      {
+        "seed": 101,
+        "failed": false,
+        "failedAtStep": null,
+        "failureMode": null,
+        "finding": "divergence"
+      },
+      {
+        "seed": 777,
+        "failed": false,
+        "failedAtStep": null,
+        "failureMode": null,
+        "finding": "divergence"
+      },
+      {
+        "seed": 1337,
+        "failed": false,
+        "failedAtStep": null,
+        "failureMode": null,
+        "finding": "divergence"
+      },
+      {
+        "seed": 2026,
+        "failed": false,
+        "failedAtStep": null,
+        "failureMode": null,
+        "finding": "divergence"
+      }
+    ]
+  },
+  "fixVerification": [
+    {
+      "seed": 42,
+      "finalLoss": null,
+      "valLoss": 999,
+      "success": false
+    },
+    {
+      "seed": 101,
+      "finalLoss": null,
+      "valLoss": 999,
+      "success": false
+    },
+    {
+      "seed": 777,
+      "finalLoss": null,
+      "valLoss": 999,
+      "success": false
+    },
+    {
+      "seed": 1337,
+      "finalLoss": null,
+      "valLoss": 999,
+      "success": false
+    },
+    {
+      "seed": 2026,
+      "finalLoss": null,
+      "valLoss": 999,
+      "success": false
+    }
+  ]
+}

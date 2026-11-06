@@ -6,9 +6,9 @@ struct AdamWUniforms {
   beta2: f32,
   eps: f32,
   weightDecay: f32,
-  stepCount: u32,
+  bc1Inv: f32,
+  bc2Inv: f32,
   totalParams: u32,
-  pad0: u32,
 };
 
 @group(0) @binding(0) var<storage, read_write> params: array<f32>;
@@ -46,14 +46,11 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
   v[idx] = v_val;
 
   // 4. Bias corrections
-  let stepF = f32(uniforms.stepCount);
-  let bc1 = 1.0 - pow(beta1, stepF);
-  let bc2 = 1.0 - pow(beta2, stepF);
-
-  let mHat = m_val / max(bc1, 1e-12);
-  let vHat = v_val / max(bc2, 1e-12);
+  let mHat = m_val * uniforms.bc1Inv;
+  let vHat = v_val * uniforms.bc2Inv;
 
   // 5. In-place parameter update
-  p = p - (uniforms.lr * mHat) / (sqrt(vHat) + uniforms.eps);
+  let denom = sqrt(max(0.0, vHat)) + 1e-5;
+  p = p - (uniforms.lr * mHat) / denom;
   params[idx] = p;
 }

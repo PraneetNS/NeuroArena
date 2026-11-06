@@ -1772,8 +1772,11 @@ export class GpuModel {
     f32[2] = beta2;
     f32[3] = eps;
     f32[4] = weightDecay;
-    u32[5] = stepCount;
-    u32[6] = this.totalParams;
+    const bc1 = Math.max(1e-12, 1.0 - Math.pow(beta1, Math.max(1, stepCount)));
+    const bc2 = Math.max(1e-12, 1.0 - Math.pow(beta2, Math.max(1, stepCount)));
+    f32[5] = 1.0 / bc1;
+    f32[6] = 1.0 / bc2;
+    u32[7] = this.totalParams;
     device.queue.writeBuffer(this.adamwUniformBuffer, 0, uData);
 
     // Update ReduceNorm uniforms
@@ -1794,7 +1797,9 @@ export class GpuModel {
     pass.setPipeline(this.pipelines.zeroBuffer);
     pass.setBindGroup(0, this.zeroGradsBindGroup);
     pass.dispatchWorkgroups(Math.ceil(this.totalParams / 256));
+    pass.end();
 
+    pass = encoder.beginComputePass({ label: 'TiedHeadAndFinalLnPass' });
     // Tied Head Backward
     pass.setPipeline(this.pipelines.matmul);
     pass.setBindGroup(0, this.tiedHeadBwdXBindGroup);
@@ -1941,15 +1946,19 @@ export class GpuModel {
 
 
     // 3. Optimizer: Grad Norm, Clip & AdamW
-    pass = encoder.beginComputePass({ label: 'OptimizerPass' });
+    pass = encoder.beginComputePass({ label: 'GradNormPass' });
     pass.setPipeline(this.pipelines.gradNorm);
     pass.setBindGroup(0, this.gradNormBindGroup);
     pass.dispatchWorkgroups(this.numPartials);
+    pass.end();
 
+    pass = encoder.beginComputePass({ label: 'ReduceNormPass' });
     pass.setPipeline(this.pipelines.reduceNorm);
     pass.setBindGroup(0, this.reduceNormBindGroup);
     pass.dispatchWorkgroups(1);
+    pass.end();
 
+    pass = encoder.beginComputePass({ label: 'AdamWPass' });
     pass.setPipeline(this.pipelines.adamw);
     pass.setBindGroup(0, this.adamwBindGroup);
     pass.dispatchWorkgroups(Math.ceil(this.totalParams / 256));

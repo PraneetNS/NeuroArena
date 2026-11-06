@@ -28,8 +28,8 @@ export class CosineLRScheduler {
   public warmupSteps: number;
   public totalSteps: number;
 
-  constructor(options: LRSchedulerOptions) {
-    this.maxLR = options.maxLR;
+  constructor(options: LRSchedulerOptions & { baseLR?: number }) {
+    this.maxLR = options.maxLR ?? options.baseLR ?? 0.001;
     this.minLR = options.minLR ?? 0;
     this.warmupSteps = Math.max(1, options.warmupSteps);
     this.totalSteps = Math.max(this.warmupSteps + 1, options.totalSteps);
