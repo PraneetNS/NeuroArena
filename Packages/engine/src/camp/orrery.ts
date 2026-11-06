@@ -45,8 +45,8 @@ export class CampOrrery {
     // Central pulsing mystic gyro core
     const coreGeo = new THREE.IcosahedronGeometry(0.24, 2);
     const coreMat = new THREE.MeshStandardMaterial({
-      color: 0x38bdf8,
-      emissive: 0x0284c7,
+      color: 0x4FB3A9,
+      emissive: 0x207F75,
       emissiveIntensity: 0.8,
       metalness: 0.8,
       roughness: 0.2
@@ -55,7 +55,7 @@ export class CampOrrery {
     this.group.add(this.coreSphere);
 
     // Subtle localized point light from Orrery core
-    this.coreLight = new THREE.PointLight(0x38bdf8, 1.2, 8.0, 2.0);
+    this.coreLight = new THREE.PointLight(0x4FB3A9, 1.2, 8.0, 2.0);
     this.group.add(this.coreLight);
 
     this.rebuildLayers(nLayers);
@@ -87,7 +87,7 @@ export class CampOrrery {
       // 1. Structural Gimbal Ring (dark bronze / brass)
       const gimbalGeo = new THREE.TorusGeometry(radius, 0.016, 12, 64);
       const gimbalMat = new THREE.MeshStandardMaterial({
-        color: 0xd97706,
+        color: 0xE8A33D,
         metalness: 0.85,
         roughness: 0.35
       });
@@ -97,8 +97,8 @@ export class CampOrrery {
       // 2. Inner Glowing Band: Self-Attention Sublayer
       const attnGeo = new THREE.TorusGeometry(radius - 0.05, 0.012, 12, 64);
       const attnMat = new THREE.MeshStandardMaterial({
-        color: 0x38bdf8,
-        emissive: 0x0284c7,
+        color: 0x4FB3A9,
+        emissive: 0x207F75,
         emissiveIntensity: 0.6,
         roughness: 0.3,
         metalness: 0.5
@@ -109,8 +109,8 @@ export class CampOrrery {
       // 3. Outer Glowing Band: MLP Sublayer
       const mlpGeo = new THREE.TorusGeometry(radius + 0.05, 0.012, 12, 64);
       const mlpMat = new THREE.MeshStandardMaterial({
-        color: 0xa855f7,
-        emissive: 0x7e22ce,
+        color: 0x8E9AAF,
+        emissive: 0x5F6876,
         emissiveIntensity: 0.6,
         roughness: 0.3,
         metalness: 0.5
@@ -197,21 +197,21 @@ export class CampOrrery {
 
         if (isAnomalous) {
           // Ember Red Warning state
-          ring.attnMaterial.color.setHex(0xef4444);
-          ring.attnMaterial.emissive.setHex(0xb91c1c);
+          ring.attnMaterial.color.setHex(0xD9564A);
+          ring.attnMaterial.emissive.setHex(0xB83428);
           ring.attnMaterial.emissiveIntensity = 1.4;
 
-          ring.mlpMaterial.color.setHex(0xf97316);
-          ring.mlpMaterial.emissive.setHex(0xc2410c);
+          ring.mlpMaterial.color.setHex(0xE0B04A);
+          ring.mlpMaterial.emissive.setHex(0x9C6F12);
           ring.mlpMaterial.emissiveIntensity = 1.4;
         } else {
           // Healthy state: Brightness reflects relative gradient norm
-          ring.attnMaterial.color.setHex(0x38bdf8);
-          ring.attnMaterial.emissive.setHex(0x0284c7);
+          ring.attnMaterial.color.setHex(0x4FB3A9);
+          ring.attnMaterial.emissive.setHex(0x207F75);
           ring.attnMaterial.emissiveIntensity = 0.5 * relativeGrad;
 
-          ring.mlpMaterial.color.setHex(0xa855f7);
-          ring.mlpMaterial.emissive.setHex(0x7e22ce);
+          ring.mlpMaterial.color.setHex(0x8E9AAF);
+          ring.mlpMaterial.emissive.setHex(0x5F6876);
           ring.mlpMaterial.emissiveIntensity = 0.5 * relativeGrad;
         }
       }
