@@ -63,32 +63,32 @@ const REGION_CONFIGS: Record<
 > = {
   meadow_of_verse: {
     name: 'Meadow of Verse',
-    color: 0x10b981, // Emerald
-    colorHex: '#10b981',
+    color: 0x6BBF7A, // Clean / Success Green
+    colorHex: '#6BBF7A',
     createGeometry: () => new THREE.OctahedronGeometry(0.85, 0)
   },
   weathered_archive: {
     name: 'Weathered Archive',
-    color: 0xf59e0b, // Amber
-    colorHex: '#f59e0b',
+    color: 0xE8A33D, // Accent Amber
+    colorHex: '#E8A33D',
     createGeometry: () => new THREE.DodecahedronGeometry(0.8, 0)
   },
   echo_hollow: {
     name: 'Echo Hollow',
-    color: 0xa855f7, // Violet
-    colorHex: '#a855f7',
+    color: 0x8E9AAF, // Duplicate / Archival Slate
+    colorHex: '#8E9AAF',
     createGeometry: () => new THREE.ConeGeometry(0.65, 1.8, 6)
   },
   billboard_flats: {
     name: 'Billboard Flats',
-    color: 0xf43f5e, // Rose
-    colorHex: '#f43f5e',
+    color: 0xD9564A, // Contaminated / Danger Red
+    colorHex: '#D9564A',
     createGeometry: () => new THREE.BoxGeometry(1.2, 1.5, 0.35)
   },
   foreign_shore: {
     name: 'Foreign Shore',
-    color: 0x06b6d4, // Cyan
-    colorHex: '#06b6d4',
+    color: 0x4FB3A9, // Signal Teal
+    colorHex: '#4FB3A9',
     createGeometry: () => new THREE.TetrahedronGeometry(0.95, 0)
   }
 };
