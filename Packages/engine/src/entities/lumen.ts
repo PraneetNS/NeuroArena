@@ -12,10 +12,10 @@ import * as THREE from 'three';
 export type LumenMood = 'calm' | 'guiding' | 'alert' | 'success';
 
 const MOOD_COLORS: Record<LumenMood, { hex: number; intensity: number; pulseSpeed: number }> = {
-  calm: { hex: 0x00f3ff, intensity: 2.2, pulseSpeed: 2.0 }, // Cyan breathing
-  guiding: { hex: 0xf59e0b, intensity: 2.8, pulseSpeed: 3.5 }, // Warm amber guiding
-  alert: { hex: 0xef4444, intensity: 4.5, pulseSpeed: 8.0 }, // Red/Orange warning flare
-  success: { hex: 0x10b981, intensity: 3.2, pulseSpeed: 2.5 } // Emerald serene
+  calm: { hex: 0x4FB3A9, intensity: 2.2, pulseSpeed: 2.0 }, // Signal Teal breathing
+  guiding: { hex: 0xE8A33D, intensity: 2.8, pulseSpeed: 3.5 }, // Accent Amber guiding
+  alert: { hex: 0xD9564A, intensity: 4.5, pulseSpeed: 8.0 }, // Danger flare
+  success: { hex: 0x6BBF7A, intensity: 3.2, pulseSpeed: 2.5 } // Success green serene
 };
 
 export class LumenCompanion {
@@ -28,7 +28,7 @@ export class LumenCompanion {
   private haloMesh: THREE.Mesh;
   private light: THREE.PointLight;
 
-  private currentHex = 0x00f3ff;
+  private currentHex = 0x4FB3A9;
   private currentIntensity = 2.2;
 
   constructor() {
@@ -37,7 +37,7 @@ export class LumenCompanion {
     // 1. Inner radiant flame core
     const coreGeo = new THREE.SphereGeometry(0.22, 16, 16);
     const coreMat = new THREE.MeshBasicMaterial({
-      color: 0x00f3ff,
+      color: 0x4FB3A9,
       transparent: true,
       opacity: 0.95
     });
@@ -47,7 +47,7 @@ export class LumenCompanion {
     // 2. Ornate lantern cage / rings (brass/obsidian aesthetic)
     const cageGeo = new THREE.IcosahedronGeometry(0.35, 1);
     const cageMat = new THREE.MeshStandardMaterial({
-      color: 0x27272a,
+      color: 0x151A21,
       metalness: 0.85,
       roughness: 0.3,
       wireframe: true
@@ -58,7 +58,7 @@ export class LumenCompanion {
     // 3. Orbiting halo
     const haloGeo = new THREE.TorusGeometry(0.48, 0.015, 8, 32);
     const haloMat = new THREE.MeshBasicMaterial({
-      color: 0x00f3ff,
+      color: 0x4FB3A9,
       transparent: true,
       opacity: 0.65
     });
@@ -67,7 +67,7 @@ export class LumenCompanion {
     this.group.add(this.haloMesh);
 
     // 4. Point light casting soft glow onto terrain and player
-    this.light = new THREE.PointLight(0x00f3ff, 2.2, 8);
+    this.light = new THREE.PointLight(0x4FB3A9, 2.2, 8);
     this.group.add(this.light);
   }
 
