@@ -87,9 +87,9 @@ export const LUMEN_DIALOGUE: Record<string, LumenLine> = {
   },
 
   reward_unlocked: {
-    text: 'Your model speaks. New Codex pages and vault tiers are unlocked.',
-    subtext: 'A glowing beacon marks the trail to the first great region beyond.',
-    hint: 'Press {KEY_CODEX} anytime to study the Codex, or follow the path into the valley.'
+    text: 'Your model surpassed the unigram baseline (4.472). Codex entries are now unlocked.',
+    subtext: 'The bigram gate awaits in Region 1. A glowing beacon lights the path.',
+    hint: 'Press {KEY_CODEX} anytime to study the Codex, or follow the path into Region 1.'
   },
 
   mentor_checkpoint_safety: {
