@@ -30,10 +30,10 @@ export class NeuralShard {
     this.group = new THREE.Group();
     this.group.position.copy(position);
 
-    // Color based on category
-    let color = 0x00f3ff; // Cyan for dialogue
-    if (data.category === 'lore') color = 0xa855f7; // Purple for lore
-    if (data.category === 'logic') color = 0xf59e0b; // Amber for logic
+    // Color based on category using design-system tokens
+    let color = 0x4FB3A9; // Signal Teal for dialogue
+    if (data.category === 'lore') color = 0x8E9AAF; // Archival slate for lore
+    if (data.category === 'logic') color = 0xE8A33D; // Accent Amber for logic
 
     // Outer crystal (Octahedron)
     const outerGeo = new THREE.OctahedronGeometry(0.7, 0);
