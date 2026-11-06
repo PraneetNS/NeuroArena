@@ -89,7 +89,7 @@ export class MentorsNotes {
     ctx.fillStyle = '#1e1b18';
     ctx.fillRect(0, 0, w, h);
 
-    ctx.fillStyle = '#d97706';
+    ctx.fillStyle = '#E8A33D';
     ctx.font = 'bold 26px "Fraunces", serif';
     ctx.fillText("MENTOR'S DIAGNOSTIC BOARD", 50, 60);
 
@@ -109,12 +109,12 @@ export class MentorsNotes {
     ctx.fillRect(0, 0, w, h);
 
     // Title Header
-    ctx.fillStyle = '#f59e0b';
+    ctx.fillStyle = '#E8A33D';
     ctx.font = 'bold 26px serif';
     ctx.textAlign = 'left';
     ctx.fillText("THE MENTOR'S NOTES // FAILURE TAXONOMY", 50, 56);
 
-    ctx.strokeStyle = 'rgba(245, 158, 11, 0.3)';
+    ctx.strokeStyle = 'rgba(232, 163, 61, 0.3)';
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(50, 72);
@@ -126,7 +126,7 @@ export class MentorsNotes {
       ctx.fillStyle = '#292524';
       ctx.fillRect(50, 110, w - 100, 120);
 
-      ctx.fillStyle = '#10b981';
+      ctx.fillStyle = '#6BBF7A';
       ctx.font = 'bold 20px monospace';
       ctx.fillText('● ALL SUBSYSTEMS HEALTHY', 80, 155);
 
@@ -150,13 +150,13 @@ export class MentorsNotes {
       ctx.fillRect(cardX, cardY, cardW, cardH);
 
       // Severity pin & border
-      let pinColor = '#38bdf8';
+      let pinColor = '#4FB3A9';
       let badgeText = 'INFO';
       if (finding.severity === 'critical') {
-        pinColor = '#ef4444';
+        pinColor = '#D9564A';
         badgeText = 'CRITICAL';
       } else if (finding.severity === 'warn') {
-        pinColor = '#f59e0b';
+        pinColor = '#E0B04A';
         badgeText = 'WARNING';
       }
 
@@ -209,10 +209,10 @@ export class MentorsNotes {
         ctx.fillStyle = '#1e293b';
         ctx.fillRect(cardX + 16, fixY, cardW - 32, 58);
 
-        ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+        ctx.strokeStyle = 'rgba(79, 179, 169, 0.4)';
         ctx.strokeRect(cardX + 16, fixY, cardW - 32, 58);
 
-        ctx.fillStyle = '#38bdf8';
+        ctx.fillStyle = '#4FB3A9';
         ctx.font = 'bold 11px monospace';
         ctx.fillText('RECOMMENDED ACTION:', cardX + 24, fixY + 20);
 
