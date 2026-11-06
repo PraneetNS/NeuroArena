@@ -15,6 +15,7 @@ import {
 import { TUTORIAL_STEPS } from './tutorialSteps.js';
 import { LUMEN_DIALOGUE, LumenLine } from './lumenLines.js';
 import { TutorialTelemetry } from './telemetry.js';
+import { formatLumenDialogue } from '../keymap.js';
 
 const INACTIVITY_HINT_SEC = 20;
 
@@ -129,18 +130,7 @@ export class TutorialDirector {
 
   public formatGlyphsAndLineBreaks(text: string): string {
     const isGamepad = this.accessibility.deviceType === 'gamepad';
-    const glyphs: Record<string, string> = {
-      '{KEY_MOVE}': isGamepad ? 'Left Stick' : 'WASD',
-      '{KEY_HARVEST}': isGamepad ? '(X)' : '[E]',
-      '{KEY_LENS}': isGamepad ? '(Y)' : '[Q]',
-      '{KEY_WORKBENCH}': isGamepad ? '(Menu)' : '[Tab]',
-      '{KEY_CODEX}': isGamepad ? '(View)' : '[J]'
-    };
-
-    let formatted = text;
-    for (const [key, val] of Object.entries(glyphs)) {
-      formatted = formatted.replaceAll(key, val);
-    }
+    let formatted = formatLumenDialogue(text, isGamepad);
 
     // Ensure no line exceeds 14 words
     const words = formatted.split(' ');
