@@ -354,9 +354,10 @@ export const CodexModal: React.FC<CodexModalProps> = ({
                   </div>
                   {[
                     { label: 'Uniform Random Guessing', loss: 6.931, color: '#64748b' },
-                    { label: 'Bigram Frequency Table (Gate 1)', loss: 3.286, color: '#f59e0b' },
-                    { label: 'Trigram Frequency Table (Gate 2)', loss: 2.834, color: '#3b82f6' },
-                    { label: 'Scout Neural Network (Trained)', loss: 2.62, color: '#10b981' }
+                    { label: 'Unigram Frequency (Tutorial Gate - Cleared)', loss: 4.472, color: '#6BBF7A' },
+                    { label: 'Bigram Frequency (Region 1 Gate)', loss: 3.284, color: '#E8A33D' },
+                    { label: 'Trigram Frequency (Region 2 Gate)', loss: 2.834, color: '#4FB3A9' },
+                    { label: 'Scout Neural Network (Trained)', loss: 2.62, color: '#38bdf8' }
                   ].map((b, i) => (
                     <div key={i} style={{ marginBottom: '10px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#e2e8f0', marginBottom: '4px' }}>
