@@ -49,7 +49,7 @@ import {
 } from './capability.js';
 import { TerrainStatsOverlay } from './statsOverlay.js';
 import { EnvironmentDebugPanel } from './environmentDebugPanel.js';
-import { VaultManager, Shard, TutorialDirector, TutorialBot, TutorialStepId, CodexConceptId } from '@na/game-core';
+import { VaultManager, Shard, TutorialDirector, TutorialBot, TutorialStepId, CodexConceptId, KEYMAP, formatLumenDialogue } from '@na/game-core';
 import { ShardWorld, ShardInteractionState } from './shardWorld.js';
 import { ShardHUD } from './shardHUD.js';
 
@@ -260,9 +260,14 @@ class NeuroArenaGame {
       (window as any).worldState = this.shardWorld.worldState;
       (window as any).__tutorialDirector = this.director;
       (window as any).__tutorialBot = new TutorialBot(this.director);
-      (window as any).__runTutorialBot = async () => {
+      (window as any).__runTutorialBot = async (fuzzMode = false) => {
+        if (fuzzMode) {
+          const fuzzReport = await (window as any).__tutorialBot.runFuzzMode(50);
+          console.log('[TutorialBot Fuzz Report (50 Deviations)]', fuzzReport);
+          return fuzzReport;
+        }
         const report = await (window as any).__tutorialBot.runFullTutorialHeadless();
-        console.log('[TutorialBot Report]', report);
+        console.log('[TutorialBot Walkthrough Report]', report);
         return report;
       };
       (window as any).__skipToStep = (stepId: TutorialStepId) => {
@@ -444,22 +449,47 @@ class NeuroArenaGame {
 
   private setupKeybindings(): void {
     window.addEventListener('keydown', (e) => {
-      // Free-Fly Camera toggle with key F
-      if (e.code === 'KeyF') {
+      // Dev Free-Fly Camera toggle with Shift+KeyF or KeyP (avoids conflict with Sweep Net on KeyF)
+      if ((e.shiftKey && e.code === 'KeyF') || e.code === 'KeyP') {
         this.toggleFreeFly();
         return;
       }
 
-      // Vault modal toggle on Tab
-      if (e.code === 'Tab') {
+      // Workbench toggle on Tab (matches KEYMAP.workbench)
+      if (e.code === KEYMAP.workbench.code) {
+        e.preventDefault();
+        if (this.isWorkbenchOpen) {
+          this.closeWorkbench();
+        } else {
+          this.openWorkbench();
+        }
+        return;
+      }
+
+      // Shard Vault toggle on KeyV (matches KEYMAP.vault)
+      if (e.code === KEYMAP.vault.code) {
         e.preventDefault();
         this.toggleVault();
         return;
       }
 
-      // Lens Scanner toggle on Key Q
-      if (e.code === 'KeyQ') {
+      // Lens Scanner toggle on KeyQ (matches KEYMAP.lens)
+      if (e.code === KEYMAP.lens.code) {
         this.shardWorld.toggleScanMode();
+        this.director.handleEvent({ type: 'lens_scanned' });
+        return;
+      }
+
+      // Sweep Net trigger on KeyF (matches KEYMAP.sweep_net)
+      if (e.code === KEYMAP.sweep_net.code && !e.shiftKey) {
+        this.shardWorld.triggerSweepNet(this.player.position);
+        this.director.handleEvent({ type: 'cache_swept' });
+        return;
+      }
+
+      // Codex Journal toggle on KeyJ (matches KEYMAP.codex)
+      if (e.code === KEYMAP.codex.code) {
+        this.toggleCodex();
         return;
       }
 
@@ -477,22 +507,17 @@ class NeuroArenaGame {
         return;
       }
 
-      // Codex Journal toggle on Key J
-      if (e.code === 'KeyJ') {
-        this.toggleCodex();
-        return;
-      }
-
       const isModalOpen =
         this.curatorModal.isOpen ||
         this.forgeModal.isOpen ||
         this.chatModal.isOpen ||
         this.capabilityModal.isOpen ||
         this.isVaultOpen ||
-        this.isCodexOpen;
+        this.isCodexOpen ||
+        this.isWorkbenchOpen;
 
       if (isModalOpen) {
-        if (e.code === 'Escape') {
+        if (e.code === KEYMAP.camp_exit.code) {
           this.closeAllModals();
         }
         return;
@@ -501,22 +526,22 @@ class NeuroArenaGame {
       // Player Movement controls (when not in free-fly)
       if (!this.world.isFreeFly) {
         switch (e.code) {
-          case 'KeyW':
+          case KEYMAP.move_forward.code:
           case 'ArrowUp':
             this.player.controls.forward = true;
             this.director.handleEvent({ type: 'player_moved' });
             break;
-          case 'KeyS':
+          case KEYMAP.move_backward.code:
           case 'ArrowDown':
             this.player.controls.backward = true;
             this.director.handleEvent({ type: 'player_moved' });
             break;
-          case 'KeyA':
+          case KEYMAP.move_left.code:
           case 'ArrowLeft':
             this.player.controls.left = true;
             this.director.handleEvent({ type: 'player_moved' });
             break;
-          case 'KeyD':
+          case KEYMAP.move_right.code:
           case 'ArrowRight':
             this.player.controls.right = true;
             this.director.handleEvent({ type: 'player_moved' });
@@ -525,30 +550,16 @@ class NeuroArenaGame {
           case 'ShiftRight':
             this.player.controls.sprint = true;
             break;
-          case 'Space':
+          case KEYMAP.jump.code:
             this.player.controls.jump = true;
             break;
         }
       }
 
       switch (e.code) {
-        case 'KeyE':
+        case KEYMAP.harvest.code:
           this.shardWorld.isHoldingE = true;
           this.handleInteraction();
-          break;
-
-        case 'KeyF':
-          this.shardWorld.triggerSweepNet(this.player.position);
-          this.director.handleEvent({ type: 'cache_swept' });
-          break;
-
-        case 'KeyQ':
-          this.shardWorld.toggleScanMode();
-          this.director.handleEvent({ type: 'lens_scanned' });
-          break;
-
-        case 'KeyJ':
-          this.toggleCodex();
           break;
 
         case 'KeyC':
@@ -563,23 +574,15 @@ class NeuroArenaGame {
           this.openChat();
           break;
 
-        case 'KeyG':
+        case KEYMAP.debug_panel.code:
           this.toggleDebugPanel();
-          break;
-
-        case 'KeyB':
-          if (this.isWorkbenchOpen) {
-            this.closeWorkbench();
-          } else {
-            this.openWorkbench();
-          }
           break;
 
         case 'KeyU':
           window.location.href = '/ui-lab';
           break;
 
-        case 'Escape':
+        case KEYMAP.camp_exit.code:
           if (this.isCampActive) {
             this.exitCamp();
           } else {
@@ -590,24 +593,24 @@ class NeuroArenaGame {
     });
 
     window.addEventListener('keyup', (e) => {
-      if (e.code === 'KeyE') {
+      if (e.code === KEYMAP.harvest.code) {
         this.shardWorld.isHoldingE = false;
       }
 
       switch (e.code) {
-        case 'KeyW':
+        case KEYMAP.move_forward.code:
         case 'ArrowUp':
           this.player.controls.forward = false;
           break;
-        case 'KeyS':
+        case KEYMAP.move_backward.code:
         case 'ArrowDown':
           this.player.controls.backward = false;
           break;
-        case 'KeyA':
+        case KEYMAP.move_left.code:
         case 'ArrowLeft':
           this.player.controls.left = false;
           break;
-        case 'KeyD':
+        case KEYMAP.move_right.code:
         case 'ArrowRight':
           this.player.controls.right = false;
           break;
@@ -615,7 +618,7 @@ class NeuroArenaGame {
         case 'ShiftRight':
           this.player.controls.sprint = false;
           break;
-        case 'Space':
+        case KEYMAP.jump.code:
           this.player.controls.jump = false;
           break;
       }
