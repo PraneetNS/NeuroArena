@@ -96,17 +96,17 @@ export class LossLantern {
     // Baseline Notches: Metallic horizontal indicator rings circling the glass
     const notchGeo = new THREE.TorusGeometry(0.164, 0.007, 8, 32);
 
-    // Notch 1: Unigram (4.472)
-    const unigramMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.8, roughness: 0.2 });
+    // Notch 1: Unigram (4.472) - Tutorial Gate
+    const unigramMat = new THREE.MeshStandardMaterial({ color: 0x8E9AAF, metalness: 0.8, roughness: 0.2 });
     const unigramNotch = new THREE.Mesh(notchGeo, unigramMat);
     unigramNotch.position.y = 0.347;
     unigramNotch.rotation.x = Math.PI / 2;
     this.group.add(unigramNotch);
 
-    // Notch 2: Bigram (3.286) - Tier 2 Gate
+    // Notch 2: Bigram (3.286) - Region 1 Gate
     const bigramMat = new THREE.MeshStandardMaterial({
-      color: 0xf59e0b,
-      emissive: 0xd97706,
+      color: 0xE8A33D,
+      emissive: 0xB36814,
       emissiveIntensity: 0.4,
       metalness: 0.8,
       roughness: 0.2
@@ -116,10 +116,10 @@ export class LossLantern {
     bigramNotch.rotation.x = Math.PI / 2;
     this.group.add(bigramNotch);
 
-    // Notch 3: Trigram (2.834) - Tier 3 Gate
+    // Notch 3: Trigram (2.834) - Region 2 Gate
     const trigramMat = new THREE.MeshStandardMaterial({
-      color: 0x38bdf8,
-      emissive: 0x0284c7,
+      color: 0x4FB3A9,
+      emissive: 0x207F75,
       emissiveIntensity: 0.5,
       metalness: 0.8,
       roughness: 0.2
@@ -156,8 +156,8 @@ export class LossLantern {
     this.flameCoreMesh.position.y = 0.08;
     this.group.add(this.flameCoreMesh);
 
-    // 5. Point light emitted from flame
-    this.lanternLight = new THREE.PointLight(0xff7722, 1.8, 5.0, 2.0);
+    // 5. Point light emitted from flame (Accent Amber)
+    this.lanternLight = new THREE.PointLight(0xE8A33D, 1.8, 5.0, 2.0);
     this.lanternLight.position.y = 0.24;
     this.group.add(this.lanternLight);
   }
@@ -216,12 +216,12 @@ export class LossLantern {
         // Sudden spike then decay
         const flareProfile = Math.sin(progress * Math.PI) * 1.5;
         flareMultiplier = 1.0 + flareProfile;
-        this.flameMaterial.emissive.setHex(0xffaa22);
+        this.flameMaterial.emissive.setHex(0xE8A33D);
         this.flameMaterial.emissiveIntensity = 2.4;
         this.lanternLight.intensity = 3.6;
       } else {
         this.isFlaring = false;
-        this.flameMaterial.emissive.setHex(0xff6b00);
+        this.flameMaterial.emissive.setHex(0xB36814);
         this.flameMaterial.emissiveIntensity = 1.2;
         this.lanternLight.intensity = 1.8;
       }
