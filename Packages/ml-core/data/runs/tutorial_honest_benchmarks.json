@@ -10,40 +10,40 @@
       {
         "seed": 42,
         "totalSteps": 300,
-        "valLoss": 999,
-        "wallSec": 9.02,
+        "valLoss": 3.9633,
+        "wallSec": 8.69,
         "samples": [
-          "The \u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
-          "The \u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
-          "The \u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+          "The I in I the I the of the be be my ",
+          "The and the be my in to the to of my the ",
+          "The be s my my in in in in in to in "
         ]
       },
       {
         "seed": 101,
         "totalSteps": 300,
-        "valLoss": 999,
-        "wallSec": 8.01,
+        "valLoss": 3.9225,
+        "wallSec": 8.43,
         "samples": []
       },
       {
         "seed": 777,
         "totalSteps": 300,
-        "valLoss": 999,
-        "wallSec": 8.01,
+        "valLoss": 4.0452,
+        "wallSec": 8.78,
         "samples": []
       },
       {
         "seed": 1337,
         "totalSteps": 300,
-        "valLoss": 999,
-        "wallSec": 8.02,
+        "valLoss": 3.9237,
+        "wallSec": 8.73,
         "samples": []
       },
       {
         "seed": 2026,
         "totalSteps": 300,
-        "valLoss": 999,
-        "wallSec": 8.03,
+        "valLoss": 3.9208,
+        "wallSec": 8.85,
         "samples": []
       }
     ],
@@ -51,40 +51,40 @@
       {
         "seed": 42,
         "totalSteps": 600,
-        "valLoss": 999,
-        "wallSec": 15.97,
+        "valLoss": 3.8535,
+        "wallSec": 17.38,
         "samples": [
-          "The \u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
-          "The \u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
-          "The \u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+          "The of in of of the in to of ber\nAll ",
+          "The my in to be beauty be to in of my ",
+          "The to I in of of of of of of in of "
         ]
       },
       {
         "seed": 101,
         "totalSteps": 600,
-        "valLoss": 999,
-        "wallSec": 16.07,
+        "valLoss": 3.8598,
+        "wallSec": 17.9,
         "samples": []
       },
       {
         "seed": 777,
         "totalSteps": 600,
-        "valLoss": 999,
-        "wallSec": 15.96,
+        "valLoss": 3.8929,
+        "wallSec": 17.55,
         "samples": []
       },
       {
         "seed": 1337,
         "totalSteps": 600,
-        "valLoss": 999,
-        "wallSec": 15.99,
+        "valLoss": 3.8893,
+        "wallSec": 17.42,
         "samples": []
       },
       {
         "seed": 2026,
         "totalSteps": 600,
-        "valLoss": 999,
-        "wallSec": 16.13,
+        "valLoss": 3.8907,
+        "wallSec": 18.89,
         "samples": []
       }
     ],
@@ -92,40 +92,40 @@
       {
         "seed": 42,
         "totalSteps": 1000,
-        "valLoss": 999,
-        "wallSec": 26.54,
+        "valLoss": 3.8782,
+        "wallSec": 31.16,
         "samples": [
-          "The \u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
-          "The \u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
-          "The \u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+          "The the false the of of black,\nSave and ",
+          "The my self-false burn of the praise,\nAnd ",
+          "The that love I my love love my love,\nA not my"
         ]
       },
       {
         "seed": 101,
         "totalSteps": 1000,
-        "valLoss": 999,
-        "wallSec": 26.29,
+        "valLoss": 3.854,
+        "wallSec": 31.51,
         "samples": []
       },
       {
         "seed": 777,
         "totalSteps": 1000,
-        "valLoss": 999,
-        "wallSec": 26.25,
+        "valLoss": 3.8554,
+        "wallSec": 30.26,
         "samples": []
       },
       {
         "seed": 1337,
         "totalSteps": 1000,
-        "valLoss": 999,
-        "wallSec": 26.15,
+        "valLoss": 3.8746,
+        "wallSec": 30.1,
         "samples": []
       },
       {
         "seed": 2026,
         "totalSteps": 1000,
-        "valLoss": 999,
-        "wallSec": 26.22,
+        "valLoss": 3.8858,
+        "wallSec": 29.88,
         "samples": []
       }
     ],
@@ -133,40 +133,40 @@
       {
         "seed": 42,
         "totalSteps": 1500,
-        "valLoss": 999,
-        "wallSec": 39.1,
+        "valLoss": 4.1504,
+        "wallSec": 44.49,
         "samples": [
-          "The \u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
-          "The \u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
-          "The \u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+          "The water of bit my love love as I love,\n",
+          "The gifted and thy beauty to slow,\nAnd ",
+          "The humes of my self thy depart,\nAnd thy bea"
         ]
       },
       {
         "seed": 101,
         "totalSteps": 1500,
-        "valLoss": 999,
-        "wallSec": 39.11,
+        "valLoss": 4.1064,
+        "wallSec": 44.79,
         "samples": []
       },
       {
         "seed": 777,
         "totalSteps": 1500,
-        "valLoss": 999,
-        "wallSec": 39.26,
+        "valLoss": 4.1449,
+        "wallSec": 44.18,
         "samples": []
       },
       {
         "seed": 1337,
         "totalSteps": 1500,
-        "valLoss": 999,
-        "wallSec": 39.55,
+        "valLoss": 4.1203,
+        "wallSec": 44.64,
         "samples": []
       },
       {
         "seed": 2026,
         "totalSteps": 1500,
-        "valLoss": 999,
-        "wallSec": 39.35,
+        "valLoss": 4.0815,
+        "wallSec": 42.9,
         "samples": []
       }
     ]
@@ -398,33 +398,33 @@
   "fixVerification": [
     {
       "seed": 42,
-      "finalLoss": null,
-      "valLoss": 999,
-      "success": false
+      "finalLoss": 4.811,
+      "valLoss": 3.8729,
+      "success": true
     },
     {
       "seed": 101,
-      "finalLoss": null,
-      "valLoss": 999,
-      "success": false
+      "finalLoss": 4.9407,
+      "valLoss": 3.8683,
+      "success": true
     },
     {
       "seed": 777,
-      "finalLoss": null,
-      "valLoss": 999,
-      "success": false
+      "finalLoss": 4.8272,
+      "valLoss": 3.8766,
+      "success": true
     },
     {
       "seed": 1337,
-      "finalLoss": null,
-      "valLoss": 999,
-      "success": false
+      "finalLoss": 4.8757,
+      "valLoss": 3.8696,
+      "success": true
     },
     {
       "seed": 2026,
-      "finalLoss": null,
-      "valLoss": 999,
-      "success": false
+      "finalLoss": 4.8166,
+      "valLoss": 3.9137,
+      "success": true
     }
   ]
 }
