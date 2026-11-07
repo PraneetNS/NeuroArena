@@ -13,6 +13,8 @@
  *    attention collapse, data contamination, underfitting, and gradient vanishing/explosion.
  */
 
+import { BASELINES } from './baselines.js';
+
 export interface LayerDiagnostics {
   layer: number;
   paramNorm: number;
@@ -306,9 +308,9 @@ export function getBaselinePosition(valLoss: number): {
   badgeColor: string;
   advice: string;
 } {
-  const UNIGRAM = 4.7477;
-  const BIGRAM = 3.2863;
-  const TRIGRAM = 2.8335;
+  const UNIGRAM = BASELINES.unigram;
+  const BIGRAM = BASELINES.bigram;
+  const TRIGRAM = BASELINES.trigram;
 
   if (valLoss > UNIGRAM) {
     return {
@@ -690,6 +692,54 @@ export function diagnose(
         { label: 'Increase learning rate to 0.001', parameterChange: { parameter: 'lr', suggestedValue: 0.001 } }
       ],
       conceptId: 'learning-rate-low'
+    });
+  }
+
+  // --------------------------------------------------------------------------
+  // 3b. OPTIMIZATION STALL (loss plateau above unigram baseline)
+  // --------------------------------------------------------------------------
+  let isStalled = false;
+  if (latestSnapshot && latestSnapshot.step >= 40) {
+    if (latestSnapshot.loss >= BASELINES.unigram) {
+      if (history.length >= 4) {
+        const recentSnapshots = history.slice(-4);
+        const lossDiff = Math.abs(recentSnapshots[recentSnapshots.length - 1].loss - recentSnapshots[0].loss);
+        if (lossDiff < 0.3) {
+          isStalled = true;
+        }
+      }
+    }
+  } else if (metrics.length >= 8 && latestMetric && latestMetric.step >= 40) {
+    if (latestMetric.trainLoss >= BASELINES.unigram) {
+      const recentM = metrics.slice(-6);
+      const lossDelta = Math.abs(recentM[recentM.length - 1].trainLoss - recentM[0].trainLoss);
+      if (lossDelta < 0.25) {
+        isStalled = true;
+      }
+    }
+  }
+
+  if (isStalled) {
+    findings.push({
+      id: 'stall',
+      severity: 'warn',
+      title: 'Optimization Stalled',
+      evidence: [
+        { metric: 'currentLoss', value: (latestSnapshot?.loss ?? latestMetric?.trainLoss ?? 4.5).toFixed(4), threshold: `< ${BASELINES.unigram}` },
+        { metric: 'trajectory', value: 'plateaued above baseline', threshold: 'descent' }
+      ],
+      plainExplanation:
+        'The loss trajectory has plateaued above the unigram baseline and ceased making measurable progress. Adjusting the learning rate or scheduler will help the optimizer escape this high-loss plateau.',
+      likelyCauses: [
+        'Learning rate is poorly tuned or too erratic to descend into an optimal basin',
+        'Optimizer momentum or warmup schedule plateaued prematurely',
+        'Model capacity is saturated by suboptimal hyperparameter balance'
+      ],
+      suggestedFixes: [
+        { label: 'Tune learning rate to calibrated baseline (0.003)', parameterChange: { parameter: 'lr', suggestedValue: 0.003 } },
+        { label: 'Extend warmup schedule to 15-25 steps', parameterChange: { parameter: 'warmupSteps', suggestedValue: 20 } }
+      ],
+      conceptId: 'optimization-stall'
     });
   }
 
