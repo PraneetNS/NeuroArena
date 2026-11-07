@@ -5,6 +5,15 @@
  * Evaluates validation loss per token (cross-entropy in nats) and per character (loss / charsPerToken).
  */
 
+export const BASELINES = {
+  uniform: 6.9315, // ln(1024)
+  unigram: 4.472,
+  bigram: 3.286,
+  trigram: 2.834
+} as const;
+
+export type BaselineType = keyof typeof BASELINES;
+
 export interface NGramEvalResult {
   model: 'unigram' | 'bigram' | 'trigram';
   k: number;

@@ -13,7 +13,8 @@
     "./model": "./src/model.ts",
     "./dataset": "./src/dataset.ts",
     "./optimizer": "./src/optimizer.ts",
-    "./validation": "./src/validation.ts"
+    "./validation": "./src/validation.ts",
+    "./baselines": "./src/baselines.ts"
   },
   "scripts": {
     "build": "tsc --noEmit",
