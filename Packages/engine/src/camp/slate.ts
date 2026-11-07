@@ -9,6 +9,7 @@
  */
 
 import * as THREE from 'three/webgpu';
+import { BASELINES } from '@na/ml-core';
 import { CampStepStats } from './campScene.js';
 
 export class CampSlate {
@@ -205,8 +206,8 @@ export class CampSlate {
     }
 
     // 4. Target Baseline Guidelines
-    // Trigram (2.834)
-    const triY = getY(2.834);
+    // Trigram Guideline
+    const triY = getY(BASELINES.trigram);
     ctx.strokeStyle = '#38bdf8';
     ctx.setLineDash([8, 6]);
     ctx.beginPath();
@@ -215,10 +216,10 @@ export class CampSlate {
     ctx.stroke();
     ctx.fillStyle = '#38bdf8';
     ctx.textAlign = 'right';
-    ctx.fillText('TRIGRAM (2.834) - TIER 3 GATE', plotX + plotW - 10, triY - 6);
+    ctx.fillText(`TRIGRAM (${BASELINES.trigram}) - TIER 3 GATE`, plotX + plotW - 10, triY - 6);
 
-    // Bigram (3.286)
-    const biY = getY(3.286);
+    // Bigram Guideline
+    const biY = getY(BASELINES.bigram);
     ctx.strokeStyle = '#f59e0b';
     ctx.setLineDash([8, 6]);
     ctx.beginPath();
@@ -226,7 +227,7 @@ export class CampSlate {
     ctx.lineTo(plotX + plotW, biY);
     ctx.stroke();
     ctx.fillStyle = '#f59e0b';
-    ctx.fillText('BIGRAM (3.286) - TIER 2 GATE', plotX + plotW - 10, biY - 6);
+    ctx.fillText(`BIGRAM (${BASELINES.bigram}) - TIER 2 GATE`, plotX + plotW - 10, biY - 6);
     ctx.setLineDash([]);
 
     // 5. Draw Loss Curves

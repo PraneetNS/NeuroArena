@@ -13,6 +13,7 @@
  */
 
 import * as THREE from 'three/webgpu';
+import { BASELINES } from '@na/ml-core';
 
 export class LossLantern {
   public group: THREE.Group;
@@ -96,14 +97,14 @@ export class LossLantern {
     // Baseline Notches: Metallic horizontal indicator rings circling the glass
     const notchGeo = new THREE.TorusGeometry(0.164, 0.007, 8, 32);
 
-    // Notch 1: Unigram (4.472) - Tutorial Gate
+    // Notch 1: Unigram Baseline - Tutorial Gate
     const unigramMat = new THREE.MeshStandardMaterial({ color: 0x8E9AAF, metalness: 0.8, roughness: 0.2 });
     const unigramNotch = new THREE.Mesh(notchGeo, unigramMat);
-    unigramNotch.position.y = 0.347;
+    unigramNotch.position.y = 0.10 + ((BASELINES.unigram - 2.0) / 4.0) * 0.40;
     unigramNotch.rotation.x = Math.PI / 2;
     this.group.add(unigramNotch);
 
-    // Notch 2: Bigram (3.286) - Region 1 Gate
+    // Notch 2: Bigram Baseline - Region 1 Gate
     const bigramMat = new THREE.MeshStandardMaterial({
       color: 0xE8A33D,
       emissive: 0xB36814,
@@ -112,11 +113,11 @@ export class LossLantern {
       roughness: 0.2
     });
     const bigramNotch = new THREE.Mesh(notchGeo, bigramMat);
-    bigramNotch.position.y = 0.228;
+    bigramNotch.position.y = 0.10 + ((BASELINES.bigram - 2.0) / 4.0) * 0.40;
     bigramNotch.rotation.x = Math.PI / 2;
     this.group.add(bigramNotch);
 
-    // Notch 3: Trigram (2.834) - Region 2 Gate
+    // Notch 3: Trigram Baseline - Region 2 Gate
     const trigramMat = new THREE.MeshStandardMaterial({
       color: 0x4FB3A9,
       emissive: 0x207F75,
@@ -125,7 +126,7 @@ export class LossLantern {
       roughness: 0.2
     });
     const trigramNotch = new THREE.Mesh(notchGeo, trigramMat);
-    trigramNotch.position.y = 0.183;
+    trigramNotch.position.y = 0.10 + ((BASELINES.trigram - 2.0) / 4.0) * 0.40;
     trigramNotch.rotation.x = Math.PI / 2;
     this.group.add(trigramNotch);
 

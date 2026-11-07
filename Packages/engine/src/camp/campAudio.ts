@@ -9,6 +9,8 @@
  * 5. Celebratory chime: layered harmonic bell tones when training completes.
  */
 
+import { BASELINES } from '@na/ml-core';
+
 export class CampAudio {
   private ctx: AudioContext | null = null;
   private isMuted = false;
@@ -302,7 +304,7 @@ export class CampAudio {
       if (this.currentSmoothedLoss > 3.5) {
         // C-minor contemplative motif
         notes = [261.63, 311.13, 392.0, 523.25]; // C4, Eb4, G4, C5
-      } else if (this.currentSmoothedLoss > 2.834) {
+      } else if (this.currentSmoothedLoss > BASELINES.trigram) {
         // C-lydian hopeful motif
         notes = [261.63, 329.63, 369.99, 523.25]; // C4, E4, F#4, C5
       } else {
