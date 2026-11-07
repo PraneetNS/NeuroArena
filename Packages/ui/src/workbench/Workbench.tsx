@@ -328,16 +328,16 @@ export function createDefaultNode(kind: NodeKind, x: number, y: number, idSuffix
           }
         ],
         data: {
-          learningRate: 0.0003,
+          learningRate: 0.003,
           batchSize: 16,
-          maxSteps: 250,
-          warmupSteps: 50,
+          maxSteps: 600,
+          warmupSteps: 20,
           weightDecay: 0.01,
           seed: 42,
           throttle: 0,
           currentStep: 0,
-          currentLoss: 4.82,
-          etaSeconds: 30
+          currentLoss: 4.47,
+          etaSeconds: 18
         } as TrainerNodeData
       };
 

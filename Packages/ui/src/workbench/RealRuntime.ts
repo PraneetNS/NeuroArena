@@ -84,7 +84,7 @@ export class RealRuntime implements WorkbenchRuntime {
   // Simulation fallback timer if WebGPU is absent
   private simTimer: number | null = null;
   private currentStep = 0;
-  private maxSteps = 250;
+  private maxSteps = 600;
   private startTime = 0;
 
   constructor(options?: { vaultManager?: VaultManager }) {
@@ -535,7 +535,7 @@ export class RealRuntime implements WorkbenchRuntime {
     }
 
     const tData = (trainerNode?.data as TrainerNodeData) || {};
-    this.maxSteps = tData.maxSteps || 250;
+    this.maxSteps = tData.maxSteps || 600;
     this.currentStep = 0;
     this.startTime = performance.now();
     this.activeRunId = `run-${Date.now()}`;
