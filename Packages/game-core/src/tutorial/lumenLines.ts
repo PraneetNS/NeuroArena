@@ -76,20 +76,20 @@ export const LUMEN_DIALOGUE: Record<string, LumenLine> = {
 
   apply_fix_retrain: {
     text: 'Apply the suggested learning rate and reignite the run.',
-    subtext: 'Watch the scroll turn from random static into coherent speech.',
+    subtext: 'Watch the scroll turn from random noise into frequent words.',
     hint: 'Click Apply Fix or set the learning rate to 0.003, then restart the training run.'
   },
 
   evaluator_inspection: {
     text: 'Listen to what the fledgling model has learned. Prompt it with a short sentence.',
-    subtext: 'The heatmap highlights tokens where the model felt surprised.',
-    hint: 'Type a prompt in the Evaluator node and generate samples to hear its first voice.'
+    subtext: 'It learned which words are common, not how they fit together.',
+    hint: 'Generate samples to inspect its frequent-word soup before grammar forms.'
   },
 
   reward_unlocked: {
-    text: 'Your model surpassed the unigram baseline (4.472). Codex entries are now unlocked.',
-    subtext: 'The bigram gate awaits in Region 1. A glowing beacon lights the path.',
-    hint: 'Press {KEY_CODEX} anytime to study the Codex, or follow the path into Region 1.'
+    text: 'Your model surpassed the unigram baseline (4.472): it learned common words.',
+    subtext: 'Region 1 holds the bigram gate—the true beginning of syntax and grammar.',
+    hint: 'Press {KEY_CODEX} anytime to study the Codex, or follow the beacon into Region 1.'
   },
 
   mentor_checkpoint_safety: {

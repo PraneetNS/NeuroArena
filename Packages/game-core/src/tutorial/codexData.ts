@@ -137,7 +137,7 @@ export const CODEX_ENTRIES: Record<CodexConceptId, CodexEntryDef> = {
     unlockedAtStep: 'evaluator_inspection',
     paragraphs: [
       'A loss value is meaningless without reference points. Uniform random guessing on a 1,024-token vocabulary yields ln(1024) ≈ 6.931. An empirical unigram frequency baseline yields 4.472.',
-      'Beating the unigram gate clears the Tutorial. The bigram gate (3.284) awaits in Region 1 to unlock the Journeyman Vault; the trigram gate (2.834) unlocks the Grand Archive.'
+      'Surpassing the unigram baseline proves the model learned which words are common, not how they fit together. The bigram gate (3.286) awaits in Region 1 with the promise of grammar.'
     ],
     formulaPlain: 'Tutorial_Gate: Val_Loss < 4.472 (Unigram)',
     widgetType: 'baseline_bars'
