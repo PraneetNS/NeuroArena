@@ -1105,6 +1105,28 @@ export const Workbench: React.FC<WorkbenchProps> = ({ vaultManager, runtime, onC
     showToast('Stopped training run', 'info');
   };
 
+  const handleStartLongerRun = async () => {
+    setGraph((prev) => {
+      const updatedNodes = prev.nodes.map((n) => {
+        if (n.kind === 'trainer') {
+          return {
+            ...n,
+            data: {
+              ...n.data,
+              totalSteps: 3000
+            }
+          };
+        }
+        return n;
+      });
+      return { ...prev, nodes: updatedNodes };
+    });
+    setTimeout(() => {
+      handleStartRun();
+      showToast('Started 3,000-step extended run to observe empirical overfitting curve', 'info');
+    }, 50);
+  };
+
   // Autopsy trigger
   const handleOpenAutopsy = async (runId?: string) => {
     setIsAutopsyOpen(true);
@@ -1178,15 +1200,26 @@ export const Workbench: React.FC<WorkbenchProps> = ({ vaultManager, runtime, onC
         {/* Central Controls */}
         <div className="na-workbench-toolbar">
           {!isRunning ? (
-            <Button
-              variant="primary"
-              size="sm"
-              icon={<PlayIcon size={14} />}
-              onClick={handleStartRun}
-              title="Start training run on RealRuntime"
-            >
-              Start Run
-            </Button>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <Button
+                variant="primary"
+                size="sm"
+                icon={<PlayIcon size={14} />}
+                onClick={handleStartRun}
+                title="Start training run on RealRuntime (600 steps)"
+              >
+                Start Run
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleStartLongerRun}
+                title="Run longer (3,000 steps) to observe empirical overfitting on real validation curve"
+                style={{ borderColor: '#ec4899', color: '#ec4899' }}
+              >
+                Run Longer (3,000 Steps)
+              </Button>
+            </div>
           ) : (
             <>
               <Button

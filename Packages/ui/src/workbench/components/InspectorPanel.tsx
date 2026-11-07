@@ -1,4 +1,5 @@
 import React from 'react';
+import { BASELINES } from '@na/ml-core';
 import { GraphNode as GraphNodeType, NodeKind } from '../types.js';
 import { Button } from '../../components/Button.js';
 import { Slider } from '../../components/Slider.js';
@@ -554,7 +555,7 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
                 </span>
               </div>
               <div style={{ fontSize: '10px', color: 'var(--na-text)', fontWeight: 600 }}>
-                ● {data.baselineComparison || 'Beats Bigram Baseline (3.286)'}
+                ● {data.baselineComparison || `Beats Bigram Baseline (${BASELINES.bigram})`}
               </div>
 
               {/* One-line advice */}

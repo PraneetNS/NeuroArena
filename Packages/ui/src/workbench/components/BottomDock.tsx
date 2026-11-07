@@ -5,7 +5,7 @@ import { Slider } from '../../components/Slider.js';
 import { Toggle } from '../../components/Toggle.js';
 import { Badge } from '../../components/Badge.js';
 
-import { Finding, SuggestedFix } from '@na/ml-core';
+import { Finding, SuggestedFix, BASELINES } from '@na/ml-core';
 
 export interface BottomDockProps {
   history: TrainingStepStats[];
@@ -133,11 +133,11 @@ export const BottomDock: React.FC<BottomDockProps> = ({
       smoothedVal.push(prevV);
     }
 
-    // Draw Baseline Target Lines (Unigram 4.472, Bigram 3.286 [Tier 2], Trigram 2.834 [Tier 3])
+    // Draw Baseline Target Lines (Unigram, Bigram [Tier 2], Trigram [Tier 3])
     const baselines = [
-      { name: 'TRIGRAM (Tier 3 Gate)', val: 2.834, color: '#38BDF8' },
-      { name: 'BIGRAM (Tier 2 Gate)', val: 3.286, color: '#F59E0B' },
-      { name: 'UNIGRAM', val: 4.472, color: '#94A3B8' }
+      { name: 'TRIGRAM (Tier 3 Gate)', val: BASELINES.trigram, color: '#38BDF8' },
+      { name: 'BIGRAM (Tier 2 Gate)', val: BASELINES.bigram, color: '#F59E0B' },
+      { name: 'UNIGRAM', val: BASELINES.unigram, color: '#94A3B8' }
     ];
 
     for (const b of baselines) {
@@ -282,15 +282,19 @@ export const BottomDock: React.FC<BottomDockProps> = ({
 
         {/* Live Controls and Telemetry Readout */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          {history.length > 0 && (
-            <div style={{ display: 'flex', gap: '10px', fontSize: '11px', fontFamily: 'var(--na-font-mono)', alignItems: 'center' }}>
-              <span>Step: <strong>{history[history.length - 1].step}</strong></span>
-              <span>Train: <strong style={{ color: '#E8A33D' }}>{history[history.length - 1].trainLoss.toFixed(3)}</strong></span>
-              <span>Val: <strong style={{ color: '#4FB3A9' }}>{history[history.length - 1].valLoss.toFixed(3)}</strong></span>
-              <span>Grad: <strong style={{ color: '#ec4899' }}>{(history[history.length - 1].gradNorm ?? 0).toFixed(2)}</strong></span>
-              <span>LR: <strong style={{ color: '#38bdf8' }}>{history[history.length - 1].learningRate.toExponential(2)}</strong></span>
-            </div>
-          )}
+          {history.length > 0 && (() => {
+            const last20 = history.slice(-20);
+            const meanLast20 = last20.reduce((acc, h) => acc + h.trainLoss, 0) / last20.length;
+            return (
+              <div style={{ display: 'flex', gap: '10px', fontSize: '11px', fontFamily: 'var(--na-font-mono)', alignItems: 'center' }}>
+                <span>Step: <strong>{history[history.length - 1].step}</strong></span>
+                <span>Train (last 20): <strong style={{ color: '#E8A33D' }}>{meanLast20.toFixed(3)}</strong></span>
+                <span>Val: <strong style={{ color: '#4FB3A9' }}>{history[history.length - 1].valLoss.toFixed(3)}</strong></span>
+                <span>Grad: <strong style={{ color: '#ec4899' }}>{(history[history.length - 1].gradNorm ?? 0).toFixed(2)}</strong></span>
+                <span>LR: <strong style={{ color: '#38bdf8' }}>{history[history.length - 1].learningRate.toExponential(2)}</strong></span>
+              </div>
+            );
+          })()}
 
           {activeTab === 'chart' && (
             <>

@@ -1,4 +1,5 @@
 import React, { useRef } from 'react';
+import { BASELINES } from '@na/ml-core';
 import { GraphNode as GraphNodeType, PortDefinition } from '../types.js';
 import { Badge } from '../../components/Badge.js';
 import {
@@ -177,7 +178,7 @@ export const GraphNode: React.FC<GraphNodeProps> = ({
         const chip = data.starvationChip || (tokens < 100000 ? 'severely-starved' : tokens < 400000 ? 'data-starved' : 'comfortable');
         const chipColor = chip === 'starved' || chip === 'severely-starved' ? '#ef4444' : chip === 'workable' || chip === 'data-starved' ? '#f59e0b' : '#10b981';
         const advice = data.scalingAdvice || (tokens < 400000 ? 'more data helps a lot here' : 'more steps help more than more data');
-        const baseline = data.baselineComparison || (predVal < 2.834 ? 'Beats Trigram (2.834)' : predVal < 3.286 ? 'Beats Bigram (3.286)' : 'Above Bigram');
+        const baseline = data.baselineComparison || (predVal < BASELINES.trigram ? `Beats Trigram (${BASELINES.trigram})` : predVal < BASELINES.bigram ? `Beats Bigram (${BASELINES.bigram})` : 'Above Bigram');
 
         return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>

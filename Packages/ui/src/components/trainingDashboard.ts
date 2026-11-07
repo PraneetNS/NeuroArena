@@ -3,7 +3,7 @@
  * live generation checkpoints, and hyperparameter controls.
  */
 
-import { TinyGPT, TinyGPTConfig, AdamW, Dataset, Tokenizer, Sampler } from '@na/ml-core';
+import { TinyGPT, TinyGPTConfig, AdamW, Dataset, Tokenizer, Sampler, BASELINES } from '@na/ml-core';
 
 export class TrainingDashboard {
   public root: HTMLElement;
@@ -186,8 +186,10 @@ export class TrainingDashboard {
 
   private updateMetrics(currentLoss: number): void {
     if (!this.lossMetricEl) return;
-    const perplexity = Math.min(999, Math.exp(currentLoss));
-    this.lossMetricEl.textContent = currentLoss.toFixed(4);
+    const last20 = this.lossHistory.slice(-20);
+    const meanLast20 = last20.length > 0 ? last20.reduce((a, b) => a + b, 0) / last20.length : currentLoss;
+    const perplexity = Math.min(999, Math.exp(meanLast20));
+    this.lossMetricEl.textContent = meanLast20.toFixed(4);
     this.perplexityMetricEl.textContent = perplexity.toFixed(2);
     this.stepMetricEl.textContent = this.stepCount.toString();
 
@@ -224,11 +226,11 @@ export class TrainingDashboard {
     const minLoss = Math.min(0.5, ...this.lossHistory);
     const range = maxLoss - minLoss || 1;
 
-    // Draw Baselines (Unigram 4.472, Bigram 3.286 [Tier 2 Gate], Trigram 2.834 [Tier 3 Gate])
+    // Draw Baselines (Unigram, Bigram [Tier 2 Gate], Trigram [Tier 3 Gate])
     const baselines = [
-      { name: 'TRIGRAM (Tier 3 Gate)', val: 2.834, color: '#38bdf8' },
-      { name: 'BIGRAM (Tier 2 Gate)', val: 3.286, color: '#f59e0b' },
-      { name: 'UNIGRAM', val: 4.472, color: '#94a3b8' }
+      { name: 'TRIGRAM (Tier 3 Gate)', val: BASELINES.trigram, color: '#38bdf8' },
+      { name: 'BIGRAM (Tier 2 Gate)', val: BASELINES.bigram, color: '#f59e0b' },
+      { name: 'UNIGRAM', val: BASELINES.unigram, color: '#94a3b8' }
     ];
 
     for (const b of baselines) {
