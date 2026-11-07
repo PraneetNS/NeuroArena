@@ -398,33 +398,49 @@
   "fixVerification": [
     {
       "seed": 42,
-      "finalLoss": 4.811,
-      "valLoss": 3.8729,
+      "trainLossLast20": 3.1562,
+      "evalOnTrain": 3.1678,
+      "valLoss": 3.886,
       "success": true
     },
     {
       "seed": 101,
-      "finalLoss": 4.9407,
+      "trainLossLast20": 3.1614,
+      "evalOnTrain": 3.1702,
       "valLoss": 3.8683,
       "success": true
     },
     {
       "seed": 777,
-      "finalLoss": 4.8272,
+      "trainLossLast20": 3.1588,
+      "evalOnTrain": 3.1691,
       "valLoss": 3.8766,
       "success": true
     },
     {
       "seed": 1337,
-      "finalLoss": 4.8757,
+      "trainLossLast20": 3.1642,
+      "evalOnTrain": 3.1725,
       "valLoss": 3.8696,
       "success": true
     },
     {
       "seed": 2026,
-      "finalLoss": 4.8166,
+      "trainLossLast20": 3.1595,
+      "evalOnTrain": 3.1684,
       "valLoss": 3.9137,
       "success": true
     }
+  ],
+  "overfittingRun": [
+    { "step": 1, "trainLoss": 6.6136, "valLoss": 6.6602, "genGap": 0.0466 },
+    { "step": 100, "trainLoss": 3.66, "valLoss": 4.1628, "genGap": 0.5028 },
+    { "step": 300, "trainLoss": 3.2539, "valLoss": 3.9311, "genGap": 0.6771 },
+    { "step": 600, "trainLoss": 2.8518, "valLoss": 3.8918, "genGap": 1.04 },
+    { "step": 1000, "trainLoss": 2.4993, "valLoss": 4.0361, "genGap": 1.5368 },
+    { "step": 1500, "trainLoss": 1.754, "valLoss": 4.6366, "genGap": 2.8826 },
+    { "step": 2000, "trainLoss": 1.277, "valLoss": 5.4411, "genGap": 4.1642 },
+    { "step": 2500, "trainLoss": 0.9987, "valLoss": 6.0278, "genGap": 5.0291 },
+    { "step": 3000, "trainLoss": 0.8327, "valLoss": 6.1898, "genGap": 5.3571 }
   ]
 }
