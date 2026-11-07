@@ -317,6 +317,15 @@ export class GpuTrainer {
   }
 
   /**
+   * Returns the mean train loss of the last N logged steps.
+   */
+  public getMeanRecentLoss(n = 20): number {
+    const window = this.metricsHistory.slice(-n);
+    if (window.length === 0) return this.lastLoggedMetrics?.loss ?? 0;
+    return window.reduce((acc, m) => acc + m.loss, 0) / window.length;
+  }
+
+  /**
    * Downloads flat parameters from GPU.
    */
   public async getParams(): Promise<Float32Array> {
