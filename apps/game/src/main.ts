@@ -455,7 +455,7 @@ class NeuroArenaGame {
         return;
       }
 
-      // Workbench toggle on Tab (matches KEYMAP.workbench)
+      // Workbench toggle on KeyB (matches KEYMAP.workbench)
       if (e.code === KEYMAP.workbench.code) {
         e.preventDefault();
         if (this.isWorkbenchOpen) {

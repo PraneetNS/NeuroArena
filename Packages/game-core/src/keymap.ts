@@ -100,8 +100,8 @@ export const KEYMAP: Record<string, KeyBinding> = {
   },
   workbench: {
     action: 'workbench',
-    code: 'Tab',
-    keyLabel: 'Tab',
+    code: 'KeyB',
+    keyLabel: 'B',
     gamepadGlyph: '(Back)',
     description: 'Toggle Neural Workbench compute graph',
     category: 'interface'
