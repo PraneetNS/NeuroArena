@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { CODEX_ENTRIES, CodexConceptId, CodexEntryDef } from '@na/game-core';
+import { BASELINES } from '@na/ml-core';
 
 export interface CodexModalProps {
   isOpen: boolean;
@@ -353,10 +354,10 @@ export const CodexModal: React.FC<CodexModalProps> = ({
                     Benchmark validation loss thresholds on ByteBPE-1024 Shakespeare:
                   </div>
                   {[
-                    { label: 'Uniform Random Guessing', loss: 6.931, color: '#64748b' },
-                    { label: 'Unigram Frequency (Tutorial Gate - Cleared)', loss: 4.472, color: '#6BBF7A' },
-                    { label: 'Bigram Frequency (Region 1 Gate)', loss: 3.284, color: '#E8A33D' },
-                    { label: 'Trigram Frequency (Region 2 Gate)', loss: 2.834, color: '#4FB3A9' },
+                    { label: 'Uniform Random Guessing', loss: BASELINES.uniform, color: '#64748b' },
+                    { label: 'Unigram Frequency (Tutorial Gate - Cleared)', loss: BASELINES.unigram, color: '#6BBF7A' },
+                    { label: 'Bigram Frequency (Region 1 Gate)', loss: BASELINES.bigram, color: '#E8A33D' },
+                    { label: 'Trigram Frequency (Region 2 Gate)', loss: BASELINES.trigram, color: '#4FB3A9' },
                     { label: 'Scout Neural Network (Trained)', loss: 2.62, color: '#38bdf8' }
                   ].map((b, i) => (
                     <div key={i} style={{ marginBottom: '10px' }}>
@@ -369,6 +370,74 @@ export const CodexModal: React.FC<CodexModalProps> = ({
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+
+              {/* Widget 4b: Overfitting Empirical Dual Curves */}
+              {currentEntry.id === 'overfitting' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ fontSize: '13px', color: '#94a3b8' }}>
+                      Measured 3,000-Step Scout Overfitting Run (Shakespeare 60k tokens):
+                    </div>
+                    <div style={{ display: 'flex', gap: '12px', fontSize: '11px', fontFamily: 'monospace' }}>
+                      <span style={{ color: '#E8A33D' }}>● Train Loss (plunging)</span>
+                      <span style={{ color: '#ec4899' }}>● Val Loss (surging)</span>
+                    </div>
+                  </div>
+
+                  <div style={{ height: '160px', width: '100%', backgroundColor: '#090d16', borderRadius: '8px', padding: '12px', boxSizing: 'border-box' }}>
+                    <svg viewBox="0 0 400 140" style={{ width: '100%', height: '100%' }}>
+                      <line x1="40" y1="20" x2="380" y2="20" stroke="#1e293b" strokeDasharray="4 4" />
+                      <line x1="40" y1="60" x2="380" y2="60" stroke="#1e293b" strokeDasharray="4 4" />
+                      <line x1="40" y1="100" x2="380" y2="100" stroke="#1e293b" strokeDasharray="4 4" />
+                      
+                      <line x1="40" y1="68" x2="380" y2="68" stroke="#64748b" strokeDasharray="2 2" />
+                      <text x="382" y="71" fill="#64748b" fontSize="8" fontFamily="monospace">Unigram 4.472</text>
+
+                      <text x="32" y="24" fill="#64748b" fontSize="9" textAnchor="end" fontFamily="monospace">6.5</text>
+                      <text x="32" y="64" fill="#64748b" fontSize="9" textAnchor="end" fontFamily="monospace">4.5</text>
+                      <text x="32" y="104" fill="#64748b" fontSize="9" textAnchor="end" fontFamily="monospace">2.5</text>
+                      <text x="32" y="125" fill="#64748b" fontSize="9" textAnchor="end" fontFamily="monospace">0.8</text>
+
+                      {/* Measured Empirical Train Path (Amber) */}
+                      <path
+                        d="M 40,20 L 51,73 L 74,81 L 108,88 L 153,94 L 210,108 L 266,116 L 323,121 L 380,125"
+                        fill="none"
+                        stroke="#E8A33D"
+                        strokeWidth="2.5"
+                      />
+
+                      {/* Measured Empirical Val Path (Magenta) */}
+                      <path
+                        d="M 40,19 L 51,64 L 74,68 L 108,69 L 153,66 L 210,55 L 266,41 L 323,30 L 380,27"
+                        fill="none"
+                        stroke="#ec4899"
+                        strokeWidth="2.5"
+                      />
+
+                      <circle cx="108" cy="69" r="4" fill="#10b981" />
+                      <text x="108" y="60" fill="#10b981" fontSize="9" textAnchor="middle" fontFamily="monospace">Optimal: 600 (Val 3.89)</text>
+
+                      <line x1="380" y1="27" x2="380" y2="125" stroke="#ef4444" strokeWidth="1.5" strokeDasharray="3 3" />
+                      <text x="375" y="80" fill="#ef4444" fontSize="9" textAnchor="end" fontFamily="monospace">Gap: +5.36</text>
+                    </svg>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', fontSize: '12px' }}>
+                    <div style={{ backgroundColor: '#0f172a', padding: '8px', borderRadius: '6px' }}>
+                      <span style={{ color: '#94a3b8' }}>Optimal Early Stop:</span>
+                      <div style={{ color: '#10b981', fontWeight: 600, fontFamily: 'monospace' }}>Step 600 (Val 3.8918)</div>
+                    </div>
+                    <div style={{ backgroundColor: '#0f172a', padding: '8px', borderRadius: '6px' }}>
+                      <span style={{ color: '#E8A33D', fontWeight: 600, fontFamily: 'monospace' }}>Final Train Loss:</span>
+                      <div style={{ color: '#E8A33D', fontWeight: 600, fontFamily: 'monospace' }}>0.8327 (Memorized)</div>
+                    </div>
+                    <div style={{ backgroundColor: '#0f172a', padding: '8px', borderRadius: '6px' }}>
+                      <span style={{ color: '#94a3b8' }}>Final Val Surrender:</span>
+                      <div style={{ color: '#ec4899', fontWeight: 600, fontFamily: 'monospace' }}>6.1898 (+5.357 Gap)</div>
+                    </div>
+                  </div>
                 </div>
               )}
 
