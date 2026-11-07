@@ -8,6 +8,7 @@
 
 import { Shard, VaultEntry, VaultStats, VaultState, CapacityTier, VAULT_CAPACITY_TIERS } from './types.js';
 import { VALIDATION_CORPUS_TEXT } from './data/corpus.js';
+import { BASELINES } from '@na/ml-core/baselines';
 
 const DB_NAME = 'NeuroArenaVault';
 const DB_VERSION = 1;
@@ -79,11 +80,11 @@ export class VaultManager {
   }
 
   public getCapacityTier(): CapacityTier {
-    if (this.bestValLoss <= 2.834) {
-      return VAULT_CAPACITY_TIERS[2]; // Tier 3: Grand Archive (beats Trigram 2.834)
+    if (this.bestValLoss <= BASELINES.trigram) {
+      return VAULT_CAPACITY_TIERS[2]; // Tier 3: Grand Archive (beats Trigram)
     }
-    if (this.bestValLoss <= 3.286) {
-      return VAULT_CAPACITY_TIERS[1]; // Tier 2: Journeyman Vault (beats Bigram 3.286)
+    if (this.bestValLoss <= BASELINES.bigram) {
+      return VAULT_CAPACITY_TIERS[1]; // Tier 2: Journeyman Vault (beats Bigram)
     }
     return VAULT_CAPACITY_TIERS[0]; // Tier 1: Novice Ledger (350 pages)
   }
@@ -412,9 +413,9 @@ export class VaultManager {
     const activeTier = this.getCapacityTier();
     let nextTierUnlock: string | undefined = undefined;
     if (activeTier.tier === 1) {
-      nextTierUnlock = `Beat BIGRAM baseline on VAL (val loss ≤ 3.286) to unlock Tier 2 (${VAULT_CAPACITY_TIERS[1].maxPages} pages)`;
+      nextTierUnlock = `Beat BIGRAM baseline on VAL (val loss ≤ ${BASELINES.bigram}) to unlock Tier 2 (${VAULT_CAPACITY_TIERS[1].maxPages} pages)`;
     } else if (activeTier.tier === 2) {
-      nextTierUnlock = `Beat TRIGRAM baseline on VAL (val loss ≤ 2.834) to unlock Tier 3 (${VAULT_CAPACITY_TIERS[2].maxPages} pages)`;
+      nextTierUnlock = `Beat TRIGRAM baseline on VAL (val loss ≤ ${BASELINES.trigram}) to unlock Tier 3 (${VAULT_CAPACITY_TIERS[2].maxPages} pages)`;
     }
 
     return {

@@ -3,6 +3,8 @@
  * No DOM or Three.js dependencies.
  */
 
+import { BASELINES } from '@na/ml-core/baselines';
+
 export const TRAIN_VAL_SPLIT_RATIO = 0.9;
 
 export type QualityTag =
@@ -133,15 +135,15 @@ export const VAULT_CAPACITY_TIERS: CapacityTier[] = [
     tier: 2,
     maxPages: 1000,
     title: 'Journeyman Vault',
-    conditionDescription: 'Beat BIGRAM baseline on VAL (val loss ≤ 3.286)',
-    unlockCondition: { type: 'val_loss_threshold', targetValLoss: 3.286 }
+    conditionDescription: `Beat BIGRAM baseline on VAL (val loss ≤ ${BASELINES.bigram})`,
+    unlockCondition: { type: 'val_loss_threshold', targetValLoss: BASELINES.bigram }
   },
   {
     tier: 3,
     maxPages: 2000,
     title: 'Grand Archive',
-    conditionDescription: 'Beat TRIGRAM baseline on VAL (val loss ≤ 2.834)',
-    unlockCondition: { type: 'val_loss_threshold', targetValLoss: 2.834 }
+    conditionDescription: `Beat TRIGRAM baseline on VAL (val loss ≤ ${BASELINES.trigram})`,
+    unlockCondition: { type: 'val_loss_threshold', targetValLoss: BASELINES.trigram }
   }
 ];
 
