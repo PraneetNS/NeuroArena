@@ -11,6 +11,9 @@ export * from './tokenizers/bpe.js';
 export * from './gradCheck.js';
 export * from './diagnostics.js';
 export * from './baselines.js';
+export * from './inspection.js';
+export * from './checkpoint.js';
+export * from './pca.js';
 export * from './gpu/index.js';
 export * from './data/validation.js';
 

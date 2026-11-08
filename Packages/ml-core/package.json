@@ -14,7 +14,10 @@
     "./dataset": "./src/dataset.ts",
     "./optimizer": "./src/optimizer.ts",
     "./validation": "./src/validation.ts",
-    "./baselines": "./src/baselines.ts"
+    "./baselines": "./src/baselines.ts",
+    "./inspection": "./src/inspection.ts",
+    "./checkpoint": "./src/checkpoint.ts",
+    "./pca": "./src/pca.ts"
   },
   "scripts": {
     "build": "tsc --noEmit",
