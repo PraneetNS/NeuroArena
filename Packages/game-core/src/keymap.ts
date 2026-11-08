@@ -114,6 +114,14 @@ export const KEYMAP: Record<string, KeyBinding> = {
     description: 'Open Codex study journal',
     category: 'interface'
   },
+  observatory: {
+    action: 'observatory',
+    code: 'KeyO',
+    keyLabel: 'O',
+    gamepadGlyph: '(RT)',
+    description: 'Open Neural Observatory instruments',
+    category: 'interface'
+  },
 
   camp_exit: {
     action: 'camp_exit',

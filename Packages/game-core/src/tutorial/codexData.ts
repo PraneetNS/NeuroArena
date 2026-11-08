@@ -19,7 +19,11 @@ export type CodexConceptId =
   | 'loss'
   | 'learning_rate'
   | 'overfitting'
-  | 'baseline';
+  | 'baseline'
+  | 'attention'
+  | 'embedding'
+  | 'residual_stream'
+  | 'logit_lens';
 
 export interface CodexEntryDef {
   id: CodexConceptId;
@@ -35,7 +39,11 @@ export interface CodexEntryDef {
     | 'vocab_slider'
     | 'split_slider'
     | 'overfit_curve'
-    | 'baseline_bars';
+    | 'baseline_bars'
+    | 'attention_matrix'
+    | 'embedding_space'
+    | 'residual_norm'
+    | 'logit_lens_viewer';
 }
 
 export const CODEX_ENTRIES: Record<CodexConceptId, CodexEntryDef> = {
@@ -141,5 +149,57 @@ export const CODEX_ENTRIES: Record<CodexConceptId, CodexEntryDef> = {
     ],
     formulaPlain: 'Tutorial_Gate: Val_Loss < 4.472 (Unigram)',
     widgetType: 'baseline_bars'
+  },
+
+  attention: {
+    id: 'attention',
+    title: 'Self-Attention Mechanism',
+    category: 'Architecture // Routing',
+    unlockedAtStep: 'observatory_unlocked',
+    paragraphs: [
+      'Self-attention allows tokens to communicate dynamically across distance. For every position, queries ask questions, keys publish addresses, and values provide information. Dot products between queries and keys dictate how much focus each token directs toward its predecessors.',
+      'In multi-head attention, distinct heads specialize in different linguistic tasks: some track immediate previous tokens, others act as contextual sinks, while specialized induction heads detect repeated phrases.'
+    ],
+    formulaPlain: 'Attention(Q, K, V) = softmax(Q K^T / sqrt(d_k)) V',
+    widgetType: 'attention_matrix'
+  },
+
+  embedding: {
+    id: 'embedding',
+    title: 'Vector Space & Semantics',
+    category: 'Foundations // Geometry',
+    unlockedAtStep: 'observatory_unlocked',
+    paragraphs: [
+      'Tokens reside as geometric points in high-dimensional continuous space. As training proceeds, words with similar grammatical roles and semantic meanings naturally cluster together through gradient attraction.',
+      'Dimensionality reduction via Principal Component Analysis (PCA) unmasks this learned manifold, revealing structured axes distinguishing nouns, punctuation, syntax, and dramatic characters.'
+    ],
+    formulaPlain: 'Token_Vector = tokEmb[id] + posEmb[pos]',
+    widgetType: 'embedding_space'
+  },
+
+  residual_stream: {
+    id: 'residual_stream',
+    title: 'The Residual Stream',
+    category: 'Architecture // Highway',
+    unlockedAtStep: 'observatory_unlocked',
+    paragraphs: [
+      'The residual stream is the central communication highway running uninterrupted from the first layer to the last. Instead of overwriting representations, each attention and MLP sublayer writes additive delta updates directly into the stream.',
+      'Because the identity path preserves earlier information, gradients flow cleanly without vanishing. As depth increases, the L2 norm of the residual vector systematically grows as features accumulate.'
+    ],
+    formulaPlain: 'x_{l+1} = x_l + Sublayer(LN(x_l))',
+    widgetType: 'residual_norm'
+  },
+
+  logit_lens: {
+    id: 'logit_lens',
+    title: 'The Logit Lens',
+    category: 'Mechanistic // Interpretability',
+    unlockedAtStep: 'observatory_unlocked',
+    paragraphs: [
+      'What is a transformer thinking mid-computation? The Logit Lens probes the intermediate residual stream at any layer by passing it through the final LayerNorm and tied unembedding head, decoding virtual predictions early.',
+      'Early layers focus on unigram token frequencies and surface grammar. As information traverses through deeper layers, predictions progressively sharpen into context-specific words, revealing where cognition crystallizes.'
+    ],
+    formulaPlain: 'Intermediate_Prediction = softmax( LN_f( x_l ) @ tokEmb^T )',
+    widgetType: 'logit_lens_viewer'
   }
 };
