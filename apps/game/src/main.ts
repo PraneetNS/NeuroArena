@@ -39,7 +39,8 @@ import {
   RealRuntime,
   ComputeGraph,
   LumenSubtitles,
-  CodexModal
+  CodexModal,
+  ObservatoryModal
 } from '@na/ui';
 import '@na/ui/styles';
 import {
@@ -106,6 +107,10 @@ class NeuroArenaGame {
   private workbenchContainer: HTMLElement | null = null;
   private workbenchRoot: ReactDOM.Root | null = null;
   private isWorkbenchOpen = false;
+
+  private observatoryContainer: HTMLElement | null = null;
+  private observatoryRoot: ReactDOM.Root | null = null;
+  private isObservatoryOpen = false;
 
   // The Camp State & Subsystems
   private campScene: CampScene | null = null;
@@ -493,6 +498,16 @@ class NeuroArenaGame {
         return;
       }
 
+      // Neural Observatory toggle on KeyO (matches KEYMAP.observatory)
+      if (e.code === KEYMAP.observatory.code) {
+        if (this.isObservatoryOpen) {
+          this.closeObservatory();
+        } else {
+          this.openObservatory();
+        }
+        return;
+      }
+
       // Quality tier hotkeys: 1 = Low, 2 = Medium, 3 = High
       if (e.code === 'Digit1') {
         this.statsOverlay.selectTier('low');
@@ -514,6 +529,7 @@ class NeuroArenaGame {
         this.capabilityModal.isOpen ||
         this.isVaultOpen ||
         this.isCodexOpen ||
+        this.isObservatoryOpen ||
         this.isWorkbenchOpen;
 
       if (isModalOpen) {
@@ -718,7 +734,8 @@ class NeuroArenaGame {
       React.createElement(Workbench, {
         vaultManager: this.vaultManager,
         onClose: () => this.closeWorkbench(),
-        onStartCamp: (runtime: any, graph: any) => this.enterCamp(runtime, graph)
+        onStartCamp: (runtime: any, graph: any) => this.enterCamp(runtime, graph),
+        onOpenObservatory: (customModel: any) => this.openObservatory(customModel)
       })
     );
   }
@@ -728,6 +745,38 @@ class NeuroArenaGame {
       this.workbenchContainer.style.display = 'none';
     }
     this.isWorkbenchOpen = false;
+  }
+
+  public openObservatory(customModel?: any): void {
+    this.closeAllModals();
+    this.isObservatoryOpen = true;
+
+    if (!this.observatoryContainer) {
+      this.observatoryContainer = document.createElement('div');
+      this.observatoryContainer.id = 'app-observatory-modal-container';
+      this.observatoryContainer.style.position = 'fixed';
+      this.observatoryContainer.style.inset = '0';
+      this.observatoryContainer.style.zIndex = '200';
+      this.uiContainer.appendChild(this.observatoryContainer);
+      this.observatoryRoot = ReactDOM.createRoot(this.observatoryContainer);
+    }
+
+    this.observatoryContainer.style.display = 'block';
+    this.observatoryRoot!.render(
+      React.createElement(ObservatoryModal, {
+        isOpen: true,
+        onClose: () => this.closeObservatory(),
+        customModel: customModel || this.activeRuntime?.model || null,
+        bpeTokenizer: this.activeRuntime?.bpe || null
+      })
+    );
+  }
+
+  public closeObservatory(): void {
+    if (this.observatoryContainer) {
+      this.observatoryContainer.style.display = 'none';
+    }
+    this.isObservatoryOpen = false;
   }
 
   public enterCamp(runtime: RealRuntime, graph: any): void {
@@ -895,6 +944,7 @@ class NeuroArenaGame {
 
   private closeAllModals(): void {
     this.closeWorkbench();
+    this.closeObservatory();
     this.capabilityModal.close();
     this.curatorModal.close();
     this.forgeModal.close();
