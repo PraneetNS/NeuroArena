@@ -25,6 +25,7 @@ import { InspectorPanel } from './components/InspectorPanel.js';
 import { BottomDock } from './components/BottomDock.js';
 import { CommandPalette } from './components/CommandPalette.js';
 import { CodexModal } from '../codex/CodexModal.js';
+import { ObservatoryModal } from '../observatory/ObservatoryModal.js';
 import { AutopsyModal } from './components/AutopsyModal.js';
 import { RunManagerModal } from './components/RunManagerModal.js';
 import { Button } from '../components/Button.js';
@@ -38,6 +39,7 @@ export interface WorkbenchProps {
   runtime?: WorkbenchRuntime;
   onClose?: () => void;
   onStartCamp?: (runtime: WorkbenchRuntime, graph: GraphState) => void;
+  onOpenObservatory?: (customModel?: any) => void;
 }
 
 // Educational Graph Validator
@@ -467,7 +469,7 @@ export function createDefaultGraph(): GraphState {
   };
 }
 
-export const Workbench: React.FC<WorkbenchProps> = ({ vaultManager, runtime, onClose, onStartCamp }) => {
+export const Workbench: React.FC<WorkbenchProps> = ({ vaultManager, runtime, onClose, onStartCamp, onOpenObservatory }) => {
   // Graph state & history stack for Undo/Redo
   const [graph, setGraph] = useState<GraphState>(() => createDefaultGraph());
   const [historyPast, setHistoryPast] = useState<GraphState[]>([]);
@@ -480,6 +482,7 @@ export const Workbench: React.FC<WorkbenchProps> = ({ vaultManager, runtime, onC
   // Modals & Panels
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [codexModalNode, setCodexModalNode] = useState<GraphNodeType | null>(null);
+  const [isObservatoryOpen, setIsObservatoryOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'info' | 'error' | 'success' } | null>(null);
 
   // Autopsy & Run Manager Modals
@@ -1404,6 +1407,10 @@ export const Workbench: React.FC<WorkbenchProps> = ({ vaultManager, runtime, onC
           onMoveNode={handleMoveNode}
           onConnectPorts={handleConnectPorts}
           onOpenCodex={(node) => setCodexModalNode(node)}
+          onOpenObservatory={() => {
+            setIsObservatoryOpen(true);
+            onOpenObservatory?.((runtime as any)?.model);
+          }}
           onClearSelection={handleClearSelection}
         />
 
@@ -1413,6 +1420,10 @@ export const Workbench: React.FC<WorkbenchProps> = ({ vaultManager, runtime, onC
           onUpdateNodeData={handleUpdateNodeData}
           onClose={() => setActiveInspectorNodeId(null)}
           onOpenCodex={(node) => setCodexModalNode(node)}
+          onOpenObservatory={() => {
+            setIsObservatoryOpen(true);
+            onOpenObservatory?.((runtime as any)?.model);
+          }}
         />
       </div>
 
@@ -1467,6 +1478,15 @@ export const Workbench: React.FC<WorkbenchProps> = ({ vaultManager, runtime, onC
         runs={storedRuns}
         onDeleteRun={handleDeleteRun}
         onRunAutopsy={(rId) => handleOpenAutopsy(rId)}
+      />
+
+      {/* The Observatory Mechanistic Instruments Modal */}
+      <ObservatoryModal
+        isOpen={isObservatoryOpen}
+        onClose={() => setIsObservatoryOpen(false)}
+        customModel={(runtime as any)?.model}
+        customModelName="Active Trained Model"
+        bpeTokenizer={(runtime as any)?.bpe}
       />
 
       {/* Feedback Toast Notification */}

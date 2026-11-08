@@ -20,6 +20,7 @@ export interface GraphNodeProps {
   onPortMouseDown: (e: React.MouseEvent, nodeId: string, port: PortDefinition) => void;
   onPortMouseUp: (nodeId: string, port: PortDefinition) => void;
   onOpenCodex: (node: GraphNodeType) => void;
+  onOpenObservatory?: (node?: GraphNodeType) => void;
 }
 
 export const GraphNode: React.FC<GraphNodeProps> = ({
@@ -30,7 +31,8 @@ export const GraphNode: React.FC<GraphNodeProps> = ({
   onMove,
   onPortMouseDown,
   onPortMouseUp,
-  onOpenCodex
+  onOpenCodex,
+  onOpenObservatory
 }) => {
   const isDragging = useRef(false);
   const dragStartPos = useRef({ x: 0, y: 0 });
@@ -256,6 +258,26 @@ export const GraphNode: React.FC<GraphNodeProps> = ({
                 {data.perplexity ? data.perplexity.toFixed(2) : '--'}
               </span>
             </div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenObservatory?.(node);
+              }}
+              style={{
+                marginTop: '4px',
+                padding: '3px 6px',
+                fontSize: '10px',
+                fontWeight: 600,
+                backgroundColor: 'var(--na-raised)',
+                color: 'var(--na-accent)',
+                border: '1px solid var(--na-accent)',
+                borderRadius: 'var(--na-radius-sm)',
+                cursor: 'pointer',
+                textAlign: 'center'
+              }}
+            >
+              🔬 Open in Observatory
+            </button>
           </div>
         );
     }

@@ -20,13 +20,15 @@ export interface InspectorPanelProps {
   onUpdateNodeData: (id: string, newData: any) => void;
   onClose: () => void;
   onOpenCodex: (node: GraphNodeType) => void;
+  onOpenObservatory?: (node?: GraphNodeType) => void;
 }
 
 export const InspectorPanel: React.FC<InspectorPanelProps> = ({
   node,
   onUpdateNodeData,
   onClose,
-  onOpenCodex
+  onOpenCodex,
+  onOpenObservatory
 }) => {
   if (!node) {
     return (
@@ -656,6 +658,29 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
         {/* 6. EVALUATOR INSPECTOR */}
         {node.kind === 'evaluator' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <button
+              onClick={() => onOpenObservatory?.(node)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                padding: '10px 14px',
+                fontSize: 'var(--na-text-sm)',
+                fontWeight: 600,
+                backgroundColor: 'var(--na-accent)',
+                color: 'var(--na-ink)',
+                border: 'none',
+                borderRadius: 'var(--na-radius-sm)',
+                cursor: 'pointer',
+                boxShadow: '0 2px 8px var(--na-accent-muted)',
+                transition: 'background-color var(--na-duration-fast)'
+              }}
+            >
+              <span>🔬</span>
+              <span>Open in Observatory</span>
+            </button>
+
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
               <div style={{ backgroundColor: 'var(--na-raised)', padding: '10px', borderRadius: '4px', border: '1px solid var(--na-line)' }}>
                 <div style={{ fontSize: '10px', color: 'var(--na-muted)' }}>Fixed Val Loss</div>

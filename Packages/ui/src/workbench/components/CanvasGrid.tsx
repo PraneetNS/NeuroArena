@@ -11,6 +11,7 @@ export interface CanvasGridProps {
   onMoveNode: (id: string, dx: number, dy: number) => void;
   onConnectPorts: (sourceNodeId: string, sourcePortId: string, targetNodeId: string, targetPortId: string) => void;
   onOpenCodex: (node: GraphNodeType) => void;
+  onOpenObservatory?: (node?: GraphNodeType) => void;
   onClearSelection: () => void;
 }
 
@@ -23,6 +24,7 @@ export const CanvasGrid: React.FC<CanvasGridProps> = ({
   onMoveNode,
   onConnectPorts,
   onOpenCodex,
+  onOpenObservatory,
   onClearSelection
 }) => {
   // Pan and Zoom transform state
@@ -317,6 +319,7 @@ export const CanvasGrid: React.FC<CanvasGridProps> = ({
             onPortMouseDown={handlePortMouseDown}
             onPortMouseUp={handlePortMouseUp}
             onOpenCodex={onOpenCodex}
+            onOpenObservatory={onOpenObservatory}
           />
         ))}
 
