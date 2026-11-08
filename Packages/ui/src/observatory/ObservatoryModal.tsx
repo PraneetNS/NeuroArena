@@ -501,3 +501,4 @@ export const ObservatoryModal: React.FC<ObservatoryModalProps> = ({
     </div>
   );
 };
+

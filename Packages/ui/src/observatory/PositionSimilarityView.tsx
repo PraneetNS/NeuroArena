@@ -226,3 +226,4 @@ export const PositionSimilarityView: React.FC<PositionSimilarityViewProps> = ({
     </div>
   );
 };
+

@@ -260,3 +260,4 @@ export const LogitLensPanel: React.FC<LogitLensPanelProps> = ({ inspection }) =>
     </div>
   );
 };
+
