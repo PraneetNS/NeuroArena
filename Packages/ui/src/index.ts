@@ -47,4 +47,7 @@ export * from './workbench/RealRuntime.js';
 export * from './tutorial/LumenSubtitles.js';
 export * from './codex/CodexModal.js';
 
+// Observatory Mechanistic Instruments
+export * from './observatory/index.js';
+
 
