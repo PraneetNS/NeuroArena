@@ -19,7 +19,11 @@ export interface AttentionHeadMetrics {
   firstTokenScore: number;
   localWindowScore: number;
   entropy: number;
-  label: string | null;
+  label: string;
+  chancePrev?: number;
+  chanceFirst?: number;
+  chanceLocal?: number;
+  chanceEntropy?: number;
 }
 
 export interface AttentionHeadData {
@@ -87,7 +91,17 @@ export interface ModelInspectionResult {
  */
 export function computeHeadMetrics(probs: Float32Array | Float64Array, T: number): AttentionHeadMetrics {
   if (T <= 0) {
-    return { prevTokenScore: 0, firstTokenScore: 0, localWindowScore: 0, entropy: 0, label: null };
+    return {
+      prevTokenScore: 0,
+      firstTokenScore: 0,
+      localWindowScore: 0,
+      entropy: 0,
+      label: 'no clear pattern',
+      chancePrev: 0,
+      chanceFirst: 0,
+      chanceLocal: 0,
+      chanceEntropy: 0
+    };
   }
 
   let prevTokenSum = 0;
@@ -128,18 +142,38 @@ export function computeHeadMetrics(probs: Float32Array | Float64Array, T: number
   const localWindowScore = localWindowSum / T;
   const entropy = totalEntropy / T;
 
-  // Thresholded classification label
-  let label: string | null = null;
-  if (prevTokenScore >= 0.35) {
-    label = `this head mostly looks at the previous token (score ${prevTokenScore.toFixed(2)})`;
+  // Exact uniform causal attention expectations (chance) for context length T
+  let harmonicSum = 0;
+  for (let k = 1; k <= T; k++) harmonicSum += 1 / k;
+  const chanceFirst = harmonicSum / T;
+  const chancePrev = T > 1 ? (harmonicSum - 1) / (T - 1) : 0;
+
+  let localChanceSum = 0;
+  for (let i = 0; i < T; i++) {
+    localChanceSum += Math.min(i + 1, 5) / (i + 1);
+  }
+  const chanceLocal = localChanceSum / T;
+
+  let chanceEntropySum = 0;
+  for (let i = 0; i < T; i++) {
+    chanceEntropySum += Math.log(i + 1);
+  }
+  const chanceEntropy = chanceEntropySum / T;
+
+  // Strict thresholded classification label:
+  // Previous-token: score above 0.50
+  // Sink: mass on token 0 above 0.50
+  // Local-window: score above chance * 2 and at least 0.50
+  let label = 'no clear pattern';
+  if (prevTokenScore >= 0.50) {
+    const ratio = chancePrev > 0 ? prevTokenScore / chancePrev : 0;
+    label = `previous-token (${prevTokenScore.toFixed(2)}, ${ratio.toFixed(1)}x chance)`;
   } else if (firstTokenScore >= 0.50) {
-    label = `this head functions as an attention sink (score ${firstTokenScore.toFixed(2)})`;
-  } else if (localWindowScore >= 0.80) {
-    label = `this head focuses on immediate local context (score ${localWindowScore.toFixed(2)})`;
-  } else if (entropy <= 0.85) {
-    label = `this head is a sharp feature selector (entropy ${entropy.toFixed(2)})`;
-  } else if (entropy >= 2.20) {
-    label = `this head gathers broad diffuse context (entropy ${entropy.toFixed(2)})`;
+    const ratio = chanceFirst > 0 ? firstTokenScore / chanceFirst : 0;
+    label = `attention sink (${firstTokenScore.toFixed(2)}, ${ratio.toFixed(1)}x chance)`;
+  } else if (localWindowScore >= chanceLocal * 2.0 && localWindowScore >= 0.50) {
+    const ratio = chanceLocal > 0 ? localWindowScore / chanceLocal : 0;
+    label = `local window (${localWindowScore.toFixed(2)}, ${ratio.toFixed(1)}x chance)`;
   }
 
   return {
@@ -147,7 +181,11 @@ export function computeHeadMetrics(probs: Float32Array | Float64Array, T: number
     firstTokenScore,
     localWindowScore,
     entropy,
-    label
+    label,
+    chancePrev,
+    chanceFirst,
+    chanceLocal,
+    chanceEntropy
   };
 }
 
