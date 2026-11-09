@@ -158,7 +158,7 @@ export const CODEX_ENTRIES: Record<CodexConceptId, CodexEntryDef> = {
     unlockedAtStep: 'observatory_unlocked',
     paragraphs: [
       'Self-attention allows tokens to communicate dynamically across distance. For every position, queries ask questions, keys publish addresses, and values provide information. Dot products between queries and keys dictate how much focus each token directs toward its predecessors.',
-      'In multi-head attention, distinct heads specialize in different linguistic tasks: some track immediate previous tokens, others act as contextual sinks, while specialized induction heads detect repeated phrases.'
+      'In multi-head attention, distinct heads specialize in local sequence routing: in this small 4-layer model, heads predominantly track immediate preceding tokens (local window mass > 80%), act as initial-token sinks, or provide broad diffuse smoothing across recent context.'
     ],
     formulaPlain: 'Attention(Q, K, V) = softmax(Q K^T / sqrt(d_k)) V',
     widgetType: 'attention_matrix'
