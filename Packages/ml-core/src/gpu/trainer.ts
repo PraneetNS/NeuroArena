@@ -66,7 +66,7 @@ export class GpuTrainer {
 
   constructor(model: GpuModel, options: GpuTrainerOptions = {}) {
     this.model = model;
-    const ringSize = options.ringSize ?? 4;
+    const ringSize = options.ringSize ?? 8;
     this.diagByteSize = Math.max(2048, (model.config.nLayers * GpuModel.DIAG_LAYER_STRIDE + 32) * 4);
 
     this.options = {
@@ -170,24 +170,27 @@ export class GpuTrainer {
     let activeDownloadSlot: (typeof this.downloadRing)[0] | null = null;
 
     if (shouldLog) {
-      // Find an available download slot
-      const slot = this.downloadRing[this.downloadRingIndex];
-      this.downloadRingIndex = (this.downloadRingIndex + 1) % this.options.ringSize;
+      // Find an available download slot across the ring
+      for (let i = 0; i < this.options.ringSize; i++) {
+        const candidateIdx = (this.downloadRingIndex + i) % this.options.ringSize;
+        const candidateSlot = this.downloadRing[candidateIdx];
+        if (!candidateSlot.isBusy) {
+          activeDownloadSlot = candidateSlot;
+          candidateSlot.isBusy = true;
+          candidateSlot.isDiag = shouldDiag;
+          this.downloadRingIndex = (candidateIdx + 1) % this.options.ringSize;
 
-      if (!slot.isBusy) {
-        activeDownloadSlot = slot;
-        slot.isBusy = true;
-        slot.isDiag = shouldDiag;
-
-        if (shouldDiag) {
-          // Encode GPU-side diagnostics reduction pass
-          this.model.encodeDiagnostics(encoder);
-          // Copy diagnostics buffer into staging buffer
-          encoder.copyBufferToBuffer(this.model.diagnosticsBuffer, 0, slot.buffer, 0, this.diagByteSize);
-        } else {
-          // Standard fast metrics copy
-          encoder.copyBufferToBuffer(this.model.meanLossBuffer, 0, slot.buffer, 0, 4);
-          encoder.copyBufferToBuffer(this.model.normClipBuffer, 0, slot.buffer, 4, 8);
+          if (shouldDiag) {
+            // Encode GPU-side diagnostics reduction pass
+            this.model.encodeDiagnostics(encoder);
+            // Copy diagnostics buffer into staging buffer
+            encoder.copyBufferToBuffer(this.model.diagnosticsBuffer, 0, candidateSlot.buffer, 0, this.diagByteSize);
+          } else {
+            // Standard fast metrics copy
+            encoder.copyBufferToBuffer(this.model.meanLossBuffer, 0, candidateSlot.buffer, 0, 4);
+            encoder.copyBufferToBuffer(this.model.normClipBuffer, 0, candidateSlot.buffer, 4, 8);
+          }
+          break;
         }
       }
     }
@@ -318,9 +321,13 @@ export class GpuTrainer {
 
   /**
    * Returns the mean train loss of the last N logged steps.
+   * If training has progressed, excludes stale initialization steps from early in training.
    */
   public getMeanRecentLoss(n = 20): number {
-    const window = this.metricsHistory.slice(-n);
+    if (this.metricsHistory.length === 0) return this.lastLoggedMetrics?.loss ?? 0;
+    const minStep = this.stepCount > 100 ? this.stepCount - Math.max(500, n * this.options.logInterval * 2) : 0;
+    const candidates = this.metricsHistory.filter(m => m.step >= minStep);
+    const window = (candidates.length > 0 ? candidates : this.metricsHistory).slice(-n);
     if (window.length === 0) return this.lastLoggedMetrics?.loss ?? 0;
     return window.reduce((acc, m) => acc + m.loss, 0) / window.length;
   }

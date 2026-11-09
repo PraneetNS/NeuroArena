@@ -574,13 +574,15 @@ export class RealRuntime implements WorkbenchRuntime {
       contextLen: 128
     };
 
+    let lastKnownValLoss: number | null = null;
+
     this.client.on('stats', (stats) => {
       this.currentStep = stats.step;
       const stepStats: TrainingStepStats = {
         step: stats.step,
         maxSteps: this.maxSteps,
         trainLoss: Number(stats.trainLoss.toFixed(4)),
-        valLoss: Number(stats.smoothedLoss.toFixed(4)),
+        valLoss: lastKnownValLoss !== null ? lastKnownValLoss : Number(stats.trainLoss.toFixed(4)),
         learningRate: stats.lr,
         tokensPerSec: stats.tokensPerSec,
         elapsedSeconds: stats.elapsedSec,
@@ -597,8 +599,9 @@ export class RealRuntime implements WorkbenchRuntime {
     });
 
     this.client.on('valStats', (val) => {
+      lastKnownValLoss = Number(val.valLoss.toFixed(4));
       if (this.history.length > 0) {
-        this.history[this.history.length - 1].valLoss = Number(val.valLoss.toFixed(4));
+        this.history[this.history.length - 1].valLoss = lastKnownValLoss;
       }
     });
 
