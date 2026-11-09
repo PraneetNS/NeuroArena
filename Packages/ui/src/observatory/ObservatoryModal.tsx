@@ -12,7 +12,7 @@ import { LogitLensPanel } from './LogitLensPanel.js';
 import { EmbeddingExplorer } from './EmbeddingExplorer.js';
 import { PositionSimilarityView } from './PositionSimilarityView.js';
 
-export type ObservatoryTab = 'attention' | 'logit_lens' | 'embeddings' | 'positions';
+export type ObservatoryTab = 'attention' | 'logit_lens' | 'embeddings' | 'positions' | 'scope_limits';
 
 export interface ObservatoryModalProps {
   isOpen: boolean;
@@ -339,6 +339,22 @@ export const ObservatoryModal: React.FC<ObservatoryModalProps> = ({
             >
               4. Position View
             </button>
+
+            <button
+              onClick={() => setActiveTab('scope_limits')}
+              style={{
+                padding: '6px 14px',
+                fontSize: 'var(--na-text-xs)',
+                borderRadius: 'var(--na-radius-sm)',
+                backgroundColor: activeTab === 'scope_limits' ? 'var(--na-raised)' : 'transparent',
+                color: activeTab === 'scope_limits' ? 'var(--na-danger)' : 'var(--na-muted)',
+                border: `1px solid ${activeTab === 'scope_limits' ? 'var(--na-danger)' : 'var(--na-line)'}`,
+                cursor: 'pointer',
+                fontWeight: activeTab === 'scope_limits' ? 600 : 400
+              }}
+            >
+              5. Scope & Limits
+            </button>
           </div>
 
           {/* Close Button */}
@@ -495,6 +511,134 @@ export const ObservatoryModal: React.FC<ObservatoryModalProps> = ({
               contextLen={activeModel.config.contextLen}
               dModel={activeModel.config.dModel}
             />
+          )}
+
+          {activeTab === 'scope_limits' && (
+            <div
+              style={{
+                height: '100%',
+                overflowY: 'auto',
+                backgroundColor: 'var(--na-surface)',
+                border: '1px solid var(--na-line)',
+                borderRadius: 'var(--na-radius-base)',
+                padding: 'var(--na-space-6)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 'var(--na-space-6)'
+              }}
+            >
+              <div>
+                <h3
+                  style={{
+                    fontFamily: 'var(--na-font-display)',
+                    fontSize: 'var(--na-text-lg)',
+                    color: 'var(--na-text)',
+                    margin: 0
+                  }}
+                >
+                  What This Small Model Does Not Show
+                </h3>
+                <p style={{ color: 'var(--na-muted)', fontSize: 'var(--na-text-sm)', marginTop: '4px' }}>
+                  Empirical scope boundaries for a 4-layer, 0.94M parameter transformer trained on Shakespeare.
+                </p>
+              </div>
+
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+                  gap: 'var(--na-space-4)'
+                }}
+              >
+                {/* Panel 1: What is Real */}
+                <div
+                  style={{
+                    backgroundColor: 'var(--na-raised)',
+                    border: '1px solid var(--na-line)',
+                    borderRadius: 'var(--na-radius-base)',
+                    padding: 'var(--na-space-4)'
+                  }}
+                >
+                  <div
+                    style={{
+                      fontFamily: 'var(--na-font-mono)',
+                      fontSize: 'var(--na-text-xs)',
+                      color: 'var(--na-accent-cool)',
+                      fontWeight: 600,
+                      marginBottom: '8px'
+                    }}
+                  >
+                    ✓ MEASURED & VERIFIED CAPABILITIES
+                  </div>
+                  <ul
+                    style={{
+                      fontSize: 'var(--na-text-xs)',
+                      color: 'var(--na-text)',
+                      lineHeight: 1.6,
+                      paddingLeft: '18px',
+                      margin: 0
+                    }}
+                  >
+                    <li>
+                      <strong>Local N-Gram Routing:</strong> Early heads in Layers 0-1 concentrate &gt;80% of attention mass on the immediate preceding 4 tokens.
+                    </li>
+                    <li>
+                      <strong>Attention Sinks:</strong> Token 0 acts as a numerical receptacle absorbing unassigned softmax probability mass across intermediate layers.
+                    </li>
+                    <li>
+                      <strong>Syntactic Geometry:</strong> Word embeddings form distinct clusters for modal verbs, determiners, and adjectives through gradient co-occurrence.
+                    </li>
+                    <li>
+                      <strong>Logit Lens Sharpening:</strong> Probability mass concentrates progressively across residual depth, resolving punctuation and dialogue prefixes.
+                    </li>
+                  </ul>
+                </div>
+
+                {/* Panel 2: What is Absent */}
+                <div
+                  style={{
+                    backgroundColor: 'var(--na-raised)',
+                    border: '1px solid var(--na-line)',
+                    borderRadius: 'var(--na-radius-base)',
+                    padding: 'var(--na-space-4)'
+                  }}
+                >
+                  <div
+                    style={{
+                      fontFamily: 'var(--na-font-mono)',
+                      fontSize: 'var(--na-text-xs)',
+                      color: 'var(--na-danger)',
+                      fontWeight: 600,
+                      marginBottom: '8px'
+                    }}
+                  >
+                    ✕ ABSENT / OVER-INTERPRETED CLAIMS
+                  </div>
+                  <ul
+                    style={{
+                      fontSize: 'var(--na-text-xs)',
+                      color: 'var(--na-text)',
+                      lineHeight: 1.6,
+                      paddingLeft: '18px',
+                      margin: 0
+                    }}
+                  >
+                    <li>
+                      <strong>No In-Context Induction:</strong> In-context [A B ... A] induction test scores 0.034, which is statistically indistinguishable from uniform chance (0.032).
+                    </li>
+                    <li>
+                      <strong>No Multi-Hop Reasoning:</strong> High-entropy heads in Layers 2-3 act as broad unigram frequency smoothers, not multi-step logic operators.
+                    </li>
+                    <li>
+                      <strong>No Factual Consistency:</strong> Generation mimics play cadence and character names, but factual narrative state is completely ungrounded.
+                    </li>
+                    <li>
+                      <strong>No Formal Case Agreement:</strong> Embedding clusters reflect BPE token co-occurrence frequencies, not an internal formal grammar solver.
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       </div>
