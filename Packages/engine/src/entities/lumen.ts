@@ -7,7 +7,7 @@
  * - Purely visual, zero voice acting.
  */
 
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 
 export type LumenMood = 'calm' | 'guiding' | 'alert' | 'success';
 

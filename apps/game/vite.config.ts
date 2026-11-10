@@ -21,6 +21,7 @@ export default defineConfig({
     }
   },
   resolve: {
+    dedupe: ['three'],
     alias: {
       '@na/ml-core': path.resolve(__dirname, '../../packages/ml-core/src'),
       '@nа/ml-core': path.resolve(__dirname, '../../packages/ml-core/src'),

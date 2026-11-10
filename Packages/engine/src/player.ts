@@ -2,7 +2,7 @@
  * 3D Player Entity and Third-Person Controller with keyboard/mouse inputs.
  */
 
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 
 export interface PlayerControlsState {
   forward: boolean;

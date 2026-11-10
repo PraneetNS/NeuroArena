@@ -19,7 +19,8 @@ import {
   QualityTier,
   CampScene,
   CameraMode,
-  FpsTargetSetting
+  FpsTargetSetting,
+  getTerrainHeight
 } from '@na/engine';
 import * as mlCore from '@na/ml-core';
 import { Tokenizer, Dataset, TinyGPT, PRESET_CORPORA } from '@na/ml-core';
@@ -53,6 +54,64 @@ import { EnvironmentDebugPanel } from './environmentDebugPanel.js';
 import { VaultManager, Shard, TutorialDirector, TutorialBot, TutorialStepId, CodexConceptId, KEYMAP, formatLumenDialogue } from '@na/game-core';
 import { ShardWorld, ShardInteractionState } from './shardWorld.js';
 import { ShardHUD } from './shardHUD.js';
+
+export interface PhotoSpotDef {
+  id: string;
+  name: string;
+  timeHours: number;
+  camPos: [number, number, number];
+  lookAt: [number, number, number];
+  playerPos: [number, number, number];
+  description: string;
+}
+
+export const PHOTO_SPOTS: Record<string, PhotoSpotDef> = {
+  ridge_sunrise: {
+    id: 'ridge_sunrise',
+    name: 'Ridge at Sunrise',
+    timeHours: 6.25,
+    camPos: [-85, 38, 120],
+    lookAt: [10, 24, 40],
+    playerPos: [-78, 23, 110],
+    description: 'Looking eastward from the western ridge as dawn rises over the valley mist'
+  },
+  meadow_golden_hour: {
+    id: 'meadow_golden_hour',
+    name: 'Meadow at Golden Hour',
+    timeHours: 17.8,
+    camPos: [32, 55, 52],
+    lookAt: [55, 85, 20],
+    playerPos: [42, 52, 35],
+    description: 'Immersed in meadow flora with low warm sunlight and floating verse shards'
+  },
+  river_midday: {
+    id: 'river_midday',
+    name: 'River at Midday',
+    timeHours: 12.0,
+    camPos: [-8, 72, -42],
+    lookAt: [35, 55, -85],
+    playerPos: [5, 68, -60],
+    description: 'Standing on the sandy shore looking across the crystal turquoise water and distant cliffs'
+  },
+  camp_dusk: {
+    id: 'camp_dusk',
+    name: 'Camp at Dusk',
+    timeHours: 19.5,
+    camPos: [-18, 42, 25],
+    lookAt: [0, 52, 0],
+    playerPos: [-4, 39, 8],
+    description: 'The scholar camp at twilight with glowing loss lantern, orrery, and indigo sky'
+  },
+  border_blue_hour: {
+    id: 'border_blue_hour',
+    name: 'Region Border at Blue Hour',
+    timeHours: 20.75,
+    camPos: [155, 30, -95],
+    lookAt: [215, 36, -155],
+    playerPos: [180, 26, -120],
+    description: 'The transition boundary between biomes under luminous deep periwinkle nightfall'
+  }
+};
 
 class NeuroArenaGame {
   private canvasContainer: HTMLElement;
@@ -210,7 +269,7 @@ class NeuroArenaGame {
     this.shardWorld = new ShardWorld(
       this.world.scene,
       this.vaultManager,
-      (x, z) => (this.world.terrain ? this.world.terrain.getHeight(x, z) : 0),
+      (x, z) => getTerrainHeight(x, z),
       (shard: Shard) => {
         this.audio.playShardCollect();
         // Sync kept tokens into active dataset
@@ -277,6 +336,20 @@ class NeuroArenaGame {
       };
       (window as any).__skipToStep = (stepId: TutorialStepId) => {
         this.director.advanceToStep(stepId);
+      };
+      (window as any).__game = this;
+      (window as any).__photoSpots = PHOTO_SPOTS;
+      (window as any).__setPhotoSpot = (spotId: string, qualityTier?: QualityTier) => {
+        return this.setPhotoSpot(spotId, qualityTier);
+      };
+      (window as any).__openUIScreen = (screenId: string) => {
+        return this.openUIScreen(screenId);
+      };
+      (window as any).__getPhotoSpotStats = () => {
+        return this.world.getFullStats();
+      };
+      (window as any).__setQualityTier = (tier: QualityTier) => {
+        this.world.setQualityTier(tier);
       };
     }
 
@@ -957,6 +1030,65 @@ class NeuroArenaGame {
     }
   }
 
+  public setPhotoSpot(spotId: string, qualityTier?: QualityTier): void {
+    const spot = PHOTO_SPOTS[spotId];
+    if (!spot) {
+      console.warn(`[PhotoSpot] Unknown spot ID: ${spotId}`);
+      return;
+    }
+    if (qualityTier) {
+      this.world.setQualityTier(qualityTier);
+    }
+    this.closeAllModals();
+    this.world.isFreeFly = true;
+
+    const terrain = this.world.terrain;
+    const getH = (x: number, z: number) => (terrain ? terrain.getHeight(x, z) : 15);
+
+    const camGround = getH(spot.camPos[0], spot.camPos[2]);
+    const camY = Math.max(spot.camPos[1], camGround + 3.5);
+
+    const playerGround = getH(spot.playerPos[0], spot.playerPos[2]);
+    const playerY = Math.max(spot.playerPos[1], playerGround);
+
+    const lookGround = getH(spot.lookAt[0], spot.lookAt[2]);
+    const lookY = Math.max(spot.lookAt[1], lookGround + 1.8);
+
+    this.world.camera.position.set(spot.camPos[0], camY, spot.camPos[2]);
+    this.world.camera.lookAt(new THREE.Vector3(spot.lookAt[0], lookY, spot.lookAt[2]));
+    if (this.world.freeFlyCamera?.camera) {
+      this.world.freeFlyCamera.camera.position.set(spot.camPos[0], camY, spot.camPos[2]);
+      this.world.freeFlyCamera.camera.lookAt(new THREE.Vector3(spot.lookAt[0], lookY, spot.lookAt[2]));
+    }
+    this.player.position.set(spot.playerPos[0], playerY, spot.playerPos[2]);
+    this.world.environment.timeOfDay.setTime(spot.timeHours);
+    this.world.environment.timeOfDay.isPaused = true;
+
+    // Force chunk loading and environmental update
+    if (this.world.terrain) {
+      this.world.terrain.update(this.world.camera.position);
+    }
+    this.world.environment.update(0.016, performance.now() * 0.001, this.player.position);
+    this.world.render();
+  }
+
+  public openUIScreen(screenId: string): void {
+    this.closeAllModals();
+    if (screenId === 'hud') {
+      this.updateHUD();
+    } else if (screenId === 'vault') {
+      this.toggleVault(true);
+    } else if (screenId === 'workbench') {
+      this.openWorkbench();
+    } else if (screenId === 'camp') {
+      this.enterCamp(new RealRuntime(this.vaultManager), null);
+    } else if (screenId === 'codex') {
+      this.toggleCodex(true, 'attention');
+    } else if (screenId === 'observatory') {
+      this.openObservatory();
+    }
+  }
+
   public toggleVault(open?: boolean): void {
     this.isVaultOpen = open !== undefined ? open : !this.isVaultOpen;
     this.renderShardHUD();
@@ -1080,7 +1212,7 @@ class NeuroArenaGame {
 
     // Ground sampling function on CPU
     const groundFn = (x: number, z: number) =>
-      this.world.terrain ? this.world.terrain.getHeight(x, z) : 0;
+      this.world.terrain ? this.world.terrain.getHeight(x, z) : getTerrainHeight(x, z);
 
     // 1. Update Player (when not in modal and not in free-fly)
     const isModalOpen =

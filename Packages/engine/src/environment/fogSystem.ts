@@ -5,6 +5,7 @@
  */
 
 import * as THREE from 'three/webgpu';
+import { uniform, vec4, float, Fn, length, clamp, uv } from 'three/tsl';
 import { TimeOfDayState } from './timeOfDay.js';
 
 export class FogSystem {
@@ -19,8 +20,13 @@ export class FogSystem {
 
   // Light shaft mesh & material (subtle radial sunburst in front of camera)
   private shaftMesh: THREE.Mesh;
-  private shaftMaterial: THREE.ShaderMaterial;
+  private shaftMaterial: THREE.MeshBasicNodeMaterial;
   private sunScreenPos = new THREE.Vector2();
+
+  private uSunPos = uniform(new THREE.Vector2(0.5, 0.5));
+  private uSunColor = uniform(new THREE.Color(0xffedd5));
+  private uIntensity = uniform(0.35);
+  private uSunVisible = uniform(1.0);
 
   constructor(scene: THREE.Scene, camera: THREE.PerspectiveCamera) {
     this.scene = scene;
@@ -31,58 +37,22 @@ export class FogSystem {
 
     // 2. Light Shaft Screen Quad (View space billboard facing camera)
     const shaftGeo = new THREE.PlaneGeometry(2, 2);
-    this.shaftMaterial = new THREE.ShaderMaterial({
-      uniforms: {
-        uSunPos: { value: new THREE.Vector2(0.5, 0.5) },
-        uSunColor: { value: new THREE.Color(0xffedd5) },
-        uIntensity: { value: 0.35 },
-        uSunVisible: { value: 1.0 }
-      },
-      vertexShader: `
-        varying vec2 vUv;
-        void main() {
-          vUv = uv;
-          gl_Position = vec4(position.xy, 0.9999, 1.0);
-        }
-      `,
-      fragmentShader: `
-        uniform vec2 uSunPos;
-        uniform vec3 uSunColor;
-        uniform float uIntensity;
-        uniform float uSunVisible;
-        varying vec2 vUv;
+    const shaftColorNode = Fn(() => {
+      const coord = uv();
+      const delta = this.uSunPos.sub(coord);
+      const dist = length(delta);
+      const radialGlow = clamp(float(1.0).sub(dist.mul(1.2)), 0.0, 1.0);
+      const alpha = radialGlow.mul(this.uIntensity).mul(this.uSunVisible).mul(0.28);
+      return vec4(this.uSunColor.rgb, alpha);
+    });
 
-        void main() {
-          if (uSunVisible <= 0.01 || uIntensity <= 0.01) {
-            discard;
-          }
-
-          vec2 delta = uSunPos - vUv;
-          float dist = length(delta);
-
-          // Ray step sampling towards sun position
-          float rays = 0.0;
-          float weight = 0.06;
-          vec2 step = delta * 0.035;
-          vec2 coord = vUv;
-
-          for (int i = 0; i < 8; i++) {
-            coord += step;
-            float falloff = clamp(1.0 - length(coord - uSunPos) * 1.4, 0.0, 1.0);
-            rays += falloff * weight;
-          }
-
-          float radialGlow = clamp(1.0 - dist * 1.2, 0.0, 1.0);
-          float alpha = (rays * 0.6 + radialGlow * 0.4) * uIntensity * uSunVisible;
-
-          gl_FragColor = vec4(uSunColor, alpha * 0.28);
-        }
-      `,
+    this.shaftMaterial = new THREE.MeshBasicNodeMaterial({
       transparent: true,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       depthTest: false
     });
+    this.shaftMaterial.colorNode = shaftColorNode();
 
     this.shaftMesh = new THREE.Mesh(shaftGeo, this.shaftMaterial);
     this.shaftMesh.frustumCulled = false;
@@ -125,14 +95,14 @@ export class FogSystem {
         // Map from NDC [-1, 1] to UV [0, 1]
         this.sunScreenPos.set(proj.x * 0.5 + 0.5, proj.y * 0.5 + 0.5);
 
-        this.shaftMaterial.uniforms.uSunPos.value.copy(this.sunScreenPos);
-        this.shaftMaterial.uniforms.uSunColor.value.copy(state.sunColor);
+        this.uSunPos.value.copy(this.sunScreenPos);
+        this.uSunColor.value.copy(state.sunColor);
         // Golden hour gets dramatic warm light shafts
         const shaftBoost = state.isGoldenHour ? 0.65 : 0.35;
-        this.shaftMaterial.uniforms.uIntensity.value = shaftBoost * Math.min(1.0, dotSun * 2.0);
-        this.shaftMaterial.uniforms.uSunVisible.value = 1.0;
+        this.uIntensity.value = shaftBoost * Math.min(1.0, dotSun * 2.0);
+        this.uSunVisible.value = 1.0;
       } else {
-        this.shaftMaterial.uniforms.uSunVisible.value = 0.0;
+        this.uSunVisible.value = 0.0;
       }
     } else {
       this.shaftMesh.visible = false;

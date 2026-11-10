@@ -3,7 +3,7 @@
  * and magnetic attraction.
  */
 
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 
 export interface ShardData {
   id: string;

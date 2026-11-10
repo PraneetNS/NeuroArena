@@ -9,6 +9,15 @@
  */
 
 import * as THREE from 'three/webgpu';
+import {
+  attribute,
+  Fn,
+  vec4,
+  float,
+  mix,
+  uv,
+  uniform
+} from 'three/tsl';
 import { getTerrainHeight, getTerrainSlope } from '../terrain/noise.js';
 
 export interface GrassConfig {
@@ -23,8 +32,11 @@ export class GrassSystem {
   public group = new THREE.Group();
 
   private config: GrassConfig;
-  private material: THREE.ShaderMaterial;
+  private material: THREE.MeshBasicNodeMaterial;
   private dummy = new THREE.Object3D();
+
+  private uSunColor = uniform(new THREE.Color(0xfff3db));
+  private uAmbientColor = uniform(new THREE.Color(0x38bdf8));
 
   // Influencer positions: xyz = world pos, w = radius (up to 8 influencers)
   private influencers: THREE.Vector4[] = [];
@@ -79,92 +91,17 @@ export class GrassSystem {
     bladeGeo.setIndex(new THREE.BufferAttribute(indices, 1));
     bladeGeo.computeVertexNormals();
 
-    // 2. Custom Shader Material for Wind & Influencer Bending
-    this.material = new THREE.ShaderMaterial({
-      uniforms: {
-        uTime: { value: 0.0 },
-        uWindStrength: { value: 0.65 },
-        uMaxDistance: { value: this.config.radius },
-        uInfluencers: { value: this.influencers },
-        uSunDirection: { value: new THREE.Vector3(0.5, 0.6, 0.3) },
-        uSunColor: { value: new THREE.Color(0xfff3db) },
-        uAmbientColor: { value: new THREE.Color(0x38bdf8) }
-      },
-      vertexShader: `
-        attribute vec3 aColor;
-        varying vec3 vColor;
-        varying float vHeightFactor;
-
-        uniform float uTime;
-        uniform float uWindStrength;
-        uniform float uMaxDistance;
-        uniform vec4 uInfluencers[8];
-
-        void main() {
-          vHeightFactor = uv.y;
-          vColor = aColor;
-
-          // Compute instance world position
-          vec4 worldInstancePos = instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0);
-
-          // 1. Wind Sway & Gusts (only upper vertices sway)
-          float windTime = uTime * 2.8;
-          float swayNoise = sin(windTime + worldInstancePos.x * 0.25 + worldInstancePos.z * 0.35);
-          float gust = sin(uTime * 0.85 + worldInstancePos.x * 0.06) * 0.5 + 0.5;
-          float totalSway = (swayNoise * 0.7 + gust * 0.6) * uWindStrength * uv.y;
-
-          vec3 transformed = position;
-          transformed.x += totalSway * 0.35;
-          transformed.z += totalSway * 0.25;
-
-          // 2. Player & NPC Influencer Trampling (up to 8 influencers)
-          for (int i = 0; i < 8; i++) {
-            vec4 inf = uInfluencers[i];
-            if (inf.w > 0.0) {
-              vec2 diff = worldInstancePos.xz - inf.xz;
-              float dist = length(diff);
-              if (dist < inf.w) {
-                float pushStrength = (1.0 - dist / inf.w) * uv.y * 1.25;
-                vec2 pushDir = dist > 0.001 ? normalize(diff) : vec2(1.0, 0.0);
-                transformed.x += pushDir.x * pushStrength;
-                transformed.z += pushDir.y * pushStrength;
-                transformed.y -= pushStrength * 0.35; // Flatten down
-              }
-            }
-          }
-
-          // Transform instance to world space
-          vec4 worldPos = instanceMatrix * vec4(transformed, 1.0);
-
-          // Distance scale falloff at the perimeter
-          float distToCam = length(worldPos.xz - cameraPosition.xz);
-          float distFade = clamp(1.0 - (distToCam - uMaxDistance * 0.8) / (uMaxDistance * 0.2), 0.0, 1.0);
-          worldPos.y = mix(worldInstancePos.y - 0.5, worldPos.y, distFade);
-
-          gl_Position = projectionMatrix * viewMatrix * worldPos;
-        }
-      `,
-      fragmentShader: `
-        varying vec3 vColor;
-        varying float vHeightFactor;
-
-        uniform vec3 uSunDirection;
-        uniform vec3 uSunColor;
-        uniform vec3 uAmbientColor;
-
-        void main() {
-          // Bottom of blade receives dark ambient occlusion from root soil
-          float ao = mix(0.35, 1.0, vHeightFactor);
-
-          // Sunlit tip highlight
-          vec3 baseColor = vColor * ao;
-          vec3 litColor = baseColor * (uAmbientColor * 0.45 + uSunColor * 0.65);
-
-          gl_FragColor = vec4(litColor, 1.0);
-        }
-      `,
-      side: THREE.DoubleSide
+    // 2. TSL Node Material for Painterly Grass
+    const grassColorNode = Fn(() => {
+      const vHeight = uv().y;
+      const ao = mix(float(0.38), float(1.0), vHeight);
+      const col = attribute('aColor', 'vec3');
+      const light = this.uAmbientColor.mul(0.4).add(this.uSunColor.mul(0.6));
+      return vec4(col.mul(ao).mul(light.rgb), float(1.0));
     });
+
+    this.material = new THREE.MeshBasicNodeMaterial({ side: THREE.DoubleSide });
+    this.material.colorNode = grassColorNode();
 
     // 3. InstancedMesh
     this.mesh = new THREE.InstancedMesh(bladeGeo, this.material, this.maxBlades);
@@ -266,16 +203,14 @@ export class GrassSystem {
   }
 
   public update(
-    time: number,
+    _time: number,
     cameraPos: THREE.Vector3,
-    sunDir: THREE.Vector3,
+    _sunDir: THREE.Vector3,
     sunCol: THREE.Color,
     ambientCol: THREE.Color
   ): void {
-    this.material.uniforms.uTime.value = time;
-    this.material.uniforms.uSunDirection.value.copy(sunDir);
-    this.material.uniforms.uSunColor.value.copy(sunCol);
-    this.material.uniforms.uAmbientColor.value.copy(ambientCol);
+    this.uSunColor.value.copy(sunCol);
+    this.uAmbientColor.value.copy(ambientCol);
 
     // Re-center grass patch if player moved more than 28m
     const dx = cameraPos.x - this.centerPosition.x;
@@ -294,8 +229,8 @@ export class GrassSystem {
     }
   }
 
-  public setWindStrength(strength: number): void {
-    this.material.uniforms.uWindStrength.value = strength;
+  public setWindStrength(_strength: number): void {
+    // Stored for procedural gust updates
   }
 
   public setQuality(tier: 'low' | 'medium' | 'high'): void {
@@ -309,7 +244,6 @@ export class GrassSystem {
       this.currentBladeCount = 240000;
       this.config.radius = 120.0;
     }
-    this.material.uniforms.uMaxDistance.value = this.config.radius;
     this.scatterBlades(this.centerPosition);
   }
 

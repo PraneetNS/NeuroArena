@@ -3,7 +3,7 @@
  * emotes, and displays generated dialogue.
  */
 
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 
 export type CompanionState = 'dormant' | 'active' | 'thinking' | 'speaking';
 

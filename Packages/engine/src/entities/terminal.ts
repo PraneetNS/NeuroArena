@@ -2,7 +2,7 @@
  * Interactive 3D World Terminals & NPC Stations in the NeuroArena.
  */
 
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 
 export type TerminalType = 'forge' | 'curator' | 'archivist' | 'nexus';
 

@@ -23,7 +23,8 @@ import {
   length,
   mix,
   dot,
-  clamp
+  clamp,
+  screenUV
 } from 'three/tsl';
 
 export interface PostProcessingConfig {
@@ -78,114 +79,64 @@ export class PostProcessingSystem {
     try {
       this.postProcessing = new THREE.PostProcessing(this.renderer);
 
-      // 1. Base Scene Color Pass
+      // Base Scene Color Pass
       const scenePass = pass(this.scene, this.camera);
-      let outputNode: any = scenePass;
 
-      // 2. Stylized Bloom Glow Pass (TSL Node)
-      if (this.config.enableBloom) {
-        const bloomNode = Fn(() => {
-          const col = outputNode.rgb;
+      // Stylized Indie Post-Processing Pass (TSL Node)
+      const postNode = Fn(() => {
+        let col = scenePass.rgb;
+
+        // 1. Stylized Bloom Glow Pass
+        if (this.config.enableBloom) {
           const thresh = float(this.config.bloomThreshold);
           const strength = float(this.config.bloomStrength);
-
-          // Extract bright highlights
           const lum = dot(col, vec3(0.2126, 0.7152, 0.0722));
           const bloomFactor = smoothstep(thresh, thresh.add(0.25), lum);
           const bloomGlow = col.mul(bloomFactor).mul(strength);
+          col = col.add(bloomGlow);
+        }
 
-          return vec4(col.add(bloomGlow), outputNode.a);
-        });
-
-        outputNode = bloomNode();
-      }
-
-      // 3. GTAO / Ambient Cavity Occlusion Pass
-      if (this.config.enableGTAO) {
-        const aoNode = Fn(() => {
-          const col = outputNode.rgb;
-          // Soft ambient cavity deepening
+        // 2. GTAO / Ambient Cavity Occlusion
+        if (this.config.enableGTAO) {
           const lum = dot(col, vec3(0.299, 0.587, 0.114));
           const cavity = smoothstep(float(0.0), float(0.4), lum);
-          const aoMultiplier = mix(float(0.85), float(1.0), cavity);
-          return vec4(col.mul(aoMultiplier), outputNode.a);
-        });
+          const aoMultiplier = mix(float(0.88), float(1.0), cavity);
+          col = col.mul(aoMultiplier);
+        }
 
-        outputNode = aoNode();
-      }
-
-      // 4. Subtle Depth of Field (Horizon softness)
-      if (this.config.enableDepthOfField) {
-        const dofNode = Fn(() => {
-          const col = outputNode.rgb;
-          // Soft focal blend for painterly horizon distance
-          return vec4(col.mul(float(1.01)), outputNode.a);
-        });
-        outputNode = dofNode();
-      }
-
-      // 5. Stylized Warm Color-Grading (Warm filmic contrast & golden hour lift)
-      if (this.config.enableColorGrade) {
-        const colorGradeNode = Fn(() => {
-          const col = outputNode.rgb;
-
-          // Gentle S-curve contrast
-          const contrast = float(1.08);
+        // 3. Stylized Warm Color-Grading (Warm filmic contrast & golden hour lift)
+        if (this.config.enableColorGrade) {
+          const contrast = float(1.06);
           const graded = col.sub(0.5).mul(contrast).add(0.5);
-
-          // Warm tint: lift amber/peach in midtones, cool slate in shadows
           const warmTint = vec3(1.04, 1.01, 0.96);
           const shadowCool = vec3(0.97, 0.98, 1.03);
+          const lum = dot(col, vec3(0.299, 0.587, 0.114));
+          col = mix(shadowCool, warmTint, lum).mul(graded);
+        }
 
-          const luminance = dot(col, vec3(0.299, 0.587, 0.114));
-          const tinted = mix(shadowCool, warmTint, luminance).mul(graded);
-
-          return vec4(tinted, outputNode.a);
-        });
-
-        outputNode = colorGradeNode();
-      }
-
-      // 6. ACES Filmic Tonemapping
-      if (this.config.enableToneMapping) {
-        const toneMapNode = Fn(() => {
-          const x = outputNode.rgb;
-          // ACES Narkowicz filmic tonemapping curve
+        // 4. Filmic Tone Mapping (ACES curve approximation)
+        if (this.config.enableToneMapping) {
           const a = float(2.51);
           const b = float(0.03);
           const c = float(2.43);
           const d = float(0.59);
           const e = float(0.14);
+          const mapped = col.mul(col.mul(a).add(b)).div(col.mul(col.mul(c).add(d)).add(e));
+          col = clamp(mapped, 0.0, 1.0);
+        }
 
-          const mapped = x.mul(x.mul(a).add(b)).div(x.mul(x.mul(c).add(d)).add(e));
-          return vec4(clamp(mapped, 0.0, 1.0), outputNode.a);
-        });
+        // 5. Stylized Vignette
+        if (this.config.enableVignette) {
+          const vigDarkness = float(this.config.vignetteDarkness);
+          const dist = length(screenUV.sub(vec2(0.5, 0.5)));
+          const vig = smoothstep(float(0.75), float(0.25), dist.mul(vigDarkness));
+          col = col.mul(vig);
+        }
 
-        outputNode = toneMapNode();
-      }
+        return vec4(col, scenePass.a);
+      });
 
-      // 7. Stylized Vignette
-      if (this.config.enableVignette) {
-        const vigDarkness = this.config.vignetteDarkness;
-        const vignetteNode = Fn(() => {
-          const uv = vec2(outputNode.x, outputNode.y);
-          const dist = length(uv.sub(vec2(0.5, 0.5)));
-          const vig = smoothstep(float(0.75), float(0.25), dist.mul(float(vigDarkness)));
-          return vec4(outputNode.rgb.mul(vig), outputNode.a);
-        });
-
-        outputNode = vignetteNode();
-      }
-
-      // 8. Anti-Aliasing (FXAA Edge Softener)
-      if (this.config.enableAntialiasing) {
-        const fxaaNode = Fn(() => {
-          return outputNode;
-        });
-        outputNode = fxaaNode();
-      }
-
-      this.postProcessing.outputNode = outputNode;
+      this.postProcessing.outputNode = postNode();
       this.isSupported = true;
     } catch (err) {
       console.warn('PostProcessing node pipeline fallback to direct render:', err);
