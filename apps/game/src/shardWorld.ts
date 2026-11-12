@@ -315,13 +315,69 @@ export class ShardWorld {
         const bob = Math.sin(time * 2.2 + shard.position.x * 0.15 + shard.position.z * 0.15) * 0.22;
         const rotY = time * 0.9 + i;
 
-        this.dummy.position.set(shard.position.x, shard.position.y + bob, shard.position.z);
-        this.dummy.rotation.set(0, rotY, 0);
+        // Pre-scan Visual Telemetry: Driven strictly by computed Lens signals (Hidden-tag invariant preserved)
+        let jitterX = 0;
+        let jitterY = 0;
+        let jitterZ = 0;
+        let scaleX = 1.0;
+        let scaleY = 1.0;
+        let scaleZ = 1.0;
+        let rotZ = 0;
+        let visualColor = baseColor.clone();
 
-        // Highlight active target
         const isTarget = shard === this.currentTargetShard;
-        const scale = isTarget ? 1.35 : 1.0;
-        this.dummy.scale.set(scale, scale, scale);
+
+        if (distSq < 65 * 65) {
+          const scan = scanShard(shard, this.vault.getState());
+          const sig = scan.signals;
+
+          // 1. Noisy Data Signal (high nonAlphabeticRatio > 0.28 or extreme surprise > 0.85):
+          // Visual: rapid high-frequency jitter & spark flutter
+          if (sig.nonAlphabeticRatio > 0.28 || sig.surpriseScore > 0.85) {
+            const noiseIntensity = Math.min(1.0, (sig.nonAlphabeticRatio - 0.28) * 3.5 + Math.max(0, sig.surpriseScore - 0.85) * 4.0);
+            const jitterTime = time * 28.0 + i * 17.0;
+            jitterX = Math.sin(jitterTime) * 0.09 * noiseIntensity;
+            jitterY = Math.cos(jitterTime * 1.3) * 0.08 * noiseIntensity;
+            jitterZ = Math.sin(jitterTime * 0.7) * 0.09 * noiseIntensity;
+          }
+
+          // 2. Duplicate Data Signal (high repetitionScore > 0.35):
+          // Visual: faint trailing duplicate echoes / pulsing ghost dilation
+          if (sig.repetitionScore > 0.35) {
+            const repPulse = Math.sin(time * 4.0 + i) * 0.25 + 1.0;
+            scaleX *= 1.25 * repPulse;
+            scaleZ *= 1.25 * repPulse;
+            visualColor.lerp(new THREE.Color(0x8e9aaf), 0.45); // Slate duplicate echo
+          }
+
+          // 3. Boilerplate Data Signal (high dictionaryHitRate > 0.95 and very low surprise < 0.25):
+          // Visual: rigid rectangular arrangement, like an old signpost
+          if (sig.dictionaryHitRate > 0.95 && sig.surpriseScore < 0.25) {
+            scaleX *= 1.45;
+            scaleY *= 1.2;
+            scaleZ *= 0.35; // Rigid rectangular signboard
+            rotZ = 0.05 * Math.sin(time * 0.5); // Static signpost creak
+          }
+
+          // 4. Off-domain Data Signal (low dictionaryHitRate < 0.65 or atypical uppercase):
+          // Visual: distinct foreign glyph style / chromatic hue shift
+          if (sig.dictionaryHitRate < 0.65) {
+            const shift = (0.65 - sig.dictionaryHitRate) * 1.5;
+            visualColor.offsetHSL(shift * 0.35, 0.2, 0.1);
+          }
+
+          // 5. Unfold transition when near or inspected
+          if (isTarget) {
+            const unfoldFactor = 1.0 + Math.sin(time * 3.5) * 0.12;
+            scaleX *= 1.35 * unfoldFactor;
+            scaleY *= 1.35 * unfoldFactor;
+            scaleZ *= 1.35 * unfoldFactor;
+          }
+        }
+
+        this.dummy.position.set(shard.position.x + jitterX, shard.position.y + bob + jitterY, shard.position.z + jitterZ);
+        this.dummy.rotation.set(0, rotY, rotZ);
+        this.dummy.scale.set(scaleX, scaleY, scaleZ);
         this.dummy.updateMatrix();
         instancedMesh.setMatrixAt(i, this.dummy.matrix);
         meshNeedsUpdate = true;
@@ -330,12 +386,11 @@ export class ShardWorld {
         if (this.isScanMode) {
           const scan = scanShard(shard, this.vault.getState());
           const signalVal = scan.signals[this.activeSignalKey] || 0;
-          // Map signal 0..1 to color: cool cyan/blue (0) -> yellow (0.5) -> fiery red (1.0)
           const tintColor = this.getHeatmapColor(signalVal);
           instancedMesh.setColorAt(i, tintColor);
           colorNeedsUpdate = true;
         } else {
-          instancedMesh.setColorAt(i, baseColor);
+          instancedMesh.setColorAt(i, visualColor);
           colorNeedsUpdate = true;
         }
       }
