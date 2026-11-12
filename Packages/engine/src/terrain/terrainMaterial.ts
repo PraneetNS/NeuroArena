@@ -18,7 +18,9 @@ import {
   vec3,
   vec4,
   float,
-  Fn
+  Fn,
+  smoothstep,
+  mix
 } from 'three/tsl';
 
 
@@ -106,8 +108,34 @@ export function createTerrainMaterial(textures: TerrainTextures): THREE.MeshStan
     // Apply painterly macro-variation modulation
     const painterlyColor = c.mul(macroVal);
 
+    // Biome Regional Color Shifts based on world coordinates across 2 km world
+    const biomeX = worldPos.x.mul(0.001); // [-1.0, 1.0]
+    const biomeZ = worldPos.z.mul(0.001);
+
+    // North-West / River: cool aquamarine coastal tint
+    // South-West / Meadow: vivid clover emerald
+    // North-East / Ridge: cool lavender / alpine slate
+    // South-East / Terracotta: rich sunbaked ochre
+    const biomeTint = vec3(
+      float(1.0).add(biomeX.mul(0.08)),
+      float(1.0).add(biomeZ.mul(0.06)).sub(biomeX.mul(0.03)),
+      float(1.0).sub(biomeX.mul(0.06)).add(biomeZ.mul(0.04))
+    );
+
+    // Shoreline wet-sand darkening (near water level 7.5m)
+    const distWater = worldPos.y.sub(float(7.5)).abs();
+    const wetSand = smoothstep(float(1.8), float(0.0), distWater).mul(aSplats.x);
+    const wetFactor = mix(float(1.0), float(0.70), wetSand);
+
+    // Drifting cloud shadow modulation
+    const cloudWave1 = worldPos.x.mul(0.004).add(worldPos.z.mul(0.003)).sin();
+    const cloudWave2 = worldPos.x.mul(0.002).sub(worldPos.z.mul(0.005)).cos();
+    const cloudShadow = cloudWave1.add(cloudWave2).mul(0.12).add(0.88);
+
+    const finalTerrain = painterlyColor.mul(biomeTint).mul(wetFactor).mul(cloudShadow);
+
     // Warm atmospheric sun-kissed boost
-    return vec4(painterlyColor, 1.0);
+    return vec4(finalTerrain, 1.0);
   });
 
   material.colorNode = diffuseBlend();
@@ -140,10 +168,15 @@ export function createTerrainMaterial(textures: TerrainTextures): THREE.MeshStan
 
   // 8. Roughness Node: Sand (0.9), Grass (0.75), Dirt (0.85), Rock (0.7)
   const roughnessBlend = Fn(() => {
-    return float(0.9).mul(aSplats.x)
+    const baseRoughness = float(0.9).mul(aSplats.x)
       .add(float(0.75).mul(aSplats.y))
       .add(float(0.85).mul(aSplats.z))
       .add(float(0.70).mul(aSplats.w));
+
+    // Wet sand is glossy / reflective
+    const distWater = worldPos.y.sub(float(7.5)).abs();
+    const wetSand = smoothstep(float(1.8), float(0.0), distWater).mul(aSplats.x);
+    return mix(baseRoughness, float(0.28), wetSand);
   });
 
   material.roughnessNode = roughnessBlend();

@@ -100,24 +100,24 @@ export class FoliageSystem {
     const trunk = new THREE.CylinderGeometry(0.2, 0.45, 2.5, 6);
     trunk.translate(0, 1.25, 0);
     const trunkCol = new THREE.Color(0x5c4033);
-    this.applyVertexColor(trunk, trunkCol);
+    this.applyVertexColor(trunk, trunkCol, true);
     geometries.push(trunk);
 
     // 3 Foliage Cones
     const foliageCol = new THREE.Color(0x2d6a4f); // Deep forest pine
     const c1 = new THREE.ConeGeometry(2.4, 3.2, 7);
     c1.translate(0, 3.2, 0);
-    this.applyVertexColor(c1, foliageCol);
+    this.applyVertexColor(c1, foliageCol, true);
     geometries.push(c1);
 
     const c2 = new THREE.ConeGeometry(1.8, 2.8, 7);
     c2.translate(0, 4.8, 0);
-    this.applyVertexColor(c2, foliageCol.clone().offsetHSL(0, 0, 0.05));
+    this.applyVertexColor(c2, foliageCol.clone().offsetHSL(0, 0, 0.05), true);
     geometries.push(c2);
 
     const c3 = new THREE.ConeGeometry(1.2, 2.2, 6);
     c3.translate(0, 6.2, 0);
-    this.applyVertexColor(c3, foliageCol.clone().offsetHSL(0, 0, 0.09));
+    this.applyVertexColor(c3, foliageCol.clone().offsetHSL(0, 0, 0.09), true);
     geometries.push(c3);
 
     return this.mergeGeometries(geometries);
@@ -130,24 +130,24 @@ export class FoliageSystem {
     const trunk = new THREE.CylinderGeometry(0.35, 0.6, 2.8, 6);
     trunk.translate(0, 1.4, 0);
     const trunkCol = new THREE.Color(0x4a3525);
-    this.applyVertexColor(trunk, trunkCol);
+    this.applyVertexColor(trunk, trunkCol, true);
     geometries.push(trunk);
 
     // 3 Faceted Foliage Dodecahedrons
     const leafCol = new THREE.Color(0x40916c); // Warm sunlit oak
     const s1 = new THREE.DodecahedronGeometry(1.8, 0);
     s1.translate(0, 4.0, 0);
-    this.applyVertexColor(s1, leafCol);
+    this.applyVertexColor(s1, leafCol, true);
     geometries.push(s1);
 
     const s2 = new THREE.DodecahedronGeometry(1.4, 0);
     s2.translate(0.9, 3.5, 0.6);
-    this.applyVertexColor(s2, leafCol.clone().offsetHSL(0.02, 0.05, 0.04));
+    this.applyVertexColor(s2, leafCol.clone().offsetHSL(0.02, 0.05, 0.04), true);
     geometries.push(s2);
 
     const s3 = new THREE.DodecahedronGeometry(1.3, 0);
     s3.translate(-0.8, 3.6, -0.5);
-    this.applyVertexColor(s3, leafCol.clone().offsetHSL(-0.02, -0.05, -0.03));
+    this.applyVertexColor(s3, leafCol.clone().offsetHSL(-0.02, -0.05, -0.03), true);
     geometries.push(s3);
 
     return this.mergeGeometries(geometries);
@@ -171,7 +171,7 @@ export class FoliageSystem {
     rock.computeVertexNormals();
 
     const rockCol = new THREE.Color(0x8d99ae); // Sandstone / granite grey
-    this.applyVertexColor(rock, rockCol);
+    this.applyVertexColor(rock, rockCol, true);
     return rock;
   }
 
@@ -193,13 +193,34 @@ export class FoliageSystem {
     return this.mergeGeometries([q1, q2]);
   }
 
-  private applyVertexColor(geo: THREE.BufferGeometry, col: THREE.Color): void {
+  private applyVertexColor(geo: THREE.BufferGeometry, baseCol: THREE.Color, applyMoss = false): void {
     const count = geo.attributes.position.count;
+    const pos = geo.attributes.position.array as Float32Array;
+    const norm = geo.attributes.normal ? (geo.attributes.normal.array as Float32Array) : null;
     const colors = new Float32Array(count * 3);
+    const mossCol = new THREE.Color(0x65a30d); // Lush moss green
+
     for (let i = 0; i < count; i++) {
-      colors[i * 3 + 0] = col.r;
-      colors[i * 3 + 1] = col.g;
-      colors[i * 3 + 2] = col.b;
+      const c = baseCol.clone();
+      const vy = pos[i * 3 + 1];
+
+      // Base contact ambient occlusion: darker near ground base
+      if (vy < 1.2) {
+        c.multiplyScalar(0.55 + Math.max(0, vy) * 0.38);
+      }
+
+      // Northern face moss tinting on rocks and tree bark
+      if (applyMoss && norm) {
+        const nz = norm[i * 3 + 2];
+        if (nz < -0.2) {
+          const mossAmount = Math.min(1.0, (-nz - 0.2) * 1.4);
+          c.lerp(mossCol, mossAmount * 0.42);
+        }
+      }
+
+      colors[i * 3 + 0] = c.r;
+      colors[i * 3 + 1] = c.g;
+      colors[i * 3 + 2] = c.b;
     }
     geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
   }
@@ -444,9 +465,11 @@ export class FoliageSystem {
   }
 
   public update(time: number): void {
-    // Subtle wind oscillation on billboard orientation/sway
+    // Subtle wind oscillation on trees and billboard orientation
     const sway = Math.sin(time * 1.5) * 0.04;
     this.billboardMesh.rotation.y = sway;
+    this.oakMesh.rotation.z = Math.sin(time * 1.6) * 0.007;
+    this.pineMesh.rotation.x = Math.cos(time * 1.3) * 0.005;
   }
 
   public setQuality(tier: 'low' | 'medium' | 'high'): void {

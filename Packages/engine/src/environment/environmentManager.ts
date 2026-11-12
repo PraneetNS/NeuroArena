@@ -14,6 +14,7 @@ import { GrassSystem } from './grassSystem.js';
 import { FoliageSystem, FoliageObject } from './foliageSystem.js';
 import { WaterSystem } from './waterSystem.js';
 import { PostProcessingSystem } from './postProcessingSystem.js';
+import { AtmosphereParticles } from './atmosphereParticles.js';
 import { QualityTier } from '../terrain/terrainManager.js';
 
 export interface EnvironmentFeatures {
@@ -62,6 +63,7 @@ export class EnvironmentManager {
   public foliage: FoliageSystem;
   public water: WaterSystem;
   public postProcessing: PostProcessingSystem;
+  public particles: AtmosphereParticles;
 
   // Lighting references
   public sunLight: THREE.DirectionalLight;
@@ -118,7 +120,11 @@ export class EnvironmentManager {
     this.water = new WaterSystem({ waterLevel: 7.5 });
     this.scene.add(this.water.group);
 
-    // 7. Initialize Post-Processing Pipeline
+    // 7. Initialize Atmosphere Particles (Pollen / Dust Motes / Spores)
+    this.particles = new AtmosphereParticles();
+    this.scene.add(this.particles.group);
+
+    // 8. Initialize Post-Processing Pipeline
     this.postProcessing = new PostProcessingSystem(
       this.renderer,
       this.scene,
@@ -208,6 +214,8 @@ export class EnvironmentManager {
     } else {
       this.water.group.visible = false;
     }
+    // 8. Update Atmosphere Particles
+    this.particles.update(dt, timeState, this.camera.position);
   }
 
   public render(): void {
@@ -223,6 +231,7 @@ export class EnvironmentManager {
     this.grass.setQuality(tier);
     this.foliage.setQuality(tier);
     this.fog.setQuality(tier);
+    this.particles.setQuality(tier);
     this.postProcessing.setQuality(tier);
   }
 
