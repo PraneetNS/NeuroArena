@@ -788,6 +788,7 @@ class NeuroArenaGame {
 
   public openWorkbench(): void {
     this.closeAllModals();
+    this.audio.playUIOpen();
     this.isWorkbenchOpen = true;
     this.director.handleEvent({ type: 'workbench_opened' });
 
@@ -814,6 +815,9 @@ class NeuroArenaGame {
   }
 
   public closeWorkbench(): void {
+    if (this.isWorkbenchOpen) {
+      this.audio.playUIClose();
+    }
     if (this.workbenchContainer) {
       this.workbenchContainer.style.display = 'none';
     }
@@ -822,6 +826,7 @@ class NeuroArenaGame {
 
   public openObservatory(customModel?: any): void {
     this.closeAllModals();
+    this.audio.playUIOpen();
     this.isObservatoryOpen = true;
 
     if (!this.observatoryContainer) {
@@ -846,6 +851,9 @@ class NeuroArenaGame {
   }
 
   public closeObservatory(): void {
+    if (this.isObservatoryOpen) {
+      this.audio.playUIClose();
+    }
     if (this.observatoryContainer) {
       this.observatoryContainer.style.display = 'none';
     }
@@ -1090,12 +1098,22 @@ class NeuroArenaGame {
   }
 
   public toggleVault(open?: boolean): void {
-    this.isVaultOpen = open !== undefined ? open : !this.isVaultOpen;
+    const nextState = open !== undefined ? open : !this.isVaultOpen;
+    if (nextState !== this.isVaultOpen) {
+      if (nextState) this.audio.playUIOpen();
+      else this.audio.playUIClose();
+    }
+    this.isVaultOpen = nextState;
     this.renderShardHUD();
   }
 
   public toggleCodex(open?: boolean, entryId?: CodexConceptId): void {
-    this.isCodexOpen = open !== undefined ? open : !this.isCodexOpen;
+    const nextState = open !== undefined ? open : !this.isCodexOpen;
+    if (nextState !== this.isCodexOpen) {
+      if (nextState) this.audio.playUIOpen();
+      else this.audio.playUIClose();
+    }
+    this.isCodexOpen = nextState;
     if (entryId) {
       this.codexInitialEntry = entryId;
     }
