@@ -328,17 +328,36 @@ export class World {
   public updateCamera(player: Player): void {
     if (this.isFreeFly) return;
 
-    const target = player.position.clone().add(new THREE.Vector3(0, 1.8, 0));
+    // 1. Subtle camera lead in player movement direction
+    const leadOffset = new THREE.Vector3(player.velocity.x * 0.12, 0, player.velocity.z * 0.12);
+    const target = player.position.clone().add(new THREE.Vector3(0, 1.8, 0)).add(leadOffset);
 
     const horizontalDist = this.cameraDistance * Math.cos(this.cameraPitch);
     const verticalDist = this.cameraDistance * Math.sin(this.cameraPitch);
 
-    const camX = target.x + Math.sin(this.cameraAngleY) * horizontalDist;
-    const camY = target.y + verticalDist;
-    const camZ = target.z + Math.cos(this.cameraAngleY) * horizontalDist;
+    let camX = target.x + Math.sin(this.cameraAngleY) * horizontalDist;
+    let camY = target.y + verticalDist;
+    let camZ = target.z + Math.cos(this.cameraAngleY) * horizontalDist;
+
+    // 2. Spring-Arm Soft Collision against Terrain (Never clip into the ground)
+    if (this.terrain) {
+      const groundH = this.terrain.getHeight(camX, camZ);
+      const minCamElevation = groundH + 1.75;
+      if (camY < minCamElevation) {
+        camY = THREE.MathUtils.lerp(camY, minCamElevation, 0.4);
+      }
+    }
 
     this.camera.position.set(camX, camY, camZ);
     this.camera.lookAt(target);
+
+    // 3. Dynamic Field-of-View widening on sprint
+    const isSprinting = player.controls.sprint && player.velocity.lengthSq() > 2.0;
+    const targetFov = isSprinting ? 68 : 60;
+    if (Math.abs(this.camera.fov - targetFov) > 0.05) {
+      this.camera.fov = THREE.MathUtils.lerp(this.camera.fov, targetFov, 0.08);
+      this.camera.updateProjectionMatrix();
+    }
   }
 
   public update(dt: number, playerPos?: THREE.Vector3): void {
