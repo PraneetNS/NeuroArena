@@ -474,26 +474,36 @@ export class FoliageSystem {
 
   public setQuality(tier: 'low' | 'medium' | 'high'): void {
     if (tier === 'low') {
-      this.pineMesh.count = Math.min(1000, this.allObjects.length);
-      this.oakMesh.count = Math.min(1000, this.allObjects.length);
-      this.rockMesh.count = Math.min(1200, this.allObjects.length);
-      this.billboardMesh.count = 2000;
+      this.pineMesh.count = Math.min(300, this.allObjects.length);
+      this.oakMesh.count = Math.min(300, this.allObjects.length);
+      this.rockMesh.count = Math.min(350, this.allObjects.length);
+      this.billboardMesh.count = 1000;
     } else if (tier === 'medium') {
-      this.pineMesh.count = 1800;
-      this.oakMesh.count = 1800;
-      this.rockMesh.count = 2200;
-      this.billboardMesh.count = 4000;
+      this.pineMesh.count = 900;
+      this.oakMesh.count = 900;
+      this.rockMesh.count = 1100;
+      this.billboardMesh.count = 2500;
     } else {
-      this.pineMesh.count = 2500;
-      this.oakMesh.count = 2500;
-      this.rockMesh.count = 3000;
-      this.billboardMesh.count = 6000;
+      this.pineMesh.count = 2000;
+      this.oakMesh.count = 2000;
+      this.rockMesh.count = 2400;
+      this.billboardMesh.count = 5000;
     }
 
     this.pineMesh.instanceMatrix.needsUpdate = true;
     this.oakMesh.instanceMatrix.needsUpdate = true;
     this.rockMesh.instanceMatrix.needsUpdate = true;
     this.billboardMesh.instanceMatrix.needsUpdate = true;
+  }
+
+  public setTreesVisible(visible: boolean): void {
+    this.pineMesh.visible = visible;
+    this.oakMesh.visible = visible;
+    this.billboardMesh.visible = visible;
+  }
+
+  public setRocksVisible(visible: boolean): void {
+    this.rockMesh.visible = visible;
   }
 
   public getStats(): { totalObjects: number; triangles: number; drawCalls: number } {

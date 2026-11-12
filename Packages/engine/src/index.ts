@@ -31,3 +31,7 @@ export * from './camp/slate.js';
 export * from './camp/scroll.js';
 export * from './camp/mentorsNotes.js';
 
+// Benchmark Harness & Quality Governor
+export * from './benchmark/benchmarkHarness.js';
+export * from './governor/qualityGovernor.js';
+

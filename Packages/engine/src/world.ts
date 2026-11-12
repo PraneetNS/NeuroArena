@@ -254,7 +254,21 @@ export class World {
     this.scene.add(this.sunLight);
   }
 
+  public setDpr(dpr: number): void {
+    this.renderer.setPixelRatio(dpr);
+    this.onResize();
+  }
+
   public setQualityTier(tier: QualityTier): void {
+    if (tier === 'low') {
+      this.renderer.setPixelRatio(0.75);
+    } else if (tier === 'medium') {
+      this.renderer.setPixelRatio(1.0);
+    } else {
+      this.renderer.setPixelRatio(Math.min(typeof window !== 'undefined' ? window.devicePixelRatio : 1.0, 1.5));
+    }
+    this.onResize();
+
     if (this.terrain) {
       this.terrain.setQualityTier(tier);
       const config = this.terrain.getQualityConfig();

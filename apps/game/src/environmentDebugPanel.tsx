@@ -27,13 +27,15 @@ export interface EnvironmentDebugProps {
   isOpen: boolean;
   onClose: () => void;
   onQualityChange: (tier: 'low' | 'medium' | 'high') => void;
+  onOpenBenchmark?: () => void;
 }
 
 export const EnvironmentDebugPanel: React.FC<EnvironmentDebugProps> = ({
   environment,
   isOpen,
   onClose,
-  onQualityChange
+  onQualityChange,
+  onOpenBenchmark
 }) => {
   const [timeHours, setTimeHours] = useState(environment.timeOfDay.timeHours);
   const [isPaused, setIsPaused] = useState(environment.timeOfDay.isPaused);
@@ -301,8 +303,20 @@ export const EnvironmentDebugPanel: React.FC<EnvironmentDebugProps> = ({
 
         <PanelFooter>
           <span style={{ fontSize: 'var(--na-text-xs)', color: 'var(--na-muted)', marginRight: 'auto' }}>
-            Hotkeys: <KeyHint>F</KeyHint> Free-Fly | <KeyHint>G</KeyHint> Toggle Debug
+            Hotkeys: <KeyHint>F</KeyHint> Free-Fly | <KeyHint>G</KeyHint> Toggle Debug | <KeyHint>B</KeyHint> Benchmark
           </span>
+          {onOpenBenchmark && (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => {
+                onClose();
+                onOpenBenchmark();
+              }}
+            >
+              📊 Benchmark
+            </Button>
+          )}
           <Button variant="secondary" size="sm" onClick={onClose}>
             Close
           </Button>

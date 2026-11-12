@@ -20,7 +20,9 @@ import {
   CampScene,
   CameraMode,
   FpsTargetSetting,
-  getTerrainHeight
+  getTerrainHeight,
+  BenchmarkHarness,
+  QualityGovernor
 } from '@na/engine';
 import * as mlCore from '@na/ml-core';
 import { Tokenizer, Dataset, TinyGPT, PRESET_CORPORA } from '@na/ml-core';
@@ -41,7 +43,8 @@ import {
   ComputeGraph,
   LumenSubtitles,
   CodexModal,
-  ObservatoryModal
+  ObservatoryModal,
+  BenchmarkModal
 } from '@na/ui';
 import '@na/ui/styles';
 import {
@@ -171,6 +174,13 @@ class NeuroArenaGame {
   private observatoryRoot: ReactDOM.Root | null = null;
   private isObservatoryOpen = false;
 
+  private benchmarkContainer: HTMLElement | null = null;
+  private benchmarkRoot: ReactDOM.Root | null = null;
+  private isBenchmarkOpen = false;
+  private benchmarkHarness: BenchmarkHarness | null = null;
+  private qualityGovernor: QualityGovernor | null = null;
+  private activeTier: QualityTier = 'high';
+
   // The Camp State & Subsystems
   private campScene: CampScene | null = null;
   public isCampActive = false;
@@ -224,9 +234,18 @@ class NeuroArenaGame {
     this.uiContainer.appendChild(this.debugContainer);
     this.debugRoot = ReactDOM.createRoot(this.debugContainer);
 
+    this.qualityGovernor = new QualityGovernor(this.world, 'high');
+    this.benchmarkHarness = new BenchmarkHarness(this.world, this.player);
+
     this.statsOverlay = new TerrainStatsOverlay(this.uiContainer, {
-      onQualityChange: (tier: QualityTier) => {
-        this.world.setQualityTier(tier);
+      onQualityChange: (tier: QualityTier | 'auto') => {
+        if (tier === 'auto') {
+          this.qualityGovernor?.enable();
+        } else {
+          this.qualityGovernor?.disable();
+          this.activeTier = tier;
+          this.world.setQualityTier(tier);
+        }
         this.renderDebugPanel();
       },
       onToggleFreeFly: () => {
@@ -234,6 +253,9 @@ class NeuroArenaGame {
       },
       onOpenDebugPanel: () => {
         this.toggleDebugPanel();
+      },
+      onOpenBenchmark: () => {
+        this.openBenchmark();
       }
     });
 
@@ -581,7 +603,11 @@ class NeuroArenaGame {
         return;
       }
 
-      // Quality tier hotkeys: 1 = Low, 2 = Medium, 3 = High
+      // Quality tier hotkeys: 0 = Auto Governor, 1 = Low, 2 = Medium, 3 = High
+      if (e.code === 'Digit0') {
+        this.statsOverlay.selectTier('auto');
+        return;
+      }
       if (e.code === 'Digit1') {
         this.statsOverlay.selectTier('low');
         return;
@@ -595,6 +621,16 @@ class NeuroArenaGame {
         return;
       }
 
+      // Benchmark modal hotkey
+      if (e.code === 'KeyK' || (e.shiftKey && e.code === 'KeyB')) {
+        if (this.isBenchmarkOpen) {
+          this.closeBenchmark();
+        } else {
+          this.openBenchmark();
+        }
+        return;
+      }
+
       const isModalOpen =
         this.curatorModal.isOpen ||
         this.forgeModal.isOpen ||
@@ -603,7 +639,8 @@ class NeuroArenaGame {
         this.isVaultOpen ||
         this.isCodexOpen ||
         this.isObservatoryOpen ||
-        this.isWorkbenchOpen;
+        this.isWorkbenchOpen ||
+        this.isBenchmarkOpen;
 
       if (isModalOpen) {
         if (e.code === KEYMAP.camp_exit.code) {
@@ -860,6 +897,42 @@ class NeuroArenaGame {
     this.isObservatoryOpen = false;
   }
 
+  public openBenchmark(): void {
+    this.closeAllModals();
+    this.audio.playUIOpen();
+    this.isBenchmarkOpen = true;
+
+    if (!this.benchmarkContainer) {
+      this.benchmarkContainer = document.createElement('div');
+      this.benchmarkContainer.id = 'app-benchmark-modal-container';
+      this.benchmarkContainer.style.position = 'fixed';
+      this.benchmarkContainer.style.inset = '0';
+      this.benchmarkContainer.style.zIndex = '220';
+      this.uiContainer.appendChild(this.benchmarkContainer);
+      this.benchmarkRoot = ReactDOM.createRoot(this.benchmarkContainer);
+    }
+
+    this.benchmarkContainer.style.display = 'block';
+    this.benchmarkRoot!.render(
+      React.createElement(BenchmarkModal, {
+        isOpen: true,
+        onClose: () => this.closeBenchmark(),
+        harness: this.benchmarkHarness,
+        currentTier: this.activeTier
+      })
+    );
+  }
+
+  public closeBenchmark(): void {
+    if (this.isBenchmarkOpen) {
+      this.audio.playUIClose();
+    }
+    if (this.benchmarkContainer) {
+      this.benchmarkContainer.style.display = 'none';
+    }
+    this.isBenchmarkOpen = false;
+  }
+
   public enterCamp(runtime: RealRuntime, graph: any): void {
     this.closeWorkbench();
     this.closeAllModals();
@@ -1018,7 +1091,8 @@ class NeuroArenaGame {
         onQualityChange: (tier: QualityTier) => {
           this.world.setQualityTier(tier);
           this.statsOverlay.selectTier(tier);
-        }
+        },
+        onOpenBenchmark: () => this.openBenchmark()
       })
     );
   }
@@ -1026,6 +1100,7 @@ class NeuroArenaGame {
   private closeAllModals(): void {
     this.closeWorkbench();
     this.closeObservatory();
+    this.closeBenchmark();
     this.capabilityModal.close();
     this.curatorModal.close();
     this.forgeModal.close();
@@ -1238,7 +1313,9 @@ class NeuroArenaGame {
       this.forgeModal.isOpen ||
       this.chatModal.isOpen ||
       this.isVaultOpen ||
-      this.isCodexOpen;
+      this.isCodexOpen ||
+      this.isObservatoryOpen ||
+      this.isBenchmarkOpen;
     if (!isModalOpen && !this.world.isFreeFly) {
       this.player.update(dt, this.world.cameraAngleY, groundFn);
     }
@@ -1273,6 +1350,10 @@ class NeuroArenaGame {
     }
 
     // 5. Update World environment, streamed chunks, and render
+    if (this.qualityGovernor?.isActive()) {
+      const frameMs = dt * 1000;
+      this.qualityGovernor.update(dt, frameMs);
+    }
     this.world.update(dt, this.player.position);
     this.world.render();
 
@@ -1284,7 +1365,10 @@ class NeuroArenaGame {
       this.statsOverlay.update({
         ...fullStats,
         cameraPos: { x: camPos.x, y: camPos.y, z: camPos.z },
-        groundHeight: groundAlt
+        groundHeight: groundAlt,
+        governorStatus: this.qualityGovernor?.isActive()
+          ? this.qualityGovernor.getStatusString()
+          : `Quality: ${this.activeTier.toUpperCase()} (Manual)`
       });
     }
 
@@ -1303,6 +1387,11 @@ const isUILabRoute = () =>
   window.location.pathname.startsWith('/ui-lab') ||
   window.location.hash.startsWith('#/ui-lab') ||
   window.location.search.includes('ui-lab');
+
+const isBenchRoute = () =>
+  window.location.pathname.startsWith('/bench-world') ||
+  window.location.hash.startsWith('#/bench-world') ||
+  window.location.search.includes('bench-world');
 
 window.addEventListener('DOMContentLoaded', () => {
   if (isWorkbenchRoute()) {
@@ -1452,7 +1541,16 @@ window.addEventListener('DOMContentLoaded', () => {
       root.render(React.createElement(UILabGallery));
     }
   } else {
-    new NeuroArenaGame();
+    const game = new NeuroArenaGame();
+    (window as any).__game = game;
+    (window as any).__openBenchmark = () => game.openBenchmark();
+    (window as any).__benchmarkHarness = (game as any).benchmarkHarness;
+
+    if (isBenchRoute()) {
+      setTimeout(() => {
+        game.openBenchmark();
+      }, 400);
+    }
   }
 });
 

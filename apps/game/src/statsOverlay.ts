@@ -26,13 +26,15 @@ export interface OverlayStatsData extends EnvironmentStats {
   isFreeFly: boolean;
   cameraPos: { x: number; y: number; z: number };
   groundHeight: number;
+  governorStatus?: string;
 }
 
 export class TerrainStatsOverlay {
   public root: HTMLElement;
-  private onQualityChange: (tier: QualityTier) => void;
+  private onQualityChange: (tier: QualityTier | 'auto') => void;
   private onToggleFreeFly: () => void;
   private onOpenDebugPanel?: () => void;
+  private onOpenBenchmark?: () => void;
   private onGpuPreferenceChange?: (pref: GpuPreference) => void;
 
   private fpsValEl!: HTMLElement;
@@ -45,6 +47,7 @@ export class TerrainStatsOverlay {
   private posValEl!: HTMLElement;
   private groundValEl!: HTMLElement;
   private timeValEl!: HTMLElement;
+  private governorValEl!: HTMLElement;
 
   // Per-feature breakdown elements
   private featTerrainEl!: HTMLElement;
@@ -53,6 +56,7 @@ export class TerrainStatsOverlay {
   private featWaterEl!: HTMLElement;
   private featPostEl!: HTMLElement;
 
+  private btnAuto!: HTMLButtonElement;
   private btnLow!: HTMLButtonElement;
   private btnMed!: HTMLButtonElement;
   private btnHigh!: HTMLButtonElement;
@@ -66,15 +70,17 @@ export class TerrainStatsOverlay {
   constructor(
     parent: HTMLElement,
     callbacks: {
-      onQualityChange: (tier: QualityTier) => void;
+      onQualityChange: (tier: QualityTier | 'auto') => void;
       onToggleFreeFly: () => void;
       onOpenDebugPanel?: () => void;
+      onOpenBenchmark?: () => void;
       onGpuPreferenceChange?: (pref: GpuPreference) => void;
     }
   ) {
     this.onQualityChange = callbacks.onQualityChange;
     this.onToggleFreeFly = callbacks.onToggleFreeFly;
     this.onOpenDebugPanel = callbacks.onOpenDebugPanel;
+    this.onOpenBenchmark = callbacks.onOpenBenchmark;
     this.onGpuPreferenceChange = callbacks.onGpuPreferenceChange;
 
     this.initialGpuPref = getPreferredGpuSetting();
@@ -141,13 +147,17 @@ export class TerrainStatsOverlay {
         <!-- Quality Tiers -->
         <div style="display: flex; flex-direction: column; gap: 0.25rem;">
           <div style="display: flex; justify-content: space-between; font-size: 0.65rem; color: #9AA3AE; text-transform: uppercase;">
-            <span>Quality Tier</span>
-            <span>Budgets: &lt;800 DC | &lt;2M Tris</span>
+            <span>Quality Governor</span>
+            <span id="stat-budget-label" style="color: #4FB3A9;">Auto (DPR & Effects)</span>
           </div>
           <div style="display: flex; gap: 0.35rem;">
+            <button id="tier-auto" class="tier-btn" style="flex: 1; padding: 0.28rem; font-size: 0.68rem; font-family: inherit; border-radius: 4px; border: 1px solid #4FB3A9; background: rgba(79, 179, 169, 0.2); color: #4FB3A9; font-weight: 600; cursor: pointer;">Auto</button>
             <button id="tier-low" class="tier-btn" style="flex: 1; padding: 0.28rem; font-size: 0.68rem; font-family: inherit; border-radius: 4px; border: 1px solid #2A333F; background: #1D242D; color: #9AA3AE; cursor: pointer;">Low</button>
-            <button id="tier-med" class="tier-btn" style="flex: 1; padding: 0.28rem; font-size: 0.68rem; font-family: inherit; border-radius: 4px; border: 1px solid #2A333F; background: #1D242D; color: #9AA3AE; cursor: pointer;">Medium</button>
-            <button id="tier-high" class="tier-btn" style="flex: 1; padding: 0.28rem; font-size: 0.68rem; font-family: inherit; border-radius: 4px; border: 1px solid #E8A33D; background: rgba(232, 163, 61, 0.18); color: #E8A33D; font-weight: 600; cursor: pointer;">High</button>
+            <button id="tier-med" class="tier-btn" style="flex: 1; padding: 0.28rem; font-size: 0.68rem; font-family: inherit; border-radius: 4px; border: 1px solid #2A333F; background: #1D242D; color: #9AA3AE; cursor: pointer;">Med</button>
+            <button id="tier-high" class="tier-btn" style="flex: 1; padding: 0.28rem; font-size: 0.68rem; font-family: inherit; border-radius: 4px; border: 1px solid #2A333F; background: #1D242D; color: #9AA3AE; cursor: pointer;">High</button>
+          </div>
+          <div id="stat-governor" style="font-size: 0.62rem; color: #4FB3A9; background: rgba(79, 179, 169, 0.1); border: 1px solid rgba(79, 179, 169, 0.25); padding: 2px 6px; border-radius: 3px; font-family: monospace;">
+            Auto: Monitoring Frame Times
           </div>
         </div>
 
@@ -205,11 +215,14 @@ export class TerrainStatsOverlay {
         </div>
 
         <!-- Camera Mode & Debug Controls -->
-        <div style="display: flex; gap: 0.4rem;">
-          <button id="toggle-freefly-btn" style="flex: 2; padding: 0.35rem; font-size: 0.72rem; font-weight: 600; font-family: inherit; border-radius: 4px; border: 1px solid #3A4657; background: #1D242D; color: #E8E4DA; cursor: pointer; text-align: center;">
+        <div style="display: flex; gap: 0.35rem;">
+          <button id="toggle-freefly-btn" style="flex: 3; padding: 0.35rem; font-size: 0.7rem; font-weight: 600; font-family: inherit; border-radius: 4px; border: 1px solid #3A4657; background: #1D242D; color: #E8E4DA; cursor: pointer; text-align: center;">
             [F] 3rd-Person Orbit
           </button>
-          <button id="open-debug-btn" style="flex: 1; padding: 0.35rem; font-size: 0.72rem; font-weight: 600; font-family: inherit; border-radius: 4px; border: 1px solid var(--na-accent, #E8A33D); background: rgba(232, 163, 61, 0.15); color: var(--na-accent, #E8A33D); cursor: pointer;">
+          <button id="btn-benchmark" style="flex: 3; padding: 0.35rem; font-size: 0.7rem; font-weight: 600; font-family: inherit; border-radius: 4px; border: 1px solid #4FB3A9; background: rgba(79, 179, 169, 0.18); color: #4FB3A9; cursor: pointer; text-align: center;">
+            [B] Benchmark
+          </button>
+          <button id="open-debug-btn" style="flex: 2; padding: 0.35rem; font-size: 0.7rem; font-weight: 600; font-family: inherit; border-radius: 4px; border: 1px solid var(--na-accent, #E8A33D); background: rgba(232, 163, 61, 0.15); color: var(--na-accent, #E8A33D); cursor: pointer;">
             [G] Debug
           </button>
         </div>
@@ -238,14 +251,23 @@ export class TerrainStatsOverlay {
     this.featFoliageEl = this.root.querySelector('#feat-foliage')!;
     this.featWaterEl = this.root.querySelector('#feat-water')!;
     this.featPostEl = this.root.querySelector('#feat-post')!;
+    this.governorValEl = this.root.querySelector('#stat-governor')!;
 
+    this.btnAuto = this.root.querySelector('#tier-auto')!;
     this.btnLow = this.root.querySelector('#tier-low')!;
     this.btnMed = this.root.querySelector('#tier-med')!;
     this.btnHigh = this.root.querySelector('#tier-high')!;
 
+    this.btnAuto.onclick = () => this.selectTier('auto');
     this.btnLow.onclick = () => this.selectTier('low');
     this.btnMed.onclick = () => this.selectTier('medium');
     this.btnHigh.onclick = () => this.selectTier('high');
+
+    // Benchmark Button
+    const benchBtn = this.root.querySelector('#btn-benchmark') as HTMLButtonElement;
+    if (benchBtn && this.onOpenBenchmark) {
+      benchBtn.onclick = () => this.onOpenBenchmark!();
+    }
 
     // GPU Preference buttons
     this.btnGpuAuto = this.root.querySelector('#gpu-btn-auto')!;
@@ -310,8 +332,9 @@ export class TerrainStatsOverlay {
     }
   }
 
-  public selectTier(tier: QualityTier): void {
+  public selectTier(tier: QualityTier | 'auto'): void {
     const buttons = [
+      { btn: this.btnAuto, t: 'auto' },
       { btn: this.btnLow, t: 'low' },
       { btn: this.btnMed, t: 'medium' },
       { btn: this.btnHigh, t: 'high' }
@@ -319,9 +342,9 @@ export class TerrainStatsOverlay {
 
     for (const b of buttons) {
       if (b.t === tier) {
-        b.btn.style.border = '1px solid #E8A33D';
-        b.btn.style.background = 'rgba(232, 163, 61, 0.18)';
-        b.btn.style.color = '#E8A33D';
+        b.btn.style.border = '1px solid #4FB3A9';
+        b.btn.style.background = 'rgba(79, 179, 169, 0.25)';
+        b.btn.style.color = '#4FB3A9';
         b.btn.style.fontWeight = '600';
       } else {
         b.btn.style.border = '1px solid #2A333F';
@@ -331,10 +354,23 @@ export class TerrainStatsOverlay {
       }
     }
 
+    const budgetLabel = this.root.querySelector('#stat-budget-label');
+    if (budgetLabel) {
+      if (tier === 'low') budgetLabel.textContent = 'Budget: 120 DC | 150k Tris | DPR 0.75';
+      else if (tier === 'medium') budgetLabel.textContent = 'Budget: 250 DC | 400k Tris | DPR 1.0';
+      else if (tier === 'high') budgetLabel.textContent = 'Budget: 500 DC | 900k Tris | DPR 1.0';
+      else budgetLabel.textContent = 'Auto (Governor: DPR & Effects)';
+    }
+
     this.onQualityChange(tier);
   }
 
   public update(stats: OverlayStatsData): void {
+    // Governor status readout in HUD
+    if (this.governorValEl && stats.governorStatus) {
+      this.governorValEl.textContent = stats.governorStatus;
+    }
+
     // Active GPU Name in header
     if (this.gpuNameEl && stats.gpuName) {
       this.gpuNameEl.textContent = stats.gpuName;
@@ -364,11 +400,12 @@ export class TerrainStatsOverlay {
     }
 
     // Overall metrics & budgets
-    this.drawCallsValEl.textContent = `${stats.drawCalls} / 800`;
-    this.drawCallsValEl.style.color = stats.drawCalls <= 800 ? '#E8E4DA' : '#D9564A';
+    const tierBudget = stats.qualityTier === 'low' ? { dc: 120, tris: 150000 } : stats.qualityTier === 'medium' ? { dc: 250, tris: 400000 } : { dc: 500, tris: 900000 };
+    this.drawCallsValEl.textContent = `${stats.drawCalls} / ${tierBudget.dc}`;
+    this.drawCallsValEl.style.color = stats.drawCalls <= tierBudget.dc ? '#E8E4DA' : '#D9564A';
 
-    this.trisValEl.textContent = `${(stats.totalTriangles / 1000).toFixed(0)}k / 2M`;
-    this.trisValEl.style.color = stats.totalTriangles <= 2000000 ? '#E8E4DA' : '#D9564A';
+    this.trisValEl.textContent = `${(stats.totalTriangles / 1000).toFixed(0)}k / ${(tierBudget.tris / 1000).toFixed(0)}k`;
+    this.trisValEl.style.color = stats.totalTriangles <= tierBudget.tris ? '#E8E4DA' : '#D9564A';
 
     const visible = stats.visibleChunks || stats.terrainDrawCalls;
     this.chunksValEl.textContent = `${stats.activeChunks} RAM (${visible} vis)`;

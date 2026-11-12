@@ -21,24 +21,24 @@ export interface QualityConfig {
 
 export const QUALITY_PRESETS: Record<QualityTier, QualityConfig> = {
   low: {
-    drawDistance: 450,
-    lod0Distance: 96,
-    lod1Distance: 192,
-    shadowResolution: 1024,
+    drawDistance: 200,
+    lod0Distance: 56,
+    lod1Distance: 112,
+    shadowResolution: 512,
     maxChunksPerFrame: 3
   },
   medium: {
-    drawDistance: 850,
-    lod0Distance: 128,
-    lod1Distance: 280,
-    shadowResolution: 2048,
+    drawDistance: 440,
+    lod0Distance: 96,
+    lod1Distance: 200,
+    shadowResolution: 1024,
     maxChunksPerFrame: 5
   },
   high: {
-    drawDistance: 1400,
-    lod0Distance: 160,
-    lod1Distance: 380,
-    shadowResolution: 4096,
+    drawDistance: 820,
+    lod0Distance: 140,
+    lod1Distance: 320,
+    shadowResolution: 2048,
     maxChunksPerFrame: 8
   }
 };

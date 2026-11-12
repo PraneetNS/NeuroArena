@@ -25,7 +25,11 @@ export interface EnvironmentFeatures {
   lightShafts: boolean;
   grass: boolean;
   foliage: boolean;
+  trees: boolean;
+  rocks: boolean;
   water: boolean;
+  shadows: boolean;
+  particles: boolean;
   postProcessing: boolean;
 }
 
@@ -78,7 +82,11 @@ export class EnvironmentManager {
     lightShafts: true,
     grass: true,
     foliage: true,
+    trees: true,
+    rocks: true,
     water: true,
+    shadows: true,
+    particles: true,
     postProcessing: true
   };
 
@@ -196,6 +204,8 @@ export class EnvironmentManager {
     // 6. Update Foliage & Rocks
     if (this.features.foliage) {
       this.foliage.group.visible = true;
+      this.foliage.setTreesVisible(this.features.trees);
+      this.foliage.setRocksVisible(this.features.rocks);
       this.foliage.update(elapsedTime);
     } else {
       this.foliage.group.visible = false;
@@ -215,7 +225,15 @@ export class EnvironmentManager {
       this.water.group.visible = false;
     }
     // 8. Update Atmosphere Particles
-    this.particles.update(dt, timeState, this.camera.position);
+    if (this.features.particles) {
+      this.particles.group.visible = true;
+      this.particles.update(dt, timeState, this.camera.position);
+    } else {
+      this.particles.group.visible = false;
+    }
+
+    // Dynamic Shadows
+    this.sunLight.castShadow = this.features.shadows;
   }
 
   public render(): void {
@@ -231,6 +249,7 @@ export class EnvironmentManager {
     this.grass.setQuality(tier);
     this.foliage.setQuality(tier);
     this.fog.setQuality(tier);
+    this.water.setQuality(tier);
     this.particles.setQuality(tier);
     this.postProcessing.setQuality(tier);
   }

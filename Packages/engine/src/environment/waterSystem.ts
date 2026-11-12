@@ -40,14 +40,16 @@ export class WaterSystem {
   private uDeepColor = uniform(new THREE.Color(0x0c4a6e));    // Deep ocean sapphire
   private uFoamColor = uniform(new THREE.Color(0xffffff));
   private uCameraPos = uniform(new THREE.Vector3());
+  private size: number = 2000.0;
+  private currentSegments: number = 64;
 
   constructor(config?: Partial<WaterConfig>) {
     this.waterLevel = config?.waterLevel ?? 7.5;
     this.uWaterLevel.value = this.waterLevel;
-    const size = config?.size ?? 2000.0;
+    this.size = config?.size ?? 2000.0;
 
     // Water Plane Geometry (Subdivided plane for smooth depth interpolation)
-    const waterGeo = new THREE.PlaneGeometry(size, size, 64, 64);
+    const waterGeo = new THREE.PlaneGeometry(this.size, this.size, 64, 64);
     waterGeo.rotateX(-Math.PI / 2);
 
     const waterColorNode = Fn(() => {
@@ -96,9 +98,21 @@ export class WaterSystem {
     this.uWaterLevel.value = level;
   }
 
+  public setQuality(tier: 'low' | 'medium' | 'high'): void {
+    const segs = tier === 'low' ? 16 : tier === 'medium' ? 32 : 64;
+    if (segs === this.currentSegments) return;
+    this.currentSegments = segs;
+    if (this.mesh.geometry) {
+      this.mesh.geometry.dispose();
+    }
+    const newGeo = new THREE.PlaneGeometry(this.size, this.size, segs, segs);
+    newGeo.rotateX(-Math.PI / 2);
+    this.mesh.geometry = newGeo;
+  }
+
   public getStats(): { triangles: number; drawCalls: number } {
     return {
-      triangles: 64 * 64 * 2, // 8,192 triangles
+      triangles: this.currentSegments * this.currentSegments * 2,
       drawCalls: this.group.visible ? 1 : 0
     };
   }

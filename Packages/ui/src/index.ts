@@ -50,4 +50,7 @@ export * from './codex/CodexModal.js';
 // Observatory Mechanistic Instruments
 export * from './observatory/index.js';
 
+// Open-World In-Game Benchmark & Feature Cost Profiler
+export * from './benchmark/BenchmarkModal.js';
+
 

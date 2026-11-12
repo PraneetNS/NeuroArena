@@ -235,14 +235,14 @@ export class GrassSystem {
 
   public setQuality(tier: 'low' | 'medium' | 'high'): void {
     if (tier === 'low') {
-      this.currentBladeCount = 50000;
-      this.config.radius = 75.0;
+      this.currentBladeCount = 18000;
+      this.config.radius = 50.0;
     } else if (tier === 'medium') {
-      this.currentBladeCount = 120000;
-      this.config.radius = 95.0;
+      this.currentBladeCount = 45000;
+      this.config.radius = 75.0;
     } else {
-      this.currentBladeCount = 240000;
-      this.config.radius = 120.0;
+      this.currentBladeCount = 100000;
+      this.config.radius = 105.0;
     }
     this.scatterBlades(this.centerPosition);
   }
