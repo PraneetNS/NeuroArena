@@ -24,8 +24,10 @@ import {
   mix,
   dot,
   clamp,
-  screenUV
+  screenUV,
+  uniform
 } from 'three/tsl';
+import { TimeOfDayState } from './timeOfDay.js';
 
 export interface PostProcessingConfig {
   enableGTAO: boolean;
@@ -48,6 +50,11 @@ export class PostProcessingSystem {
   public postProcessing: THREE.PostProcessing | null = null;
   public config: PostProcessingConfig;
   public isSupported: boolean = true;
+
+  // Time of Day Color LUT Uniforms
+  private uGradeWarmTint = uniform(new THREE.Color(1.04, 1.01, 0.96));
+  private uGradeShadowCool = uniform(new THREE.Color(0.97, 0.98, 1.03));
+  private uGradeContrast = uniform(1.06);
 
   constructor(
     renderer: THREE.WebGPURenderer,
@@ -104,14 +111,12 @@ export class PostProcessingSystem {
           col = col.mul(aoMultiplier);
         }
 
-        // 3. Stylized Warm Color-Grading (Warm filmic contrast & golden hour lift)
+        // 3. Stylized Time of Day Color-Grading LUT (Dynamic key/shadow lift per hour)
         if (this.config.enableColorGrade) {
-          const contrast = float(1.06);
+          const contrast = this.uGradeContrast;
           const graded = col.sub(0.5).mul(contrast).add(0.5);
-          const warmTint = vec3(1.04, 1.01, 0.96);
-          const shadowCool = vec3(0.97, 0.98, 1.03);
           const lum = dot(col, vec3(0.299, 0.587, 0.114));
-          col = mix(shadowCool, warmTint, lum).mul(graded);
+          col = mix(this.uGradeShadowCool, this.uGradeWarmTint, lum).mul(graded);
         }
 
         // 4. Filmic Tone Mapping (ACES curve approximation)
@@ -129,11 +134,11 @@ export class PostProcessingSystem {
         if (this.config.enableVignette) {
           const vigDarkness = float(this.config.vignetteDarkness);
           const dist = length(screenUV.sub(vec2(0.5, 0.5)));
-          const vig = smoothstep(float(0.75), float(0.25), dist.mul(vigDarkness));
+          const vig = float(1.0).sub(smoothstep(float(0.25), float(0.75), dist).mul(vigDarkness));
           col = col.mul(vig);
         }
 
-        return vec4(col, scenePass.a);
+        return vec4(col, float(1.0));
       });
 
       this.postProcessing.outputNode = postNode();
@@ -143,6 +148,12 @@ export class PostProcessingSystem {
       this.isSupported = false;
       this.postProcessing = null;
     }
+  }
+
+  public updateTimeOfDayGrade(state: TimeOfDayState): void {
+    if (state.lutWarmTint) this.uGradeWarmTint.value.copy(state.lutWarmTint);
+    if (state.lutShadowCool) this.uGradeShadowCool.value.copy(state.lutShadowCool);
+    if (state.lutContrast !== undefined) this.uGradeContrast.value = state.lutContrast;
   }
 
   public render(): void {

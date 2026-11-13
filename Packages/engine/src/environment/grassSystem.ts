@@ -12,6 +12,7 @@ import * as THREE from 'three/webgpu';
 import {
   attribute,
   Fn,
+  vec3,
   vec4,
   float,
   mix,
@@ -29,10 +30,12 @@ export interface GrassConfig {
 
 export class GrassSystem {
   public mesh: THREE.InstancedMesh;
+  public flowerMesh: THREE.InstancedMesh;
   public group = new THREE.Group();
 
   private config: GrassConfig;
   private material: THREE.MeshBasicNodeMaterial;
+  private flowerMaterial: THREE.MeshLambertMaterial;
   private dummy = new THREE.Object3D();
 
   private uSunColor = uniform(new THREE.Color(0xfff3db));
@@ -42,6 +45,7 @@ export class GrassSystem {
   private influencers: THREE.Vector4[] = [];
   private maxBlades = 240000;
   private currentBladeCount = 240000;
+  private maxFlowers = 4000;
   private centerPosition = new THREE.Vector3(0, 0, 0);
 
   constructor(config?: Partial<GrassConfig>) {
@@ -91,19 +95,24 @@ export class GrassSystem {
     bladeGeo.setIndex(new THREE.BufferAttribute(indices, 1));
     bladeGeo.computeVertexNormals();
 
-    // 2. TSL Node Material for Painterly Grass
+    // 2. TSL Node Material for Painterly Grass (Base-to-Tip Color Gradient)
     const grassColorNode = Fn(() => {
       const vHeight = uv().y;
-      const ao = mix(float(0.38), float(1.0), vHeight);
+      // Stylized base-to-tip gradient: earthy dark forest emerald base to vibrant sunlit chartreuse tip
+      const baseGradient = vec3(0.25, 0.45, 0.22);
+      const tipGradient = vec3(1.15, 1.25, 0.92);
+      const verticalGradient = mix(baseGradient, tipGradient, vHeight);
+
+      const ao = mix(float(0.40), float(1.0), vHeight);
       const col = attribute('aColor', 'vec3');
-      const light = this.uAmbientColor.mul(0.4).add(this.uSunColor.mul(0.6));
-      return vec4(col.mul(ao).mul(light.rgb), float(1.0));
+      const light = this.uAmbientColor.mul(0.35).add(this.uSunColor.mul(0.65));
+      return vec4(col.mul(verticalGradient).mul(ao).mul(light), float(1.0));
     });
 
     this.material = new THREE.MeshBasicNodeMaterial({ side: THREE.DoubleSide });
     this.material.colorNode = grassColorNode();
 
-    // 3. InstancedMesh
+    // 3. InstancedMesh for Grass
     this.mesh = new THREE.InstancedMesh(bladeGeo, this.material, this.maxBlades);
     this.mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     this.mesh.frustumCulled = false;
@@ -111,8 +120,22 @@ export class GrassSystem {
     // Per-blade color attribute
     const colors = new Float32Array(this.maxBlades * 3);
     bladeGeo.setAttribute('aColor', new THREE.InstancedBufferAttribute(colors, 3));
-
     this.group.add(this.mesh);
+
+    // 4. Instanced Meadow Flowers & Clutter (Buttercups & Daisies)
+    const flowerGeo = new THREE.CylinderGeometry(0.18, 0.02, 0.38, 5);
+    flowerGeo.rotateX(0.2);
+    this.flowerMaterial = new THREE.MeshLambertMaterial({
+      vertexColors: true,
+      side: THREE.DoubleSide
+    });
+    this.flowerMesh = new THREE.InstancedMesh(flowerGeo, this.flowerMaterial, this.maxFlowers);
+    this.flowerMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    this.flowerMesh.frustumCulled = false;
+
+    const flowerColors = new Float32Array(this.maxFlowers * 3);
+    flowerGeo.setAttribute('aColor', new THREE.InstancedBufferAttribute(flowerColors, 3));
+    this.group.add(this.flowerMesh);
 
     // Initial scatter of grass blades
     this.scatterBlades(new THREE.Vector3(0, 0, 0));
@@ -200,6 +223,51 @@ export class GrassSystem {
     this.mesh.count = placed;
     this.mesh.instanceMatrix.needsUpdate = true;
     colorsAttr.needsUpdate = true;
+
+    // Scatter instanced flowers in meadows
+    const flowerColorsAttr = this.flowerMesh.geometry.getAttribute('aColor') as THREE.InstancedBufferAttribute;
+    const flColors = flowerColorsAttr.array as Float32Array;
+    const flowerPalettes = [
+      new THREE.Color(0xfacc15), // Golden buttercup
+      new THREE.Color(0xfffbeb), // White mountain daisy
+      new THREE.Color(0xc084fc), // Alpine lavender
+      new THREE.Color(0xf87171)  // Wild rose coral
+    ];
+
+    let flowersPlaced = 0;
+    const flowerRadius = radius * 0.75;
+    for (let f = 0; f < this.maxFlowers; f++) {
+      const r = Math.sqrt(Math.random()) * flowerRadius;
+      const theta = Math.random() * Math.PI * 2;
+      const x = center.x + r * Math.cos(theta);
+      const z = center.z + r * Math.sin(theta);
+      const h = getTerrainHeight(x, z);
+      const s = getTerrainSlope(x, z);
+
+      if (h >= 7.5 && h <= 45.0 && s < 0.22) {
+        this.dummy.position.set(x, h + 0.15, z);
+        this.dummy.scale.set(0.9 + Math.random() * 0.4, 0.9 + Math.random() * 0.4, 0.9 + Math.random() * 0.4);
+        this.dummy.rotation.set((Math.random() - 0.5) * 0.2, Math.random() * Math.PI * 2, (Math.random() - 0.5) * 0.2);
+        this.dummy.updateMatrix();
+        this.flowerMesh.setMatrixAt(flowersPlaced, this.dummy.matrix);
+
+        const flCol = flowerPalettes[flowersPlaced % flowerPalettes.length];
+        flColors[flowersPlaced * 3 + 0] = flCol.r;
+        flColors[flowersPlaced * 3 + 1] = flCol.g;
+        flColors[flowersPlaced * 3 + 2] = flCol.b;
+        flowersPlaced++;
+      }
+    }
+
+    for (let i = flowersPlaced; i < this.maxFlowers; i++) {
+      this.dummy.position.set(0, -9999, 0);
+      this.dummy.scale.set(0, 0, 0);
+      this.dummy.updateMatrix();
+      this.flowerMesh.setMatrixAt(i, this.dummy.matrix);
+    }
+    this.flowerMesh.count = flowersPlaced;
+    this.flowerMesh.instanceMatrix.needsUpdate = true;
+    flowerColorsAttr.needsUpdate = true;
   }
 
   public update(
@@ -248,10 +316,11 @@ export class GrassSystem {
   }
 
   public getStats(): { bladeCount: number; triangles: number; drawCalls: number } {
+    const flowerTris = (this.flowerMesh?.count || 0) * 8;
     return {
       bladeCount: this.mesh.count,
-      triangles: this.mesh.count * 2, // 2 triangles per blade
-      drawCalls: this.group.visible ? 1 : 0
+      triangles: this.mesh.count * 2 + flowerTris,
+      drawCalls: this.group.visible ? 2 : 0
     };
   }
 }

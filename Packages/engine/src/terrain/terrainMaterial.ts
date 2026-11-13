@@ -15,12 +15,14 @@ import {
   normalWorld,
   texture,
   triplanarTexture,
+  vec2,
   vec3,
   vec4,
   float,
   Fn,
   smoothstep,
-  mix
+  mix,
+  uniform
 } from 'three/tsl';
 
 
@@ -40,6 +42,11 @@ export interface TerrainTextures {
  */
 export function createTerrainMaterial(textures: TerrainTextures): THREE.MeshStandardNodeMaterial {
   const material = new THREE.MeshStandardNodeMaterial();
+
+  // Dynamic uniforms for drifting cloud shadows and player worn paths
+  const uTime = uniform(0.0);
+  const uPlayerTrailPos = uniform(new THREE.Vector3(0, 0, 0));
+  const uTrailFade = uniform(0.0);
 
   // Ensure wrapping is set to RepeatWrapping on all textures
   const allTextures = Object.values(textures);
@@ -124,15 +131,23 @@ export function createTerrainMaterial(textures: TerrainTextures): THREE.MeshStan
 
     // Shoreline wet-sand darkening (near water level 7.5m)
     const distWater = worldPos.y.sub(float(7.5)).abs();
-    const wetSand = smoothstep(float(1.8), float(0.0), distWater).mul(aSplats.x);
+    const wetSand = float(1.0).sub(smoothstep(float(0.0), float(1.8), distWater)).mul(aSplats.x);
     const wetFactor = mix(float(1.0), float(0.70), wetSand);
 
-    // Drifting cloud shadow modulation
-    const cloudWave1 = worldPos.x.mul(0.004).add(worldPos.z.mul(0.003)).sin();
-    const cloudWave2 = worldPos.x.mul(0.002).sub(worldPos.z.mul(0.005)).cos();
-    const cloudShadow = cloudWave1.add(cloudWave2).mul(0.12).add(0.88);
+    // Drifting cloud shadow modulation (procedural cloud velocity across terrain)
+    const cloudSpeed = uTime.mul(0.025);
+    const cloudWave1 = worldPos.x.mul(0.003).add(worldPos.z.mul(0.002)).add(cloudSpeed).sin();
+    const cloudWave2 = worldPos.x.mul(0.0015).sub(worldPos.z.mul(0.0035)).sub(cloudSpeed.mul(0.8)).cos();
+    const cloudShadow = cloudWave1.add(cloudWave2).mul(0.18).add(0.82);
 
-    const finalTerrain = painterlyColor.mul(biomeTint).mul(wetFactor).mul(cloudShadow);
+    // Player worn paths: compaction and dirt transition where the player walks
+    const playerXZ = vec2(uPlayerTrailPos.x, uPlayerTrailPos.z);
+    const worldXZ = vec2(worldPos.x, worldPos.z);
+    const distPlayer = worldXZ.sub(playerXZ).length();
+    const pathMask = float(1.0).sub(smoothstep(float(0.4), float(2.2), distPlayer)).mul(uTrailFade).mul(aSplats.y);
+    const pathTint = mix(vec3(1.0, 1.0, 1.0), vec3(0.68, 0.58, 0.48), pathMask);
+
+    const finalTerrain = painterlyColor.mul(biomeTint).mul(wetFactor).mul(cloudShadow).mul(pathTint);
 
     // Warm atmospheric sun-kissed boost
     return vec4(finalTerrain, 1.0);
@@ -175,7 +190,7 @@ export function createTerrainMaterial(textures: TerrainTextures): THREE.MeshStan
 
     // Wet sand is glossy / reflective
     const distWater = worldPos.y.sub(float(7.5)).abs();
-    const wetSand = smoothstep(float(1.8), float(0.0), distWater).mul(aSplats.x);
+    const wetSand = float(1.0).sub(smoothstep(float(0.0), float(1.8), distWater)).mul(aSplats.x);
     return mix(baseRoughness, float(0.28), wetSand);
   });
 
@@ -184,6 +199,17 @@ export function createTerrainMaterial(textures: TerrainTextures): THREE.MeshStan
 
   material.roughness = 0.8;
   material.metalness = 0.05;
+
+  material.userData.uTime = uTime;
+  material.userData.uPlayerTrailPos = uPlayerTrailPos;
+  material.userData.uTrailFade = uTrailFade;
+  material.userData.update = (time: number, playerPos?: THREE.Vector3) => {
+    uTime.value = time;
+    if (playerPos) {
+      uPlayerTrailPos.value.copy(playerPos);
+      uTrailFade.value = 1.0;
+    }
+  };
 
   return material;
 }

@@ -234,6 +234,11 @@ export class EnvironmentManager {
 
     // Dynamic Shadows
     this.sunLight.castShadow = this.features.shadows;
+
+    // Update Time of Day Color LUT Grading
+    if (this.features.postProcessing) {
+      this.postProcessing.updateTimeOfDayGrade(timeState);
+    }
   }
 
   public render(): void {

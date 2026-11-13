@@ -51,6 +51,7 @@ export class ChatTerminalModal {
 
     this.root = document.createElement('div');
     this.root.className = 'modal-overlay';
+    this.root.style.display = 'none';
     parent.appendChild(this.root);
 
     this.render();
@@ -63,6 +64,7 @@ export class ChatTerminalModal {
   public open(): void {
     this.isOpen = true;
     this.root.classList.add('active');
+    this.root.style.display = 'flex';
     this.render();
     setTimeout(() => this.inputEl?.focus(), 100);
   }
@@ -70,6 +72,7 @@ export class ChatTerminalModal {
   public close(): void {
     this.isOpen = false;
     this.root.classList.remove('active');
+    this.root.style.display = 'none';
   }
 
   public sendMessage(userText: string): void {

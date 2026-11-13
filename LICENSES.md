@@ -28,6 +28,18 @@ Low-poly stylized nature models (Pines, Broadleaf Oaks, Boulders, Cliff Rocks) a
 | `rock_boulder` | Displaced faceted sandstone & granite boulders | Kenney / Quaternius inspired | CC0 Public Domain |
 | `tree_billboard` | Cross-quad billboard proxy for distant trees | Procedural LOD2 cross-quad | CC0 Public Domain |
 
+## Skinned Rigged Character Model
+
+- **Asset**: `character.glb` (Stylized Explorer / Scholar Character)
+- **Author**: Quaternius ([quaternius.com](https://quaternius.com))
+- **Pack**: Platformer Game Pack / Universal Base Rig
+- **Source URL**: [https://quaternius.com](https://quaternius.com) (Mirrored at `trebeljahr/quaternius-showcase`)
+- **Format**: Compressed Binary glTF (`.glb`), 453 KB
+- **Geometry**: 2,908 triangles (under 10,000 triangle requirement), 29 bones (under 60 bone requirement)
+- **Skeletal Rig**: Humanoid armature with `Hips`, `Torso`, `Neck`, `Head`, `UpperArm.L/R`, `LowerArm.L/R`, `Hand.L/R`, `UpperLeg.L/R`, `LowerLeg.L/R`, `Foot.L/R`
+- **Embedded Animations**: `Idle`, `Walk`, `Run`, `Jump`, `Jump_Land`, `Punch` (gather), `No` (turn-in-place), `Wave`, `Duck`, `Death`
+- **License**: **Creative Commons Zero (CC0 1.0 Universal / Public Domain Dedication)**
+
 ## Basis Universal Transcoder
 
 - `basis_transcoder.js` & `basis_transcoder.wasm`

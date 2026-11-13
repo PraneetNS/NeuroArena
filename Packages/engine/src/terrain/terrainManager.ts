@@ -131,7 +131,11 @@ export class TerrainManager {
    * Main update loop called every frame with camera position.
    * Handles streaming chunks, LOD transitions, and culling.
    */
-  public update(cameraPosition: THREE.Vector3): void {
+  public update(cameraPosition: THREE.Vector3, time?: number, playerPosition?: THREE.Vector3): void {
+    if (time !== undefined && this.material.userData.update) {
+      this.material.userData.update(time, playerPosition);
+    }
+
     const cx = cameraPosition.x;
     const cz = cameraPosition.z;
 

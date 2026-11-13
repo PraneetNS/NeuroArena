@@ -44,7 +44,8 @@ import {
   LumenSubtitles,
   CodexModal,
   ObservatoryModal,
-  BenchmarkModal
+  BenchmarkModal,
+  CharacterDevModal
 } from '@na/ui';
 import '@na/ui/styles';
 import {
@@ -82,18 +83,18 @@ export const PHOTO_SPOTS: Record<string, PhotoSpotDef> = {
     id: 'meadow_golden_hour',
     name: 'Meadow at Golden Hour',
     timeHours: 17.8,
-    camPos: [32, 55, 52],
-    lookAt: [55, 85, 20],
-    playerPos: [42, 52, 35],
+    camPos: [32, 54, 52],
+    lookAt: [48, 48, 30],
+    playerPos: [42, 48, 35],
     description: 'Immersed in meadow flora with low warm sunlight and floating verse shards'
   },
   river_midday: {
     id: 'river_midday',
     name: 'River at Midday',
     timeHours: 12.0,
-    camPos: [-8, 72, -42],
-    lookAt: [35, 55, -85],
-    playerPos: [5, 68, -60],
+    camPos: [-8, 22, -42],
+    lookAt: [18, 11, -75],
+    playerPos: [8, 9, -60],
     description: 'Standing on the sandy shore looking across the crystal turquoise water and distant cliffs'
   },
   camp_dusk: {
@@ -101,8 +102,8 @@ export const PHOTO_SPOTS: Record<string, PhotoSpotDef> = {
     name: 'Camp at Dusk',
     timeHours: 19.5,
     camPos: [-18, 42, 25],
-    lookAt: [0, 52, 0],
-    playerPos: [-4, 39, 8],
+    lookAt: [-4, 38, 8],
+    playerPos: [-4, 38, 8],
     description: 'The scholar camp at twilight with glowing loss lantern, orrery, and indigo sky'
   },
   border_blue_hour: {
@@ -180,6 +181,10 @@ class NeuroArenaGame {
   private benchmarkHarness: BenchmarkHarness | null = null;
   private qualityGovernor: QualityGovernor | null = null;
   private activeTier: QualityTier = 'high';
+
+  private characterDevContainer: HTMLElement | null = null;
+  private characterDevRoot: ReactDOM.Root | null = null;
+  private isCharacterDevOpen = false;
 
   // The Camp State & Subsystems
   private campScene: CampScene | null = null;
@@ -331,8 +336,8 @@ class NeuroArenaGame {
     this.uiContainer.appendChild(this.codexContainer);
     this.codexRoot = ReactDOM.createRoot(this.codexContainer);
 
-    // Attach global debug commands in dev builds only
-    if (import.meta.env.DEV) {
+    // Attach global debug, benchmark, and photo spot APIs
+    if (typeof window !== 'undefined') {
       (window as any).fillVaultDebug = (count = 20) => {
         const added = this.vaultManager.fillRandomShards(count, this.shardWorld.worldState.shards);
         const stream = this.vaultManager.vaultToTokenStream(this.tokenizer);
@@ -360,12 +365,16 @@ class NeuroArenaGame {
         this.director.advanceToStep(stepId);
       };
       (window as any).__game = this;
+      (window as any).THREE = THREE;
       (window as any).__photoSpots = PHOTO_SPOTS;
       (window as any).__setPhotoSpot = (spotId: string, qualityTier?: QualityTier) => {
         return this.setPhotoSpot(spotId, qualityTier);
       };
       (window as any).__openUIScreen = (screenId: string) => {
         return this.openUIScreen(screenId);
+      };
+      (window as any).__openCharacterDev = () => {
+        return this.openCharacterDev();
       };
       (window as any).__getPhotoSpotStats = () => {
         return this.world.getFullStats();
@@ -385,6 +394,9 @@ class NeuroArenaGame {
     // Auto-open capability report if specified in URL (#capability or ?report)
     if (window.location.hash === '#capability' || window.location.search.includes('report')) {
       setTimeout(() => this.openReport(), 250);
+    }
+    if (window.location.hash.includes('character-dev')) {
+      setTimeout(() => this.openCharacterDev(), 250);
     }
 
     // 7. Asynchronously initialize WebGPURenderer & Load 2 km Terrain
@@ -599,6 +611,16 @@ class NeuroArenaGame {
           this.closeObservatory();
         } else {
           this.openObservatory();
+        }
+        return;
+      }
+
+      // Character Dev Studio toggle on KeyK
+      if (e.code === 'KeyK') {
+        if (this.isCharacterDevOpen) {
+          this.closeCharacterDev();
+        } else {
+          this.openCharacterDev();
         }
         return;
       }
@@ -933,6 +955,41 @@ class NeuroArenaGame {
     this.isBenchmarkOpen = false;
   }
 
+  public openCharacterDev(): void {
+    this.closeAllModals();
+    this.audio.playUIOpen();
+    this.isCharacterDevOpen = true;
+
+    if (!this.characterDevContainer) {
+      this.characterDevContainer = document.createElement('div');
+      this.characterDevContainer.id = 'app-character-dev-modal-container';
+      this.characterDevContainer.style.position = 'fixed';
+      this.characterDevContainer.style.inset = '0';
+      this.characterDevContainer.style.zIndex = '220';
+      this.uiContainer.appendChild(this.characterDevContainer);
+      this.characterDevRoot = ReactDOM.createRoot(this.characterDevContainer);
+    }
+
+    this.characterDevContainer.style.display = 'block';
+    this.characterDevRoot!.render(
+      React.createElement(CharacterDevModal, {
+        isOpen: true,
+        onClose: () => this.closeCharacterDev(),
+        player: this.player
+      })
+    );
+  }
+
+  public closeCharacterDev(): void {
+    if (this.isCharacterDevOpen) {
+      this.audio.playUIClose();
+    }
+    if (this.characterDevContainer) {
+      this.characterDevContainer.style.display = 'none';
+    }
+    this.isCharacterDevOpen = false;
+  }
+
   public enterCamp(runtime: RealRuntime, graph: any): void {
     this.closeWorkbench();
     this.closeAllModals();
@@ -1101,6 +1158,7 @@ class NeuroArenaGame {
     this.closeWorkbench();
     this.closeObservatory();
     this.closeBenchmark();
+    this.closeCharacterDev();
     this.capabilityModal.close();
     this.curatorModal.close();
     this.forgeModal.close();
@@ -1110,6 +1168,9 @@ class NeuroArenaGame {
     }
     if (this.isVaultOpen) {
       this.toggleVault(false);
+    }
+    if (this.isCodexOpen) {
+      this.toggleCodex(false);
     }
   }
 
@@ -1149,7 +1210,7 @@ class NeuroArenaGame {
 
     // Force chunk loading and environmental update
     if (this.world.terrain) {
-      this.world.terrain.update(this.world.camera.position);
+      this.world.terrain.update(this.world.camera.position, performance.now() * 0.001, this.player.position);
     }
     this.world.environment.update(0.016, performance.now() * 0.001, this.player.position);
     this.world.render();
@@ -1169,6 +1230,10 @@ class NeuroArenaGame {
       this.toggleCodex(true, 'attention');
     } else if (screenId === 'observatory') {
       this.openObservatory();
+    } else if (screenId === 'benchmark') {
+      this.openBenchmark();
+    } else if (screenId === 'character' || screenId === 'character-dev') {
+      this.openCharacterDev();
     }
   }
 
@@ -1315,7 +1380,8 @@ class NeuroArenaGame {
       this.isVaultOpen ||
       this.isCodexOpen ||
       this.isObservatoryOpen ||
-      this.isBenchmarkOpen;
+      this.isBenchmarkOpen ||
+      this.isCharacterDevOpen;
     if (!isModalOpen && !this.world.isFreeFly) {
       this.player.update(dt, this.world.cameraAngleY, groundFn);
     }

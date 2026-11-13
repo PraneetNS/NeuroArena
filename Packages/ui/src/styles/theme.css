@@ -211,3 +211,19 @@ body, html {
   outline: none;
   box-shadow: var(--na-focus-ring) !important;
 }
+
+/* Modal overlay default hidden state */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(8px);
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-overlay.active {
+  display: flex !important;
+}

@@ -32,6 +32,7 @@ export class DataCuratorModal {
 
     this.root = document.createElement('div');
     this.root.className = 'modal-overlay';
+    this.root.style.display = 'none';
     parent.appendChild(this.root);
 
     this.render();
@@ -51,12 +52,14 @@ export class DataCuratorModal {
   public open(): void {
     this.isOpen = true;
     this.root.classList.add('active');
+    this.root.style.display = 'flex';
     this.render();
   }
 
   public close(): void {
     this.isOpen = false;
     this.root.classList.remove('active');
+    this.root.style.display = 'none';
   }
 
   private render(): void {

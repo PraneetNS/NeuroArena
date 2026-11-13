@@ -80,6 +80,7 @@ export class World {
 
     // 1. Scene
     this.scene = new THREE.Scene();
+    this.scene.background = new THREE.Color(0x0e1116);
 
     // 2. Camera
     this.camera = new THREE.PerspectiveCamera(
@@ -95,9 +96,23 @@ export class World {
     const canvas = document.createElement('canvas');
     const origGetContext = canvas.getContext.bind(canvas);
     (canvas as any).getContext = function (contextId: string, contextAttributes?: any) {
+      if (contextId === 'webgpu') {
+        const ctx = origGetContext('webgpu', contextAttributes);
+        if (ctx && (ctx as any).configure) {
+          const origConfigure = (ctx as any).configure.bind(ctx);
+          (ctx as any).configure = function (config: any) {
+            config.alphaMode = 'opaque';
+            const copySrc = typeof GPUTextureUsage !== 'undefined' ? GPUTextureUsage.COPY_SRC : 1;
+            const renderAtt = typeof GPUTextureUsage !== 'undefined' ? GPUTextureUsage.RENDER_ATTACHMENT : 16;
+            config.usage = (config.usage || renderAtt) | copySrc;
+            return origConfigure(config);
+          };
+        }
+        return ctx;
+      }
       if (contextId === 'webgl2' || contextId === 'webgl' || contextId === 'experimental-webgl') {
         contextAttributes = Object.assign(
-          { powerPreference: targetPowerPreference, antialias: true },
+          { powerPreference: targetPowerPreference, antialias: true, alpha: false },
           contextAttributes
         );
       }
@@ -107,6 +122,7 @@ export class World {
     this.renderer = new THREE.WebGPURenderer({
       canvas,
       antialias: true,
+      alpha: false,
       powerPreference: targetPowerPreference
     });
     this.renderer.setSize(container.clientWidth, container.clientHeight);
@@ -115,6 +131,7 @@ export class World {
     this.renderer.toneMappingExposure = 1.15;
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.setClearColor(new THREE.Color(0x0e1116), 1.0);
 
     container.appendChild(this.renderer.domElement);
 
@@ -383,9 +400,9 @@ export class World {
     const pos = playerPos || this.camera.position;
     const elapsed = this.clock.getElapsedTime();
 
-    // 2. Update Streamed Terrain Chunks
+    // 2. Update Streamed Terrain Chunks (Drifting cloud shadows & player worn paths)
     if (this.terrain) {
-      this.terrain.update(this.camera.position);
+      this.terrain.update(this.camera.position, elapsed, pos);
     }
 
     // 3. Update Environment (Sky, Time of day, Grass, Foliage, Water, Fog)

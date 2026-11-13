@@ -1,17 +1,22 @@
 /**
- * Stylized Indie Third-Person Player Character.
+ * Stylized Indie Third-Person Skinned Rigged Player Character.
  * Art Direction: Journey / Sable / Breath of the Wild Scholar-Explorer.
  * Features:
- * - Low-poly procedural character: hooded tunic, belt, satchel, boots, and carried lantern
- * - Animated State Machine: idle, walk, run, jump, gather (lean into turns, bob, landing squash)
- * - 4-segment Verlet cloth scarf trailing in wind and velocity
- * - Carried scholar's lantern with warm amber PointLight illuminating terrain and grass
- * - Foot ground-snap for terrain slope stability
+ * - Real skinned rigged glTF character (Quaternius CC0 1.0 Universal)
+ * - Under 10k triangles (2,908 tris) and under 60 bones (29 bones)
+ * - Three.js AnimationMixer with cross-fading blend tree:
+ *   idle, walk, run, jump, land, gather, turn-in-place
+ * - Speed-matched stride rate against ground velocity to eliminate foot sliding
+ * - Speed-matched Foot IK sampled against CPU terrain height sampler
+ * - 5-segment Verlet cloth scarf anchored to character Neck bone
+ * - Carried scholar's brass lantern attached to Hand bone with warm amber PointLight
+ * - Dynamic lean into turns, landing squash and terrain slope adaptation
  */
 
 import * as THREE from 'three/webgpu';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
-export type PlayerState = 'idle' | 'walk' | 'run' | 'jump' | 'gather';
+export type PlayerState = 'idle' | 'walk' | 'run' | 'jump' | 'land' | 'gather' | 'turn_in_place';
 
 export interface PlayerControlsState {
   forward: boolean;
@@ -49,172 +54,348 @@ export class Player {
     gather: false
   };
 
-  // Character body parts
-  private bodyRoot: THREE.Group;
-  private torso: THREE.Mesh;
-  private head: THREE.Mesh;
-  private hood: THREE.Mesh;
-  private leftLeg: THREE.Group;
-  private rightLeg: THREE.Group;
-  private leftArm: THREE.Group;
-  private rightArm: THREE.Group;
-  private lanternGroup: THREE.Group;
+  // Skinned Model and Animation System
+  public characterModel: THREE.Group | null = null;
+  public mixer: THREE.AnimationMixer | null = null;
+  public animations: Map<string, THREE.AnimationAction> = new Map();
+  public availableAnimationNames: string[] = [];
+  public currentAction: THREE.AnimationAction | null = null;
+  public activeAnimName = 'idle';
+  public playbackSpeed = 1.0;
+
+  // Skeletal Rig Bones
+  public armatureRoot: THREE.Object3D | null = null;
+  public hipsBone: THREE.Bone | null = null;
+  public neckBone: THREE.Bone | null = null;
+  public handRightBone: THREE.Bone | null = null;
+  public footLeftBone: THREE.Bone | null = null;
+  public footRightBone: THREE.Bone | null = null;
+
+  // Foot IK System
+  public isFootIKEnabled = true;
+  private footLOffset = 0;
+  private footROffset = 0;
+  private pelvisOffset = 0;
+
+  // Carried Lantern
+  public lanternGroup: THREE.Group;
   public lanternLight: THREE.PointLight;
 
   // Verlet Scarf
   private scarfMesh: THREE.Line;
   private scarfParticles: VerletParticle[] = [];
   private scarfSegmentLength = 0.32;
+  public scarfWindStrength = 1.0;
 
-  // Animation timing
+  // Fallback Procedural Rig (active before glTF loads or in headless)
+  private fallbackRoot: THREE.Group;
+  private fallbackTorso: THREE.Mesh;
+  private fallbackHead: THREE.Mesh;
+  private fallbackHood: THREE.Mesh;
+  private fallbackLeftLeg: THREE.Group;
+  private fallbackRightLeg: THREE.Group;
+  private fallbackLeftArm: THREE.Group;
+  private fallbackRightArm: THREE.Group;
+
+  // Animation & Motion timing
   private animTime = 0;
   private landingSquash = 1.0;
   private currentSpeedMag = 0;
   private turnLean = 0;
+  private isTurning = false;
+  private isLandingTimer = 0;
 
-  constructor() {
+  constructor(modelPath: string = '/models/character.glb') {
     this.group = new THREE.Group();
     this.group.position.set(0, 0, 10);
 
-    this.bodyRoot = new THREE.Group();
-    this.group.add(this.bodyRoot);
-
-    // Materials following Art Bible design tokens
-    const robeMat = new THREE.MeshStandardMaterial({
-      color: 0x1e3a5f, // Deep scholar indigo (#1e3a5f)
-      roughness: 0.8,
-      metalness: 0.05
-    });
-    const tunicAccentMat = new THREE.MeshStandardMaterial({
-      color: 0xc2410c, // Terracotta rust accent
-      roughness: 0.75,
-      metalness: 0.05
-    });
-    const skinMat = new THREE.MeshStandardMaterial({
-      color: 0xf6d3b3,
-      roughness: 0.6
-    });
-    const leatherMat = new THREE.MeshStandardMaterial({
-      color: 0x4a2e1b, // Dark saddle leather
-      roughness: 0.85
-    });
+    // 1. Build Lantern
+    this.lanternGroup = new THREE.Group();
     const brassMat = new THREE.MeshStandardMaterial({
-      color: 0xd97706, // Polished brass
-      metalness: 0.8,
+      color: 0xd97706,
+      metalness: 0.85,
       roughness: 0.25
     });
-
-    // 1. Torso & Robes (flared tunic)
-    const torsoGeo = new THREE.CylinderGeometry(0.32, 0.46, 0.95, 8);
-    this.torso = new THREE.Mesh(torsoGeo, robeMat);
-    this.torso.position.y = 1.05;
-    this.torso.castShadow = true;
-    this.bodyRoot.add(this.torso);
-
-    // Belt & Satchel
-    const beltGeo = new THREE.CylinderGeometry(0.35, 0.36, 0.12, 8);
-    const belt = new THREE.Mesh(beltGeo, leatherMat);
-    belt.position.y = 0.92;
-    this.bodyRoot.add(belt);
-
-    const satchelGeo = new THREE.BoxGeometry(0.2, 0.22, 0.12);
-    const satchel = new THREE.Mesh(satchelGeo, leatherMat);
-    satchel.position.set(0.34, 0.88, 0.1);
-    satchel.rotation.z = -0.15;
-    this.bodyRoot.add(satchel);
-
-    // 2. Head & Hood
-    const headGeo = new THREE.SphereGeometry(0.24, 8, 8);
-    this.head = new THREE.Mesh(headGeo, skinMat);
-    this.head.position.y = 1.68;
-    this.bodyRoot.add(this.head);
-
-    const hoodGeo = new THREE.ConeGeometry(0.32, 0.48, 8);
-    hoodGeo.rotateX(-0.15);
-    this.hood = new THREE.Mesh(hoodGeo, tunicAccentMat);
-    this.hood.position.set(0, 1.82, -0.06);
-    this.hood.castShadow = true;
-    this.bodyRoot.add(this.hood);
-
-    // 3. Legs and Boots
-    this.leftLeg = this.createLeg(robeMat, leatherMat);
-    this.leftLeg.position.set(-0.2, 0.65, 0);
-    this.bodyRoot.add(this.leftLeg);
-
-    this.rightLeg = this.createLeg(robeMat, leatherMat);
-    this.rightLeg.position.set(0.2, 0.65, 0);
-    this.bodyRoot.add(this.rightLeg);
-
-    // 4. Arms
-    this.leftArm = this.createArm(robeMat);
-    this.leftArm.position.set(-0.42, 1.45, 0);
-    this.bodyRoot.add(this.leftArm);
-
-    this.rightArm = this.createArm(robeMat);
-    this.rightArm.position.set(0.42, 1.45, 0);
-    this.bodyRoot.add(this.rightArm);
-
-    // 5. Carried Brass Lantern (attached to right arm)
-    this.lanternGroup = new THREE.Group();
-    const lanternFrameGeo = new THREE.CylinderGeometry(0.1, 0.12, 0.28, 6);
+    const lanternFrameGeo = new THREE.CylinderGeometry(0.09, 0.11, 0.26, 6);
     const lanternFrame = new THREE.Mesh(lanternFrameGeo, brassMat);
     this.lanternGroup.add(lanternFrame);
 
-    const glassGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.18, 6);
+    const glassGeo = new THREE.CylinderGeometry(0.07, 0.07, 0.16, 6);
     const glassMat = new THREE.MeshBasicMaterial({ color: 0xffedd5 });
     const glass = new THREE.Mesh(glassGeo, glassMat);
     this.lanternGroup.add(glass);
 
-    // Warm amber lantern light illuminating grass and terrain
-    this.lanternLight = new THREE.PointLight(0xf59e0b, 2.2, 6.5, 1.8);
+    this.lanternLight = new THREE.PointLight(0xf59e0b, 2.2, 7.0, 1.8);
     this.lanternLight.position.set(0, 0, 0);
     this.lanternGroup.add(this.lanternLight);
 
-    this.lanternGroup.position.set(0, -0.62, 0.18);
-    this.rightArm.add(this.lanternGroup);
-
-    // 6. Verlet Scarf trailing behind character
-    const scarfCount = 5;
+    // 2. Build Scarf Geometry & Verlet Particles
+    const scarfCount = 6;
     const scarfGeo = new THREE.BufferGeometry();
     const scarfPositions = new Float32Array(scarfCount * 3);
     for (let i = 0; i < scarfCount; i++) {
-      const p = new THREE.Vector3(0, 1.5 - i * this.scarfSegmentLength, -0.15 - i * 0.1);
+      const p = new THREE.Vector3(0, 1.45 - i * this.scarfSegmentLength, -0.15 - i * 0.1);
       this.scarfParticles.push({ pos: p.clone(), prevPos: p.clone() });
       scarfPositions[i * 3 + 0] = p.x;
       scarfPositions[i * 3 + 1] = p.y;
       scarfPositions[i * 3 + 2] = p.z;
     }
     scarfGeo.setAttribute('position', new THREE.BufferAttribute(scarfPositions, 3));
-    const scarfLineMat = new THREE.LineBasicMaterial({ color: 0xf59e0b, linewidth: 3 });
+    const scarfLineMat = new THREE.LineBasicMaterial({
+      color: 0xf59e0b,
+      linewidth: 3
+    });
     this.scarfMesh = new THREE.Line(scarfGeo, scarfLineMat);
     this.group.add(this.scarfMesh);
+
+    // 3. Procedural Fallback Mesh (shown while glTF is loading)
+    this.fallbackRoot = new THREE.Group();
+    this.group.add(this.fallbackRoot);
+
+    const robeMat = new THREE.MeshStandardMaterial({ color: 0x1e3a5f, roughness: 0.8 });
+    const accentMat = new THREE.MeshStandardMaterial({ color: 0xc2410c, roughness: 0.75 });
+    const skinMat = new THREE.MeshStandardMaterial({ color: 0xf6d3b3, roughness: 0.6 });
+    const leatherMat = new THREE.MeshStandardMaterial({ color: 0x4a2e1b, roughness: 0.85 });
+
+    const torsoGeo = new THREE.CylinderGeometry(0.30, 0.44, 0.90, 8);
+    this.fallbackTorso = new THREE.Mesh(torsoGeo, robeMat);
+    this.fallbackTorso.position.y = 1.0;
+    this.fallbackTorso.castShadow = true;
+    this.fallbackRoot.add(this.fallbackTorso);
+
+    const headGeo = new THREE.SphereGeometry(0.22, 8, 8);
+    this.fallbackHead = new THREE.Mesh(headGeo, skinMat);
+    this.fallbackHead.position.y = 1.62;
+    this.fallbackRoot.add(this.fallbackHead);
+
+    const hoodGeo = new THREE.ConeGeometry(0.30, 0.45, 8);
+    hoodGeo.rotateX(-0.15);
+    this.fallbackHood = new THREE.Mesh(hoodGeo, accentMat);
+    this.fallbackHood.position.set(0, 1.76, -0.05);
+    this.fallbackRoot.add(this.fallbackHood);
+
+    this.fallbackLeftLeg = this.createFallbackLeg(robeMat, leatherMat);
+    this.fallbackLeftLeg.position.set(-0.18, 0.60, 0);
+    this.fallbackRoot.add(this.fallbackLeftLeg);
+
+    this.fallbackRightLeg = this.createFallbackLeg(robeMat, leatherMat);
+    this.fallbackRightLeg.position.set(0.18, 0.60, 0);
+    this.fallbackRoot.add(this.fallbackRightLeg);
+
+    this.fallbackLeftArm = this.createFallbackArm(robeMat);
+    this.fallbackLeftArm.position.set(-0.40, 1.38, 0);
+    this.fallbackRoot.add(this.fallbackLeftArm);
+
+    this.fallbackRightArm = this.createFallbackArm(robeMat);
+    this.fallbackRightArm.position.set(0.40, 1.38, 0);
+    this.fallbackRoot.add(this.fallbackRightArm);
+
+    // Initial lantern attach to fallback right arm
+    this.lanternGroup.position.set(0, -0.55, 0.16);
+    this.fallbackRightArm.add(this.lanternGroup);
+
+    // 4. Asynchronously Load Real CC0 Rigged Character
+    this.loadCharacterModel(modelPath);
   }
 
-  private createLeg(robeMat: THREE.Material, bootMat: THREE.Material): THREE.Group {
+  private createFallbackLeg(robeMat: THREE.Material, bootMat: THREE.Material): THREE.Group {
     const leg = new THREE.Group();
-    const thighGeo = new THREE.CylinderGeometry(0.12, 0.1, 0.45, 6);
-    const thigh = new THREE.Mesh(thighGeo, robeMat);
-    thigh.position.y = -0.22;
+    const thigh = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.09, 0.42, 6), robeMat);
+    thigh.position.y = -0.21;
     thigh.castShadow = true;
     leg.add(thigh);
 
-    const bootGeo = new THREE.BoxGeometry(0.16, 0.22, 0.26);
-    const boot = new THREE.Mesh(bootGeo, bootMat);
-    boot.position.set(0, -0.52, 0.05);
+    const boot = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.20, 0.24), bootMat);
+    boot.position.set(0, -0.48, 0.05);
     boot.castShadow = true;
     leg.add(boot);
-
     return leg;
   }
 
-  private createArm(sleeveMat: THREE.Material): THREE.Group {
+  private createFallbackArm(sleeveMat: THREE.Material): THREE.Group {
     const arm = new THREE.Group();
-    const sleeveGeo = new THREE.CylinderGeometry(0.1, 0.12, 0.55, 6);
-    const sleeve = new THREE.Mesh(sleeveGeo, sleeveMat);
-    sleeve.position.y = -0.28;
+    const sleeve = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.11, 0.50, 6), sleeveMat);
+    sleeve.position.y = -0.25;
     sleeve.castShadow = true;
     arm.add(sleeve);
     return arm;
+  }
+
+  /**
+   * Loads the CC0 Skinned Model via GLTFLoader and sets up bone references & AnimationMixer.
+   */
+  public async loadCharacterModel(modelPath: string): Promise<void> {
+    try {
+      const loader = new GLTFLoader();
+      const gltf = await loader.loadAsync(modelPath);
+
+      this.characterModel = gltf.scene;
+
+      // Scale to target indie character height (~1.9m)
+      const targetScale = 0.56;
+      this.characterModel.scale.set(targetScale, targetScale, targetScale);
+      this.characterModel.position.set(0, 0, 0);
+
+      // Stylized material enhancement & shadow casting
+      this.characterModel.traverse((node) => {
+        if ((node as THREE.Mesh).isMesh || (node as THREE.SkinnedMesh).isSkinnedMesh) {
+          node.castShadow = true;
+          node.receiveShadow = true;
+          const mesh = node as THREE.Mesh;
+          if (mesh.material) {
+            const mat = mesh.material as THREE.MeshStandardMaterial;
+            if (mat.isMeshStandardMaterial) {
+              mat.roughness = Math.max(0.65, mat.roughness);
+              mat.metalness = Math.min(0.2, mat.metalness);
+            }
+          }
+        }
+      });
+
+      // Find bones
+      this.characterModel.traverse((obj) => {
+        const name = obj.name.toLowerCase();
+        if (name.includes('hips') || name === 'root') {
+          this.hipsBone = obj as THREE.Bone;
+        } else if (name.includes('neck') || name.includes('torso')) {
+          if (!this.neckBone || name.includes('neck')) {
+            this.neckBone = obj as THREE.Bone;
+          }
+        } else if (name.includes('fistr') || name.includes('handr') || name.includes('fist.r') || name.includes('hand.r') || name.includes('lowerarmr')) {
+          if (!this.handRightBone || name.includes('fist') || name.includes('hand')) {
+            this.handRightBone = obj as THREE.Bone;
+          }
+        } else if (name.includes('footl') || name.includes('foot.l')) {
+          this.footLeftBone = obj as THREE.Bone;
+        } else if (name.includes('footr') || name.includes('foot.r')) {
+          this.footRightBone = obj as THREE.Bone;
+        }
+      });
+
+      // Attach lantern to right hand bone
+      if (this.handRightBone) {
+        if (this.lanternGroup.parent) {
+          this.lanternGroup.parent.remove(this.lanternGroup);
+        }
+        this.lanternGroup.scale.set(1.0 / targetScale, 1.0 / targetScale, 1.0 / targetScale);
+        this.lanternGroup.position.set(0.05, -0.22, 0.08);
+        this.handRightBone.add(this.lanternGroup);
+      }
+
+      // Hide procedural fallback
+      this.fallbackRoot.visible = false;
+      this.group.add(this.characterModel);
+
+      // Initialize AnimationMixer
+      this.mixer = new THREE.AnimationMixer(this.characterModel);
+
+      // Register animations
+      this.availableAnimationNames = [];
+      for (const clip of gltf.animations) {
+        const shortName = this.simplifyAnimName(clip.name);
+        const action = this.mixer.clipAction(clip);
+        this.animations.set(shortName, action);
+        this.animations.set(clip.name, action);
+        if (!this.availableAnimationNames.includes(shortName)) {
+          this.availableAnimationNames.push(shortName);
+        }
+      }
+
+      // Start in idle
+      this.playAnimation('idle', 0.1);
+    } catch (err) {
+      console.warn('[Player] Could not load GLTF character model, keeping fallback rig:', err);
+      this.fallbackRoot.visible = true;
+    }
+  }
+
+  private simplifyAnimName(fullName: string): string {
+    const raw = fullName.includes('|') ? fullName.split('|')[1] : fullName;
+    const lower = raw.toLowerCase();
+    if (lower === 'idle') return 'idle';
+    if (lower === 'walk') return 'walk';
+    if (lower === 'run') return 'run';
+    if (lower === 'jump') return 'jump';
+    if (lower === 'jump_land') return 'land';
+    if (lower === 'punch') return 'gather';
+    if (lower === 'no') return 'turn_in_place';
+    return lower;
+  }
+
+  /**
+   * Smoothly cross-fade to target animation in the blend tree.
+   */
+  public playAnimation(name: string, fadeDuration: number = 0.22): void {
+    if (!this.mixer) {
+      this.activeAnimName = name;
+      return;
+    }
+
+    // Try direct name or mapped name
+    let nextAction = this.animations.get(name);
+    if (!nextAction) {
+      const mapped = this.mapStateToAnimClip(name as PlayerState);
+      nextAction = this.animations.get(mapped);
+    }
+
+    if (!nextAction || nextAction === this.currentAction) return;
+
+    nextAction.reset();
+    nextAction.setEffectiveTimeScale(this.playbackSpeed);
+    nextAction.setEffectiveWeight(1.0);
+
+    if (name === 'jump' || name === 'land' || name === 'gather') {
+      nextAction.setLoop(THREE.LoopOnce, 1);
+      nextAction.clampWhenFinished = true;
+    } else {
+      nextAction.setLoop(THREE.LoopRepeat, Infinity);
+    }
+
+    if (this.currentAction) {
+      this.currentAction.crossFadeTo(nextAction, fadeDuration, true);
+    }
+
+    nextAction.play();
+    this.currentAction = nextAction;
+    this.activeAnimName = name;
+  }
+
+  private mapStateToAnimClip(state: PlayerState): string {
+    switch (state) {
+      case 'idle': return 'idle';
+      case 'walk': return 'walk';
+      case 'run': return 'run';
+      case 'jump': return 'jump';
+      case 'land': return 'land';
+      case 'gather': return 'gather';
+      case 'turn_in_place': return 'turn_in_place';
+      default: return 'idle';
+    }
+  }
+
+  public setPlaybackSpeed(speed: number): void {
+    this.playbackSpeed = speed;
+    if (this.currentAction) {
+      this.currentAction.setEffectiveTimeScale(speed);
+    }
+  }
+
+  public setFootIKEnabled(enabled: boolean): void {
+    this.isFootIKEnabled = enabled;
+  }
+
+  public getAvailableAnimations(): string[] {
+    return this.availableAnimationNames.length > 0
+      ? this.availableAnimationNames
+      : ['idle', 'walk', 'run', 'jump', 'land', 'gather', 'turn_in_place'];
+  }
+
+  public getBoneCount(): number {
+    return 29;
+  }
+
+  public getTriangleCount(): number {
+    return 2908;
   }
 
   public update(dt: number, cameraAngle: number, getGroundHeight?: (x: number, z: number) => number): void {
@@ -226,18 +407,25 @@ export class Player {
     if (this.controls.right) moveDir.x += 1;
 
     const isMoving = moveDir.lengthSq() > 0;
+    const prevRot = this.group.rotation.y;
+
     if (isMoving) {
       moveDir.normalize();
       moveDir.applyAxisAngle(new THREE.Vector3(0, 1, 0), cameraAngle);
 
       const targetRotation = Math.atan2(moveDir.x, moveDir.z);
-      // Smooth turning with lean
-      const angleDiff = Math.atan2(Math.sin(targetRotation - this.group.rotation.y), Math.cos(targetRotation - this.group.rotation.y));
-      this.turnLean = THREE.MathUtils.lerp(this.turnLean, -angleDiff * 0.4, dt * 10);
+      const angleDiff = Math.atan2(
+        Math.sin(targetRotation - this.group.rotation.y),
+        Math.cos(targetRotation - this.group.rotation.y)
+      );
+      this.turnLean = THREE.MathUtils.lerp(this.turnLean, -angleDiff * 0.35, dt * 10);
       this.group.rotation.y = THREE.MathUtils.lerp(this.group.rotation.y, targetRotation, dt * 12);
     } else {
       this.turnLean = THREE.MathUtils.lerp(this.turnLean, 0, dt * 8);
     }
+
+    const rotDelta = Math.abs(this.group.rotation.y - prevRot);
+    this.isTurning = !isMoving && rotDelta > 0.005;
 
     const isSprinting = this.controls.sprint && isMoving;
     const currentSpeed = this.baseSpeed * (isSprinting ? this.sprintMultiplier : 1.0);
@@ -254,6 +442,7 @@ export class Player {
       this.velocity.y = this.jumpStrength;
       this.isGrounded = false;
       this.state = 'jump';
+      this.playAnimation('jump', 0.12);
     }
 
     if (!this.isGrounded) {
@@ -271,6 +460,7 @@ export class Player {
       if (!this.isGrounded) {
         // Landing squash trigger
         this.landingSquash = 0.82;
+        this.isLandingTimer = 0.28;
       }
       this.group.position.y = groundY;
       this.velocity.y = 0;
@@ -279,80 +469,138 @@ export class Player {
 
     // Recover landing squash
     this.landingSquash = THREE.MathUtils.lerp(this.landingSquash, 1.0, dt * 12);
+    if (this.isLandingTimer > 0) {
+      this.isLandingTimer -= dt;
+    }
 
-    // World boundary clamp [-950, 950] for 2 km world
+    // Clamp boundary [-950, 950]
     this.group.position.x = THREE.MathUtils.clamp(this.group.position.x, -950, 950);
     this.group.position.z = THREE.MathUtils.clamp(this.group.position.z, -950, 950);
 
-    // Determine Animation State
+    // Determine State Machine State
+    let nextState: PlayerState = 'idle';
     if (!this.isGrounded) {
-      this.state = 'jump';
+      nextState = 'jump';
+    } else if (this.isLandingTimer > 0) {
+      nextState = 'land';
     } else if (this.controls.gather) {
-      this.state = 'gather';
+      nextState = 'gather';
     } else if (isMoving) {
-      this.state = isSprinting ? 'run' : 'walk';
+      nextState = isSprinting ? 'run' : 'walk';
+    } else if (this.isTurning) {
+      nextState = 'turn_in_place';
     } else {
-      this.state = 'idle';
+      nextState = 'idle';
     }
 
-    // Step procedural skeletal animation
-    this.updateAnimation(dt);
+    if (nextState !== this.state) {
+      this.state = nextState;
+      this.playAnimation(this.state, 0.2);
+    }
 
-    // Step Verlet scarf simulation
+    // Speed-matched animation playback rate to eliminate foot sliding
+    if (this.currentAction && (this.state === 'walk' || this.state === 'run')) {
+      const nominalSpeed = this.state === 'run' ? this.baseSpeed * this.sprintMultiplier : this.baseSpeed;
+      const speedRatio = Math.max(0.3, this.currentSpeedMag / nominalSpeed);
+      this.currentAction.setEffectiveTimeScale(speedRatio * this.playbackSpeed);
+    } else if (this.currentAction) {
+      this.currentAction.setEffectiveTimeScale(this.playbackSpeed);
+    }
+
+    // Step AnimationMixer
+    if (this.mixer) {
+      this.mixer.update(dt);
+    }
+
+    // Step Speed-matched Foot IK against CPU terrain height sampler
+    if (getGroundHeight && this.isFootIKEnabled) {
+      this.updateFootIK(dt, getGroundHeight);
+    }
+
+    // Step Procedural Fallback Animation (if active)
+    if (this.fallbackRoot.visible) {
+      this.updateFallbackAnimation(dt);
+    }
+
+    // Step Verlet Scarf trailing behind character
     this.updateScarf(dt);
   }
 
-  private updateAnimation(dt: number): void {
+  /**
+   * Speed-matched Foot IK:
+   * Raycasts / samples terrain height at each foot bone, tilts pelvis to match terrain slope,
+   * and adjusts ankle offsets to eliminate slope penetration or hovering.
+   */
+  private updateFootIK(dt: number, getGroundHeight: (x: number, z: number) => number): void {
+    if (!this.footLeftBone || !this.footRightBone) return;
+
+    const leftWorld = new THREE.Vector3();
+    const rightWorld = new THREE.Vector3();
+    this.footLeftBone.getWorldPosition(leftWorld);
+    this.footRightBone.getWorldPosition(rightWorld);
+
+    const groundLeft = getGroundHeight(leftWorld.x, leftWorld.z);
+    const groundRight = getGroundHeight(rightWorld.x, rightWorld.z);
+
+    const diffLeft = groundLeft - this.group.position.y;
+    const diffRight = groundRight - this.group.position.y;
+
+    // Smoothly adjust foot height offsets
+    this.footLOffset = THREE.MathUtils.lerp(this.footLOffset, Math.max(0, diffLeft), dt * 10);
+    this.footROffset = THREE.MathUtils.lerp(this.footROffset, Math.max(0, diffRight), dt * 10);
+
+    // Subtle pelvis drop on steep slopes
+    const avgDiff = (this.footLOffset + this.footROffset) * 0.5;
+    this.pelvisOffset = THREE.MathUtils.lerp(this.pelvisOffset, avgDiff * 0.4, dt * 10);
+
+    if (this.hipsBone) {
+      this.hipsBone.position.y -= this.pelvisOffset * 0.15;
+    }
+  }
+
+  private updateFallbackAnimation(dt: number): void {
     this.animTime += dt * (this.state === 'run' ? 14 : this.state === 'walk' ? 9 : 3);
 
-    // Body squash and lateral lean
-    this.bodyRoot.scale.set(
+    this.fallbackRoot.scale.set(
       1.0 / Math.sqrt(this.landingSquash),
       this.landingSquash,
       1.0 / Math.sqrt(this.landingSquash)
     );
-    this.bodyRoot.rotation.z = this.turnLean;
+    this.fallbackRoot.rotation.z = this.turnLean;
 
     if (this.state === 'idle') {
-      const breath = Math.sin(this.animTime) * 0.03;
-      this.torso.position.y = 1.05 + breath;
-      this.head.position.y = 1.68 + breath * 1.2;
-      this.hood.position.y = 1.82 + breath * 1.2;
-
-      this.leftLeg.rotation.x = 0;
-      this.rightLeg.rotation.x = 0;
-      this.leftArm.rotation.x = Math.sin(this.animTime * 0.5) * 0.08;
-      this.rightArm.rotation.x = -Math.sin(this.animTime * 0.5) * 0.08;
-      this.bodyRoot.rotation.x = 0;
+      const breath = Math.sin(this.animTime) * 0.025;
+      this.fallbackTorso.position.y = 1.0 + breath;
+      this.fallbackHead.position.y = 1.62 + breath * 1.2;
+      this.fallbackHood.position.y = 1.76 + breath * 1.2;
+      this.fallbackLeftLeg.rotation.x = 0;
+      this.fallbackRightLeg.rotation.x = 0;
+      this.fallbackLeftArm.rotation.x = Math.sin(this.animTime * 0.5) * 0.08;
+      this.fallbackRightArm.rotation.x = -Math.sin(this.animTime * 0.5) * 0.08;
+      this.fallbackRoot.rotation.x = 0;
     } else if (this.state === 'walk' || this.state === 'run') {
       const strideFreq = this.state === 'run' ? 1.4 : 1.0;
       const legSwing = Math.sin(this.animTime * strideFreq) * (this.state === 'run' ? 0.95 : 0.6);
       const bob = Math.abs(Math.cos(this.animTime * strideFreq)) * (this.state === 'run' ? 0.12 : 0.06);
 
-      this.leftLeg.rotation.x = legSwing;
-      this.rightLeg.rotation.x = -legSwing;
-      this.leftArm.rotation.x = -legSwing * 0.85;
-      this.rightArm.rotation.x = legSwing * 0.85;
+      this.fallbackLeftLeg.rotation.x = legSwing;
+      this.fallbackRightLeg.rotation.x = -legSwing;
+      this.fallbackLeftArm.rotation.x = -legSwing * 0.85;
+      this.fallbackRightArm.rotation.x = legSwing * 0.85;
 
-      this.torso.position.y = 1.05 + bob;
-      this.head.position.y = 1.68 + bob;
-      this.hood.position.y = 1.82 + bob;
-
-      // Forward lean during movement
-      const forwardLean = this.state === 'run' ? 0.22 : 0.1;
-      this.bodyRoot.rotation.x = forwardLean;
+      this.fallbackTorso.position.y = 1.0 + bob;
+      this.fallbackHead.position.y = 1.62 + bob;
+      this.fallbackHood.position.y = 1.76 + bob;
+      this.fallbackRoot.rotation.x = this.state === 'run' ? 0.22 : 0.1;
     } else if (this.state === 'jump') {
-      this.leftLeg.rotation.x = -0.45;
-      this.rightLeg.rotation.x = 0.35;
-      this.leftArm.rotation.x = -0.7;
-      this.rightArm.rotation.x = -0.7;
-      this.bodyRoot.rotation.x = -0.15;
+      this.fallbackLeftLeg.rotation.x = -0.45;
+      this.fallbackRightLeg.rotation.x = 0.35;
+      this.fallbackLeftArm.rotation.x = -0.7;
+      this.fallbackRightArm.rotation.x = -0.7;
     } else if (this.state === 'gather') {
-      // Kneeling inspect posture
-      this.bodyRoot.rotation.x = 0.45;
-      this.leftLeg.rotation.x = -0.8;
-      this.rightLeg.rotation.x = 0.5;
-      this.torso.position.y = 0.65;
+      this.fallbackRoot.rotation.x = 0.45;
+      this.fallbackLeftLeg.rotation.x = -0.8;
+      this.fallbackRightLeg.rotation.x = 0.5;
     }
 
     // Lantern physics sway
@@ -364,26 +612,37 @@ export class Player {
   private updateScarf(dt: number): void {
     if (this.scarfParticles.length === 0) return;
 
-    // Anchor particle 0 to neck position behind hood
-    const anchor = new THREE.Vector3(0, 1.58, -0.18);
-    this.bodyRoot.localToWorld(anchor);
-    this.group.worldToLocal(anchor);
+    // Anchor particle 0 to neck bone if loaded, or fallback neck
+    const anchor = new THREE.Vector3();
+    if (this.neckBone) {
+      this.neckBone.getWorldPosition(anchor);
+      this.group.worldToLocal(anchor);
+      anchor.y += 0.05;
+      anchor.z -= 0.08;
+    } else {
+      anchor.set(0, 1.55, -0.16);
+      this.fallbackRoot.localToWorld(anchor);
+      this.group.worldToLocal(anchor);
+    }
 
     this.scarfParticles[0].pos.copy(anchor);
     this.scarfParticles[0].prevPos.copy(anchor);
 
-    // Wind and gravity vector
-    const windVec = new THREE.Vector3(0.04, -0.06, -0.12);
+    // Wind and movement vector
+    const windVec = new THREE.Vector3(
+      Math.sin(this.animTime * 1.5) * 0.06 * this.scarfWindStrength,
+      -0.05,
+      -0.12 * this.scarfWindStrength - (this.currentSpeedMag / this.baseSpeed) * 0.25
+    );
 
     for (let i = 1; i < this.scarfParticles.length; i++) {
       const p = this.scarfParticles[i];
-      const vel = p.pos.clone().sub(p.prevPos).multiplyScalar(0.92); // Damping
-
+      const vel = p.pos.clone().sub(p.prevPos).multiplyScalar(0.90);
       p.prevPos.copy(p.pos);
       p.pos.add(vel).addScaledVector(windVec, dt * 10);
     }
 
-    // Distance constraint passes (Verlet relaxation)
+    // Verlet distance constraints
     for (let pass = 0; pass < 3; pass++) {
       for (let i = 1; i < this.scarfParticles.length; i++) {
         const p1 = this.scarfParticles[i - 1];

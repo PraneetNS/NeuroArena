@@ -22,6 +22,9 @@ export interface TimeOfDayState {
   isNight: boolean;
   cloudTint: THREE.Color;
   starOpacity: number;
+  lutWarmTint: THREE.Color;
+  lutShadowCool: THREE.Color;
+  lutContrast: number;
 }
 
 export class TimeOfDayController {
@@ -42,6 +45,9 @@ export class TimeOfDayController {
   private ambientGround = new THREE.Color();
   private fogColor = new THREE.Color();
   private cloudTint = new THREE.Color();
+  private lutWarmTint = new THREE.Color();
+  private lutShadowCool = new THREE.Color();
+  private lutContrast = 1.06;
 
   constructor(initialHours = 18.2, minutesPerDay = 24.0) {
     this.timeHours = initialHours;
@@ -108,6 +114,11 @@ export class TimeOfDayController {
       this.fogColor.setRGB(0.72, 0.85, 0.98); // Soft distance azure haze
       this.cloudTint.setRGB(1.0, 1.0, 1.0);
       starOpacity = 0.0;
+
+      // Color LUT: Midday sunlit high-key
+      this.lutWarmTint.setRGB(1.02, 1.01, 0.98);
+      this.lutShadowCool.setRGB(0.96, 0.98, 1.04);
+      this.lutContrast = 1.05;
     } else if (sunHeight > 0.0) {
       // Golden Hour / Sunset / Sunrise (Warm, painterly, amber & rose)
       const t = sunHeight / 0.35; // 0 at horizon, 1 at golden hour peak
@@ -142,6 +153,11 @@ export class TimeOfDayController {
         t
       );
       starOpacity = 0.0;
+
+      // Color LUT: Golden Hour honey amber key & sapphire-violet shadows
+      this.lutWarmTint.setRGB(1.10, 1.03, 0.90);
+      this.lutShadowCool.setRGB(0.92, 0.95, 1.06);
+      this.lutContrast = 1.10;
     } else if (sunHeight > -0.25) {
       // Twilight / Dusk: deep violet, indigo, rose horizon line
       const t = (sunHeight - (-0.25)) / 0.25; // 0 at dark night, 1 at sunset border
@@ -164,6 +180,11 @@ export class TimeOfDayController {
       this.cloudTint.setRGB(0.45, 0.35, 0.55);
       starOpacity = (1.0 - t) * 0.8;
       fogDensity = 0.0016;
+
+      // Color LUT: Dusk terracotta & twilight purple
+      this.lutWarmTint.setRGB(1.08, 0.94, 0.88);
+      this.lutShadowCool.setRGB(0.88, 0.90, 1.12);
+      this.lutContrast = 1.12;
     } else {
       // Midnight / Starry Night
       this.sunColor.setRGB(0.05, 0.08, 0.15);
@@ -178,6 +199,11 @@ export class TimeOfDayController {
       this.cloudTint.setRGB(0.12, 0.15, 0.25);
       starOpacity = 1.0;
       fogDensity = 0.0018;
+
+      // Color LUT: Night silver moonlight & obsidian navy
+      this.lutWarmTint.setRGB(0.95, 0.98, 1.08);
+      this.lutShadowCool.setRGB(0.85, 0.88, 1.02);
+      this.lutContrast = 1.04;
     }
 
     return {
@@ -195,7 +221,10 @@ export class TimeOfDayController {
       isGoldenHour,
       isNight,
       cloudTint: this.cloudTint,
-      starOpacity
+      starOpacity,
+      lutWarmTint: this.lutWarmTint,
+      lutShadowCool: this.lutShadowCool,
+      lutContrast: this.lutContrast
     };
   }
 }

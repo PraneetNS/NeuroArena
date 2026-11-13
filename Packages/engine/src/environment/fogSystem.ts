@@ -41,16 +41,22 @@ export class FogSystem {
       const coord = uv();
       const delta = this.uSunPos.sub(coord);
       const dist = length(delta);
-      const radialGlow = clamp(float(1.0).sub(dist.mul(1.2)), 0.0, 1.0);
-      const alpha = radialGlow.mul(this.uIntensity).mul(this.uSunVisible).mul(0.28);
-      return vec4(this.uSunColor.rgb, alpha);
+      const radialGlow = clamp(float(1.0).sub(dist.mul(1.1)), 0.0, 1.0);
+
+      // Radial crepuscular god ray streaks
+      const angle = delta.y.atan2(delta.x);
+      const streaks = angle.mul(14.0).sin().mul(0.35).add(0.65);
+
+      const alpha = radialGlow.mul(streaks).mul(this.uIntensity).mul(this.uSunVisible).mul(0.35);
+      return vec4(this.uSunColor, alpha);
     });
 
     this.shaftMaterial = new THREE.MeshBasicNodeMaterial({
       transparent: true,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
-      depthTest: false
+      depthTest: false,
+      fog: false
     });
     this.shaftMaterial.colorNode = shaftColorNode();
 
@@ -80,14 +86,19 @@ export class FogSystem {
     if (this.enableLightShafts && state.sunIntensity > 0.1) {
       this.shaftMesh.visible = true;
 
+      // Position quad in front of camera view
+      const camDir = new THREE.Vector3();
+      this.camera.getWorldDirection(camDir);
+      this.shaftMesh.position.copy(this.camera.position).addScaledVector(camDir, 0.5);
+      this.shaftMesh.quaternion.copy(this.camera.quaternion);
+      this.shaftMesh.scale.set(1.4, 0.9, 1.0);
+
       // Calculate sun position in screen space
       const sunWorldPos = this.camera.position.clone().add(
         state.sunDirection.clone().multiplyScalar(500)
       );
 
       // Check if sun is in front of camera
-      const camDir = new THREE.Vector3();
-      this.camera.getWorldDirection(camDir);
       const dotSun = camDir.dot(state.sunDirection);
 
       if (dotSun > 0.05) {

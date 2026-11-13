@@ -23,7 +23,8 @@ import {
   smoothstep,
   max,
   sin,
-  cos
+  cos,
+  mix
 } from 'three/tsl';
 import { TimeOfDayState } from './timeOfDay.js';
 
@@ -45,8 +46,6 @@ export class SkySystem {
 
   constructor() {
     const skyGeo = new THREE.SphereGeometry(2200, 48, 32);
-    // Invert geometry normals so it renders inside out
-    skyGeo.scale(-1, 1, 1);
 
     this.material = this.createSkyMaterial();
     this.mesh = new THREE.Mesh(skyGeo, this.material);
@@ -58,6 +57,7 @@ export class SkySystem {
     const mat = new THREE.MeshBasicNodeMaterial();
     mat.side = THREE.BackSide;
     mat.depthWrite = false;
+    mat.fog = false;
 
     const uSunDir = this.uSunDirection;
     const uMoonDir = this.uMoonDirection;
@@ -79,7 +79,7 @@ export class SkySystem {
       // 1. Atmosphere Gradient (Zenith to Horizon)
       // Clamped altitude factor
       const hFactor = smoothstep(float(-0.05), float(0.65), rayY);
-      const baseSky = uHorizonCol.rgb.mix(uZenithCol.rgb, hFactor);
+      const baseSky = mix(uHorizonCol, uZenithCol, hFactor);
 
       // 2. Rayleigh & Mie Atmospheric Scattering towards Sun
       const cosTheta = max(float(0.0), dot(rayDir, uSunDir));
@@ -94,13 +94,14 @@ export class SkySystem {
       const mie = float(1.0).sub(g2).div(max(float(0.001), denom)).mul(0.06);
 
       // Boost forward scattering with sun color
-      const scatterLight = uSunCol.rgb.mul(mie.add(rayleigh)).mul(uSunInt);
+      const scatterLight = uSunCol.mul(mie.add(rayleigh)).mul(uSunInt);
       const skyWithAtmosphere = baseSky.add(scatterLight);
 
-      // 3. Sun Disc & Painterly Corona
-      const sunDiscEdge = smoothstep(float(0.9992), float(0.9998), cosTheta);
-      const sunCorona = smoothstep(float(0.985), float(0.9992), cosTheta).mul(0.45);
-      const sunContribution = uSunCol.rgb.mul(sunDiscEdge.mul(float(4.0)).add(sunCorona)).mul(uSunInt);
+      // 3. Sun Disc & Painterly Corona (Crisp disc with soft glow & wide atmospheric corona)
+      const sunDiscEdge = smoothstep(float(0.996), float(0.9985), cosTheta);
+      const sunInnerGlow = smoothstep(float(0.98), float(0.996), cosTheta).mul(0.65);
+      const sunCorona = smoothstep(float(0.92), float(0.98), cosTheta).mul(0.35);
+      const sunContribution = uSunCol.mul(sunDiscEdge.mul(float(4.5)).add(sunInnerGlow).add(sunCorona)).mul(uSunInt);
 
       // 4. Moon Disc & Soft Night Halo
       const cosMoon = max(float(0.0), dot(rayDir, uMoonDir));
@@ -117,7 +118,7 @@ export class SkySystem {
       // Hash function for star intensity
       const starHash = sin(dot(starFloor, vec3(12.9898, 78.233, 45.164))).mul(43758.5453).fract();
       const starDist = dot(starFract, starFract);
-      const starGlow = smoothstep(float(0.08), float(0.01), starDist);
+      const starGlow = float(1.0).sub(smoothstep(float(0.01), float(0.08), starDist));
       const isStar = starHash.greaterThan(float(0.97)).select(starGlow.mul(starHash), float(0.0));
       const stars = vec3(1.0, 0.98, 0.95).mul(isStar).mul(uStarOp);
 
@@ -143,11 +144,11 @@ export class SkySystem {
 
       // Cloud sun-rim lighting (golden/amber edge when facing sun)
       const cloudSunRim = cosTheta.mul(0.5).add(0.5);
-      const litCloudColor = uCloudCol.rgb.mul(cloudSunRim.mul(0.4).add(0.6));
+      const litCloudColor = uCloudCol.mul(cloudSunRim.mul(0.4).add(0.6));
 
       // Combine: Base Sky + Stars + Moon + Sun + Clouds
       const skyWithCelestials = skyWithAtmosphere.add(sunContribution).add(moonColor).add(stars);
-      const finalSky = skyWithCelestials.mix(litCloudColor, cloudAlpha);
+      const finalSky = mix(skyWithCelestials, litCloudColor, cloudAlpha);
 
       return vec4(finalSky, 1.0);
     });
