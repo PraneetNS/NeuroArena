@@ -218,6 +218,23 @@ class NeuroArenaGame {
     this.world.scene.add(this.player.group);
 
     this.audio = new SoundEngine();
+    this.player.onFootstep = () => {
+      const y = this.player.position.y;
+      let surface: 'grass' | 'sand' | 'rock' | 'water' = 'grass';
+      if (y <= 1.0) surface = 'water';
+      else if (y < 2.8) surface = 'sand';
+      else if (y > 20.0) surface = 'rock';
+      this.audio.playFootstep(surface);
+    };
+
+    // User gesture handler to initiate ambient soundscape
+    const startAudio = () => {
+      this.audio.startAmbientLoop();
+      window.removeEventListener('pointerdown', startAudio);
+      window.removeEventListener('keydown', startAudio);
+    };
+    window.addEventListener('pointerdown', startAudio, { once: true });
+    window.addEventListener('keydown', startAudio, { once: true });
     this.companion = new CompanionDrone();
     this.world.scene.add(this.companion.group);
 
@@ -1397,6 +1414,20 @@ class NeuroArenaGame {
     // 3. Update ShardWorld instanced markers & interactions
     this.lastInteractionState = this.shardWorld.update(dt, time, this.player.position);
     this.renderShardHUD();
+
+    // Dynamic spatial biome soundscape cross-fade
+    let activeBiome = 'meadow_of_verse';
+    let minD = Infinity;
+    for (const reg of this.shardWorld.worldState.regions) {
+      const dx = this.player.position.x - reg.center.x;
+      const dz = this.player.position.z - reg.center.z;
+      const dist = Math.sqrt(dx * dx + dz * dz);
+      if (dist < reg.radius && dist < minD) {
+        minD = dist;
+        activeBiome = reg.id;
+      }
+    }
+    this.audio.setBiome(activeBiome);
 
     this.activeNearbyShard = null;
     for (const shard of this.shards) {

@@ -15,6 +15,7 @@
 
 import * as THREE from 'three/webgpu';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { SurfaceType } from './audio.js';
 
 export type PlayerState = 'idle' | 'walk' | 'run' | 'jump' | 'land' | 'gather' | 'turn_in_place';
 
@@ -71,8 +72,10 @@ export class Player {
   public footLeftBone: THREE.Bone | null = null;
   public footRightBone: THREE.Bone | null = null;
 
-  // Foot IK System
+  // Foot IK System & Footsteps
   public isFootIKEnabled = true;
+  public onFootstep?: (surface?: SurfaceType) => void;
+  private strideDistance = 0;
   private footLOffset = 0;
   private footROffset = 0;
   private pelvisOffset = 0;
@@ -461,6 +464,7 @@ export class Player {
         // Landing squash trigger
         this.landingSquash = 0.82;
         this.isLandingTimer = 0.28;
+        this.onFootstep?.();
       }
       this.group.position.y = groundY;
       this.velocity.y = 0;
@@ -503,8 +507,17 @@ export class Player {
       const nominalSpeed = this.state === 'run' ? this.baseSpeed * this.sprintMultiplier : this.baseSpeed;
       const speedRatio = Math.max(0.3, this.currentSpeedMag / nominalSpeed);
       this.currentAction.setEffectiveTimeScale(speedRatio * this.playbackSpeed);
+
+      // Speed-matched rhythmic footstep pacing
+      this.strideDistance += this.currentSpeedMag * dt;
+      const stepInterval = this.state === 'run' ? 2.3 : 1.5;
+      if (this.strideDistance >= stepInterval) {
+        this.strideDistance = 0;
+        this.onFootstep?.();
+      }
     } else if (this.currentAction) {
       this.currentAction.setEffectiveTimeScale(this.playbackSpeed);
+      this.strideDistance = 0;
     }
 
     // Step AnimationMixer
