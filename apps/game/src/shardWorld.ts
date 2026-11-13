@@ -52,46 +52,192 @@ interface ActivePickup {
   duration: number;
 }
 
-const REGION_CONFIGS: Record<
-  string,
-  {
-    name: string;
-    color: number;
-    colorHex: string;
-    createGeometry: () => THREE.BufferGeometry;
-  }
-> = {
+interface RegionVisualConfig {
+  name: string;
+  color: number;
+  colorHex: string;
+  createGeometry: () => THREE.BufferGeometry;
+  fontSpec: string;
+  phrases: [string, string, string, string];
+}
+
+const REGION_CONFIGS: Record<string, RegionVisualConfig> = {
   meadow_of_verse: {
     name: 'Meadow of Verse',
     color: 0x6BBF7A, // Clean / Success Green
     colorHex: '#6BBF7A',
-    createGeometry: () => new THREE.OctahedronGeometry(0.85, 0)
+    createGeometry: () => new THREE.CylinderGeometry(0.24, 0.44, 1.45, 8),
+    fontSpec: '600 20px Fraunces, serif',
+    phrases: ['Shall I compare thee', 'to a summer’s day?', 'rough winds do shake', 'the darling buds']
   },
   weathered_archive: {
     name: 'Weathered Archive',
     color: 0xE8A33D, // Accent Amber
     colorHex: '#E8A33D',
-    createGeometry: () => new THREE.DodecahedronGeometry(0.8, 0)
+    createGeometry: () => new THREE.DodecahedronGeometry(0.72, 0),
+    fontSpec: '600 19px "IBM Plex Sans", sans-serif',
+    phrases: ['Folio 1623 §4', 'Archival codex roll', 'Restored parchment', 'Historical record']
   },
   echo_hollow: {
     name: 'Echo Hollow',
     color: 0x8E9AAF, // Duplicate / Archival Slate
     colorHex: '#8E9AAF',
-    createGeometry: () => new THREE.ConeGeometry(0.65, 1.8, 6)
+    createGeometry: () => new THREE.CylinderGeometry(0.08, 0.62, 1.65, 6),
+    fontSpec: '600 19px "IBM Plex Mono", monospace',
+    phrases: ['» duplicate echo «', '« recurrent token »', 'shadow pattern', 'twin resonance']
   },
   billboard_flats: {
     name: 'Billboard Flats',
     color: 0xD9564A, // Contaminated / Danger Red
     colorHex: '#D9564A',
-    createGeometry: () => new THREE.BoxGeometry(1.2, 1.5, 0.35)
+    createGeometry: () => new THREE.BoxGeometry(1.25, 1.6, 0.25),
+    fontSpec: '700 20px "IBM Plex Sans", sans-serif',
+    phrases: ['ADVERTISEMENT', 'SPONSORED COLUMN', 'SUBSCRIBE TODAY', 'LEGAL NOTICE']
   },
   foreign_shore: {
     name: 'Foreign Shore',
     color: 0x4FB3A9, // Signal Teal
     colorHex: '#4FB3A9',
-    createGeometry: () => new THREE.TetrahedronGeometry(0.95, 0)
+    createGeometry: () => new THREE.OctahedronGeometry(0.72, 0),
+    fontSpec: '600 19px "Segoe UI Symbol", monospace',
+    phrases: ['∇W · L = softmax(z)', '∀x ∈ Ω: P(x) > 0', '᚛ᚉᚑᚅᚈ᚜ ᚨᚱᚲ', 'Ψ(r,t) = e^{i(k·r)}']
   }
 };
+
+/**
+ * Builds a 4-card quad cluster orbiting the shard origin with distinct UV quadrants.
+ */
+function createClusterGeometry(): THREE.BufferGeometry {
+  const geo = new THREE.BufferGeometry();
+  const positions: number[] = [];
+  const uvs: number[] = [];
+  const indices: number[] = [];
+
+  const cards = [
+    { pos: [1.1, 0.15, 0], normal: [0, 0, 1], uv: [0, 0.5, 0.5, 1.0] },
+    { pos: [0, -0.1, 1.1], normal: [-1, 0, 0], uv: [0.5, 0.5, 1.0, 1.0] },
+    { pos: [-1.1, 0.25, 0], normal: [0, 0, -1], uv: [0, 0.0, 0.5, 0.5] },
+    { pos: [0, -0.2, -1.1], normal: [1, 0, 0], uv: [0.5, 0.0, 1.0, 0.5] }
+  ];
+
+  const w = 0.78;
+  const h = 0.22;
+
+  for (let c = 0; c < cards.length; c++) {
+    const card = cards[c];
+    const baseIdx = c * 4;
+    const [cx, cy, cz] = card.pos;
+    const [u0, v0, u1, v1] = card.uv;
+
+    if (Math.abs(card.normal[2]) > 0.5) {
+      positions.push(
+        cx - w / 2, cy - h / 2, cz,
+        cx + w / 2, cy - h / 2, cz,
+        cx + w / 2, cy + h / 2, cz,
+        cx - w / 2, cy + h / 2, cz
+      );
+    } else {
+      positions.push(
+        cx, cy - h / 2, cz - w / 2,
+        cx, cy - h / 2, cz + w / 2,
+        cx, cy + h / 2, cz + w / 2,
+        cx, cy + h / 2, cz - w / 2
+      );
+    }
+
+    uvs.push(
+      u0, v0,
+      u1, v0,
+      u1, v1,
+      u0, v1
+    );
+
+    indices.push(
+      baseIdx, baseIdx + 1, baseIdx + 2,
+      baseIdx, baseIdx + 2, baseIdx + 3
+    );
+  }
+
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  geo.setIndex(indices);
+  geo.computeVertexNormals();
+  return geo;
+}
+
+/**
+ * Creates a glowing 512x128 2x2 Canvas glyph atlas texture for text fragments.
+ */
+function createRegionGlyphAtlas(
+  phrases: [string, string, string, string],
+  colorHex: string,
+  fontSpec: string
+): THREE.CanvasTexture {
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 128;
+  const ctx = canvas.getContext('2d');
+
+  if (ctx) {
+    ctx.clearRect(0, 0, 512, 128);
+
+    for (let i = 0; i < 4; i++) {
+      const gx = (i % 2) * 256;
+      const gy = Math.floor(i / 2) * 64;
+      const r = 8;
+      const x = gx + 6;
+      const y = gy + 6;
+      const w = 244;
+      const h = 52;
+
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.82)';
+      ctx.fill();
+      ctx.lineWidth = 1.8;
+      ctx.strokeStyle = colorHex;
+      ctx.stroke();
+
+      // Dot indicator
+      ctx.beginPath();
+      ctx.arc(gx + 18, gy + 32, 4, 0, Math.PI * 2);
+      ctx.fillStyle = colorHex;
+      ctx.fill();
+
+      // Glowing text
+      ctx.shadowColor = colorHex;
+      ctx.shadowBlur = 8;
+      ctx.fillStyle = '#f8fafc';
+      ctx.font = fontSpec;
+      ctx.textBaseline = 'middle';
+
+      let text = phrases[i];
+      if (ctx.measureText(text).width > 200) {
+        while (text.length > 3 && ctx.measureText(text + '…').width > 200) {
+          text = text.slice(0, -1);
+        }
+        text += '…';
+      }
+      ctx.fillText(text, gx + 28, gy + 32);
+    }
+  }
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.minFilter = THREE.LinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  tex.generateMipmaps = false;
+  return tex;
+}
 
 export class ShardWorld {
   public worldState: WorldState;
@@ -102,12 +248,14 @@ export class ShardWorld {
     string,
     {
       instancedMesh: THREE.InstancedMesh;
+      glyphMesh: THREE.InstancedMesh;
       shards: Shard[];
       baseColor: THREE.Color;
     }
   > = new Map();
 
   private dummy = new THREE.Object3D();
+  private glyphDummy = new THREE.Object3D();
   private pickups: ActivePickup[] = [];
 
   // Interaction & Scan state
@@ -194,6 +342,21 @@ export class ShardWorld {
       instancedMesh.castShadow = false;
       instancedMesh.receiveShadow = false;
 
+      // Create orbiting text fragment glyph cluster mesh
+      const clusterGeo = createClusterGeometry();
+      const glyphTex = createRegionGlyphAtlas(config.phrases, config.colorHex, config.fontSpec);
+      const glyphMat = new THREE.MeshBasicMaterial({
+        map: glyphTex,
+        transparent: true,
+        opacity: 0.9,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      });
+      const glyphMesh = new THREE.InstancedMesh(clusterGeo, glyphMat, count);
+      glyphMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+      glyphMesh.castShadow = false;
+      glyphMesh.receiveShadow = false;
+
       // Initialize initial positions
       for (let i = 0; i < count; i++) {
         const shard = regionShards[i];
@@ -202,13 +365,23 @@ export class ShardWorld {
         this.dummy.updateMatrix();
         instancedMesh.setMatrixAt(i, this.dummy.matrix);
         instancedMesh.setColorAt(i, new THREE.Color(config.color));
+
+        this.glyphDummy.position.set(0, -9999, 0);
+        this.glyphDummy.scale.set(0, 0, 0);
+        this.glyphDummy.updateMatrix();
+        glyphMesh.setMatrixAt(i, this.glyphDummy.matrix);
+        glyphMesh.setColorAt(i, new THREE.Color(config.color));
       }
       instancedMesh.instanceMatrix.needsUpdate = true;
       if (instancedMesh.instanceColor) instancedMesh.instanceColor.needsUpdate = true;
+      glyphMesh.instanceMatrix.needsUpdate = true;
+      if (glyphMesh.instanceColor) glyphMesh.instanceColor.needsUpdate = true;
 
       this.scene.add(instancedMesh);
+      this.scene.add(glyphMesh);
       this.regionMeshes.set(regionId, {
         instancedMesh,
+        glyphMesh,
         shards: regionShards,
         baseColor: new THREE.Color(config.color)
       });
@@ -279,9 +452,11 @@ export class ShardWorld {
 
     // 3. Update Instanced Meshes (bobbing, rotation, culling, scan tinting)
     for (const [regionId, data] of this.regionMeshes.entries()) {
-      const { instancedMesh, shards, baseColor } = data;
+      const { instancedMesh, glyphMesh, shards, baseColor } = data;
       let meshNeedsUpdate = false;
       let colorNeedsUpdate = false;
+      let glyphMeshNeedsUpdate = false;
+      let glyphColorNeedsUpdate = false;
 
       for (let i = 0; i < shards.length; i++) {
         const shard = shards[i];
@@ -294,6 +469,12 @@ export class ShardWorld {
           this.dummy.updateMatrix();
           instancedMesh.setMatrixAt(i, this.dummy.matrix);
           meshNeedsUpdate = true;
+
+          this.glyphDummy.position.set(0, -9999, 0);
+          this.glyphDummy.scale.set(0, 0, 0);
+          this.glyphDummy.updateMatrix();
+          glyphMesh.setMatrixAt(i, this.glyphDummy.matrix);
+          glyphMeshNeedsUpdate = true;
           continue;
         }
 
@@ -308,6 +489,12 @@ export class ShardWorld {
           this.dummy.updateMatrix();
           instancedMesh.setMatrixAt(i, this.dummy.matrix);
           meshNeedsUpdate = true;
+
+          this.glyphDummy.position.set(0, -9999, 0);
+          this.glyphDummy.scale.set(0, 0, 0);
+          this.glyphDummy.updateMatrix();
+          glyphMesh.setMatrixAt(i, this.glyphDummy.matrix);
+          glyphMeshNeedsUpdate = true;
           continue;
         }
 
@@ -382,6 +569,26 @@ export class ShardWorld {
         instancedMesh.setMatrixAt(i, this.dummy.matrix);
         meshNeedsUpdate = true;
 
+        // Floating text glyph cluster: rendered within 52m for maximum detail and performance
+        if (distSq < 52 * 52) {
+          const unfoldFactor = isTarget ? 1.35 : 1.0;
+          this.glyphDummy.position.set(shard.position.x + jitterX, shard.position.y + bob + jitterY, shard.position.z + jitterZ);
+          this.glyphDummy.rotation.set(0, rotY * 1.35, rotZ);
+          this.glyphDummy.scale.set(scaleX * unfoldFactor, scaleY * unfoldFactor, scaleZ * unfoldFactor);
+          this.glyphDummy.updateMatrix();
+          glyphMesh.setMatrixAt(i, this.glyphDummy.matrix);
+          glyphMeshNeedsUpdate = true;
+
+          glyphMesh.setColorAt(i, visualColor);
+          glyphColorNeedsUpdate = true;
+        } else {
+          this.glyphDummy.position.set(0, -9999, 0);
+          this.glyphDummy.scale.set(0, 0, 0);
+          this.glyphDummy.updateMatrix();
+          glyphMesh.setMatrixAt(i, this.glyphDummy.matrix);
+          glyphMeshNeedsUpdate = true;
+        }
+
         // Tint color if in Scan Mode
         if (this.isScanMode) {
           const scan = scanShard(shard, this.vault.getState());
@@ -397,6 +604,8 @@ export class ShardWorld {
 
       if (meshNeedsUpdate) instancedMesh.instanceMatrix.needsUpdate = true;
       if (colorNeedsUpdate && instancedMesh.instanceColor) instancedMesh.instanceColor.needsUpdate = true;
+      if (glyphMeshNeedsUpdate) glyphMesh.instanceMatrix.needsUpdate = true;
+      if (glyphColorNeedsUpdate && glyphMesh.instanceColor) glyphMesh.instanceColor.needsUpdate = true;
     }
 
     // Sweep cooldown and toast timers decay
