@@ -17,7 +17,9 @@ import {
   float,
   mix,
   uv,
-  uniform
+  uniform,
+  positionWorld,
+  sin
 } from 'three/tsl';
 import { getTerrainHeight, getTerrainSlope } from '../terrain/noise.js';
 
@@ -38,6 +40,7 @@ export class GrassSystem {
   private flowerMaterial: THREE.MeshLambertMaterial;
   private dummy = new THREE.Object3D();
 
+  private uTime = uniform(0.0);
   private uSunColor = uniform(new THREE.Color(0xfff3db));
   private uAmbientColor = uniform(new THREE.Color(0x38bdf8));
 
@@ -95,18 +98,25 @@ export class GrassSystem {
     bladeGeo.setIndex(new THREE.BufferAttribute(indices, 1));
     bladeGeo.computeVertexNormals();
 
-    // 2. TSL Node Material for Painterly Grass (Base-to-Tip Color Gradient)
+    // 2. TSL Node Material for Painterly Grass (Base-to-Tip Color Gradient & Wind Waves)
     const grassColorNode = Fn(() => {
       const vHeight = uv().y;
       // Stylized base-to-tip gradient: earthy dark forest emerald base to vibrant sunlit chartreuse tip
-      const baseGradient = vec3(0.25, 0.45, 0.22);
+      const baseGradient = vec3(0.22, 0.42, 0.20);
       const tipGradient = vec3(1.15, 1.25, 0.92);
       const verticalGradient = mix(baseGradient, tipGradient, vHeight);
+
+      // Visible wind gust waves travelling across terrain
+      const p = positionWorld;
+      const windPhase = p.x.mul(0.035).add(p.z.mul(0.025)).add(this.uTime.mul(2.2));
+      const windWave = sin(windPhase).mul(0.5).add(0.5);
+      const gustHighlight = windWave.mul(vHeight).mul(0.28);
 
       const ao = mix(float(0.40), float(1.0), vHeight);
       const col = attribute('aColor', 'vec3');
       const light = this.uAmbientColor.mul(0.35).add(this.uSunColor.mul(0.65));
-      return vec4(col.mul(verticalGradient).mul(ao).mul(light), float(1.0));
+      const finalCol = col.mul(verticalGradient).mul(float(1.0).add(gustHighlight)).mul(ao).mul(light);
+      return vec4(finalCol, float(1.0));
     });
 
     this.material = new THREE.MeshBasicNodeMaterial({ side: THREE.DoubleSide });
@@ -271,12 +281,13 @@ export class GrassSystem {
   }
 
   public update(
-    _time: number,
+    time: number,
     cameraPos: THREE.Vector3,
     _sunDir: THREE.Vector3,
     sunCol: THREE.Color,
     ambientCol: THREE.Color
   ): void {
+    this.uTime.value = time;
     this.uSunColor.value.copy(sunCol);
     this.uAmbientColor.value.copy(ambientCol);
 
