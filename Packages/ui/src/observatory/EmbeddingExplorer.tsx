@@ -501,7 +501,7 @@ export const EmbeddingExplorer: React.FC<EmbeddingExplorerProps> = ({
                 onClick={() => setViewMode('3d')}
                 style={{
                   padding: '3px 8px',
-                  fontSize: '11px',
+                  fontSize: 'var(--na-text-xs)',
                   fontFamily: 'var(--na-font-mono)',
                   borderRadius: 'var(--na-radius-sm)',
                   backgroundColor: viewMode === '3d' ? 'var(--na-accent)' : 'transparent',
@@ -516,7 +516,7 @@ export const EmbeddingExplorer: React.FC<EmbeddingExplorerProps> = ({
                 onClick={() => setViewMode('2d_pc2_pc3')}
                 style={{
                   padding: '3px 8px',
-                  fontSize: '11px',
+                  fontSize: 'var(--na-text-xs)',
                   fontFamily: 'var(--na-font-mono)',
                   borderRadius: 'var(--na-radius-sm)',
                   backgroundColor: viewMode === '2d_pc2_pc3' ? 'var(--na-accent-cool)' : 'transparent',
@@ -531,7 +531,7 @@ export const EmbeddingExplorer: React.FC<EmbeddingExplorerProps> = ({
                 onClick={() => setViewMode('top10_variance')}
                 style={{
                   padding: '3px 8px',
-                  fontSize: '11px',
+                  fontSize: 'var(--na-text-xs)',
                   fontFamily: 'var(--na-font-mono)',
                   borderRadius: 'var(--na-radius-sm)',
                   backgroundColor: viewMode === 'top10_variance' ? 'var(--na-warning)' : 'transparent',
@@ -549,7 +549,7 @@ export const EmbeddingExplorer: React.FC<EmbeddingExplorerProps> = ({
                 onClick={() => setIsAutoFlyThrough(!isAutoFlyThrough)}
                 style={{
                   padding: '3px 8px',
-                  fontSize: '11px',
+                  fontSize: 'var(--na-text-xs)',
                   fontFamily: 'var(--na-font-mono)',
                   borderRadius: 'var(--na-radius-sm)',
                   backgroundColor: isAutoFlyThrough ? 'var(--na-accent-cool)' : 'var(--na-surface)',
@@ -581,7 +581,7 @@ export const EmbeddingExplorer: React.FC<EmbeddingExplorerProps> = ({
               onClick={() => setSelectedCategory('all')}
               style={{
                 padding: '2px 8px',
-                fontSize: '11px',
+                fontSize: 'var(--na-text-xs)',
                 borderRadius: 'var(--na-radius-sm)',
                 backgroundColor: selectedCategory === 'all' ? 'var(--na-accent)' : 'var(--na-surface)',
                 color: selectedCategory === 'all' ? 'var(--na-ink)' : 'var(--na-text)',
@@ -597,7 +597,7 @@ export const EmbeddingExplorer: React.FC<EmbeddingExplorerProps> = ({
                 onClick={() => setSelectedCategory(cat)}
                 style={{
                   padding: '2px 8px',
-                  fontSize: '11px',
+                  fontSize: 'var(--na-text-xs)',
                   borderRadius: 'var(--na-radius-sm)',
                   backgroundColor: selectedCategory === cat ? 'var(--na-raised)' : 'var(--na-surface)',
                   color: CATEGORY_METAS[cat].colorVar,
