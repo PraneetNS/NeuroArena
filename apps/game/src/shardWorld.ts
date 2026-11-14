@@ -249,6 +249,8 @@ export class ShardWorld {
     {
       instancedMesh: THREE.InstancedMesh;
       glyphMesh: THREE.InstancedMesh;
+      clusterGeo: THREE.BufferGeometry;
+      glyphTex: THREE.CanvasTexture;
       shards: Shard[];
       baseColor: THREE.Color;
     }
@@ -382,6 +384,8 @@ export class ShardWorld {
       this.regionMeshes.set(regionId, {
         instancedMesh,
         glyphMesh,
+        clusterGeo,
+        glyphTex,
         shards: regionShards,
         baseColor: new THREE.Color(config.color)
       });
@@ -743,7 +747,7 @@ export class ShardWorld {
     // 1. Add to vault
     this.vault.harvest(shard);
 
-    // 2. Spawn pickup mesh that flies to the player
+    // 2. Spawn pickup mesh with orbiting text fragment glyphs that flies to the player
     const config = REGION_CONFIGS[shard.regionId] || REGION_CONFIGS.meadow_of_verse;
     const geom = config.createGeometry();
     const mat = new THREE.MeshBasicMaterial({
@@ -753,6 +757,22 @@ export class ShardWorld {
     });
     const pickupMesh = new THREE.Mesh(geom, mat);
     pickupMesh.position.set(shard.position.x, shard.position.y, shard.position.z);
+
+    // Attach flying glyph cards to pickup
+    const regionData = this.regionMeshes.get(shard.regionId);
+    if (regionData) {
+      const glyphMat = new THREE.MeshBasicMaterial({
+        map: regionData.glyphTex,
+        transparent: true,
+        opacity: 0.95,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      });
+      const glyphPickup = new THREE.Mesh(regionData.clusterGeo, glyphMat);
+      glyphPickup.scale.set(0.75, 0.75, 0.75);
+      pickupMesh.add(glyphPickup);
+    }
+
     this.scene.add(pickupMesh);
 
     this.pickups.push({
@@ -782,21 +802,28 @@ export class ShardWorld {
       p.mesh.rotation.y += dt * 8.0;
       p.mesh.rotation.x += dt * 6.0;
 
-      // Dissolve scale and opacity
+      // Dissolve scale and opacity for pickup and child glyph meshes
       const scale = Math.max(0.01, 1.0 - t * 0.9);
       p.mesh.scale.set(scale, scale, scale);
-      if (p.mesh.material instanceof THREE.Material) {
-        p.mesh.material.opacity = 1.0 - t;
-      }
+
+      p.mesh.traverse((child) => {
+        if (child instanceof THREE.Mesh && child.material instanceof THREE.Material) {
+          child.material.opacity = 1.0 - t;
+        }
+      });
 
       if (t >= 1.0) {
         this.scene.remove(p.mesh);
-        p.mesh.geometry.dispose();
-        if (Array.isArray(p.mesh.material)) {
-          p.mesh.material.forEach(m => m.dispose());
-        } else {
-          p.mesh.material.dispose();
-        }
+        p.mesh.traverse((child) => {
+          if (child instanceof THREE.Mesh) {
+            child.geometry.dispose();
+            if (Array.isArray(child.material)) {
+              child.material.forEach((m) => m.dispose());
+            } else if (child.material) {
+              child.material.dispose();
+            }
+          }
+        });
         this.pickups.splice(i, 1);
       }
     }
