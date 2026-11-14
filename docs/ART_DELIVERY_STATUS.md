@@ -48,3 +48,4 @@ This status report catalogs every deliverable specified in the Art and Stylized 
 | **High** | $\le 900\text{k}$ | **661k – 715k** | $\le 500$ | **294 – 486** | $\approx 60\text{ fps}$ | **54 – 62 FPS** |
 
 *All quality tiers comfortably satisfy their triangle, draw call, and framerate budgets.*
+
