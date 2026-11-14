@@ -371,9 +371,10 @@ export const AttentionInstrument: React.FC<AttentionInstrumentProps> = ({
                 </span>
                 <span
                   style={{
-                    fontSize: '10px',
+                    fontSize: 'var(--na-text-xs)',
                     color: isSelected ? 'var(--na-ink)' : 'var(--na-muted)',
-                    fontFamily: 'var(--na-font-mono)'
+                    fontFamily: 'var(--na-font-mono)',
+                    opacity: 0.85
                   }}
                 >
                   {idx}
@@ -444,10 +445,10 @@ export const AttentionInstrument: React.FC<AttentionInstrumentProps> = ({
                     {metrics.label && (
                       <span
                         style={{
-                          fontSize: '10px',
+                          fontSize: 'var(--na-text-xs)',
                           color: 'var(--na-accent)',
                           backgroundColor: 'var(--na-accent-muted)',
-                          padding: '1px 5px',
+                          padding: '1px 6px',
                           borderRadius: 'var(--na-radius-full)'
                         }}
                       >
@@ -457,7 +458,7 @@ export const AttentionInstrument: React.FC<AttentionInstrumentProps> = ({
                   </div>
 
                   {metrics.label && (
-                    <div style={{ fontSize: '11px', color: 'var(--na-text-secondary)', fontStyle: 'italic' }}>
+                    <div style={{ fontSize: 'var(--na-text-xs)', color: 'var(--na-text-secondary)', fontStyle: 'italic' }}>
                       "{metrics.label}"
                     </div>
                   )}
@@ -467,9 +468,9 @@ export const AttentionInstrument: React.FC<AttentionInstrumentProps> = ({
                     style={{
                       display: 'grid',
                       gridTemplateColumns: '1fr 1fr',
-                      gap: '4px',
-                      marginTop: '4px',
-                      fontSize: '10px',
+                      gap: 'var(--na-space-1)',
+                      marginTop: 'var(--na-space-1)',
+                      fontSize: 'var(--na-text-xs)',
                       fontFamily: 'var(--na-font-mono)'
                     }}
                   >
