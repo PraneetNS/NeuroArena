@@ -103,15 +103,15 @@ export const CharacterDevModal: React.FC<CharacterDevModalProps> = ({
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(2, 6, 23, 0.75)',
+        backgroundColor: 'var(--na-overlay)',
         backdropFilter: 'blur(8px)',
         zIndex: 1000,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '24px',
-        color: '#f8fafc',
-        fontFamily: "'IBM Plex Sans', sans-serif"
+        padding: 'var(--na-space-5)',
+        color: 'var(--na-text)',
+        fontFamily: 'var(--na-font-sans)'
       }}
     >
       <div
@@ -119,10 +119,10 @@ export const CharacterDevModal: React.FC<CharacterDevModalProps> = ({
           width: '100%',
           maxWidth: '860px',
           maxHeight: '90vh',
-          backgroundColor: '#0f172a',
-          border: '1px solid #334155',
-          borderRadius: '16px',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6)',
+          backgroundColor: 'var(--na-ink)',
+          border: '1px solid var(--na-line)',
+          borderRadius: 'var(--na-radius-lg)',
+          boxShadow: '0 25px 50px -12px var(--na-overlay)',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden'
@@ -131,35 +131,35 @@ export const CharacterDevModal: React.FC<CharacterDevModalProps> = ({
         {/* Header */}
         <div
           style={{
-            padding: '20px 28px',
-            borderBottom: '1px solid #1e293b',
+            padding: 'var(--na-space-4) var(--na-space-6)',
+            borderBottom: '1px solid var(--na-line)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            backgroundColor: '#090d16'
+            backgroundColor: 'var(--na-surface)'
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--na-space-3)' }}>
             <span style={{ fontSize: '24px' }}>🧙</span>
             <div>
               <h2
                 style={{
                   margin: 0,
-                  fontSize: '20px',
-                  fontFamily: "'Fraunces', serif",
+                  fontSize: 'var(--na-text-lg)',
+                  fontFamily: 'var(--na-font-display)',
                   fontWeight: 600,
                   letterSpacing: '0.02em',
-                  color: '#f1f5f9'
+                  color: 'var(--na-text)'
                 }}
               >
                 Character Studio & Blend Tree
               </h2>
-              <p style={{ margin: 0, fontSize: '13px', color: '#94a3b8' }}>
+              <p style={{ margin: 0, fontSize: 'var(--na-text-xs)', color: 'var(--na-muted)' }}>
                 Quaternius CC0 Rigged Scholar • AnimationMixer & Speed-Matched Foot IK
               </p>
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--na-space-2)' }}>
             <Badge variant="success">CC0 Public Domain</Badge>
             <Badge variant="neutral">2,908 Tris</Badge>
             <Badge variant="neutral">29 Bones</Badge>
