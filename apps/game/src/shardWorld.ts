@@ -253,6 +253,8 @@ export class ShardWorld {
       glyphTex: THREE.CanvasTexture;
       shards: Shard[];
       baseColor: THREE.Color;
+      shardVisible: Uint8Array;
+      glyphVisible: Uint8Array;
     }
   > = new Map();
 
@@ -402,7 +404,9 @@ export class ShardWorld {
         clusterGeo,
         glyphTex,
         shards: regionShards,
-        baseColor: new THREE.Color(config.color)
+        baseColor: new THREE.Color(config.color),
+        shardVisible: new Uint8Array(count),
+        glyphVisible: new Uint8Array(count)
       });
     }
   }
@@ -471,7 +475,7 @@ export class ShardWorld {
 
     // 3. Update Instanced Meshes (bobbing, rotation, culling, scan tinting)
     for (const [regionId, data] of this.regionMeshes.entries()) {
-      const { instancedMesh, glyphMesh, shards, baseColor } = data;
+      const { instancedMesh, glyphMesh, shards, baseColor, shardVisible, glyphVisible } = data;
       let meshNeedsUpdate = false;
       let colorNeedsUpdate = false;
       let glyphMeshNeedsUpdate = false;
@@ -483,17 +487,22 @@ export class ShardWorld {
 
         if (isCollected) {
           // Zero scale to hide
-          this.dummy.position.set(0, -9999, 0);
-          this.dummy.scale.set(0, 0, 0);
-          this.dummy.updateMatrix();
-          instancedMesh.setMatrixAt(i, this.dummy.matrix);
-          meshNeedsUpdate = true;
-
-          this.glyphDummy.position.set(0, -9999, 0);
-          this.glyphDummy.scale.set(0, 0, 0);
-          this.glyphDummy.updateMatrix();
-          glyphMesh.setMatrixAt(i, this.glyphDummy.matrix);
-          glyphMeshNeedsUpdate = true;
+          if (shardVisible[i] !== 0) {
+            this.dummy.position.set(0, -9999, 0);
+            this.dummy.scale.set(0, 0, 0);
+            this.dummy.updateMatrix();
+            instancedMesh.setMatrixAt(i, this.dummy.matrix);
+            meshNeedsUpdate = true;
+            shardVisible[i] = 0;
+          }
+          if (glyphVisible[i] !== 0) {
+            this.glyphDummy.position.set(0, -9999, 0);
+            this.glyphDummy.scale.set(0, 0, 0);
+            this.glyphDummy.updateMatrix();
+            glyphMesh.setMatrixAt(i, this.glyphDummy.matrix);
+            glyphMeshNeedsUpdate = true;
+            glyphVisible[i] = 0;
+          }
           continue;
         }
 
@@ -502,20 +511,27 @@ export class ShardWorld {
         const distSq = dx * dx + dz * dz;
 
         if (distSq > CULL_RADIUS * CULL_RADIUS) {
-          // Outside culling radius
-          this.dummy.position.set(shard.position.x, -9999, shard.position.z);
-          this.dummy.scale.set(0, 0, 0);
-          this.dummy.updateMatrix();
-          instancedMesh.setMatrixAt(i, this.dummy.matrix);
-          meshNeedsUpdate = true;
-
-          this.glyphDummy.position.set(0, -9999, 0);
-          this.glyphDummy.scale.set(0, 0, 0);
-          this.glyphDummy.updateMatrix();
-          glyphMesh.setMatrixAt(i, this.glyphDummy.matrix);
-          glyphMeshNeedsUpdate = true;
+          // Outside culling radius: update only on state transition
+          if (shardVisible[i] !== 0) {
+            this.dummy.position.set(shard.position.x, -9999, shard.position.z);
+            this.dummy.scale.set(0, 0, 0);
+            this.dummy.updateMatrix();
+            instancedMesh.setMatrixAt(i, this.dummy.matrix);
+            meshNeedsUpdate = true;
+            shardVisible[i] = 0;
+          }
+          if (glyphVisible[i] !== 0) {
+            this.glyphDummy.position.set(0, -9999, 0);
+            this.glyphDummy.scale.set(0, 0, 0);
+            this.glyphDummy.updateMatrix();
+            glyphMesh.setMatrixAt(i, this.glyphDummy.matrix);
+            glyphMeshNeedsUpdate = true;
+            glyphVisible[i] = 0;
+          }
           continue;
         }
+
+        shardVisible[i] = 1;
 
         // Inside visibility radius: animate bobbing and rotation
         const bob = Math.sin(time * 2.2 + shard.position.x * 0.15 + shard.position.z * 0.15) * 0.22;
@@ -597,15 +613,17 @@ export class ShardWorld {
           this.glyphDummy.updateMatrix();
           glyphMesh.setMatrixAt(i, this.glyphDummy.matrix);
           glyphMeshNeedsUpdate = true;
+          glyphVisible[i] = 1;
 
           glyphMesh.setColorAt(i, visualColor);
           glyphColorNeedsUpdate = true;
-        } else {
+        } else if (glyphVisible[i] !== 0) {
           this.glyphDummy.position.set(0, -9999, 0);
           this.glyphDummy.scale.set(0, 0, 0);
           this.glyphDummy.updateMatrix();
           glyphMesh.setMatrixAt(i, this.glyphDummy.matrix);
           glyphMeshNeedsUpdate = true;
+          glyphVisible[i] = 0;
         }
 
         // Tint color if in Scan Mode
