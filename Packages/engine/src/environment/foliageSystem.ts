@@ -290,6 +290,8 @@ export class FoliageSystem {
     let rockCount = 0;
     let billboardCount = 0;
 
+    const tmpColor = new THREE.Color();
+
     for (let x = -worldRadius; x <= worldRadius; x += step) {
       for (let z = -worldRadius; z <= worldRadius; z += step) {
         const px = x + (rand() - 0.5) * step * 0.9;
@@ -322,7 +324,9 @@ export class FoliageSystem {
               scale
             };
             this.addObjectToGrid(obj);
-            this.setInstanceTransform(this.rockMesh, rockCount++, obj);
+            this.setInstanceTransform(this.rockMesh, rockCount, obj);
+            tmpColor.setHSL(0.08 + (rand() - 0.5) * 0.04, 0.08, 0.85 + (rand() - 0.5) * 0.15);
+            this.rockMesh.setColorAt(rockCount++, tmpColor);
           }
         } else if (height > 52.0) {
           // Alpine heights: Pines only
@@ -338,7 +342,9 @@ export class FoliageSystem {
               scale
             };
             this.addObjectToGrid(obj);
-            this.setInstanceTransform(this.pineMesh, pineCount++, obj);
+            this.setInstanceTransform(this.pineMesh, pineCount, obj);
+            tmpColor.setHSL(0.38 + (rand() - 0.5) * 0.06, 0.45, 0.88 + (rand() - 0.5) * 0.16);
+            this.pineMesh.setColorAt(pineCount++, tmpColor);
           }
         } else {
           // Valleys and meadows: Oaks, Pines, and occasional meadow boulders
@@ -355,7 +361,9 @@ export class FoliageSystem {
               scale
             };
             this.addObjectToGrid(obj);
-            this.setInstanceTransform(this.oakMesh, oakCount++, obj);
+            this.setInstanceTransform(this.oakMesh, oakCount, obj);
+            tmpColor.setHSL(0.33 + (rand() - 0.5) * 0.08, 0.48, 0.90 + (rand() - 0.5) * 0.18);
+            this.oakMesh.setColorAt(oakCount++, tmpColor);
           } else if (choice < 0.60 && pineCount < 2500) {
             const scale = 0.8 + rand() * 0.6;
             const obj: FoliageObject = {
@@ -368,7 +376,9 @@ export class FoliageSystem {
               scale
             };
             this.addObjectToGrid(obj);
-            this.setInstanceTransform(this.pineMesh, pineCount++, obj);
+            this.setInstanceTransform(this.pineMesh, pineCount, obj);
+            tmpColor.setHSL(0.38 + (rand() - 0.5) * 0.06, 0.45, 0.88 + (rand() - 0.5) * 0.16);
+            this.pineMesh.setColorAt(pineCount++, tmpColor);
           } else if (choice < 0.72 && rockCount < 3000) {
             const scale = 0.6 + rand() * 0.8;
             const obj: FoliageObject = {
@@ -381,7 +391,9 @@ export class FoliageSystem {
               scale
             };
             this.addObjectToGrid(obj);
-            this.setInstanceTransform(this.rockMesh, rockCount++, obj);
+            this.setInstanceTransform(this.rockMesh, rockCount, obj);
+            tmpColor.setHSL(0.08 + (rand() - 0.5) * 0.04, 0.08, 0.85 + (rand() - 0.5) * 0.15);
+            this.rockMesh.setColorAt(rockCount++, tmpColor);
           } else if (billboardCount < 6000 && distCenter > 160.0) {
             // Far distance tree billboards
             const scale = 0.85 + rand() * 0.5;
@@ -409,6 +421,10 @@ export class FoliageSystem {
     this.oakMesh.instanceMatrix.needsUpdate = true;
     this.rockMesh.instanceMatrix.needsUpdate = true;
     this.billboardMesh.instanceMatrix.needsUpdate = true;
+
+    if (this.pineMesh.instanceColor) this.pineMesh.instanceColor.needsUpdate = true;
+    if (this.oakMesh.instanceColor) this.oakMesh.instanceColor.needsUpdate = true;
+    if (this.rockMesh.instanceColor) this.rockMesh.instanceColor.needsUpdate = true;
   }
 
   private setInstanceTransform(mesh: THREE.InstancedMesh, index: number, obj: FoliageObject): void {
@@ -465,11 +481,16 @@ export class FoliageSystem {
   }
 
   public update(time: number): void {
-    // Subtle wind oscillation on trees and billboard orientation
-    const sway = Math.sin(time * 1.5) * 0.04;
-    this.billboardMesh.rotation.y = sway;
-    this.oakMesh.rotation.z = Math.sin(time * 1.6) * 0.007;
-    this.pineMesh.rotation.x = Math.cos(time * 1.3) * 0.005;
+    // Dual-harmonic wind sway with gust turbulence damping
+    const windGust = Math.sin(time * 0.7) * Math.cos(time * 0.33);
+    const swayZ = Math.sin(time * 1.4 + windGust * 0.5) * 0.012;
+    const swayX = Math.cos(time * 1.1 + windGust * 0.3) * 0.008;
+
+    this.billboardMesh.rotation.y = Math.sin(time * 1.5) * 0.04;
+    this.oakMesh.rotation.z = swayZ;
+    this.oakMesh.rotation.x = swayX * 0.7;
+    this.pineMesh.rotation.x = swayX;
+    this.pineMesh.rotation.z = swayZ * 0.6;
   }
 
   public setQuality(tier: 'low' | 'medium' | 'high'): void {
