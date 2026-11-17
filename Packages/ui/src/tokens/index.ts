@@ -149,11 +149,38 @@ export const motion = {
     instant: '0ms',
     fast: '100ms',
     base: '180ms',
-    slow: '300ms'
+    slow: '300ms',
+    deliberate: '450ms'
   },
   easing: {
     standard: 'cubic-bezier(0.2, 0.0, 0, 1.0)',
     emphasized: 'cubic-bezier(0.05, 0.7, 0.1, 1.0)',
-    exit: 'cubic-bezier(0.3, 0.0, 0.8, 0.15)'
+    exit: 'cubic-bezier(0.3, 0.0, 0.8, 0.15)',
+    bounce: 'cubic-bezier(0.34, 1.56, 0.64, 1.0)'
   }
+};
+
+export const durations = motion.duration;
+export const easings = motion.easing;
+
+export const motionMs = {
+  instant: 0,
+  fast: 100,
+  base: 180,
+  slow: 300,
+  deliberate: 450
+};
+
+export const tokens = {
+  typography,
+  paletteDark,
+  paletteLight,
+  spacing,
+  radii,
+  elevation,
+  zIndex,
+  motion,
+  durations,
+  easings,
+  motionMs
 };
