@@ -17,6 +17,7 @@ export class SoundEngine {
   private ctx: AudioContext | null = null;
   private isMutedState = false;
   private masterGain: GainNode | null = null;
+  private limiter: DynamicsCompressorNode | null = null;
   private sfxGain: GainNode | null = null;
   private ambientGain: GainNode | null = null;
 
@@ -39,10 +40,18 @@ export class SoundEngine {
       if (AudioCtx) {
         this.ctx = new AudioCtx();
 
-        // 1. Master Channel
+        // 1. Master Channel with DynamicsCompressor Limiter
+        this.limiter = this.ctx.createDynamicsCompressor();
+        this.limiter.threshold.setValueAtTime(-1.0, this.ctx.currentTime);
+        this.limiter.knee.setValueAtTime(12.0, this.ctx.currentTime);
+        this.limiter.ratio.setValueAtTime(16.0, this.ctx.currentTime);
+        this.limiter.attack.setValueAtTime(0.003, this.ctx.currentTime);
+        this.limiter.release.setValueAtTime(0.25, this.ctx.currentTime);
+        this.limiter.connect(this.ctx.destination);
+
         this.masterGain = this.ctx.createGain();
         this.masterGain.gain.setValueAtTime(this.isMutedState ? 0 : this.masterVolume, this.ctx.currentTime);
-        this.masterGain.connect(this.ctx.destination);
+        this.masterGain.connect(this.limiter);
 
         // 2. SFX Channel
         this.sfxGain = this.ctx.createGain();
@@ -59,6 +68,61 @@ export class SoundEngine {
       this.ctx.resume().catch(() => {});
     }
     return this.ctx;
+  }
+
+  // --- Spatial 3D Audio Attenuation ---
+
+  /**
+   * Calculates distance attenuation gain using a quadratic falloff curve with soft cutoff.
+   */
+  public calculateSpatialGain(
+    listenerPos: { x: number; y: number; z: number },
+    emitterPos: { x: number; y: number; z: number },
+    maxRadius: number = 35.0,
+    rolloff: number = 1.8
+  ): number {
+    const dx = listenerPos.x - emitterPos.x;
+    const dy = listenerPos.y - emitterPos.y;
+    const dz = listenerPos.z - emitterPos.z;
+    const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+    if (dist >= maxRadius) return 0.0;
+    if (dist <= 1.5) return 1.0;
+    const normDist = (dist - 1.5) / (maxRadius - 1.5);
+    return Math.max(0.0, Math.pow(1.0 - normDist, rolloff));
+  }
+
+  /**
+   * Plays a distance-attenuated celestial chime at a specific 3D location.
+   */
+  public playSpatialChime(
+    listenerPos: { x: number; y: number; z: number },
+    emitterPos: { x: number; y: number; z: number },
+    basePitch = 880
+  ): void {
+    if (this.isMutedState) return;
+    const spatialGain = this.calculateSpatialGain(listenerPos, emitterPos, 40.0, 1.6);
+    if (spatialGain <= 0.005) return;
+
+    const ctx = this.getContext();
+    if (!ctx || !this.sfxGain) return;
+
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(basePitch, now);
+    osc.frequency.exponentialRampToValueAtTime(basePitch * 1.5, now + 0.35);
+
+    const targetVol = 0.12 * spatialGain;
+    gain.gain.setValueAtTime(targetVol, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.45);
+
+    osc.connect(gain);
+    gain.connect(this.sfxGain);
+
+    osc.start(now);
+    osc.stop(now + 0.45);
   }
 
   // --- Volume & Mute Controls ---
