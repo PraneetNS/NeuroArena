@@ -285,6 +285,7 @@ export class ShardWorld {
   public lastSweepSummary: SweepSummary | null = null;
   public sweepToastTimer = 0.0;
   public selectedToolId = 'sweep_net';
+  private sweepRingMesh: THREE.Mesh;
 
   private onHarvestCallback?: (shard: Shard) => void;
 
@@ -300,6 +301,20 @@ export class ShardWorld {
 
     // Generate deterministic 574 shards across 5 regions with seed 42
     this.worldState = createWorldState(42, groundSampler);
+
+    // Radial sweep pulse ring mesh
+    const ringGeo = new THREE.RingGeometry(0.85, 1.0, 48);
+    ringGeo.rotateX(-Math.PI / 2);
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: 0x4fb3a9,
+      transparent: true,
+      opacity: 0,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+    this.sweepRingMesh = new THREE.Mesh(ringGeo, ringMat);
+    this.sweepRingMesh.visible = false;
+    this.group.add(this.sweepRingMesh);
 
     this.createInstancedMeshes();
   }
@@ -631,7 +646,17 @@ export class ShardWorld {
         this.cancelSweep();
       } else {
         this.sweepTimer += dt;
+        const sweepProgress = Math.min(1.0, this.sweepTimer / this.sweepDuration);
+        const currentRadius = 0.8 + sweepProgress * this.SWEEP_RADIUS;
+        this.sweepRingMesh.visible = true;
+        this.sweepRingMesh.position.set(this.sweepStartPos.x, this.sweepStartPos.y + 0.15, this.sweepStartPos.z);
+        this.sweepRingMesh.scale.set(currentRadius, 1, currentRadius);
+        (this.sweepRingMesh.material as THREE.MeshBasicMaterial).opacity = (1.0 - sweepProgress * 0.6) * 0.85;
+
         if (this.sweepTimer >= this.sweepDuration) {
+          this.sweepRingMesh.visible = false;
+          (this.sweepRingMesh.material as THREE.MeshBasicMaterial).opacity = 0;
+
           // Execute Sweep Net Harvest
           let collected = 0;
           let skipped = 0;
@@ -719,6 +744,8 @@ export class ShardWorld {
       this.isSweeping = false;
       this.sweepTimer = 0.0;
       this.sweepCandidateShards = [];
+      this.sweepRingMesh.visible = false;
+      (this.sweepRingMesh.material as THREE.MeshBasicMaterial).opacity = 0;
     }
   }
 
