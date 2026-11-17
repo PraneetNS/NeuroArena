@@ -138,6 +138,9 @@ class NeuroArenaGame {
   private shardHudContainer: HTMLElement;
   private shardHudRoot: ReactDOM.Root;
   private isVaultOpen = false;
+  private regionBannerEl: HTMLElement | null = null;
+  private regionBannerTimeout: any = null;
+  private currentActiveBiomeId = '';
 
   // Tutorial Director, Lumen Spirit & Codex Journal
   private lumen: LumenCompanion;
@@ -1339,6 +1342,57 @@ class NeuroArenaGame {
     );
   }
 
+  private showRegionBanner(regionName: string): void {
+    if (!this.regionBannerEl) {
+      this.regionBannerEl = document.createElement('div');
+      this.regionBannerEl.style.cssText = `
+        position: absolute;
+        top: 76px;
+        left: 50%;
+        transform: translateX(-50%) translateY(-10px);
+        pointer-events: none;
+        z-index: 120;
+        text-align: center;
+        opacity: 0;
+        transition: opacity 0.5s cubic-bezier(0.2, 0.0, 0, 1.0), transform 0.5s cubic-bezier(0.2, 0.0, 0, 1.0);
+      `;
+      this.uiContainer.appendChild(this.regionBannerEl);
+    }
+
+    this.regionBannerEl.innerHTML = `
+      <div style="
+        background: var(--na-surface, rgba(14, 17, 22, 0.88));
+        backdrop-filter: blur(14px);
+        border: 1px solid var(--na-line-strong, #3A4657);
+        border-radius: var(--na-radius-md, 8px);
+        padding: 8px 24px;
+        box-shadow: 0 12px 32px var(--na-overlay, rgba(0, 0, 0, 0.6));
+      ">
+        <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.16em; color: var(--na-accent-cool, #4FB3A9); font-family: var(--na-font-mono, monospace);">
+          ENTERING REGION
+        </div>
+        <div style="font-family: var(--na-font-display, serif); font-size: 19px; font-weight: 600; color: var(--na-text, #E8E4DA); margin-top: 2px;">
+          ${regionName}
+        </div>
+      </div>
+    `;
+
+    clearTimeout(this.regionBannerTimeout);
+    requestAnimationFrame(() => {
+      if (this.regionBannerEl) {
+        this.regionBannerEl.style.opacity = '1';
+        this.regionBannerEl.style.transform = 'translateX(-50%) translateY(0px)';
+      }
+    });
+
+    this.regionBannerTimeout = setTimeout(() => {
+      if (this.regionBannerEl) {
+        this.regionBannerEl.style.opacity = '0';
+        this.regionBannerEl.style.transform = 'translateX(-50%) translateY(-10px)';
+      }
+    }, 3200);
+  }
+
   private updateHUD(): void {
     const p = this.player.position;
     if (p.x < -18 && p.z < 0) this.currentSector = 'Dialogue Citadel';
@@ -1429,6 +1483,18 @@ class NeuroArenaGame {
       }
     }
     this.audio.setBiome(activeBiome);
+
+    // Surface region entry notification banner when crossing biome borders
+    if (activeBiome !== this.currentActiveBiomeId) {
+      const prev = this.currentActiveBiomeId;
+      this.currentActiveBiomeId = activeBiome;
+      if (prev !== '') {
+        const matchingReg = this.shardWorld.worldState.regions.find((r) => r.id === activeBiome);
+        if (matchingReg) {
+          this.showRegionBanner(matchingReg.name);
+        }
+      }
+    }
 
     // Subtle proximity harmonic shimmer when near an uncollected neural shard
     if (this.lastInteractionState.targetShard && this.lastInteractionState.targetDistance <= 6.5) {
