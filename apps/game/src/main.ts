@@ -124,6 +124,7 @@ class NeuroArenaGame {
   private world: World;
   private player: Player;
   private audio: SoundEngine;
+  private shardHumTimer = 0;
   private companion: CompanionDrone;
 
   private shards: NeuralShard[] = [];
@@ -1428,6 +1429,18 @@ class NeuroArenaGame {
       }
     }
     this.audio.setBiome(activeBiome);
+
+    // Subtle proximity harmonic shimmer when near an uncollected neural shard
+    if (this.lastInteractionState.targetShard && this.lastInteractionState.targetDistance <= 6.5) {
+      this.shardHumTimer += dt;
+      if (this.shardHumTimer >= 2.4) {
+        this.shardHumTimer = 0;
+        const shardPos = this.lastInteractionState.targetShard.position;
+        this.audio.playSpatialChime(this.player.position, shardPos, 740);
+      }
+    } else {
+      this.shardHumTimer = Math.max(0, this.shardHumTimer - dt);
+    }
 
     this.activeNearbyShard = null;
     for (const shard of this.shards) {
