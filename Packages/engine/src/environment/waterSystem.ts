@@ -60,16 +60,21 @@ export class WaterSystem {
       const p = positionWorld;
       const w1 = p.x.mul(0.04).add(this.uTime.mul(1.2)).sin();
       const w2 = p.z.mul(0.05).add(this.uTime.mul(0.9)).cos();
-      const wave = w1.add(w2).mul(0.5);
+      const w3 = p.x.mul(0.09).add(p.z.mul(0.07)).add(this.uTime.mul(1.7)).sin();
+      const wave = w1.add(w2).mul(0.4).add(w3.mul(0.2));
 
       const baseWater = mix(this.uDeepColor, this.uShallowColor, wave.mul(0.3).add(0.5));
-      const foam = smoothstep(float(0.7), float(1.0), wave);
-      const colWithFoam = mix(baseWater, this.uFoamColor, foam.mul(0.35));
 
-      // Stylized high-frequency caustic sparkles on sunlit wave peaks
+      // Shore wave foam noise pulsator with multi-frequency interference
+      const foamNoise = p.x.mul(0.18).sub(p.z.mul(0.14)).add(this.uTime.mul(1.8)).sin();
+      const foamCombined = wave.add(foamNoise.mul(0.25));
+      const foam = smoothstep(float(0.65), float(0.95), foamCombined);
+      const colWithFoam = mix(baseWater, this.uFoamColor, foam.mul(0.42));
+
+      // Stylized high-frequency caustic sparkles and specular glints on wave crests
       const sparkleW1 = p.x.mul(1.6).add(this.uTime.mul(4.0)).sin();
       const sparkleW2 = p.z.mul(1.9).sub(this.uTime.mul(3.2)).cos();
-      const sparkleVal = smoothstep(float(0.80), float(0.98), sparkleW1.mul(sparkleW2));
+      const sparkleVal = smoothstep(float(0.78), float(0.98), sparkleW1.mul(sparkleW2));
       const colWithSparkles = colWithFoam.add(this.uSunColor.mul(sparkleVal).mul(1.4));
 
       return colWithSparkles;
