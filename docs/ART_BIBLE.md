@@ -106,3 +106,18 @@ NeuroArena uses a custom Three.js TSL post-processing pipeline calibrated for pa
   - *Noisy (Uncurated)*: High-frequency jitter, unstable chromatic aberration, flickering glyphs.
   - *Duplicate (Echo)*: Faint trailing ghost glyphs lagging behind the main cluster.
   - *Contaminated (Off-domain)*: Sharp discordant red-orange spikes with irregular rotational wobble.
+
+---
+
+## 7. The Five Standard Benchmark Photo Spots
+
+These five calibrated viewpoints serve as the reference standard for all visual verification, hardware benchmarking, and quality governance profiling.
+
+| Spot ID | Viewpoint Name | Time of Day | Camera Position `[x, y, z]` | Look-At Target `[x, y, z]` | Player Position `[x, y, z]` | Composition & Visual Goals |
+| :--- | :--- | :---: | :---: | :---: | :---: | :--- |
+| `ridge_sunrise` | **Ridge at Sunrise** | `06:15` (6.25h) | `[-85, 38, 120]` | `[10, 24, 40]` | `[-78, 23, 110]` | Sunrise sun disc rising over valley mist; soft apricot glow on eastern mountain faces; cool cobalt and slate shadows in western hollows. |
+| `meadow_golden_hour`| **Meadow at Golden Hour** | `17:48` (17.80h) | `[32, 55, 52]` | `[55, 85, 20]` | `[42, 52, 35]` | Low raking amber sunlight catching moving grass tip highlights; buttercup flower tufts; floating verse glyph cards with warm volumetric halos. |
+| `river_midday` | **River at Midday** | `12:00` (12.00h) | `[-8, 72, -42]` | `[35, 55, -85]` | `[5, 68, -60]` | Clear azure daylight sky; crystal turquoise water plane with rhythmic shore foam pulsation; sunlit caustic sparkles and specular glints. |
+| `camp_dusk` | **Camp at Dusk** | `19:30` (19.50h) | `[-18, 42, 25]` | `[0, 52, 0]` | `[-4, 39, 8]` | Scholar retreat at twilight; warm campfire glow and lantern amber light; deep indigo sky transitioning to violet horizon; scholar silhouette. |
+| `border_blue_hour` | **Region Border at Blue Hour** | `20:45` (20.75h) | `[155, 30, -95]` | `[215, 36, -155]` | `[180, 26, -120]` | Cool periwinkle nightfall; silver moonbeam illumination on slate boulders and pine silhouettes; boundary transition between biome flora. |
+
