@@ -7,6 +7,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+- **Stylized Painterly Open-World Experience & WebGPU Render Loop**
+  - **CC0 Rigged Character & Blend Tree AnimationMixer**: Integrated Quaternius CC0 rigged scholar (<10k triangles, 29 bones) with smooth cross-fading for idle, walk, run, jump, land, gather, and turn-in-place animations.
+  - **Speed-Matched Foot IK Ground-Conforming**: Implemented two-bone analytical Foot IK coupled with CPU terrain sampler (`noise.ts`) conforming ankles to local terrain slopes and elevations.
+  - **Three.js TSL Node Shaders**: Built 100% WebGPU WGSL compliant materials for 4-biome terrain splatting, drifting cloud shadows, macro-variation noise, player worn paths, multi-frequency water wave foam pulsators, and sunlit specular glints.
+  - **Procedural Soundscape & Spatial 3D Audio**: Built pure Web Audio API procedural sound engine with zero audio asset dependencies, featuring multi-biome ambient wind/surf/birdsong synthesis, surface-adaptive footsteps, dynamics compressor brickwall limiter, and distance attenuation falloff.
+  - **Living Neural Shards as Typographic Art**: Replaced generic crystals with floating clusters of glowing text fragment glyph cards orbiting a luminous core, with pre-scan visual telemetry directly reflecting data quality signals.
+  - **In-Game Hardware Benchmark Harness & Quality Governor**: Built reproducible scripted camera path through 5 calibrated photo spots and 60s player walk, reporting accurate GPU metrics, A/B feature cost differentials, and anti-flap frame-time hysteresis damping.
+  - **Design Token System & Reduced Motion A11y**: Enforced cohesive design tokens across all UI modals (Codex, Camp, Benchmark, Character Studio) with comprehensive `@media (prefers-reduced-motion: reduce)` accessibility compliance.
+
 ## [4.5.0] - 2026-10-10
 
 ### Added
