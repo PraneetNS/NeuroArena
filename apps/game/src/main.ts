@@ -252,7 +252,12 @@ class NeuroArenaGame {
       onCurator: () => this.openCurator(),
       onForge: () => this.openForge(),
       onChat: () => this.openChat(),
-      onReport: () => this.openReport()
+      onReport: () => this.openReport(),
+      onAudioToggle: () => {
+        const nextMute = !this.audio.isMuted();
+        this.audio.setMuted(nextMute);
+        this.hud.setAudioMuted(nextMute);
+      }
     });
 
     this.debugContainer = document.createElement('div');
@@ -585,6 +590,14 @@ class NeuroArenaGame {
       // Dev Free-Fly Camera toggle with Shift+KeyF or KeyP (avoids conflict with Sweep Net on KeyF)
       if ((e.shiftKey && e.code === 'KeyF') || e.code === 'KeyP') {
         this.toggleFreeFly();
+        return;
+      }
+
+      // Master Audio Mute toggle on KeyM
+      if (e.code === 'KeyM') {
+        const nextMute = !this.audio.isMuted();
+        this.audio.setMuted(nextMute);
+        this.hud.setAudioMuted(nextMute);
         return;
       }
 
