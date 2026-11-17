@@ -81,4 +81,86 @@
 - **Autonomous Bot Policy Colyseus Arena (`BotArenaRoom`)**: 20Hz physics simulation running player-trained 2-layer MLP neural policies for raycast observation steering, throttle modulation, and obstacle avoidance.
 - **Cross-Platform Drone Kinematics**: Bit-exact parity between Unity C# (`AutonomousBotArena.cs`) and Web PWA client (`BotArenaClient.js`).
 
+## 3. WebGPU Rendering Pipeline & TSL Node Architecture
+
+### 3.1 Frame Execution Lifecycle
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Engine as Engine (World / Game Loop)
+    participant IK as Player & Foot IK (CPU Sampler)
+    participant Culling as Spatial Hash Culler
+    participant GPU as WebGPU Renderer
+    participant TSL as TSL Node Shaders
+    participant Post as Post-Processing (PassNode)
+    participant Gov as Quality Governor
+
+    Engine->>IK: Sample height & slope at feet (noise.ts)
+    IK->>IK: Solve two-bone analytical Foot IK & speed match
+    Engine->>Culling: Query visible foliage & shards (220m radius)
+    Culling->>Engine: Return active instanced matrix buffers
+    Engine->>TSL: Update dynamic uniforms (uTime, sunDir, playerPos, camPos)
+    Engine->>GPU: Issue instanced draw calls (Terrain, Foliage, Water, Shards)
+    GPU->>TSL: Execute TSL WGSL graphs (Macro-noise splatting, foam pulsator)
+    GPU->>Post: Execute post pass chain (Half-res GTAO -> Bloom -> Time-of-day LUT)
+    Post->>GPU: Present canvas swapchain (DPR target)
+    GPU-->>Gov: Frame time delta telemetry (p50 / 1% low)
+    Gov->>Engine: Modulate DPR / effects with anti-flap hysteresis
+```
+
+### 3.2 TSL (Three.js Shading Language) Node Graph Topology
+
+The rendering pipeline is implemented entirely in Three.js TSL nodes, compiled directly to WebGPU WGSL:
+
+```mermaid
+flowchart TD
+    subgraph Inputs["Dynamic Uniforms & Attributes"]
+        UPos["positionWorld"]
+        UNorm["normalWorld"]
+        UTime["uTime (Clock)"]
+        USun["uSunDirection / uSunColor"]
+        UPlayer["uPlayerTrailPos"]
+        UCam["uCameraPos"]
+        ASplats["aSplats (Per-vertex Sand/Grass/Dirt/Rock)"]
+    end
+
+    subgraph TerrainShaders["Terrain TSL Graph (terrainMaterial.ts)"]
+        Macro["Macro-Noise Generator (0.0035 freq)"]
+        Biome["Regional Biome Tinting (2km coord mapping)"]
+        CloudShad["Drifting Cloud Shadow Node (0.025 speed)"]
+        WornPath["Player Footprint Compaction & Worn Paths"]
+        DistHaze["Distance Sky Horizon Atmospheric Haze"]
+        NormalBlend["Normal Map Blending + Micro-Bump Relief"]
+        FinalTerrain["Final Terrain ColorNode (vec4)"]
+    end
+
+    subgraph WaterShaders["Water TSL Graph (waterSystem.ts)"]
+        WaveHarmonics["Multi-frequency Wave Sin/Cos Interferences"]
+        ShoreFoam["Shore Foam Noise Pulsator Node"]
+        SunSparkle["Sunlit Caustic Sparkles & Specular Glints"]
+        FinalWater["Final Water ColorNode & Opacity"]
+    end
+
+    Inputs --> Macro
+    Inputs --> Biome
+    Inputs --> CloudShad
+    Inputs --> WornPath
+    Inputs --> DistHaze
+    Inputs --> NormalBlend
+    Macro --> FinalTerrain
+    Biome --> FinalTerrain
+    CloudShad --> FinalTerrain
+    WornPath --> FinalTerrain
+    DistHaze --> FinalTerrain
+    ASplats --> FinalTerrain
+
+    Inputs --> WaveHarmonics
+    Inputs --> ShoreFoam
+    Inputs --> SunSparkle
+    WaveHarmonics --> FinalWater
+    ShoreFoam --> FinalWater
+    SunSparkle --> FinalWater
+```
+
 
