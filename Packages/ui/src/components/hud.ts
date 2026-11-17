@@ -25,6 +25,7 @@ export class HUD {
   private onForgeClick: () => void;
   private onChatClick: () => void;
   private onReportClick: () => void;
+  private onAudioToggleClick?: () => void;
 
   constructor(
     parent: HTMLElement,
@@ -33,12 +34,14 @@ export class HUD {
       onForge: () => void;
       onChat: () => void;
       onReport: () => void;
+      onAudioToggle?: () => void;
     }
   ) {
     this.onCuratorClick = callbacks.onCurator;
     this.onForgeClick = callbacks.onForge;
     this.onChatClick = callbacks.onChat;
     this.onReportClick = callbacks.onReport;
+    this.onAudioToggleClick = callbacks.onAudioToggle;
 
     this.root = document.createElement('div');
     this.root.id = 'neuroarena-hud';
@@ -108,6 +111,11 @@ export class HUD {
             <span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:currentColor;"></span>
             Untrained
           </div>
+
+          <button id="hud-audio-btn" class="glass-panel" style="padding: 0.5rem 0.8rem; display: flex; align-items: center; gap: 0.4rem; cursor: pointer; color: var(--na-text, #fff); border: 1px solid var(--na-line, #334155); background: var(--na-surface, rgba(15,23,42,0.7)); border-radius: 6px;">
+            <span id="hud-audio-icon">🔊</span>
+            <span style="font-size: 0.72rem; font-family: var(--na-font-mono, monospace); color: var(--na-muted, #94a3b8);">[M]</span>
+          </button>
         </div>
       </div>
 
@@ -182,6 +190,14 @@ export class HUD {
       .querySelector('#btn-open-forge')
       ?.addEventListener('click', () => this.onForgeClick());
     this.root.querySelector('#btn-open-chat')?.addEventListener('click', () => this.onChatClick());
+    this.root.querySelector('#hud-audio-btn')?.addEventListener('click', () => this.onAudioToggleClick?.());
+  }
+
+  public setAudioMuted(muted: boolean): void {
+    const iconEl = this.root.querySelector('#hud-audio-icon');
+    if (iconEl) {
+      iconEl.textContent = muted ? '🔇' : '🔊';
+    }
   }
 
   public update(state: HUDState): void {
