@@ -105,41 +105,56 @@ export const CampOverlay: React.FC<CampOverlayProps> = ({
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '0.5rem',
-              backgroundColor: 'rgba(15, 23, 42, 0.75)',
+              gap: 'var(--na-space-2)',
+              backgroundColor: 'var(--na-surface)',
               backdropFilter: 'blur(12px)',
-              border: '1px solid var(--na-border, #334155)',
-              color: '#f8fafc',
-              padding: '0.55rem 1.1rem',
-              borderRadius: '8px',
+              border: '1px solid var(--na-line-strong)',
+              color: 'var(--na-text)',
+              padding: 'var(--na-space-2) var(--na-space-4)',
+              borderRadius: 'var(--na-radius-md)',
               cursor: 'pointer',
               fontWeight: 600,
-              fontSize: '0.85rem'
+              fontSize: 'var(--na-text-sm)',
+              boxShadow: '0 4px 14px var(--na-overlay)',
+              transition: 'background-color var(--na-duration-fast) var(--na-ease-default), border-color var(--na-duration-fast)'
             }}
             title="Leave camp and return to the 3D world (training continues in the background)"
           >
-            <span>←</span> Return to the world <span style={{ opacity: 0.6, fontSize: '0.75rem' }}>(Esc)</span>
+            <span>←</span> Return to the world
+            <span
+              style={{
+                fontSize: 'var(--na-text-2xs)',
+                fontFamily: 'var(--na-font-mono)',
+                backgroundColor: 'var(--na-surface-raised)',
+                padding: '1px 5px',
+                borderRadius: 'var(--na-radius-xs)',
+                color: 'var(--na-muted)'
+              }}
+            >
+              Esc
+            </span>
           </button>
 
           <div
             style={{
               display: 'flex',
               flexDirection: 'column',
-              backgroundColor: 'rgba(15, 23, 42, 0.65)',
+              backgroundColor: 'var(--na-surface)',
               backdropFilter: 'blur(12px)',
-              padding: '0.4rem 0.9rem',
-              borderRadius: '8px',
-              border: '1px solid rgba(255, 255, 255, 0.08)'
+              padding: 'var(--na-space-2) var(--na-space-4)',
+              borderRadius: 'var(--na-radius-md)',
+              border: '1px solid var(--na-line)',
+              boxShadow: '0 4px 14px var(--na-overlay)'
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ color: '#f59e0b', fontSize: '1rem' }}>🔥</span>
-              <span style={{ fontWeight: 700, fontSize: '0.9rem', color: '#f8fafc', letterSpacing: '0.04em' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--na-space-2)' }}>
+              <span style={{ color: 'var(--na-accent)', fontSize: '1rem' }}>🔥</span>
+              <span style={{ fontWeight: 700, fontSize: 'var(--na-text-sm)', color: 'var(--na-text)', letterSpacing: '0.04em' }}>
                 THE CAMP
               </span>
-              <span style={{ color: '#94a3b8', fontSize: '0.75rem' }}>• Dusk Training Retreat</span>
+              <span style={{ color: 'var(--na-muted)', fontSize: 'var(--na-text-xs)' }}>• Dusk Training Retreat</span>
             </div>
-            <span style={{ fontSize: '0.72rem', color: '#64748b', fontStyle: 'italic' }}>
+            <span style={{ fontSize: 'var(--na-text-2xs)', color: 'var(--na-muted)', fontStyle: 'italic' }}>
               Training continues actively while you rest by the fire
             </span>
           </div>
