@@ -34,7 +34,8 @@ export function computeLensSignals(
       surpriseScore: 0,
       uppercaseRatio: 0,
       avgWordLength: 0,
-      dictionaryHitRate: 1.0
+      dictionaryHitRate: 1.0,
+      shannonEntropy: 0
     };
   }
 
@@ -105,13 +106,26 @@ export function computeLensSignals(
     }
   }
 
+  // 7. Shannon Entropy (bits per character)
+  const charFreqs = new Map<string, number>();
+  for (let i = 0; i < len; i++) {
+    const ch = text[i];
+    charFreqs.set(ch, (charFreqs.get(ch) || 0) + 1);
+  }
+  let shannonEntropy = 0;
+  for (const count of charFreqs.values()) {
+    const p = count / len;
+    shannonEntropy -= p * Math.log2(p);
+  }
+
   return {
     nonAlphabeticRatio: Number(nonAlphabeticRatio.toFixed(4)),
     repetitionScore: Number(repetitionScore.toFixed(4)),
     surpriseScore: Number(surpriseScore.toFixed(4)),
     uppercaseRatio: Number(uppercaseRatio.toFixed(4)),
     avgWordLength: Number(avgWordLength.toFixed(2)),
-    dictionaryHitRate: Number(dictionaryHitRate.toFixed(4))
+    dictionaryHitRate: Number(dictionaryHitRate.toFixed(4)),
+    shannonEntropy: Number(shannonEntropy.toFixed(3))
   };
 }
 
@@ -132,7 +146,8 @@ export function scanShard(shard: Shard, vaultState?: VaultState, vault3GramsCach
     surpriseScore: signals.surpriseScore * 2.5,
     uppercaseRatio: Math.abs(signals.uppercaseRatio - 0.03) * 4.0,
     avgWordLength: Math.abs(signals.avgWordLength - 4.4) * 0.8,
-    dictionaryHitRate: (1.0 - signals.dictionaryHitRate) * 4.0
+    dictionaryHitRate: (1.0 - signals.dictionaryHitRate) * 4.0,
+    shannonEntropy: Math.abs((signals.shannonEntropy ?? 3.8) - 3.8) * 0.8
   };
 
   for (const [key, div] of Object.entries(divergences)) {

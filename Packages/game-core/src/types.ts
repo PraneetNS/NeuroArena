@@ -51,6 +51,7 @@ export interface LensSignals {
   uppercaseRatio: number;     // 0..1 fraction of uppercase letters
   avgWordLength: number;      // average length of alphabetic words
   dictionaryHitRate: number;  // 0..1 fraction of words found in clean TRAIN split vocabulary
+  shannonEntropy: number;     // character-level Shannon entropy in bits (e.g. 2.5 - 4.5)
 }
 
 export interface ScanResult {
