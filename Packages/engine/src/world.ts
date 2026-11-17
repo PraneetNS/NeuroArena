@@ -58,6 +58,8 @@ export class World {
   // Camera Orbit parameters for Third-Person
   public cameraAngleY = 0;
   public cameraPitch = 0.35;
+  public targetCameraAngleY = 0;
+  public targetCameraPitch = 0.35;
   public cameraDistance = 12.0;
   private isMouseDown = false;
   private prevMouseX = 0;
@@ -338,8 +340,8 @@ export class World {
       this.prevMouseX = e.clientX;
       this.prevMouseY = e.clientY;
 
-      this.cameraAngleY -= dx * 0.005;
-      this.cameraPitch = THREE.MathUtils.clamp(this.cameraPitch + dy * 0.004, 0.05, 1.4);
+      this.targetCameraAngleY -= dx * 0.005;
+      this.targetCameraPitch = THREE.MathUtils.clamp(this.targetCameraPitch + dy * 0.004, 0.08, 1.35);
     });
 
     el.addEventListener(
@@ -358,6 +360,10 @@ export class World {
 
   public updateCamera(player: Player): void {
     if (this.isFreeFly) return;
+
+    // Smooth camera orbit interpolation
+    this.cameraAngleY = THREE.MathUtils.lerp(this.cameraAngleY, this.targetCameraAngleY, 0.18);
+    this.cameraPitch = THREE.MathUtils.lerp(this.cameraPitch, this.targetCameraPitch, 0.18);
 
     // 1. Subtle camera lead in player movement direction
     const leadOffset = new THREE.Vector3(player.velocity.x * 0.12, 0, player.velocity.z * 0.12);
@@ -382,11 +388,12 @@ export class World {
     this.camera.position.set(camX, camY, camZ);
     this.camera.lookAt(target);
 
-    // 3. Dynamic Field-of-View widening on sprint
+    // 3. Dynamic Field-of-View widening on sprint with smooth easing
     const isSprinting = player.controls.sprint && player.velocity.lengthSq() > 2.0;
     const targetFov = isSprinting ? 68 : 60;
-    if (Math.abs(this.camera.fov - targetFov) > 0.05) {
-      this.camera.fov = THREE.MathUtils.lerp(this.camera.fov, targetFov, 0.08);
+    const fovDiff = targetFov - this.camera.fov;
+    if (Math.abs(fovDiff) > 0.02) {
+      this.camera.fov += fovDiff * (isSprinting ? 0.09 : 0.06);
       this.camera.updateProjectionMatrix();
     }
   }
