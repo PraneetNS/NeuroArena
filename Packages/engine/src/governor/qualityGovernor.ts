@@ -13,6 +13,7 @@ export interface QualityGovernorConfig {
   targetFps: number;            // 60 or 30
   downgradeThresholdMs: number; // e.g. 21.0ms for 60fps (drops below ~48 fps)
   upgradeThresholdMs: number;   // e.g. 13.5ms (room for headroom, ~74 fps)
+  hysteresisMarginMs: number;   // e.g. 2.5ms buffer between transition boundaries
   sustainedDowngradeSec: number; // 2.5s sustained before stepping down
   sustainedUpgradeSec: number;   // 5.0s sustained before stepping up
   cooldownSec: number;           // 3.0s cooldown between adjustments
@@ -48,6 +49,10 @@ export class QualityGovernor {
   private goodPerformanceDuration: number = 0;
   private cooldownTimer: number = 0;
 
+  // Anti-flapping hysteresis dampener
+  private recentTransitions: Array<{ time: number; direction: 'up' | 'down' }> = [];
+  private antiFlapCooldownMultiplier: number = 1.0;
+
   private lastAdjustmentReason: string = 'Initialized at hardware tier';
   private adjustmentLog: string[] = [];
 
@@ -61,6 +66,7 @@ export class QualityGovernor {
       targetFps: config?.targetFps ?? baseTargetFps,
       downgradeThresholdMs: config?.downgradeThresholdMs ?? (baseTargetFps === 30 ? 38.0 : 21.0),
       upgradeThresholdMs: config?.upgradeThresholdMs ?? (baseTargetFps === 30 ? 25.0 : 13.5),
+      hysteresisMarginMs: config?.hysteresisMarginMs ?? 2.5,
       sustainedDowngradeSec: config?.sustainedDowngradeSec ?? 2.5,
       sustainedUpgradeSec: config?.sustainedUpgradeSec ?? 5.0,
       cooldownSec: config?.cooldownSec ?? 3.0
@@ -111,7 +117,7 @@ export class QualityGovernor {
       if (this.badPerformanceDuration >= this.config.sustainedDowngradeSec) {
         this.stepDown(`Sustained frame time ${p50.toFixed(1)}ms > ${this.config.downgradeThresholdMs}ms for ${this.badPerformanceDuration.toFixed(1)}s`);
         this.badPerformanceDuration = 0;
-        this.cooldownTimer = this.config.cooldownSec;
+        this.cooldownTimer = this.config.cooldownSec * this.antiFlapCooldownMultiplier;
       }
     } else if (p50 < this.config.upgradeThresholdMs) {
       this.goodPerformanceDuration += dt;
@@ -120,7 +126,7 @@ export class QualityGovernor {
       if (this.goodPerformanceDuration >= this.config.sustainedUpgradeSec) {
         this.stepUp(`Sustained frame time ${p50.toFixed(1)}ms < ${this.config.upgradeThresholdMs}ms for ${this.goodPerformanceDuration.toFixed(1)}s`);
         this.goodPerformanceDuration = 0;
-        this.cooldownTimer = this.config.cooldownSec;
+        this.cooldownTimer = this.config.cooldownSec * this.antiFlapCooldownMultiplier;
       }
     } else {
       // Nominal range: slowly decay accumulated counters
@@ -129,10 +135,31 @@ export class QualityGovernor {
     }
   }
 
+  private recordTransition(direction: 'up' | 'down'): void {
+    const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    this.recentTransitions.push({ time: now, direction });
+    this.recentTransitions = this.recentTransitions.filter((t) => now - t.time < 15000);
+
+    if (this.recentTransitions.length >= 3) {
+      let alternations = 0;
+      for (let i = 1; i < this.recentTransitions.length; i++) {
+        if (this.recentTransitions[i].direction !== this.recentTransitions[i - 1].direction) {
+          alternations++;
+        }
+      }
+      if (alternations >= 2) {
+        this.antiFlapCooldownMultiplier = Math.min(2.5, this.antiFlapCooldownMultiplier + 0.5);
+      }
+    } else {
+      this.antiFlapCooldownMultiplier = Math.max(1.0, this.antiFlapCooldownMultiplier - 0.1);
+    }
+  }
+
   /**
    * Downgrades quality: DPR first, then post-effects, then tier.
    */
   private stepDown(reason: string): void {
+    this.recordTransition('down');
     // 1. Adjust DPR first (e.g. 1.0 -> 0.85 -> 0.75)
     if (this.currentDpr > 0.86) {
       this.currentDpr = 0.85;
@@ -172,6 +199,7 @@ export class QualityGovernor {
    * Upgrades quality if sustained headroom is available (with hysteresis).
    */
   private stepUp(reason: string): void {
+    this.recordTransition('up');
     // 1. Upgrade tier if below detected tier
     if (this.currentTier === 'low' && this.detectedTier !== 'low') {
       this.currentTier = 'medium';
