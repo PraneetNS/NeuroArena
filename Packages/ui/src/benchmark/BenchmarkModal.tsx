@@ -130,15 +130,15 @@ export const BenchmarkModal: React.FC<BenchmarkModalProps> = ({
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(5, 8, 12, 0.88)',
+        backgroundColor: 'var(--na-overlay)',
         backdropFilter: 'blur(16px)',
         zIndex: 250,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '1.5rem',
-        fontFamily: 'var(--na-font-sans, system-ui, sans-serif)',
-        color: 'var(--na-text, #E8E4DA)'
+        padding: 'var(--na-space-5)',
+        fontFamily: 'var(--na-font-sans)',
+        color: 'var(--na-text)'
       }}
     >
       <div
@@ -146,52 +146,52 @@ export const BenchmarkModal: React.FC<BenchmarkModalProps> = ({
           width: '100%',
           maxWidth: '1080px',
           maxHeight: '92vh',
-          backgroundColor: '#0E1217',
-          border: '1px solid var(--na-line, #2A333F)',
-          borderRadius: '8px',
+          backgroundColor: 'var(--na-ink)',
+          border: '1px solid var(--na-line)',
+          borderRadius: 'var(--na-radius-md)',
           display: 'flex',
           flexDirection: 'column',
-          boxShadow: '0 24px 64px rgba(0, 0, 0, 0.85)',
+          boxShadow: '0 24px 64px var(--na-overlay)',
           overflow: 'hidden'
         }}
       >
         {/* Header */}
         <div
           style={{
-            padding: '1.1rem 1.4rem',
-            borderBottom: '1px solid #232B36',
+            padding: 'var(--na-space-4) var(--na-space-5)',
+            borderBottom: '1px solid var(--na-line)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            background: 'linear-gradient(180deg, #151A22 0%, #0E1217 100%)'
+            background: 'var(--na-surface)'
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--na-space-3)' }}>
             <span
               style={{
                 width: '10px',
                 height: '10px',
                 borderRadius: '50%',
-                backgroundColor: isRunning ? '#E8A33D' : '#4FB3A9',
-                boxShadow: `0 0 10px ${isRunning ? '#E8A33D' : '#4FB3A9'}`
+                backgroundColor: isRunning ? 'var(--na-accent)' : 'var(--na-accent-cool)',
+                boxShadow: `0 0 10px ${isRunning ? 'var(--na-accent)' : 'var(--na-accent-cool)'}`
               }}
             />
             <div>
               <div
                 style={{
-                  fontSize: '1rem',
+                  fontSize: 'var(--na-text-base)',
                   fontWeight: 700,
                   letterSpacing: '0.04em',
-                  color: '#F8FAFC'
+                  color: 'var(--na-text)'
                 }}
               >
                 OPEN-WORLD BENCHMARK & FEATURE COST PROFILER
               </div>
               <div
                 style={{
-                  fontSize: '0.72rem',
-                  color: '#94A3B8',
-                  fontFamily: 'var(--na-font-mono, monospace)'
+                  fontSize: 'var(--na-text-xs)',
+                  color: 'var(--na-muted)',
+                  fontFamily: 'var(--na-font-mono)'
                 }}
               >
                 Route: /#/bench-world • Standard 160s Path (5 Photo Spots + Walking Tour)
@@ -199,13 +199,13 @@ export const BenchmarkModal: React.FC<BenchmarkModalProps> = ({
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--na-space-2)' }}>
             {copyFeedback && (
               <span
                 style={{
-                  fontSize: '0.75rem',
-                  color: '#4FB3A9',
-                  fontFamily: 'var(--na-font-mono, monospace)'
+                  fontSize: 'var(--na-text-xs)',
+                  color: 'var(--na-accent-cool)',
+                  fontFamily: 'var(--na-font-mono)'
                 }}
               >
                 {copyFeedback}
@@ -215,12 +215,12 @@ export const BenchmarkModal: React.FC<BenchmarkModalProps> = ({
               onClick={onClose}
               style={{
                 background: 'transparent',
-                border: '1px solid #334155',
-                borderRadius: '4px',
-                color: '#94A3B8',
-                padding: '0.35rem 0.65rem',
+                border: '1px solid var(--na-line)',
+                borderRadius: 'var(--na-radius-xs)',
+                color: 'var(--na-muted)',
+                padding: 'var(--na-space-1) var(--na-space-3)',
                 cursor: 'pointer',
-                fontSize: '0.85rem'
+                fontSize: 'var(--na-text-sm)'
               }}
             >
               ✕ Close
@@ -233,10 +233,10 @@ export const BenchmarkModal: React.FC<BenchmarkModalProps> = ({
           style={{
             flex: 1,
             overflowY: 'auto',
-            padding: '1.25rem 1.4rem',
+            padding: 'var(--na-space-4) var(--na-space-5)',
             display: 'flex',
             flexDirection: 'column',
-            gap: '1.25rem'
+            gap: 'var(--na-space-4)'
           }}
         >
           {/* Controls Bar */}
@@ -246,30 +246,30 @@ export const BenchmarkModal: React.FC<BenchmarkModalProps> = ({
               flexWrap: 'wrap',
               alignItems: 'center',
               justifyContent: 'space-between',
-              gap: '0.75rem',
-              backgroundColor: '#131821',
-              padding: '0.75rem 1rem',
-              borderRadius: '6px',
-              border: '1px solid #232B36'
+              gap: 'var(--na-space-3)',
+              backgroundColor: 'var(--na-surface)',
+              padding: 'var(--na-space-3) var(--na-space-4)',
+              borderRadius: 'var(--na-radius-sm)',
+              border: '1px solid var(--na-line)'
             }}
           >
             {/* Mode Selector */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: 600 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--na-space-2)' }}>
+              <span style={{ fontSize: 'var(--na-text-xs)', color: 'var(--na-muted)', fontWeight: 600 }}>
                 MODE:
               </span>
               <button
                 disabled={isRunning}
                 onClick={() => setSelectedMode('current')}
                 style={{
-                  padding: '0.35rem 0.75rem',
-                  fontSize: '0.75rem',
-                  borderRadius: '4px',
+                  padding: 'var(--na-space-1) var(--na-space-3)',
+                  fontSize: 'var(--na-text-xs)',
+                  borderRadius: 'var(--na-radius-xs)',
                   border: '1px solid',
-                  borderColor: selectedMode === 'current' ? '#E8A33D' : '#2A333F',
+                  borderColor: selectedMode === 'current' ? 'var(--na-accent)' : 'var(--na-line)',
                   backgroundColor:
-                    selectedMode === 'current' ? 'rgba(232, 163, 61, 0.15)' : 'transparent',
-                  color: selectedMode === 'current' ? '#E8A33D' : '#94A3B8',
+                    selectedMode === 'current' ? 'var(--na-accent-muted)' : 'transparent',
+                  color: selectedMode === 'current' ? 'var(--na-accent)' : 'var(--na-muted)',
                   cursor: isRunning ? 'not-allowed' : 'pointer'
                 }}
               >
@@ -279,14 +279,14 @@ export const BenchmarkModal: React.FC<BenchmarkModalProps> = ({
                 disabled={isRunning}
                 onClick={() => setSelectedMode('all')}
                 style={{
-                  padding: '0.35rem 0.75rem',
-                  fontSize: '0.75rem',
-                  borderRadius: '4px',
+                  padding: 'var(--na-space-1) var(--na-space-3)',
+                  fontSize: 'var(--na-text-xs)',
+                  borderRadius: 'var(--na-radius-xs)',
                   border: '1px solid',
-                  borderColor: selectedMode === 'all' ? '#E8A33D' : '#2A333F',
+                  borderColor: selectedMode === 'all' ? 'var(--na-accent)' : 'var(--na-line)',
                   backgroundColor:
-                    selectedMode === 'all' ? 'rgba(232, 163, 61, 0.15)' : 'transparent',
-                  color: selectedMode === 'all' ? '#E8A33D' : '#94A3B8',
+                    selectedMode === 'all' ? 'var(--na-accent-muted)' : 'transparent',
+                  color: selectedMode === 'all' ? 'var(--na-accent)' : 'var(--na-muted)',
                   cursor: isRunning ? 'not-allowed' : 'pointer'
                 }}
               >
