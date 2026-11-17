@@ -135,15 +135,15 @@ export const CodexModal: React.FC<CodexModalProps> = ({
               >
                 The Codex
               </div>
-              <div style={{ fontSize: '11px', color: 'var(--na-muted)' }}>Foundations & Mechanisms</div>
+              <div style={{ fontSize: 'var(--na-text-xs)', color: 'var(--na-muted)' }}>Foundations & Mechanisms</div>
             </div>
             <span
               style={{
-                fontSize: '11px',
+                fontSize: 'var(--na-text-xs)',
                 fontFamily: 'var(--na-font-mono)',
                 color: 'var(--na-accent-cool)',
                 backgroundColor: 'var(--na-accent-cool-muted)',
-                padding: '2px 8px',
+                padding: 'var(--na-space-1) var(--na-space-2)',
                 borderRadius: 'var(--na-radius-full)'
               }}
             >
@@ -160,8 +160,8 @@ export const CodexModal: React.FC<CodexModalProps> = ({
                   onClick={() => setSelectedId(entry.id)}
                   style={{
                     width: '100%',
-                    padding: '10px 12px',
-                    marginBottom: '4px',
+                    padding: 'var(--na-space-2) var(--na-space-3)',
+                    marginBottom: 'var(--na-space-1)',
                     backgroundColor: isSelected ? 'var(--na-raised)' : 'transparent',
                     border: `1px solid ${isSelected ? 'var(--na-accent-cool)' : 'transparent'}`,
                     borderRadius: 'var(--na-radius-sm)',
@@ -182,7 +182,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({
                   >
                     {entry.title}
                   </div>
-                  <div style={{ fontSize: '10px', color: 'var(--na-muted)', textTransform: 'uppercase' }}>
+                  <div style={{ fontSize: 'var(--na-text-2xs)', color: 'var(--na-muted)', textTransform: 'uppercase' }}>
                     {entry.category}
                   </div>
                 </button>
@@ -205,7 +205,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({
             }}
           >
             <div>
-              <div style={{ fontSize: '11px', color: 'var(--na-accent-cool)', textTransform: 'uppercase', fontWeight: 600 }}>
+              <div style={{ fontSize: 'var(--na-text-xs)', color: 'var(--na-accent-cool)', textTransform: 'uppercase', fontWeight: 600 }}>
                 {currentEntry.category}
               </div>
               <h2
@@ -213,7 +213,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({
                   fontFamily: 'var(--na-font-display)',
                   fontSize: 'var(--na-text-2xl)',
                   color: 'var(--na-text)',
-                  margin: '4px 0 0'
+                  margin: 'var(--na-space-1) 0 0'
                 }}
               >
                 {currentEntry.title}
@@ -225,9 +225,9 @@ export const CodexModal: React.FC<CodexModalProps> = ({
                 background: 'none',
                 border: 'none',
                 color: 'var(--na-muted)',
-                fontSize: '20px',
+                fontSize: 'var(--na-text-lg)',
                 cursor: 'pointer',
-                padding: '4px 8px'
+                padding: 'var(--na-space-1) var(--na-space-2)'
               }}
             >
               ✕
