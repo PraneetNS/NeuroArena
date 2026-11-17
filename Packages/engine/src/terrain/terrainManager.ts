@@ -133,7 +133,7 @@ export class TerrainManager {
    */
   public update(cameraPosition: THREE.Vector3, time?: number, playerPosition?: THREE.Vector3): void {
     if (time !== undefined && this.material.userData.update) {
-      this.material.userData.update(time, playerPosition);
+      this.material.userData.update(time, playerPosition, cameraPosition);
     }
 
     const cx = cameraPosition.x;

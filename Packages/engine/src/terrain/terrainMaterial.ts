@@ -43,10 +43,12 @@ export interface TerrainTextures {
 export function createTerrainMaterial(textures: TerrainTextures): THREE.MeshStandardNodeMaterial {
   const material = new THREE.MeshStandardNodeMaterial();
 
-  // Dynamic uniforms for drifting cloud shadows and player worn paths
+  // Dynamic uniforms for drifting cloud shadows, player worn paths, and atmospheric distance haze
   const uTime = uniform(0.0);
   const uPlayerTrailPos = uniform(new THREE.Vector3(0, 0, 0));
   const uTrailFade = uniform(0.0);
+  const uCameraPos = uniform(new THREE.Vector3(0, 0, 0));
+  const uSkyHorizonColor = uniform(new THREE.Color(0xb0c4de));
 
   // Ensure wrapping is set to RepeatWrapping on all textures
   const allTextures = Object.values(textures);
@@ -149,13 +151,17 @@ export function createTerrainMaterial(textures: TerrainTextures): THREE.MeshStan
 
     const finalTerrain = painterlyColor.mul(biomeTint).mul(wetFactor).mul(cloudShadow).mul(pathTint);
 
-    // Warm atmospheric sun-kissed boost
-    return vec4(finalTerrain, 1.0);
+    // Atmospheric distance haze blending softly into horizon sky
+    const camDist = worldPos.sub(uCameraPos).length();
+    const hazeAmount = smoothstep(float(350.0), float(900.0), camDist).mul(0.22);
+    const finalWithHaze = mix(finalTerrain, uSkyHorizonColor, hazeAmount);
+
+    return vec4(finalWithHaze, 1.0);
   });
 
   material.colorNode = diffuseBlend();
 
-  // 7. Normal Map Blending
+  // 7. Normal Map Blending with micro-bump tactile variation
   const normalBlend = Fn(() => {
     const grassNormSample = texture(textures.grassNormal, grassUV).xyz.mul(2.0).sub(1.0);
     const dirtNormSample = texture(textures.dirtNormal, dirtUV).xyz.mul(2.0).sub(1.0);
@@ -174,8 +180,14 @@ export function createTerrainMaterial(textures: TerrainTextures): THREE.MeshStan
       .add(dirtNormSample.mul(aSplats.z))
       .add(rockNormTri.mul(aSplats.w));
 
-    // Perturb the geometric world normal with blended normal map relief
-    const perturbed = worldNorm.add(vec3(blendedTangentNormal.x.mul(0.4), float(0.0), blendedTangentNormal.y.mul(0.4)));
+    // Perturb the geometric world normal with blended normal maps and procedural micro-bump relief
+    const microBumpX = worldPos.x.mul(1.6).add(worldPos.z.mul(0.8)).sin().mul(0.05);
+    const microBumpZ = worldPos.z.mul(1.6).sub(worldPos.x.mul(0.8)).cos().mul(0.05);
+    const perturbed = worldNorm.add(vec3(
+      blendedTangentNormal.x.mul(0.4).add(microBumpX),
+      float(0.0),
+      blendedTangentNormal.y.mul(0.4).add(microBumpZ)
+    ));
     return perturbed.normalize();
   });
 
@@ -203,11 +215,19 @@ export function createTerrainMaterial(textures: TerrainTextures): THREE.MeshStan
   material.userData.uTime = uTime;
   material.userData.uPlayerTrailPos = uPlayerTrailPos;
   material.userData.uTrailFade = uTrailFade;
-  material.userData.update = (time: number, playerPos?: THREE.Vector3) => {
+  material.userData.uCameraPos = uCameraPos;
+  material.userData.uSkyHorizonColor = uSkyHorizonColor;
+  material.userData.update = (time: number, playerPos?: THREE.Vector3, cameraPos?: THREE.Vector3, skyHorizonColor?: THREE.Color) => {
     uTime.value = time;
     if (playerPos) {
       uPlayerTrailPos.value.copy(playerPos);
       uTrailFade.value = 1.0;
+    }
+    if (cameraPos) {
+      uCameraPos.value.copy(cameraPos);
+    }
+    if (skyHorizonColor) {
+      uSkyHorizonColor.value.copy(skyHorizonColor);
     }
   };
 
