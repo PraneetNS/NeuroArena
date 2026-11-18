@@ -24,6 +24,19 @@ import '@na/ui/styles';
   const ctx = await mlCore.GpuContext.create();
   return mlCore.runGradParity(ctx, preset as any);
 };
+(window as any).runKvParityTest = async (preset: 'Scout' | 'S' = 'Scout', tokens = 200) => {
+  const ctx = await mlCore.GpuContext.create();
+  let weights: Float32Array | undefined;
+  if (preset === 'S') {
+    const elder = await mlCore.loadElderCheckpoint('/assets/elder_preset_s.bin');
+    weights = elder.weights;
+  }
+  return mlCore.runKvParityTest(ctx, preset, weights, tokens);
+};
+(window as any).runMaskedGradParity = async (preset = 'C', maskFraction = 0.4) => {
+  const ctx = await mlCore.GpuContext.create();
+  return mlCore.runMaskedGradParity(ctx, preset as any, maskFraction);
+};
 (window as any).runTrainingBenchmarkSuite = async (vocabSize = 81) => {
   const ctx = await mlCore.GpuContext.create();
   return mlCore.runTrainingBenchmark(ctx, vocabSize);
@@ -249,6 +262,8 @@ class BenchmarkApp {
   private gradReport: mlCore.GradParityReport | null = null;
   private trainingParityReport: mlCore.TrainingParityReport | null = null;
   private benchmarkReport: mlCore.TrainingBenchmarkSuiteResult | null = null;
+  private kvParityReport: { scout?: mlCore.KvParityResult; s?: mlCore.KvParityResult } | null = null;
+  private maskedGradReport: any = null;
 
   // --- Training Lab State ---
   private labClient: mlCore.TrainingClient | null = null;
@@ -349,6 +364,55 @@ class BenchmarkApp {
 
       this.trainingParityReport = await mlCore.runTrainingParity(ctx, text, 300);
       this.statusMessage = `✓ 300-step Training Complete! Final CPU Loss: ${this.trainingParityReport.finalCpuLoss.toFixed(4)} | Final GPU Loss: ${this.trainingParityReport.finalGpuLoss.toFixed(4)}`;
+    } catch (e: any) {
+      console.error(e);
+      this.statusMessage = `Error: ${e.message || String(e)}`;
+    } finally {
+      this.isRunning = false;
+      this.render();
+    }
+  }
+
+  public async runKvParitySuite(): Promise<void> {
+    if (this.isRunning) return;
+    this.isRunning = true;
+    this.statusMessage = 'Running GPU KV-Cache Generation Parity (Scout & S over 200 tokens)...';
+    this.render();
+
+    try {
+      const ctx = await mlCore.GpuContext.create();
+      const scoutRes = await mlCore.runKvParityTest(ctx, 'Scout', undefined, 200);
+      let sWeights: Float32Array | undefined;
+      try {
+        const elder = await mlCore.loadElderCheckpoint('/assets/elder_preset_s.bin');
+        sWeights = elder.weights;
+      } catch (err) {
+        console.warn('Could not load elder bin for bench, using initialized weights:', err);
+      }
+      const sRes = await mlCore.runKvParityTest(ctx, 'S', sWeights, 200);
+      this.kvParityReport = { scout: scoutRes, s: sRes };
+      this.statusMessage = `✓ KV Parity Passed! Scout RelErr: ${scoutRes.maxRelativeError.toExponential(2)} (${scoutRes.cachedTokensPerSec.toFixed(1)} tok/s) | S RelErr: ${sRes.maxRelativeError.toExponential(2)} (${sRes.cachedTokensPerSec.toFixed(1)} tok/s)`;
+    } catch (e: any) {
+      console.error(e);
+      this.statusMessage = `Error: ${e.message || String(e)}`;
+    } finally {
+      this.isRunning = false;
+      this.render();
+    }
+  }
+
+  public async runMaskedGradParitySuite(): Promise<void> {
+    if (this.isRunning) return;
+    this.isRunning = true;
+    this.statusMessage = 'Running Masked Gradient Parity (Preset C, 40% Masking)...';
+    this.render();
+
+    try {
+      const ctx = await mlCore.GpuContext.create();
+      this.maskedGradReport = await mlCore.runMaskedGradParity(ctx, 'C', 0.4);
+      this.statusMessage = this.maskedGradReport.overallPassed
+        ? `✓ Masked Gradient Parity Verified! Worst group: ${this.maskedGradReport.worstGroup.name} (relErr: ${this.maskedGradReport.worstGroup.relError.toExponential(2)} < 1e-3)`
+        : `⚠ Masked Gradient Parity failed on ${this.maskedGradReport.worstGroup.name}`;
     } catch (e: any) {
       console.error(e);
       this.statusMessage = `Error: ${e.message || String(e)}`;
@@ -817,9 +881,13 @@ class BenchmarkApp {
     this.root.querySelector('#btn-run-fwd')?.addEventListener('click', () => this.runForwardParity());
     this.root.querySelector('#btn-run-grad')?.addEventListener('click', () => this.runGradientParity());
     this.root.querySelector('#btn-run-train')?.addEventListener('click', () => this.runTrainingParity());
+    this.root.querySelector('#btn-run-kv')?.addEventListener('click', () => this.runKvParitySuite());
+    this.root.querySelector('#btn-run-maskgrad')?.addEventListener('click', () => this.runMaskedGradParitySuite());
     this.root.querySelector('#btn-run-bench')?.addEventListener('click', () => this.runBenchmarkSuite());
     this.root.querySelector('#btn-copy-fwd')?.addEventListener('click', () => this.copyJson(this.parityReport, 'btn-copy-fwd'));
     this.root.querySelector('#btn-copy-grad')?.addEventListener('click', () => this.copyJson(this.gradReport, 'btn-copy-grad'));
+    this.root.querySelector('#btn-copy-kv')?.addEventListener('click', () => this.copyJson(this.kvParityReport, 'btn-copy-kv'));
+    this.root.querySelector('#btn-copy-maskgrad')?.addEventListener('click', () => this.copyJson(this.maskedGradReport, 'btn-copy-maskgrad'));
     this.root.querySelector('#btn-copy-bench')?.addEventListener('click', () => this.copyJson(this.benchmarkReport, 'btn-copy-bench'));
 
     // Training Lab bindings
@@ -1090,15 +1158,21 @@ class BenchmarkApp {
               Forward Thresholds: Loss RelErr &lt; 1e-4, Logits &lt; 1e-3 | Backward Threshold: RelErr &lt; 1e-3 per param group
             </div>
           </div>
-          <div style="display: flex; gap: 0.8rem;">
-            <button id="btn-run-fwd" style="padding: 0.6rem 1.2rem; background: #E8A33D; color: #0E1116; border: none; border-radius: 4px; font-family: var(--font-mono); font-size: 0.82rem; font-weight: 700; cursor: pointer;" ${this.isRunning ? 'disabled' : ''}>
-              Run Forward Parity ▶
+          <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+            <button id="btn-run-fwd" style="padding: 0.5rem 1rem; background: #E8A33D; color: #0E1116; border: none; border-radius: 4px; font-family: var(--font-mono); font-size: 0.8rem; font-weight: 700; cursor: pointer;" ${this.isRunning ? 'disabled' : ''}>
+              Forward Parity ▶
             </button>
-            <button id="btn-run-grad" style="padding: 0.6rem 1.2rem; background: #4FB3A9; color: #0E1116; border: none; border-radius: 4px; font-family: var(--font-mono); font-size: 0.82rem; font-weight: 700; cursor: pointer;" ${this.isRunning ? 'disabled' : ''}>
-              Run Gradient Parity ▶
+            <button id="btn-run-grad" style="padding: 0.5rem 1rem; background: #4FB3A9; color: #0E1116; border: none; border-radius: 4px; font-family: var(--font-mono); font-size: 0.8rem; font-weight: 700; cursor: pointer;" ${this.isRunning ? 'disabled' : ''}>
+              Gradient Parity ▶
             </button>
-            <button id="btn-run-train" style="padding: 0.6rem 1.2rem; background: #6BBF7A; color: #0E1116; border: none; border-radius: 4px; font-family: var(--font-mono); font-size: 0.82rem; font-weight: 700; cursor: pointer;" ${this.isRunning ? 'disabled' : ''}>
-              Run 300-Step Training Parity ▶
+            <button id="btn-run-train" style="padding: 0.5rem 1rem; background: #6BBF7A; color: #0E1116; border: none; border-radius: 4px; font-family: var(--font-mono); font-size: 0.8rem; font-weight: 700; cursor: pointer;" ${this.isRunning ? 'disabled' : ''}>
+              300-Step Training ▶
+            </button>
+            <button id="btn-run-kv" style="padding: 0.5rem 1rem; background: #38bdf8; color: #0E1116; border: none; border-radius: 4px; font-family: var(--font-mono); font-size: 0.8rem; font-weight: 700; cursor: pointer;" ${this.isRunning ? 'disabled' : ''}>
+              KV-Cache Parity (200t) ▶
+            </button>
+            <button id="btn-run-maskgrad" style="padding: 0.5rem 1rem; background: #a855f7; color: #0E1116; border: none; border-radius: 4px; font-family: var(--font-mono); font-size: 0.8rem; font-weight: 700; cursor: pointer;" ${this.isRunning ? 'disabled' : ''}>
+              Masked Grad Parity ▶
             </button>
           </div>
         </div>
@@ -1201,6 +1275,94 @@ class BenchmarkApp {
               Click "Run 300-Step Training Parity" to train both models and render the comparison chart.
             </div>
           `}
+        </div>
+
+        <!-- 4. GPU KV-Cache Autoregressive Generation Parity -->
+        <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="font-family: var(--font-mono); font-size: 0.92rem; font-weight: 700; color: #E8E4DA;">
+              4. GPU KV-Cache Generation Parity (Scout & Preset S / The Elder, 200 Tokens)
+            </div>
+            ${this.kvParityReport ? `<button id="btn-copy-kv" style="padding: 0.4rem 0.8rem; background: #1D242D; color: #E8E4DA; border: 1px solid #2A333F; border-radius: 4px; font-family: var(--font-mono); font-size: 0.78rem; cursor: pointer;">Copy as JSON</button>` : ''}
+          </div>
+
+          <div style="overflow-x: auto; background: rgba(14, 17, 22, 0.4); border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.05);">
+            <table style="width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 0.84rem;">
+              <thead>
+                <tr style="border-bottom: 1px solid #2A333F; color: #9AA3AE; text-align: left; background: rgba(0, 0, 0, 0.2);">
+                  <th style="padding: 0.8rem;">MODEL / PRESET</th>
+                  <th style="padding: 0.8rem;">TOKENS</th>
+                  <th style="padding: 0.8rem;">MAX REL-ERR</th>
+                  <th style="padding: 0.8rem;">MEAN REL-ERR</th>
+                  <th style="padding: 0.8rem;">CACHED SPEED</th>
+                  <th style="padding: 0.8rem;">UNCACHED SPEED</th>
+                  <th style="padding: 0.8rem;">SPEEDUP</th>
+                  <th style="padding: 0.8rem;">STATUS (&lt; 1e-3)</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${!this.kvParityReport ? `
+                  <tr><td colspan="8" style="text-align: center; padding: 2.5rem; color: #9AA3AE;">Click "KV-Cache Parity (200t)" to verify matrix-vector KV generation against uncached pass over 200 tokens.</td></tr>
+                ` : [this.kvParityReport.scout, this.kvParityReport.s].filter(Boolean).map(r => `
+                  <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
+                    <td style="padding: 0.8rem; font-weight: 700; color: #E8E4DA;">${r!.preset === 'S' ? 'Preset S (The Elder)' : 'Scout Preset'}</td>
+                    <td style="padding: 0.8rem; color: #9AA3AE;">${r!.tokensGenerated}</td>
+                    <td style="padding: 0.8rem; color: ${r!.maxRelativeError < 1e-3 ? '#6BBF7A' : '#D9564A'}; font-weight: 700;">
+                      ${r!.maxRelativeError.toExponential(4)} ${r!.maxRelativeError < 1e-3 ? '✓' : '✗'}
+                    </td>
+                    <td style="padding: 0.8rem; color: #9AA3AE;">${r!.meanRelativeError.toExponential(4)}</td>
+                    <td style="padding: 0.8rem; color: #38bdf8; font-weight: 700;">${r!.cachedTokensPerSec.toFixed(2)} tok/s</td>
+                    <td style="padding: 0.8rem; color: #9AA3AE;">${r!.uncachedTokensPerSec.toFixed(2)} tok/s</td>
+                    <td style="padding: 0.8rem; color: #6BBF7A; font-weight: 700;">${r!.speedup.toFixed(3)}x</td>
+                    <td style="padding: 0.8rem; font-weight: 700; color: ${r!.passed ? '#6BBF7A' : '#D9564A'};">
+                      ${r!.passed ? 'PASS' : 'FAIL'}
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 5. Masked Gradient Parity Section -->
+        <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="font-family: var(--font-mono); font-size: 0.92rem; font-weight: 700; color: #E8E4DA;">
+              5. Masked Gradient Parity (Preset C, 40% Masking with Ignore Index -1)
+            </div>
+            ${this.maskedGradReport ? `<button id="btn-copy-maskgrad" style="padding: 0.4rem 0.8rem; background: #1D242D; color: #E8E4DA; border: 1px solid #2A333F; border-radius: 4px; font-family: var(--font-mono); font-size: 0.78rem; cursor: pointer;">Copy as JSON</button>` : ''}
+          </div>
+
+          <div style="max-height: 260px; overflow-y: auto; background: rgba(14, 17, 22, 0.4); border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.05);">
+            <table style="width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 0.82rem;">
+              <thead>
+                <tr style="border-bottom: 1px solid #2A333F; color: #9AA3AE; text-align: left; background: rgba(0, 0, 0, 0.2); position: sticky; top: 0;">
+                  <th style="padding: 0.6rem 0.8rem;">GROUP</th>
+                  <th style="padding: 0.6rem 0.8rem;">SIZE</th>
+                  <th style="padding: 0.6rem 0.8rem;">MAX ABS DIFF</th>
+                  <th style="padding: 0.6rem 0.8rem;">REL ERROR</th>
+                  <th style="padding: 0.6rem 0.8rem;">STATUS (&lt; 1e-3)</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${!this.maskedGradReport ? `
+                  <tr><td colspan="5" style="text-align: center; padding: 2.5rem; color: #9AA3AE;">Click "Masked Grad Parity" to compare WebGPU loss masking gradients against CPU reference.</td></tr>
+                ` : this.maskedGradReport.groups.map((g: any) => `
+                  <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
+                    <td style="padding: 0.6rem 0.8rem; font-weight: 700; color: #E8E4DA;">${g.name}</td>
+                    <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">${g.size}</td>
+                    <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">${g.maxAbsDiff.toExponential(3)}</td>
+                    <td style="padding: 0.6rem 0.8rem; color: ${g.passed ? '#6BBF7A' : '#D9564A'}; font-weight: 700;">
+                      ${g.relError.toExponential(3)} ${g.passed ? '✓' : '✗'}
+                    </td>
+                    <td style="padding: 0.6rem 0.8rem; font-weight: 700; color: ${g.passed ? '#6BBF7A' : '#D9564A'};">
+                      ${g.passed ? 'PASS' : 'FAIL'}
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
         </div>
 
       </div>
