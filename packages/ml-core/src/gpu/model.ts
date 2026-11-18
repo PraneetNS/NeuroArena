@@ -114,6 +114,8 @@ export class GpuModel {
   private tiedHeadBindGroup: GPUBindGroup;
   private crossEntropyBindGroup: GPUBindGroup;
   private reduceSumBindGroup: GPUBindGroup;
+  public ceUBuf: GPUBuffer;
+  public reduceUBuf: GPUBuffer;
 
   // Backward BindGroups
   private zeroGradsBindGroup: GPUBindGroup;
@@ -794,6 +796,7 @@ export class GpuModel {
 
     // Cross Entropy
     const ceUBuf = context.createUniformBuffer(16, 'ceUniforms');
+    this.ceUBuf = ceUBuf;
     device.queue.writeBuffer(ceUBuf, 0, new Uint32Array([M, vocabSize, 1, 0]));
     this.crossEntropyBindGroup = device.createBindGroup({
       label: 'crossEntropy_bindGroup',
@@ -809,6 +812,7 @@ export class GpuModel {
 
     // Reduce Mean Loss
     const reduceUBuf = context.createUniformBuffer(16, 'reduceUniforms');
+    this.reduceUBuf = reduceUBuf;
     device.queue.writeBuffer(reduceUBuf, 0, new Uint32Array([M, 0, 0, 0]));
     this.reduceSumBindGroup = device.createBindGroup({
       label: 'reduceSum_bindGroup',
@@ -1519,9 +1523,33 @@ export class GpuModel {
   /**
    * Full forward + backward pass execution with optional optimizer step.
    */
+  /**
+   * Writes targets into targetsBuffer and updates cross-entropy active count uniforms.
+   * Target -1 (or 0xFFFFFFFF) indicates an ignored/masked token.
+   */
+  public setTargets(targets: Uint32Array | Uint16Array | Int32Array | number[]): number {
+    const M = this.B * this.T;
+    const u32Targets = new Uint32Array(M);
+    let activeCount = 0;
+    for (let i = 0; i < M; i++) {
+      const val = targets[i];
+      if (val === -1 || val === 0xFFFFFFFF || val === 65535 || (val as number) < 0) {
+        u32Targets[i] = 0xFFFFFFFF;
+      } else {
+        u32Targets[i] = val;
+        activeCount++;
+      }
+    }
+    this.context.device.queue.writeBuffer(this.targetsBuffer, 0, u32Targets as unknown as BufferSource);
+    const divisor = activeCount > 0 ? activeCount : M;
+    this.context.device.queue.writeBuffer(this.ceUBuf, 0, new Uint32Array([M, this.config.vocabSize, 1, divisor]));
+    this.context.device.queue.writeBuffer(this.reduceUBuf, 0, new Uint32Array([divisor, 0, 0, 0]));
+    return activeCount;
+  }
+
   public async forward(
     ids: Uint32Array | Uint16Array | number[],
-    targets?: Uint32Array | Uint16Array | number[] | null,
+    targets?: Uint32Array | Uint16Array | Int32Array | number[] | null,
     options: GpuForwardOptions = {}
   ): Promise<GpuForwardResult> {
     const M = this.B * this.T;
@@ -1532,8 +1560,7 @@ export class GpuModel {
 
     const hasTargets = Boolean(targets && targets.length >= M);
     if (hasTargets) {
-      const u32Targets = targets instanceof Uint32Array ? targets : new Uint32Array(targets!);
-      device.queue.writeBuffer(this.targetsBuffer, 0, u32Targets as unknown as BufferSource);
+      this.setTargets(targets!);
     }
 
     const encoder = device.createCommandEncoder({ label: 'GpuForwardEncoder' });

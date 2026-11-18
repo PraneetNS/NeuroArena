@@ -1,12 +1,13 @@
 // cross_entropy.wgsl - Fused Softmax + Cross-Entropy Loss per row & dlogits calculation
 // Computes rowLoss[m] = -ln(p_target)
-// Writes dlogits[m, v] = (p_v - onehot) / (B * T)
+// Writes dlogits[m, v] = (p_v - onehot) / activeTokens
+// Target 0xFFFFFFFFu (-1) indicates ignored/masked token (no loss, zero gradient).
 
 struct CrossEntropyUniforms {
   M: u32,          // Total tokens (B * T)
   V: u32,          // Vocab size
   hasTargets: u32, // 1 if targets buffer present, 0 if inference only
-  pad0: u32,
+  activeCount: u32, // Count of active unmasked tokens (or M if all active)
 };
 
 @group(0) @binding(0) var<storage, read> logits: array<f32>;
@@ -32,6 +33,22 @@ fn main(
   let tid = local_id.x;
   let V = uniforms.V;
   let rowOffset = m * V;
+
+  // Check if this token is masked (target == 0xFFFFFFFFu)
+  if (uniforms.hasTargets == 1u) {
+    let targetId = targets[m];
+    if (targetId == 0xFFFFFFFFu) {
+      if (tid == 0u) {
+        rowLoss[m] = 0.0;
+      }
+      var vZero: u32 = tid;
+      while (vZero < V) {
+        dlogits[rowOffset + vZero] = 0.0;
+        vZero = vZero + 256u;
+      }
+      return;
+    }
+  }
 
   // 1. Find max logit in row
   var localMax: f32 = -1e9;
@@ -81,7 +98,8 @@ fn main(
   // 3. Loss and dlogits
   let sumExp = rowSumExp;
   let invSumExp = select(0.0, 1.0 / sumExp, sumExp > 0.0);
-  let invTotalTokens = 1.0 / f32(uniforms.M);
+  let divisor = select(f32(uniforms.M), f32(uniforms.activeCount), uniforms.activeCount > 0u);
+  let invTotalTokens = 1.0 / divisor;
 
   if (uniforms.hasTargets == 1u) {
     let targetId = targets[m];
@@ -92,7 +110,7 @@ fn main(
       rowLoss[m] = loss;
     }
 
-    // Write dlogits = (p - onehot) / (B * T)
+    // Write dlogits = (p - onehot) / divisor
     v = tid;
     while (v < V) {
       let p_v = exp(logits[rowOffset + v] - maxVal) * invSumExp;
