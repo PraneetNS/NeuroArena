@@ -236,7 +236,7 @@ export class TinyGPT {
    */
   public forward(
     ids: Uint16Array | number[],
-    targets?: Uint16Array | number[] | null,
+    targets?: Uint16Array | Int32Array | number[] | null,
     B?: number,
     T?: number
   ): { loss: number | null; logits: Float64Array };
@@ -244,13 +244,13 @@ export class TinyGPT {
     ids: Uint16Array | number[],
     B?: number,
     T?: number,
-    targets?: Uint16Array | number[] | null
+    targets?: Uint16Array | Int32Array | number[] | null
   ): { loss: number | null; logits: Float64Array };
   public forward(
     ids: Uint16Array | number[],
-    arg2?: Uint16Array | number[] | number | null,
+    arg2?: Uint16Array | Int32Array | number[] | number | null,
     arg3?: number,
-    arg4?: Uint16Array | number[] | number | null
+    arg4?: Uint16Array | Int32Array | number[] | number | null
   ): { loss: number | null; logits: Float64Array } {
     let targets: Uint16Array | null = null;
     let B = 1;
@@ -462,7 +462,7 @@ export class TinyGPT {
    * Zeroes the flat gradient buffer first, then fills it with parameter gradients.
    * Documented with mathematical derivations for every stage.
    */
-  public backward(targets?: Uint16Array | number[]): number {
+  public backward(targets?: Uint16Array | Int32Array | number[]): number {
     // 0. Zero gradient buffer first
     this.zeroGrad();
 

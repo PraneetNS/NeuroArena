@@ -391,22 +391,37 @@ export function causalAttentionBackward(
  * Cross-Entropy Loss and analytical gradient computation.
  * logits: [totalTokens, vocabSize], targets: [totalTokens]
  * returns mean cross-entropy loss and accumulates dLogits.
+ * Target -1 (or 0xFFFFFFFF / 65535) indicates ignore index: no loss, zero gradient.
  */
 export function crossEntropy(
   logits: Float64Array,
-  targets: Uint16Array | number[],
+  targets: Uint16Array | Uint32Array | Int32Array | number[],
   dLogits: Float64Array,
   totalTokens: number,
   vocabSize: number
 ): number {
   dLogits.fill(0);
   let totalLoss = 0;
-  const invTotal = 1.0 / totalTokens;
+  let activeCount = 0;
 
   for (let i = 0; i < totalTokens; i++) {
-    const iV = i * vocabSize;
     const target = targets[i];
+    if (target !== -1 && target !== 0xFFFFFFFF && target !== 65535 && (target as number) >= 0) {
+      activeCount++;
+    }
+  }
 
+  if (activeCount === 0) return 0;
+  const invActive = 1.0 / activeCount;
+
+  for (let i = 0; i < totalTokens; i++) {
+    const target = targets[i];
+    if (target === -1 || target === 0xFFFFFFFF || target === 65535 || (target as number) < 0) {
+      // Ignored token: no loss, no gradient
+      continue;
+    }
+
+    const iV = i * vocabSize;
     // Find max for numerical stability
     let maxVal = -Infinity;
     for (let v = 0; v < vocabSize; v++) {
@@ -423,14 +438,14 @@ export function crossEntropy(
     const loss = logSumExp - targetLogit;
     totalLoss += loss;
 
-    // Gradient: (softmax_p - 1(v == target)) / totalTokens
+    // Gradient: (softmax_p - 1(v == target)) / activeCount
     const invSum = 1.0 / sumExp;
     for (let v = 0; v < vocabSize; v++) {
       const prob = Math.exp(logits[iV + v] - maxVal) * invSum;
-      const grad = (v === target ? prob - 1.0 : prob) * invTotal;
+      const grad = (v === target ? prob - 1.0 : prob) * invActive;
       dLogits[iV + v] = grad;
     }
   }
 
-  return totalLoss * invTotal;
+  return totalLoss * invActive;
 }
