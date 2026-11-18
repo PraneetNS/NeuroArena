@@ -28,6 +28,17 @@ export const CodexModal: React.FC<CodexModalProps> = ({
   const [selectedAttnRow, setSelectedAttnRow] = useState<number>(3);
   const [lensDepth, setLensDepth] = useState<number>(4);
 
+  // Inference & Sampling Widgets State (Real Elder Model on "To be, or not to ")
+  const [codexTemp, setCodexTemp] = useState<number>(0.8);
+  const [codexTopK, setCodexTopK] = useState<number>(5);
+  const [codexTopP, setCodexTopP] = useState<number>(0.85);
+  const [sampledTokens, setSampledTokens] = useState<string[]>(['be', 'the', 'be']);
+  const [lastSampled, setLastSampled] = useState<{ token: string; prob: number; count: number }>({
+    token: 'be',
+    prob: 0.38,
+    count: 3
+  });
+
   if (!isOpen) return null;
 
   const entries = Object.values(CODEX_ENTRIES);
@@ -75,6 +86,78 @@ export const CodexModal: React.FC<CodexModalProps> = ({
     { depth: 3, stage: 'Layer 2 Attn', topToken: 'glows', prob: 0.61, note: 'Contextual binding to ridge' },
     { depth: 4, stage: 'Layer 3 MLP', topToken: 'glows', prob: 0.89, note: 'High confidence crystallisation' }
   ];
+
+  // Real Elder model measured distribution for prompt "To be, or not to "
+  const ELDER_PROMPT_DIST = [
+    { token: 'be', logit: 3.829 },
+    { token: 'the', logit: 3.163 },
+    { token: 'see', logit: 2.514 },
+    { token: 'do', logit: 2.360 },
+    { token: 'me', logit: 2.358 },
+    { token: 'a', logit: 2.199 },
+    { token: 'my', logit: 2.077 },
+    { token: 'w', logit: 1.915 },
+    { token: 'you', logit: 1.905 },
+    { token: 'make', logit: 1.888 },
+    { token: 'come', logit: 1.810 },
+    { token: 'have', logit: 1.765 },
+    { token: 'hear', logit: 1.720 },
+    { token: 'stand', logit: 1.685 },
+    { token: 'die', logit: 1.642 }
+  ];
+
+  const getScaledProbs = (temp: number) => {
+    const t = Math.max(0.01, temp);
+    const maxL = Math.max(...ELDER_PROMPT_DIST.map((c) => c.logit / t));
+    const exps = ELDER_PROMPT_DIST.map((c) => Math.exp(c.logit / t - maxL));
+    const sumExp = exps.reduce((a, b) => a + b, 0);
+    const probs = exps.map((e) => e / sumExp);
+    let entropy = 0;
+    for (const p of probs) {
+      if (p > 1e-6) entropy -= p * Math.log2(p);
+    }
+    return {
+      items: ELDER_PROMPT_DIST.map((c, i) => ({ ...c, prob: probs[i] })),
+      entropy
+    };
+  };
+
+  const getFilteredNucleus = (k: number, p: number, temp = 0.8) => {
+    const scaled = getScaledProbs(temp);
+    const sorted = [...scaled.items].sort((a, b) => b.prob - a.prob);
+    const kFiltered = sorted.slice(0, Math.min(k, sorted.length));
+    let cumProb = 0;
+    const nucleusTokens = new Set<string>();
+    for (const item of kFiltered) {
+      nucleusTokens.add(item.token);
+      cumProb += item.prob;
+      if (cumProb >= p) break;
+    }
+    return {
+      items: sorted.map((item, idx) => ({
+        ...item,
+        inTopK: idx < k,
+        inNucleus: nucleusTokens.has(item.token)
+      })),
+      nucleusMass: cumProb
+    };
+  };
+
+  const handleSampleRoll = (temp = codexTemp) => {
+    const scaled = getScaledProbs(temp);
+    const r = Math.random();
+    let acc = 0;
+    let chosen = scaled.items[0];
+    for (const item of scaled.items) {
+      acc += item.prob;
+      if (r <= acc) {
+        chosen = item;
+        break;
+      }
+    }
+    setSampledTokens((prev) => [chosen.token, ...prev.slice(0, 7)]);
+    setLastSampled({ token: chosen.token, prob: chosen.prob, count: lastSampled.count + 1 });
+  };
 
   return (
     <div
@@ -728,6 +811,222 @@ export const CodexModal: React.FC<CodexModalProps> = ({
                   </div>
                 </div>
               )}
+
+              {/* Widget: Next-Token Distribution */}
+              {currentEntry.id === 'next_token_distribution' && (() => {
+                const scaled = getScaledProbs(1.0);
+                return (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--na-space-3)' }}>
+                    <div style={{ fontSize: 'var(--na-text-xs)', color: 'var(--na-text-secondary)' }}>
+                      Real Elder model vocabulary distribution for prompt <strong style={{ color: 'var(--na-accent)' }}>"To be, or not to "</strong>:
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', backgroundColor: 'var(--na-raised)', borderRadius: 'var(--na-radius-sm)', border: '1px solid var(--na-line)' }}>
+                      <div>
+                        <span style={{ fontSize: '11px', color: 'var(--na-muted)' }}>Distribution Entropy: </span>
+                        <span style={{ fontFamily: 'var(--na-font-mono)', fontSize: '13px', color: 'var(--na-accent)', fontWeight: 700 }}>
+                          {scaled.entropy.toFixed(3)} bits
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '11px', color: 'var(--na-muted)' }}>
+                        Top token: <strong style={{ color: 'var(--na-accent-cool)' }}>"{scaled.items[0].token}"</strong> ({(scaled.items[0].prob * 100).toFixed(1)}%)
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      {scaled.items.slice(0, 8).map((item, idx) => (
+                        <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12px', fontFamily: 'var(--na-font-mono)' }}>
+                          <span style={{ width: '60px', color: idx === 0 ? 'var(--na-accent)' : 'var(--na-text)', fontWeight: idx === 0 ? 700 : 400 }}>
+                            "{item.token}"
+                          </span>
+                          <div style={{ flex: 1, height: '8px', backgroundColor: 'var(--na-raised)', borderRadius: '4px', overflow: 'hidden' }}>
+                            <div style={{ width: `${item.prob * 100}%`, height: '100%', backgroundColor: idx === 0 ? 'var(--na-accent)' : 'var(--na-accent-cool)' }} />
+                          </div>
+                          <span style={{ width: '45px', textAlign: 'right', color: 'var(--na-muted)' }}>
+                            {(item.prob * 100).toFixed(1)}%
+                          </span>
+                          <span style={{ width: '45px', textAlign: 'right', color: 'var(--na-faint)', fontSize: '10px' }}>
+                            z={item.logit.toFixed(2)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Widget: Temperature Modulation */}
+              {currentEntry.id === 'temperature' && (() => {
+                const scaled = getScaledProbs(codexTemp);
+                const qualitative = codexTemp < 0.4 ? 'Collapsed to Deterministic Argmax' : codexTemp < 1.1 ? 'Balanced Shakespearean Coherence' : 'High Entropy / Flattened Chaos';
+                return (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--na-space-3)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: 'var(--na-text-xs)', color: 'var(--na-text-secondary)' }}>
+                        Modulate Softmax Temperature T for "To be, or not to ":
+                      </span>
+                      <span style={{ fontFamily: 'var(--na-font-mono)', fontSize: '14px', color: 'var(--na-accent)', fontWeight: 700 }}>
+                        T = {codexTemp.toFixed(2)}
+                      </span>
+                    </div>
+
+                    <input
+                      type="range"
+                      min="0.1"
+                      max="2.0"
+                      step="0.05"
+                      value={codexTemp}
+                      onChange={(e) => setCodexTemp(parseFloat(e.target.value))}
+                      style={{ width: '100%', accentColor: 'var(--na-accent)' }}
+                    />
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', backgroundColor: 'var(--na-raised)', borderRadius: 'var(--na-radius-sm)', border: '1px solid var(--na-line)' }}>
+                      <span style={{ fontSize: '11px', color: 'var(--na-muted)' }}>Regime: <strong style={{ color: 'var(--na-text)' }}>{qualitative}</strong></span>
+                      <span style={{ fontSize: '11px', fontFamily: 'var(--na-font-mono)', color: 'var(--na-accent-cool)' }}>Entropy: {scaled.entropy.toFixed(2)} bits</span>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                      {scaled.items.slice(0, 6).map((item, idx) => (
+                        <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', fontFamily: 'var(--na-font-mono)' }}>
+                          <span style={{ width: '50px', color: 'var(--na-text)' }}>"{item.token}"</span>
+                          <div style={{ flex: 1, height: '6px', backgroundColor: 'var(--na-raised)', borderRadius: '3px', overflow: 'hidden' }}>
+                            <div style={{ width: `${item.prob * 100}%`, height: '100%', backgroundColor: idx === 0 ? 'var(--na-accent)' : 'var(--na-accent-cool)' }} />
+                          </div>
+                          <span style={{ width: '42px', textAlign: 'right', color: 'var(--na-muted)' }}>{(item.prob * 100).toFixed(1)}%</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Widget: Top-K and Top-P Truncation */}
+              {currentEntry.id === 'top_k_top_p' && (() => {
+                const nucleus = getFilteredNucleus(codexTopK, codexTopP, 0.8);
+                return (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--na-space-3)' }}>
+                    <div style={{ fontSize: 'var(--na-text-xs)', color: 'var(--na-text-secondary)' }}>
+                      Interactive Nucleus & Rank Filtering for "To be, or not to ":
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--na-space-3)' }}>
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '4px' }}>
+                          <span style={{ color: 'var(--na-muted)' }}>Top-K:</span>
+                          <span style={{ color: 'var(--na-accent)', fontFamily: 'var(--na-font-mono)', fontWeight: 700 }}>{codexTopK}</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="1"
+                          max="12"
+                          step="1"
+                          value={codexTopK}
+                          onChange={(e) => setCodexTopK(parseInt(e.target.value, 10))}
+                          style={{ width: '100%', accentColor: 'var(--na-accent)' }}
+                        />
+                      </div>
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '4px' }}>
+                          <span style={{ color: 'var(--na-muted)' }}>Top-P (Nucleus):</span>
+                          <span style={{ color: 'var(--na-accent-cool)', fontFamily: 'var(--na-font-mono)', fontWeight: 700 }}>{codexTopP.toFixed(2)}</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="0.1"
+                          max="1.0"
+                          step="0.05"
+                          value={codexTopP}
+                          onChange={(e) => setCodexTopP(parseFloat(e.target.value))}
+                          style={{ width: '100%', accentColor: 'var(--na-accent-cool)' }}
+                        />
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', backgroundColor: 'var(--na-raised)', borderRadius: 'var(--na-radius-sm)', border: '1px solid var(--na-line)', fontSize: '11px' }}>
+                      <span style={{ color: 'var(--na-muted)' }}>Filtered Nucleus Mass:</span>
+                      <span style={{ color: 'var(--na-accent)', fontFamily: 'var(--na-font-mono)', fontWeight: 700 }}>{(nucleus.nucleusMass * 100).toFixed(1)}%</span>
+                    </div>
+
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                      {nucleus.items.slice(0, 10).map((item, idx) => (
+                        <div
+                          key={idx}
+                          style={{
+                            padding: '4px 8px',
+                            backgroundColor: item.inNucleus ? 'var(--na-raised)' : 'var(--na-surface)',
+                            border: `1px solid ${item.inNucleus ? 'var(--na-accent)' : 'var(--na-line)'}`,
+                            borderRadius: 'var(--na-radius-sm)',
+                            opacity: item.inNucleus ? 1 : 0.4,
+                            textDecoration: item.inNucleus ? 'none' : 'line-through',
+                            fontSize: '11px',
+                            fontFamily: 'var(--na-font-mono)',
+                            display: 'flex',
+                            gap: '4px'
+                          }}
+                        >
+                          <span style={{ color: item.inNucleus ? 'var(--na-text)' : 'var(--na-faint)' }}>"{item.token}"</span>
+                          <span style={{ color: item.inNucleus ? 'var(--na-accent-cool)' : 'var(--na-faint)' }}>{(item.prob * 100).toFixed(0)}%</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Widget: Stochastic Sampling */}
+              {currentEntry.id === 'sampling' && (() => {
+                return (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--na-space-3)' }}>
+                    <div style={{ fontSize: 'var(--na-text-xs)', color: 'var(--na-text-secondary)' }}>
+                      Simulate drawing a random token from the Elder distribution for "To be, or not to ":
+                    </div>
+
+                    <div style={{ display: 'flex', gap: 'var(--na-space-3)', alignItems: 'center' }}>
+                      <button
+                        onClick={() => handleSampleRoll()}
+                        style={{
+                          backgroundColor: 'var(--na-accent)',
+                          color: 'var(--na-ink)',
+                          border: 'none',
+                          borderRadius: 'var(--na-radius-sm)',
+                          padding: '8px 16px',
+                          fontFamily: 'var(--na-font-mono)',
+                          fontSize: '12px',
+                          fontWeight: 700,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        🎲 Roll Stochastic Sample
+                      </button>
+                      <div style={{ fontSize: '11px', color: 'var(--na-muted)' }}>
+                        Drawn: <strong style={{ color: 'var(--na-accent)', fontSize: '14px', fontFamily: 'var(--na-font-mono)' }}>"{lastSampled.token}"</strong> ({(lastSampled.prob * 100).toFixed(1)}% chance)
+                      </div>
+                    </div>
+
+                    <div style={{ backgroundColor: 'var(--na-raised)', padding: '10px', borderRadius: 'var(--na-radius-sm)', border: '1px solid var(--na-line)' }}>
+                      <div style={{ fontSize: '11px', color: 'var(--na-muted)', marginBottom: '4px' }}>Recent Draws History:</div>
+                      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                        {sampledTokens.map((t, idx) => (
+                          <span
+                            key={idx}
+                            style={{
+                              backgroundColor: idx === 0 ? 'var(--na-accent-muted)' : 'var(--na-surface)',
+                              border: `1px solid ${idx === 0 ? 'var(--na-accent)' : 'var(--na-line)'}`,
+                              color: idx === 0 ? 'var(--na-accent)' : 'var(--na-text)',
+                              padding: '2px 6px',
+                              borderRadius: '3px',
+                              fontFamily: 'var(--na-font-mono)',
+                              fontSize: '12px'
+                            }}
+                          >
+                            "{t}"
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         </div>
