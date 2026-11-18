@@ -56,4 +56,7 @@ export * from './benchmark/BenchmarkModal.js';
 // Character Development & Animation Studio
 export * from './character/CharacterDevModal.js';
 
+// The Oracle Autoregressive Generator & Branching Modal
+export * from './oracle/OracleModal.js';
+
 
