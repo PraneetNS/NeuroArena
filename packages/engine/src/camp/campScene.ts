@@ -18,6 +18,7 @@ import { CampSlate } from './slate.js';
 import { CampScroll } from './scroll.js';
 import { MentorsNotes } from './mentorsNotes.js';
 import { CampAudio } from './campAudio.js';
+import { OracleStone } from '../entities/oracleStone.js';
 import { LayerDiagnostics, Finding } from '@na/ml-core';
 
 export interface CampStepStats {
@@ -66,6 +67,7 @@ export class CampScene {
   public slate: CampSlate;
   public scroll: CampScroll;
   public mentorsNotes: MentorsNotes;
+  public oracleStone: OracleStone;
 
   // Lighting
   private dirLight: THREE.DirectionalLight;
@@ -178,6 +180,10 @@ export class CampScene {
     this.mentorsNotes.group.position.set(2.2, 0, -1.3); // Board behind workbench
     this.mentorsNotes.group.rotation.y = -0.35;
     this.scene.add(this.mentorsNotes.group);
+
+    // Diegetic Oracle Stone (communing monolith)
+    this.oracleStone = new OracleStone(new THREE.Vector3(-3.2, 0.05, 2.2), 0x4fb3a9);
+    this.scene.add(this.oracleStone.group);
 
     this.setupInputListeners();
   }
@@ -659,6 +665,7 @@ export class CampScene {
     this.scroll.update(dt, timeSec);
     this.slate.render();
     this.mentorsNotes.render();
+    this.oracleStone.update(dt);
 
     // Animate stress particles if enabled
     if (this.isStressTestMode && this.stressParticles) {
