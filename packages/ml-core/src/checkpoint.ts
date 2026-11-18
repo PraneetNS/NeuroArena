@@ -114,9 +114,16 @@ export function packFp16(data: Float32Array | Float64Array): Uint8Array {
  */
 export function unpackFp16(bytes: Uint8Array): Float32Array {
   const N = Math.floor(bytes.byteLength / 2);
+  // Ensure 2-byte alignment for typed array construction
+  let alignedBytes = bytes;
+  if (bytes.byteOffset % 2 !== 0) {
+    const copy = new Uint8Array(bytes.byteLength);
+    copy.set(bytes);
+    alignedBytes = copy;
+  }
   if (typeof (globalThis as any).Float16Array !== 'undefined') {
     const f16Class = (globalThis as any).Float16Array;
-    const f16 = new f16Class(bytes.buffer, bytes.byteOffset, N);
+    const f16 = new f16Class(alignedBytes.buffer, alignedBytes.byteOffset, N);
     const f32 = new Float32Array(N);
     for (let i = 0; i < N; i++) {
       f32[i] = f16[i];
@@ -124,7 +131,7 @@ export function unpackFp16(bytes: Uint8Array): Float32Array {
     return f32;
   }
 
-  const u16 = new Uint16Array(bytes.buffer, bytes.byteOffset, N);
+  const u16 = new Uint16Array(alignedBytes.buffer, alignedBytes.byteOffset, N);
   const f32 = new Float32Array(N);
   for (let i = 0; i < N; i++) {
     f32[i] = halfToFloat(u16[i]);
