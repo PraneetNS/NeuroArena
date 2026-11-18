@@ -20,6 +20,7 @@ export interface CampOverlayProps {
   onOpenEvaluator?: () => void;
   onOpenAutopsy?: () => void;
   onApplyFix?: (finding: Finding) => void;
+  onOpenOracle?: () => void;
   cameraMode: CameraMode;
   onChangeCameraMode: (mode: CameraMode) => void;
   fpsSetting: FpsTargetSetting;
@@ -42,6 +43,7 @@ export const CampOverlay: React.FC<CampOverlayProps> = ({
   onOpenEvaluator,
   onOpenAutopsy,
   onApplyFix,
+  onOpenOracle,
   cameraMode,
   onChangeCameraMode,
   fpsSetting,
@@ -160,8 +162,31 @@ export const CampOverlay: React.FC<CampOverlayProps> = ({
           </div>
         </div>
 
-        {/* Right: Live Telemetry Badge & Findings Alert */}
+        {/* Right: Live Telemetry Badge, Oracle & Findings Alert */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+          {onOpenOracle && (
+            <button
+              onClick={onOpenOracle}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                backgroundColor: 'rgba(79, 179, 169, 0.15)',
+                border: '1px solid var(--na-accent-cool, #4fb3a9)',
+                color: 'var(--na-accent-cool, #4fb3a9)',
+                padding: '0.45rem 0.8rem',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontWeight: 600,
+                fontSize: '0.8rem'
+              }}
+              title="Commune with the Oracle Stone (R)"
+            >
+              <span>🔮</span>
+              <span>Oracle Stone</span>
+            </button>
+          )}
+
           {findings.length > 0 && (
             <button
               onClick={() => setIsFindingsDrawerOpen(!isFindingsDrawerOpen)}
@@ -556,6 +581,24 @@ export const CampOverlay: React.FC<CampOverlayProps> = ({
                   }}
                 >
                   Open Autopsy
+                </button>
+              )}
+
+              {onOpenOracle && (
+                <button
+                  onClick={onOpenOracle}
+                  className="na-button"
+                  style={{
+                    backgroundColor: 'rgba(79, 179, 169, 0.25)',
+                    color: 'var(--na-accent-cool, #4fb3a9)',
+                    border: '1px solid var(--na-accent-cool, #4fb3a9)',
+                    padding: '0.65rem 1.2rem',
+                    borderRadius: '8px',
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
+                >
+                  🔮 Commune with Oracle
                 </button>
               )}
 
