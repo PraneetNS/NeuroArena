@@ -45,7 +45,8 @@ import {
   CodexModal,
   ObservatoryModal,
   BenchmarkModal,
-  CharacterDevModal
+  CharacterDevModal,
+  OracleModal
 } from '@na/ui';
 import '@na/ui/styles';
 import {
@@ -151,6 +152,9 @@ class NeuroArenaGame {
   private codexRoot: ReactDOM.Root;
   private isCodexOpen = false;
   private codexInitialEntry: CodexConceptId = 'token';
+  private oracleContainer: HTMLElement;
+  private oracleRoot: ReactDOM.Root;
+  private isOracleOpen = false;
 
   private lastInteractionState: ShardInteractionState = {
     targetShard: null,
@@ -361,6 +365,14 @@ class NeuroArenaGame {
     this.codexContainer.id = 'app-codex-container';
     this.uiContainer.appendChild(this.codexContainer);
     this.codexRoot = ReactDOM.createRoot(this.codexContainer);
+
+    this.oracleContainer = document.createElement('div');
+    this.oracleContainer.id = 'app-oracle-container';
+    this.uiContainer.appendChild(this.oracleContainer);
+    this.oracleRoot = ReactDOM.createRoot(this.oracleContainer);
+
+    // Setup diegetic Oracle Stone in Open World
+    this.world.setupOracleStone(new THREE.Vector3(12, 1.2, 18));
 
     // Attach global debug, benchmark, and photo spot APIs
     if (typeof window !== 'undefined') {
@@ -639,6 +651,12 @@ class NeuroArenaGame {
         return;
       }
 
+      // Oracle Stone toggle on KeyR (matches KEYMAP.oracle)
+      if (e.code === KEYMAP.oracle.code) {
+        this.toggleOracle();
+        return;
+      }
+
       // Neural Observatory toggle on KeyO (matches KEYMAP.observatory)
       if (e.code === KEYMAP.observatory.code) {
         if (this.isObservatoryOpen) {
@@ -808,6 +826,12 @@ class NeuroArenaGame {
   }
 
   private handleInteraction(): void {
+    if (this.world.oracleStone?.isPlayerNearby) {
+      this.audio.playTerminalInteract();
+      this.toggleOracle(true);
+      return;
+    }
+
     if (this.activeNearbyShard && !this.activeNearbyShard.isCollected) {
       this.collectShard(this.activeNearbyShard);
       return;
@@ -1154,6 +1178,7 @@ class NeuroArenaGame {
         onChangeCameraMode: (mode: CameraMode) => this.campScene?.setCameraMode(mode),
         onChangeFpsTarget: (target: FpsTargetSetting) => this.campScene?.setFpsTarget(target),
         onToggleMute: (mute: boolean) => this.campScene?.audio.setMuted(mute),
+        onOpenOracle: () => this.toggleOracle(true),
         onOpenAutopsy: () => {
           this.exitCamp();
           this.openWorkbench();
@@ -1205,6 +1230,9 @@ class NeuroArenaGame {
     }
     if (this.isCodexOpen) {
       this.toggleCodex(false);
+    }
+    if (this.isOracleOpen) {
+      this.toggleOracle(false);
     }
   }
 
@@ -1268,6 +1296,8 @@ class NeuroArenaGame {
       this.openBenchmark();
     } else if (screenId === 'character' || screenId === 'character-dev') {
       this.openCharacterDev();
+    } else if (screenId === 'oracle') {
+      this.toggleOracle(true);
     }
   }
 
@@ -1304,6 +1334,26 @@ class NeuroArenaGame {
         initialEntryId: this.codexInitialEntry,
         completedStepIds: this.director.getState().progress.completedStepIds,
         onClose: () => this.toggleCodex(false)
+      })
+    );
+  }
+
+  public toggleOracle(open?: boolean): void {
+    const nextState = open !== undefined ? open : !this.isOracleOpen;
+    if (nextState !== this.isOracleOpen) {
+      if (nextState) this.audio.playUIOpen();
+      else this.audio.playUIClose();
+    }
+    this.isOracleOpen = nextState;
+    this.renderOracle();
+  }
+
+  private renderOracle(): void {
+    this.oracleRoot.render(
+      React.createElement(OracleModal, {
+        isOpen: this.isOracleOpen,
+        onClose: () => this.toggleOracle(false),
+        onOpenCodex: (entryId?: string) => this.toggleCodex(true, entryId as CodexConceptId)
       })
     );
   }
