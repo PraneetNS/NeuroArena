@@ -17,6 +17,7 @@ import { TerrainManager, QualityTier } from './terrain/terrainManager.js';
 import { loadTerrainTextures } from './terrain/textureLoader.js';
 import { FreeFlyCamera } from './camera/freeFlyCamera.js';
 import { EnvironmentManager, EnvironmentStats } from './environment/environmentManager.js';
+import { OracleStone } from './entities/oracleStone.js';
 
 export interface WorldOptions {
   powerPreference?: GPUPowerPreference | string;
@@ -54,6 +55,7 @@ export class World {
   public environment!: EnvironmentManager;
   public freeFlyCamera: FreeFlyCamera;
   public isFreeFly = false;
+  public oracleStone: OracleStone | null = null;
 
   // Camera Orbit parameters for Third-Person
   public cameraAngleY = 0;
@@ -273,6 +275,15 @@ export class World {
     this.scene.add(this.sunLight);
   }
 
+  public setupOracleStone(position = new THREE.Vector3(12, 1.0, 18)): OracleStone {
+    if (this.oracleStone) {
+      this.scene.remove(this.oracleStone.group);
+    }
+    this.oracleStone = new OracleStone(position, 0x4fb3a9);
+    this.scene.add(this.oracleStone.group);
+    return this.oracleStone;
+  }
+
   public setDpr(dpr: number): void {
     this.renderer.setPixelRatio(dpr);
     this.onResize();
@@ -415,6 +426,11 @@ export class World {
     // 3. Update Environment (Sky, Time of day, Grass, Foliage, Water, Fog)
     if (this.environment) {
       this.environment.update(dt, elapsed, pos);
+    }
+
+    // 4. Update Oracle Stone
+    if (this.oracleStone) {
+      this.oracleStone.update(dt, pos);
     }
 
     // 4. Update FPS
