@@ -111,11 +111,29 @@ export function getCampMentorsNoteLine(findingId?: string, loss?: number, lr?: n
       hint: 'Click "Restore Best Checkpoint" on the Mentor’s Note to rewind weights to the point of lowest validation loss.'
     };
   }
-  if (findingId === 'stall') {
+  if (findingId === 'slow-progress') {
+    const curLoss = loss ?? 6.499;
+    const curStep = step ?? 150;
+    const curLR = lr ?? 0.0001;
+    const lossDrop = Math.max(0, 6.931 - curLoss).toFixed(3);
+    const unigramGap = Math.max(0, curLoss - 4.472).toFixed(3);
+    const lrStr = curLR.toExponential(1);
     return {
-      text: `The lantern dimmed as loss stalled near ${loss !== undefined ? loss.toFixed(2) : 'baseline'}. Optimization ceased progress.`,
-      subtext: `Finding: [${findingId}] at step ${step ?? 25}. Read the board note for the fix.`,
-      hint: 'The learning rate is too low or gradients vanished. Adjust learning rate on the workbench.'
+      text: `At learning rate ${lrStr}, the loss dropped by ${lossDrop} over ${curStep} steps to ${curLoss.toFixed(3)}, still ${unigramGap} above the unigram baseline.`,
+      subtext: `Finding: [slow-progress] at step ${curStep} (LR: ${lrStr}). Read the Mentor’s Note on the board.`,
+      hint: 'Adjust learning rate to 0.003 on the Workbench to reach the unigram baseline in time.'
+    };
+  }
+  if (findingId === 'stall') {
+    const curLoss = loss ?? 6.820;
+    const curStep = step ?? 150;
+    const curLR = lr ?? 0.00003;
+    const lossDelta = Math.abs(6.931 - curLoss).toFixed(3);
+    const lrStr = curLR.toExponential(1);
+    return {
+      text: `At learning rate ${lrStr}, the loss only moved by ${lossDelta} over ${curStep} steps to ${curLoss.toFixed(3)}. Progress is insufficient to escape initial loss.`,
+      subtext: `Finding: [stall] at step ${curStep} (LR: ${lrStr}). Read the Mentor’s Note on the board.`,
+      hint: 'The learning rate is too low to escape initial loss. Increase learning rate on the Workbench.'
     };
   }
   const lossStr = loss !== undefined && isFinite(loss) ? loss.toFixed(2) : 'numerical bound';
