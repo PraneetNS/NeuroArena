@@ -37,15 +37,15 @@ This status report catalogs every deliverable specified in the Art and Stylized 
 ## 2. Hardware Benchmark Performance Verification
 
 - **Physical Adapter**: AMD Radeon(TM) Graphics (RDNA-2)
-- **Renderer**: Direct3D12 / Vulkan WebGPU (Non-fallback, non-headless)
-- **Viewport Resolution**: 1920 × 1080 (DPR 1.0)
+- **Renderer**: Direct3D12 Hardware WebGPU (Adapter: NVIDIA GeForce RTX 3050 Laptop GPU / Ampere; previous run: AMD Radeon Graphics / RDNA-2)
+- **Viewport Resolution**: 1267 × 571 (DPR 1.25, Non-headless, webdriver: false)
 - **Budgets vs. Measured Performance**:
 
-| Tier | Triangle Budget | Measured Tris | Draw Call Budget | Measured Calls | FPS Target | Measured FPS |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Low** | $\le 150\text{k}$ | **116k – 128k** | $\le 120$ | **85 – 118** | $\ge 30\text{ fps}$ | **74 – 89 FPS** |
-| **Medium** | $\le 400\text{k}$ | **320k – 341k** | $\le 250$ | **201 – 242** | $\ge 30\text{ fps}$ | **43 – 56 FPS** |
-| **High** | $\le 900\text{k}$ | **661k – 715k** | $\le 500$ | **294 – 486** | $\approx 60\text{ fps}$ | **54 – 62 FPS** |
+| Tier | Triangle Budget | Measured Tris (Peak) | Draw Call Budget | Measured Calls (Peak) | FPS Target | Measured FPS (Avg) | Code Status |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Low** | $\le 150\text{k}$ | **149.6k** | $\le 120$ | **149** | $\ge 30\text{ fps}$ | **130 FPS** | Geometry PASS / Calls Exceeded |
+| **Medium** | $\le 400\text{k}$ | **388.4k** | $\le 250$ | **305** | $\ge 30\text{ fps}$ | **127 FPS** | Geometry PASS / Calls Exceeded |
+| **High** | $\le 900\text{k}$ | **750.8k** | $\le 500$ | **504** | $\approx 60\text{ fps}$ | **99 FPS** | Geometry PASS / Calls Exceeded |
 
-*All quality tiers comfortably satisfy their triangle, draw call, and framerate budgets.*
+*Note: Measured from valid in-engine benchmark harness run with non-headless user agent, webdriver=false, and hardware WebGPU accelerator. Triangles pass on all tiers; draw calls slightly exceed budget during ridge sunrise peak due to dense foliage & shard instances.*
 

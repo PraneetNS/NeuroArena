@@ -240,6 +240,7 @@ function createRegionGlyphAtlas(
 }
 
 export class ShardWorld {
+  public group = new THREE.Group();
   public worldState: WorldState;
   public vault: VaultManager;
 
@@ -553,39 +554,39 @@ export class ShardWorld {
           const scan = scanShard(shard, this.vault.getState());
           const sig = scan.signals;
 
-          // 1. Noisy Data Signal (high nonAlphabeticRatio > 0.28 or extreme surprise > 0.85):
-          // Visual: rapid high-frequency jitter & spark flutter
-          if (sig.nonAlphabeticRatio > 0.28 || sig.surpriseScore > 0.85) {
-            const noiseIntensity = Math.min(1.0, (sig.nonAlphabeticRatio - 0.28) * 3.5 + Math.max(0, sig.surpriseScore - 0.85) * 4.0);
+          // 1. Jitter (OCR noise: low dictionary hit rate <= 0.978 or high nonAlphabeticRatio >= 0.262):
+          // Visual: rapid high-frequency position tremor & flutter
+          if (sig.dictionaryHitRate <= 0.978 || sig.nonAlphabeticRatio >= 0.262) {
+            const noiseIntensity = Math.min(1.0, Math.max(0, (0.978 - sig.dictionaryHitRate) * 15.0) + Math.max(0, (sig.nonAlphabeticRatio - 0.262) * 8.0));
             const jitterTime = time * 28.0 + i * 17.0;
-            jitterX = Math.sin(jitterTime) * 0.09 * noiseIntensity;
-            jitterY = Math.cos(jitterTime * 1.3) * 0.08 * noiseIntensity;
-            jitterZ = Math.sin(jitterTime * 0.7) * 0.09 * noiseIntensity;
+            jitterX = Math.sin(jitterTime) * 0.09 * (0.4 + 0.6 * noiseIntensity);
+            jitterY = Math.cos(jitterTime * 1.3) * 0.08 * (0.4 + 0.6 * noiseIntensity);
+            jitterZ = Math.sin(jitterTime * 0.7) * 0.09 * (0.4 + 0.6 * noiseIntensity);
           }
 
-          // 2. Duplicate Data Signal (high repetitionScore > 0.35):
+          // 2. Echo (Duplicate: high repetitionScore >= 0.25):
           // Visual: faint trailing duplicate echoes / pulsing ghost dilation
-          if (sig.repetitionScore > 0.35) {
+          if (sig.repetitionScore >= 0.25) {
             const repPulse = Math.sin(time * 4.0 + i) * 0.25 + 1.0;
             scaleX *= 1.25 * repPulse;
             scaleZ *= 1.25 * repPulse;
             visualColor.lerp(new THREE.Color(0x8e9aaf), 0.45); // Slate duplicate echo
           }
 
-          // 3. Boilerplate Data Signal (high dictionaryHitRate > 0.95 and very low surprise < 0.25):
+          // 3. Signboard (Boilerplate: elevated surprise >= 0.220 with typical dictionary <= 0.990):
           // Visual: rigid rectangular arrangement, like an old signpost
-          if (sig.dictionaryHitRate > 0.95 && sig.surpriseScore < 0.25) {
+          if (sig.surpriseScore >= 0.220 && sig.dictionaryHitRate <= 0.990) {
             scaleX *= 1.45;
             scaleY *= 1.2;
             scaleZ *= 0.35; // Rigid rectangular signboard
             rotZ = 0.05 * Math.sin(time * 0.5); // Static signpost creak
           }
 
-          // 4. Off-domain Data Signal (low dictionaryHitRate < 0.65 or atypical uppercase):
+          // 4. Runic (Off-domain: foreign vocabulary <= 0.930 or high surprise >= 0.320 with low uppercase):
           // Visual: distinct foreign glyph style / chromatic hue shift
-          if (sig.dictionaryHitRate < 0.65) {
-            const shift = (0.65 - sig.dictionaryHitRate) * 1.5;
-            visualColor.offsetHSL(shift * 0.35, 0.2, 0.1);
+          if (sig.dictionaryHitRate <= 0.930 || (sig.surpriseScore >= 0.320 && sig.uppercaseRatio <= 0.050)) {
+            const shift = Math.max(0, 0.930 - sig.dictionaryHitRate) * 2.0 + Math.max(0, sig.surpriseScore - 0.320) * 1.5;
+            visualColor.offsetHSL((shift * 0.35 + 0.1) % 1.0, 0.25, 0.1);
           }
 
           // 5. Unfold transition when near or inspected

@@ -1582,7 +1582,7 @@ const isBenchRoute = () =>
   window.location.hash.startsWith('#/bench-world') ||
   window.location.search.includes('bench-world');
 
-window.addEventListener('DOMContentLoaded', () => {
+function initApp() {
   if (isWorkbenchRoute()) {
     const canvasContainer = document.getElementById('app-canvas-container');
     if (canvasContainer) {
@@ -1730,16 +1730,28 @@ window.addEventListener('DOMContentLoaded', () => {
       root.render(React.createElement(UILabGallery));
     }
   } else {
-    const game = new NeuroArenaGame();
-    (window as any).__game = game;
-    (window as any).__openBenchmark = () => game.openBenchmark();
-    (window as any).__benchmarkHarness = (game as any).benchmarkHarness;
+    try {
+      console.log('[NeuroArena] Instantiating NeuroArenaGame...');
+      const game = new NeuroArenaGame();
+      (window as any).__game = game;
+      (window as any).__openBenchmark = () => game.openBenchmark();
+      (window as any).__benchmarkHarness = (game as any).benchmarkHarness;
+      console.log('[NeuroArena] NeuroArenaGame instantiated successfully.');
 
-    if (isBenchRoute()) {
-      setTimeout(() => {
-        game.openBenchmark();
-      }, 400);
+      if (isBenchRoute()) {
+        setTimeout(() => {
+          game.openBenchmark();
+        }, 400);
+      }
+    } catch (err) {
+      console.error('[NeuroArena] Fatal instantiation error:', err);
     }
   }
-});
+}
+
+if (document.readyState === 'loading') {
+  window.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
 

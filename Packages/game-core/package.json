@@ -11,6 +11,7 @@
     "build": "tsc --noEmit",
     "inspect": "npx tsx src/inspect.ts",
     "lens-report": "tsx src/lensReport.ts",
+    "cue-report": "tsx src/cueReport.ts",
     "walkthrough": "tsx src/walkthrough.ts",
     "sweep-calc": "tsx src/sweepCalc.ts",
     "pacing-sim": "tsx src/pacingSim.ts"

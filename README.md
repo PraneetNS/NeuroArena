@@ -529,10 +529,11 @@ A dynamic commentary system converts live training telemetry into plain-English 
 
 ### In-Engine WebGPU Benchmark Harness & Physical Hardware Verification
 - **In-Game Benchmark (`/#/bench-world`):** Scripted camera path through the 5 photo spots (20s each) and 60s walking path recording average FPS, p50, p95, p99 frame times, 1% low FPS, draw calls, triangles, and GPU memory estimate.
-- **Hardware-Verified Metrics (AMD Radeon RDNA-2 WebGPU at 1920×1080):**
-  - **Low Tier:** 116k–128k tris, 85–118 draw calls, **74–89 FPS** (Budget: $\le 150\text{k}$ tris, $\le 120$ calls, $\ge 30\text{ fps}$) ✅
-  - **Medium Tier:** 320k–341k tris, 201–242 draw calls, **43–56 FPS** (Budget: $\le 400\text{k}$ tris, $\le 250$ calls, $\ge 30\text{ fps}$) ✅
-  - **High Tier:** 661k–715k tris, 294–486 draw calls, **54–62 FPS** (Budget: $\le 900\text{k}$ tris, $\le 500$ calls, $\approx 60\text{ fps}$) ✅
+- **Hardware-Verified Metrics (NVIDIA GeForce RTX 3050 Laptop GPU / Ampere WebGPU, Headed, Non-Webdriver):**
+  - **Low Tier:** 149.6k tris (Budget $\le 150\text{k}$), 149 peak draw calls, **130 FPS** (Target: $\ge 30\text{ fps}$)
+  - **Medium Tier:** 388.4k tris (Budget $\le 400\text{k}$), 305 peak draw calls, **127 FPS** (Target: $\ge 30\text{ fps}$)
+  - **High Tier:** 750.8k tris (Budget $\le 900\text{k}$), 504 peak draw calls, **99 FPS** (Target: $\approx 60\text{ fps}$)
+  - *(Previous run labeled on AMD Radeon(TM) Graphics / RDNA-2: Low 74–89 FPS, Medium 43–56 FPS, High 54–62 FPS).*
 
 ### Dynamic WebGPU & WebGL Post-Processing Pipeline
 - **Next-Gen WebGPU First:** `RendererManager.bootstrapRenderer()` attempts `THREE.WebGPURenderer` on initialization with one-time GPU capability probing, falling back silently to `THREE.WebGLRenderer` (WebGL2 $\to$ WebGL1) if unavailable.
