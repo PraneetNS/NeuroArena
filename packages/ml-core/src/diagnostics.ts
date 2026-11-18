@@ -700,75 +700,101 @@ export function diagnose(
   }
 
   // --------------------------------------------------------------------------
-  // 3b. OPTIMIZATION STALL (loss plateau above unigram baseline)
+  // 3b. OPTIMIZATION STALL & SLOW PROGRESS
   // --------------------------------------------------------------------------
-  let isStalled = false;
-  if (latestSnapshot && latestSnapshot.step >= 40) {
-    if (latestSnapshot.loss >= BASELINES.unigram) {
-      if (history.length >= 4) {
-        const recentSnapshots = history.slice(-4);
-        const lossDiff = Math.abs(recentSnapshots[recentSnapshots.length - 1].loss - recentSnapshots[0].loss);
-        if (lossDiff < 0.3) {
-          isStalled = true;
-        }
-      }
-    }
-  } else if (metrics.length >= 8 && latestMetric && latestMetric.step >= 40) {
-    if (latestMetric.trainLoss >= BASELINES.unigram) {
-      const recentM = metrics.slice(-6);
-      const lossDelta = Math.abs(recentM[recentM.length - 1].trainLoss - recentM[0].trainLoss);
-      if (lossDelta < 0.25) {
-        isStalled = true;
-      }
+  const stallInitialLoss = metrics[0]?.trainLoss ?? 6.931;
+  const stallCurrentLoss = latestSnapshot?.loss ?? latestMetric?.trainLoss ?? 6.931;
+  const currentStep = latestSnapshot?.step ?? latestMetric?.step ?? 0;
+  const currentLR = latestMetric?.lr ?? 0.0001;
+  const lossDeltaFromInitial = Math.abs(stallCurrentLoss - stallInitialLoss);
+  const lossDropSoFar = stallInitialLoss - stallCurrentLoss;
+  const gapToUnigram = stallCurrentLoss - BASELINES.unigram;
+
+  if (currentStep >= 150) {
+    if (lossDeltaFromInitial <= 0.3) {
+      // Stall: loss is within 0.3 of initial loss after 150 steps
+      findings.push({
+        id: 'stall',
+        severity: 'warn',
+        title: 'Optimization Stalled',
+        evidence: [
+          { metric: 'lossDeltaFromInitial', value: lossDeltaFromInitial.toFixed(3), threshold: '> 0.300' },
+          { metric: 'stepsSoFar', value: currentStep, threshold: '>= 150' },
+          { metric: 'currentLoss', value: stallCurrentLoss.toFixed(3), threshold: `< ${BASELINES.unigram.toFixed(3)}` },
+          { metric: 'learningRate', value: currentLR.toExponential(1), threshold: '>= 0.001' }
+        ],
+        plainExplanation:
+          `At learning rate ${currentLR.toExponential(1)}, the loss has only moved by ${lossDeltaFromInitial.toFixed(3)} over ${currentStep} steps to ${stallCurrentLoss.toFixed(3)}. Progress is insufficient to escape the initial loss plateau.`,
+        likelyCauses: [
+          'Learning rate is set too low to make perceptible optimization headway',
+          'Gradient update magnitudes are dwarfed by parameter scale'
+        ],
+        suggestedFixes: [
+          { label: 'Tune learning rate to calibrated baseline (0.003)', parameterChange: { parameter: 'lr', suggestedValue: 0.003 } }
+        ],
+        conceptId: 'optimization-stall'
+      });
+    } else if (stallCurrentLoss >= BASELINES.unigram) {
+      // Slow Progress: loss has dropped by > 0.3, but after 150+ steps remains above unigram baseline
+      findings.push({
+        id: 'slow-progress',
+        severity: 'warn',
+        title: 'Slow Progress',
+        evidence: [
+          { metric: 'lossDropSoFar', value: lossDropSoFar.toFixed(3), threshold: 'active descent' },
+          { metric: 'stepsSoFar', value: currentStep, threshold: '>= 150' },
+          { metric: 'gapToUnigram', value: gapToUnigram.toFixed(3), threshold: '<= 0.000' },
+          { metric: 'learningRate', value: currentLR.toExponential(1), threshold: '>= 0.001' }
+        ],
+        plainExplanation:
+          `At learning rate ${currentLR.toExponential(1)}, the loss has dropped by ${lossDropSoFar.toFixed(3)} over ${currentStep} steps to ${stallCurrentLoss.toFixed(3)}, still ${gapToUnigram.toFixed(3)} above the unigram baseline.`,
+        likelyCauses: [
+          'Learning rate is below optimal descent velocity for the run duration budget',
+          'Descent is consistent but too slow to achieve grammatical convergence in time'
+        ],
+        suggestedFixes: [
+          { label: 'Adjust learning rate to calibrated baseline (0.003)', parameterChange: { parameter: 'lr', suggestedValue: 0.003 } }
+        ],
+        conceptId: 'optimization-stall'
+      });
     }
   }
 
-  if (isStalled) {
-    findings.push({
-      id: 'stall',
-      severity: 'warn',
-      title: 'Optimization Stalled',
-      evidence: [
-        { metric: 'currentLoss', value: (latestSnapshot?.loss ?? latestMetric?.trainLoss ?? 4.5).toFixed(4), threshold: `< ${BASELINES.unigram}` },
-        { metric: 'trajectory', value: 'plateaued above baseline', threshold: 'descent' }
-      ],
-      plainExplanation:
-        'The loss trajectory has plateaued above the unigram baseline and ceased making measurable progress. Adjusting the learning rate or scheduler will help the optimizer escape this high-loss plateau.',
-      likelyCauses: [
-        'Learning rate is poorly tuned or too erratic to descend into an optimal basin',
-        'Optimizer momentum or warmup schedule plateaued prematurely',
-        'Model capacity is saturated by suboptimal hyperparameter balance'
-      ],
-      suggestedFixes: [
-        { label: 'Tune learning rate to calibrated baseline (0.003)', parameterChange: { parameter: 'lr', suggestedValue: 0.003 } },
-        { label: 'Extend warmup schedule to 15-25 steps', parameterChange: { parameter: 'warmupSteps', suggestedValue: 20 } }
-      ],
-      conceptId: 'optimization-stall'
-    });
-  }
-
   // --------------------------------------------------------------------------
-  // 4. OVERFITTING (val-train gap trend & validation rise from minimum)
+  // 4. OVERFITTING (3-point smoothed val loss rise >= 0.05 and train-val gap >= 1.0)
   // --------------------------------------------------------------------------
   let valTrainGap = 0;
   let isOverfitting = false;
-  let valRiseFromMin = 0;
-  let minValLoss = Infinity;
+  let smoothedValRise = 0;
+  let minSmoothedVal = Infinity;
+  let currentSmoothedVal = 0;
 
-  // Track historical val points to find minimum and rise
   const valMetrics = metrics.filter(m => m.valLoss !== undefined && m.valLoss > 0);
-  if (valMetrics.length >= 2) {
-    for (const vm of valMetrics) {
-      if ((vm.valLoss ?? Infinity) < minValLoss) {
-        minValLoss = vm.valLoss!;
+  if (valMetrics.length >= 3) {
+    // 3-point running smoothed val
+    const smoothedVals: number[] = [];
+    for (let i = 0; i < valMetrics.length; i++) {
+      const start = Math.max(0, i - 2);
+      let sum = 0;
+      let count = 0;
+      for (let j = start; j <= i; j++) {
+        sum += valMetrics[j].valLoss!;
+        count++;
+      }
+      const sVal = sum / count;
+      smoothedVals.push(sVal);
+      if (sVal < minSmoothedVal) {
+        minSmoothedVal = sVal;
       }
     }
-    const latestValMetric = valMetrics[valMetrics.length - 1];
-    valTrainGap = (latestValMetric.valLoss ?? 0) - latestValMetric.trainLoss;
-    valRiseFromMin = (latestValMetric.valLoss ?? 0) - minValLoss;
 
-    // Overfitting criteria: gap >= 1.2 AND val has risen from its minimum by >= 0.03
-    if (valTrainGap >= 1.2 && valRiseFromMin >= 0.03) {
+    currentSmoothedVal = smoothedVals[smoothedVals.length - 1];
+    const latestValMetric = valMetrics[valMetrics.length - 1];
+    valTrainGap = (latestValMetric.valLoss ?? currentSmoothedVal) - latestValMetric.trainLoss;
+    smoothedValRise = currentSmoothedVal - minSmoothedVal;
+
+    // Overfitting rule: smoothed val is at least 0.05 above its minimum AND train-val gap is at least 1.0
+    if (smoothedValRise >= 0.05 && valTrainGap >= 1.0) {
       isOverfitting = true;
     }
   }
@@ -779,15 +805,15 @@ export function diagnose(
       severity: 'warn',
       title: 'Overfitting Detected',
       evidence: [
-        { metric: 'valTrainGap', value: valTrainGap.toFixed(2), threshold: '< 1.20' },
-        { metric: 'valRiseFromMin', value: `+${valRiseFromMin.toFixed(3)}`, threshold: '< 0.030' },
-        { metric: 'minValLoss', value: minValLoss.toFixed(3), threshold: 'monotonic decrease' }
+        { metric: 'valTrainGap', value: valTrainGap.toFixed(2), threshold: '< 1.00' },
+        { metric: 'smoothedValRise', value: `+${smoothedValRise.toFixed(3)}`, threshold: '< 0.050' },
+        { metric: 'minSmoothedVal', value: minSmoothedVal.toFixed(3), threshold: 'monotonic descent' }
       ],
       plainExplanation:
-        'Validation loss has begun climbing away from its observed minimum while training loss continues downward. The network is memorizing specific phrasing from the training set rather than generalizing.',
+        `Smoothed validation loss has risen by +${smoothedValRise.toFixed(3)} above its observed minimum (${minSmoothedVal.toFixed(3)}) while the train-val gap reached ${valTrainGap.toFixed(2)}. The network has begun memorizing training passages rather than generalizing.`,
       likelyCauses: [
         'Training continued past the generalization minimum without early stopping',
-        'Dataset size (60k tokens) is saturated by the Scout parameter capacity (446k)',
+        'Dataset size is saturated by parameter capacity',
         'Weight decay regularization is insufficient to constrain weight norm growth'
       ],
       suggestedFixes: [
