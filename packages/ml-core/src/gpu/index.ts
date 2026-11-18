@@ -7,4 +7,5 @@ export * from './shaders/index.js';
 export * from './types.js';
 export * from './storage.js';
 export * from './sampler.js';
+export * from './kvModel.js';
 export * from './client.js';

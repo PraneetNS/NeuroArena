@@ -18,4 +18,5 @@ export * from './gpu/index.js';
 export * from './data/validation.js';
 export * from './assetManifest.js';
 export * from './assetLoader.js';
+export * from './dialogue.js';
 
