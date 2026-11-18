@@ -161,19 +161,21 @@ export function computeHeadMetrics(probs: Float32Array | Float64Array, T: number
   const chanceEntropy = chanceEntropySum / T;
 
   // Strict thresholded classification label:
-  // Previous-token: score above 0.50
-  // Sink: mass on token 0 above 0.50
-  // Local-window: score above chance * 2 and at least 0.50
+  // previous-token: ratio >= 2.0 AND prevTokenScore >= 0.40
+  // first-token: ratio >= 2.0 AND firstTokenScore >= 0.30
+  // local-window: ratio >= 2.0 AND localWindowScore >= 0.60
+  // everything else: "no clear pattern"
   let label = 'no clear pattern';
-  if (prevTokenScore >= 0.50) {
-    const ratio = chancePrev > 0 ? prevTokenScore / chancePrev : 0;
-    label = `previous-token (${prevTokenScore.toFixed(2)}, ${ratio.toFixed(1)}x chance)`;
-  } else if (firstTokenScore >= 0.50) {
-    const ratio = chanceFirst > 0 ? firstTokenScore / chanceFirst : 0;
-    label = `attention sink (${firstTokenScore.toFixed(2)}, ${ratio.toFixed(1)}x chance)`;
-  } else if (localWindowScore >= chanceLocal * 2.0 && localWindowScore >= 0.50) {
-    const ratio = chanceLocal > 0 ? localWindowScore / chanceLocal : 0;
-    label = `local window (${localWindowScore.toFixed(2)}, ${ratio.toFixed(1)}x chance)`;
+  const prevRatio = chancePrev > 0 ? prevTokenScore / chancePrev : 0;
+  const firstRatio = chanceFirst > 0 ? firstTokenScore / chanceFirst : 0;
+  const localRatio = chanceLocal > 0 ? localWindowScore / chanceLocal : 0;
+
+  if (prevRatio >= 2.0 && prevTokenScore >= 0.40) {
+    label = `previous-token (${prevTokenScore.toFixed(2)}, ${prevRatio.toFixed(1)}x chance)`;
+  } else if (firstRatio >= 2.0 && firstTokenScore >= 0.30) {
+    label = `first-token (${firstTokenScore.toFixed(2)}, ${firstRatio.toFixed(1)}x chance)`;
+  } else if (localRatio >= 2.0 && localWindowScore >= 0.60) {
+    label = `local window (${localWindowScore.toFixed(2)}, ${localRatio.toFixed(1)}x chance)`;
   }
 
   return {
