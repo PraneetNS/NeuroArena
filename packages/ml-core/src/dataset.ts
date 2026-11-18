@@ -6,11 +6,11 @@ import { Xoshiro128StarStar } from './rng.js';
 import { Batch } from './types.js';
 
 export class DataLoader {
-  public trainTokens: Uint16Array;
-  public valTokens: Uint16Array;
-  private rng: Xoshiro128StarStar;
+  public trainTokens: Uint16Array | Uint32Array;
+  public valTokens: Uint16Array | Uint32Array;
+  public rng: Xoshiro128StarStar;
 
-  constructor(tokens: Uint16Array, splitRatio = 0.9, seed = 1337) {
+  constructor(tokens: Uint16Array | Uint32Array, splitRatio = 0.9, seed = 1337) {
     if (tokens.length < 8) {
       throw new Error(`Dataset too short: ${tokens.length} tokens`);
     }
@@ -19,6 +19,18 @@ export class DataLoader {
     this.trainTokens = tokens.subarray(0, splitIdx);
     this.valTokens = tokens.subarray(splitIdx);
     this.rng = new Xoshiro128StarStar(seed);
+  }
+
+  public static fromSplits(
+    trainTokens: Uint16Array | Uint32Array,
+    valTokens: Uint16Array | Uint32Array,
+    seed = 1337
+  ): DataLoader {
+    const loader = Object.create(DataLoader.prototype) as DataLoader;
+    loader.trainTokens = trainTokens;
+    loader.valTokens = valTokens;
+    loader.rng = new Xoshiro128StarStar(seed);
+    return loader;
   }
 
   /**

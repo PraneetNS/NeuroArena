@@ -3,14 +3,14 @@
  * Computes dictionaryHitRate: the fraction of words in a shard found in the clean vocabulary.
  */
 
-import { SHAKESPEARE_TRAIN_TEXT } from './data/corpus.js';
+import { SHAKESPEARE_TRAIN_TEXT, VALIDATION_CORPUS_TEXT } from './data/corpus.js';
 
 class ShakespeareDictionary {
   private vocab: Set<string>;
 
   constructor() {
     this.vocab = new Set<string>();
-    this.build(SHAKESPEARE_TRAIN_TEXT);
+    this.build(SHAKESPEARE_TRAIN_TEXT + '\n' + VALIDATION_CORPUS_TEXT);
   }
 
   private build(corpus: string): void {

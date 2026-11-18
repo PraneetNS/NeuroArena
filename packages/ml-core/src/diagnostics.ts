@@ -622,13 +622,17 @@ export function diagnose(
     }
   }
 
-  // Also check if configured LR is unreasonably high (e.g. >= 0.02)
+  // Require an observed history window (at least 15 steps) before diagnosing lr-too-high
+  const hasHistoryWindow = metrics.length >= 15;
+  const initialLoss = metrics[0]?.trainLoss ?? 5.0;
+  const currentLoss = latestMetric?.trainLoss ?? 0;
+  const lossDiverged = Number.isNaN(currentLoss) || currentLoss > initialLoss * 1.5;
   const isExtremeLR = (latestMetric?.lr ?? 0) >= 0.02;
 
-  if (highUpdateRatio || (lossOscillating && isExtremeLR) || isExtremeLR) {
+  if (hasHistoryWindow && (highUpdateRatio || lossOscillating || lossDiverged || (isExtremeLR && (currentLoss > 4.0 || lossOscillating)))) {
     findings.push({
       id: 'lr-too-high',
-      severity: isExtremeLR ? 'critical' : 'warn',
+      severity: (isExtremeLR || lossDiverged) ? 'critical' : 'warn',
       title: 'Learning Rate Too High',
       evidence: [
         { metric: 'learningRate', value: (latestMetric?.lr ?? 0).toFixed(5), threshold: '< 0.005' },

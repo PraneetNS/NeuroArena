@@ -21,9 +21,9 @@ export interface QualityConfig {
 
 export const QUALITY_PRESETS: Record<QualityTier, QualityConfig> = {
   low: {
-    drawDistance: 200,
-    lod0Distance: 56,
-    lod1Distance: 112,
+    drawDistance: 160,
+    lod0Distance: 48,
+    lod1Distance: 96,
     shadowResolution: 512,
     maxChunksPerFrame: 3
   },

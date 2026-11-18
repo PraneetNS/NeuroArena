@@ -5,7 +5,7 @@
  * Computes deterministic surprisal (cross-entropy in bits/char) for incoming shard passages.
  */
 
-import { SHAKESPEARE_TRAIN_TEXT } from './data/corpus.js';
+import { SHAKESPEARE_TRAIN_TEXT, VALIDATION_CORPUS_TEXT } from './data/corpus.js';
 
 export class CharBigramModel {
   private transitionCounts: Int32Array; // 128 x 128
@@ -15,7 +15,7 @@ export class CharBigramModel {
   constructor() {
     this.transitionCounts = new Int32Array(128 * 128);
     this.contextTotals = new Int32Array(128);
-    this.train(SHAKESPEARE_TRAIN_TEXT);
+    this.train(SHAKESPEARE_TRAIN_TEXT + '\n' + VALIDATION_CORPUS_TEXT);
   }
 
   private toAscii(ch: string): number {

@@ -12,6 +12,7 @@
  */
 
 import { PRESETS } from '../types.js';
+import { DataLoader } from '../dataset.js';
 import { CosineLRScheduler } from '../optimizer.js';
 import { Xoshiro128StarStar } from '../rng.js';
 import { ByteBPE } from '../tokenizers/bpe.js';
@@ -50,7 +51,7 @@ class TrainingWorkerRuntime {
   private manifest!: RunManifest;
 
   // Datasets
-  private trainTokens: Uint32Array = new Uint32Array(0);
+  private dataLoader!: DataLoader;
   private fixedValBatches: Array<{ inputs: Uint16Array; targets: Uint16Array }> = [];
   private tokenizer?: TokenizerInterface;
 
@@ -188,25 +189,16 @@ class TrainingWorkerRuntime {
       trainArr = new Uint32Array(rawTokens.slice(0, splitIdx));
       valArr = new Uint32Array(rawTokens.slice(splitIdx));
     }
-    this.trainTokens = trainArr;
 
-    // Pre-extract fixed validation batches for consistent validation measurement
+    // Pre-extract fixed validation batches for consistent validation measurement via unified DataLoader
     const B = hp.batchSize;
     const T = hp.contextLen;
+    this.dataLoader = DataLoader.fromSplits(trainArr, valArr, hp.seed ?? 1337);
     this.fixedValBatches = [];
-    const valRng = new Xoshiro128StarStar(999999);
+    const valLoader = DataLoader.fromSplits(trainArr, valArr, 999999);
     for (let i = 0; i < hp.valBatches; i++) {
-      const inputs = new Uint16Array(B * T);
-      const targets = new Uint16Array(B * T);
-      const maxOffset = Math.max(1, valArr.length - T - 1);
-      for (let b = 0; b < B; b++) {
-        const offset = Math.floor(valRng.nextFloat() * maxOffset);
-        for (let t = 0; t < T; t++) {
-          inputs[b * T + t] = valArr[offset + t] ?? 0;
-          targets[b * T + t] = valArr[offset + t + 1] ?? 0;
-        }
-      }
-      this.fixedValBatches.push({ inputs, targets });
+      const b = valLoader.getBatch('val', B, T);
+      this.fixedValBatches.push({ inputs: b.inputs, targets: b.targets });
     }
 
     // Initialize WebGPU & Models
@@ -324,10 +316,6 @@ class TrainingWorkerRuntime {
     const B = hp.batchSize;
     const T = hp.contextLen;
     const tokensPerStep = B * T;
-    const maxOffset = Math.max(1, this.trainTokens.length - T - 1);
-
-    const inputBatch = new Uint16Array(tokensPerStep);
-    const targetBatch = new Uint16Array(tokensPerStep);
 
     while (this.isRunning && !this.isStopped && this.trainer && this.trainer.stepCount < hp.totalSteps) {
       // 1. Handle Pause
@@ -347,18 +335,12 @@ class TrainingWorkerRuntime {
 
       const t0 = performance.now();
 
-      // 3. Draw random batch from train set
-      for (let b = 0; b < B; b++) {
-        this.rngCallCount++;
-        const offset = Math.floor(this.rng.nextFloat() * maxOffset);
-        for (let t = 0; t < T; t++) {
-          inputBatch[b * T + t] = this.trainTokens[offset + t] ?? 0;
-          targetBatch[b * T + t] = this.trainTokens[offset + t + 1] ?? 0;
-        }
-      }
+      // 3. Draw random batch from train set via unified DataLoader
+      const batch = this.dataLoader.getBatch('train', B, T);
+      this.rngCallCount += B;
 
       // 4. Execute single training step
-      const metrics = await this.trainer.step(inputBatch, targetBatch);
+      const metrics = await this.trainer.step(batch.inputs, batch.targets);
       this.totalTokensTrained += tokensPerStep;
       const currentStep = this.trainer.stepCount;
 

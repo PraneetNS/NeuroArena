@@ -69,7 +69,7 @@ export const LUMEN_DIALOGUE: Record<string, LumenLine> = {
   },
 
   camp_mentors_note: {
-    text: 'The lantern flared and loss exploded into infinity. The learning rate was too high.',
+    text: 'The lantern flared as the learning rate pushed loss past the numerical stability boundary.',
     subtext: 'Read the Mentor’s Note on the board for the diagnosed remedy.',
     hint: 'Open the Mentor’s Note finding: reduce the learning rate to prevent gradient divergence.'
   },
@@ -98,3 +98,23 @@ export const LUMEN_DIALOGUE: Record<string, LumenLine> = {
     hint: 'Click Claim Checkpoint to load Lumen’s verified model weights.'
   }
 };
+
+/**
+ * Returns dynamic Mentor/Lumen line reflecting exact observed finding ID and real numbers.
+ */
+export function getCampMentorsNoteLine(findingId?: string, loss?: number, lr?: number, step?: number): LumenLine {
+  if (findingId === 'stall') {
+    return {
+      text: `The lantern dimmed as loss stalled near ${loss !== undefined ? loss.toFixed(2) : 'baseline'}. Optimization ceased progress.`,
+      subtext: `Finding: [${findingId}] at step ${step ?? 25}. Read the board note for the fix.`,
+      hint: 'The learning rate is too low or gradients vanished. Adjust learning rate on the workbench.'
+    };
+  }
+  const lossStr = loss !== undefined && isFinite(loss) ? loss.toFixed(2) : 'numerical bound';
+  const lrStr = lr !== undefined ? lr.toString() : '0.10';
+  return {
+    text: `The lantern flared as learning rate ${lrStr} drove loss to ${lossStr}. Parameter updates destabilized.`,
+    subtext: `Finding: [${findingId || 'lr-too-high'}] at step ${step ?? 25}. Read the board note for the remedy.`,
+    hint: 'Open the Mentor’s Note finding: reduce learning rate to 0.003 to stabilize gradient descent.'
+  };
+}

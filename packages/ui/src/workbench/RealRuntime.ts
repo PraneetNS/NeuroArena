@@ -582,7 +582,7 @@ export class RealRuntime implements WorkbenchRuntime {
         step: stats.step,
         maxSteps: this.maxSteps,
         trainLoss: Number(stats.trainLoss.toFixed(4)),
-        valLoss: lastKnownValLoss !== null ? lastKnownValLoss : Number(stats.trainLoss.toFixed(4)),
+        valLoss: lastKnownValLoss !== null ? lastKnownValLoss : 0, // Validation Integrity: Never alias smoothed train loss as val loss
         learningRate: stats.lr,
         tokensPerSec: stats.tokensPerSec,
         elapsedSeconds: stats.elapsedSec,

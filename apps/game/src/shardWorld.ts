@@ -605,8 +605,8 @@ export class ShardWorld {
         instancedMesh.setMatrixAt(i, this.dummy.matrix);
         meshNeedsUpdate = true;
 
-        // Floating text glyph cluster: rendered within 52m for maximum detail and performance
-        if (distSq < 52 * 52) {
+        // Floating text glyph cluster: culled beyond 35m for optimal draw call budget at overlooks
+        if (distSq < 35 * 35) {
           const unfoldFactor = isTarget ? 1.35 : 1.0;
           this.glyphDummy.position.set(shard.position.x + jitterX, shard.position.y + bob + jitterY, shard.position.z + jitterZ);
           this.glyphDummy.rotation.set(0, rotY * 1.35, rotZ);

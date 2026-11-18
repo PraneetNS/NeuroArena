@@ -170,15 +170,24 @@ export class MentorsNotes {
       ctx.arc(cardX + cardW / 2, cardY + 12, 6, 0, Math.PI * 2);
       ctx.fill();
 
-      // Severity Badge
+      // Severity Badge & Finding ID
       ctx.fillStyle = pinColor;
       ctx.font = 'bold 12px monospace';
-      ctx.fillText(`[${badgeText}]`, cardX + 16, cardY + 36);
+      const findingTag = finding.id ? `[${badgeText}: ${finding.id.toUpperCase()}]` : `[${badgeText}]`;
+      ctx.fillText(findingTag, cardX + 16, cardY + 36);
 
       // Title
       ctx.fillStyle = '#f8fafc';
       ctx.font = 'bold 16px sans-serif';
-      ctx.fillText(finding.title || 'Diagnostic Finding', cardX + 16, cardY + 64);
+      ctx.fillText(finding.title || 'Diagnostic Finding', cardX + 16, cardY + 60);
+
+      // Real Evidence metric numbers
+      if (finding.evidence && finding.evidence.length > 0) {
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '11px monospace';
+        const evidenceStr = finding.evidence.slice(0, 2).map(e => `${e.metric}: ${typeof e.value === 'number' ? e.value.toFixed(2) : e.value}`).join(' | ');
+        ctx.fillText(evidenceStr, cardX + 16, cardY + 78);
+      }
 
       // 2-sentence explanation (wrapped)
       ctx.fillStyle = '#cbd5e1';

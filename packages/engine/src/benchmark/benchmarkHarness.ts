@@ -678,7 +678,7 @@ export class BenchmarkHarness {
       feat.enable();
       await this.waitFrames(5);
 
-      const deltaMs = Math.max(0, Math.round((baselineMs - toggledMs) * 100) / 100);
+      const deltaMs = Math.round((baselineMs - toggledMs) * 100) / 100;
       const share = baselineMs > 0 ? Math.round((deltaMs / baselineMs) * 1000) / 10 : 0;
 
       results.push({
