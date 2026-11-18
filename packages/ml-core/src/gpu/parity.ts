@@ -474,3 +474,282 @@ export async function runFullParitySuite(
     allPassed: resultC.overallPassed && resultS.overallPassed && resultM.overallPassed
   };
 }
+
+export interface KvParityResult {
+  preset: string;
+  tokensGenerated: number;
+  maxRelativeError: number;
+  meanRelativeError: number;
+  passed: boolean;
+  cachedTokensPerSec: number;
+  uncachedTokensPerSec: number;
+  speedup: number;
+}
+
+/**
+ * Validates GPU KV-Cache generation parity against uncached forward pass over 200 tokens.
+ * Verifies that cached vs uncached logits relative error is strictly under 1e-3.
+ */
+export async function runKvParityTest(
+  context: GpuContext,
+  presetKey: 'Scout' | 'S' = 'Scout',
+  weights?: Float32Array,
+  tokensToGenerate = 200
+): Promise<KvParityResult> {
+  const { GpuKvModel } = await import('./kvModel.js');
+  const config = PRESETS[presetKey];
+  const contextLen = config.contextLen;
+
+  // Initialize weights if not provided
+  let f32Weights = weights;
+  if (!f32Weights) {
+    const cpuModel = new TinyGPT(config, 1337);
+    f32Weights = new Float32Array(cpuModel.params);
+  }
+
+  // Cached KV Model
+  const kvModel = new GpuKvModel(context, config, f32Weights);
+
+  // Uncached standard model (B = 1, T = contextLen)
+  const uncachedModel = new GpuModel(context, config, f32Weights, 1, contextLen);
+
+  const initialPrompt = [12, 45, 88, 104, 230];
+  const history: number[] = [...initialPrompt];
+
+  // Prefill cached model
+  await kvModel.prefill(history);
+
+  let maxRelErr = 0;
+  let sumRelErr = 0;
+  let count = 0;
+
+  // Measure Cached Generation Time
+  const tCachedStart = performance.now();
+  let cachedCurrentPos = initialPrompt.length;
+  let cachedHistory = [...initialPrompt];
+  let cachedLogits = await kvModel.prefill(initialPrompt);
+
+  for (let step = 0; step < tokensToGenerate; step++) {
+    let nextToken = 0;
+    let maxLogit = -Infinity;
+    for (let v = 0; v < config.vocabSize; v++) {
+      if (cachedLogits[v] > maxLogit) {
+        maxLogit = cachedLogits[v];
+        nextToken = v;
+      }
+    }
+    cachedHistory.push(nextToken);
+
+    if (step === tokensToGenerate - 1) break;
+
+    if (cachedCurrentPos >= contextLen) {
+      const trailing = cachedHistory.slice(-contextLen, -1);
+      await kvModel.prefill(trailing);
+      cachedLogits = await kvModel.step(nextToken, contextLen - 1);
+      cachedCurrentPos = contextLen;
+    } else {
+      cachedLogits = await kvModel.step(nextToken, cachedCurrentPos);
+      cachedCurrentPos++;
+    }
+  }
+  const cachedDurationMs = performance.now() - tCachedStart;
+  const cachedTokensPerSec = (tokensToGenerate * 1000) / Math.max(1, cachedDurationMs);
+
+  // Measure Uncached Generation & Compute Step-by-Step Parity
+  const tUncachedStart = performance.now();
+  const inputBuffer = new Uint32Array(contextLen);
+  let uncachedHistory = [...initialPrompt];
+
+  // Re-run cached model alongside uncached to compute exact per-step logit parity
+  const kvParityModel = new GpuKvModel(context, config, f32Weights);
+  let pCachedLogits = await kvParityModel.prefill(initialPrompt);
+  let kvPos = initialPrompt.length;
+
+  for (let i = 0; i < initialPrompt.length; i++) inputBuffer[i] = initialPrompt[i];
+  await uncachedModel.forward(inputBuffer, null, { readbackLoss: false });
+  let pUncachedLogits = await uncachedModel.readLastLogits(initialPrompt.length);
+
+  for (let step = 0; step < tokensToGenerate; step++) {
+    // 1. Compute Logit Relative Error
+    let stepMaxDiff = 0;
+    let stepMaxUncached = 0;
+    for (let v = 0; v < config.vocabSize; v++) {
+      const c = pCachedLogits[v];
+      const u = pUncachedLogits[v];
+      const diff = Math.abs(c - u);
+      if (diff > stepMaxDiff) stepMaxDiff = diff;
+      if (Math.abs(u) > stepMaxUncached) stepMaxUncached = Math.abs(u);
+    }
+    const relErr = stepMaxDiff / Math.max(stepMaxUncached, 1e-4);
+    if (relErr > maxRelErr) maxRelErr = relErr;
+    sumRelErr += relErr;
+    count++;
+
+    // 2. Deterministic Next Token
+    let nextTok = 0;
+    let bestVal = -Infinity;
+    for (let v = 0; v < config.vocabSize; v++) {
+      if (pCachedLogits[v] > bestVal) {
+        bestVal = pCachedLogits[v];
+        nextTok = v;
+      }
+    }
+    uncachedHistory.push(nextTok);
+
+    if (step === tokensToGenerate - 1) break;
+
+    // 3. Advance Cached Model
+    if (kvPos >= contextLen) {
+      const trailing = uncachedHistory.slice(-contextLen, -1);
+      await kvParityModel.prefill(trailing);
+      pCachedLogits = await kvParityModel.step(nextTok, contextLen - 1);
+      kvPos = contextLen;
+    } else {
+      pCachedLogits = await kvParityModel.step(nextTok, kvPos);
+      kvPos++;
+    }
+
+    // 4. Advance Uncached Model
+    const window = uncachedHistory.slice(-contextLen);
+    const L = window.length;
+    inputBuffer.fill(0);
+    for (let i = 0; i < L; i++) inputBuffer[i] = window[i];
+    await uncachedModel.forward(inputBuffer, null, { readbackLoss: false });
+    pUncachedLogits = await uncachedModel.readLastLogits(L);
+  }
+  const uncachedDurationMs = performance.now() - tUncachedStart;
+  const uncachedTokensPerSec = (tokensToGenerate * 1000) / Math.max(1, uncachedDurationMs);
+
+  const meanRelErr = count > 0 ? sumRelErr / count : 0;
+  const passed = maxRelErr < 1e-3;
+
+  return {
+    preset: presetKey,
+    tokensGenerated: tokensToGenerate,
+    maxRelativeError: maxRelErr,
+    meanRelativeError: meanRelErr,
+    passed,
+    cachedTokensPerSec,
+    uncachedTokensPerSec,
+    speedup: cachedTokensPerSec / Math.max(1, uncachedTokensPerSec)
+  };
+}
+
+/**
+ * Validates CPU vs WebGPU gradient parity on a batch containing masked targets (target = -1).
+ */
+export async function runMaskedGradParity(
+  context: GpuContext,
+  presetKey: 'C' | 'S' | 'Scout' = 'C',
+  maskFraction = 0.4
+): Promise<{
+  preset: string;
+  totalTokens: number;
+  maskedTokens: number;
+  activeTokens: number;
+  groups: ParamGroupGradResult[];
+  worstGroup: ParamGroupGradResult;
+  overallPassed: boolean;
+}> {
+  const seed = 777;
+  const rng = new Xoshiro128StarStar(seed);
+
+  const baseConfig = PRESETS[presetKey as 'C' | 'S'];
+  const vocabSize = baseConfig.vocabSize;
+  const B = 2;
+  const T = 32;
+  const M = B * T;
+
+  const config: GPTConfig = {
+    ...baseConfig,
+    contextLen: Math.max(T, baseConfig.contextLen)
+  };
+
+  const cpuModel = new TinyGPT(config, seed);
+  const gpuModel = new GpuModel(context, config, cpuModel.params, B, T);
+
+  const inputs = new Uint16Array(M);
+  const targets = new Int32Array(M);
+  let maskedTokens = 0;
+
+  for (let i = 0; i < M; i++) {
+    inputs[i] = rng.next() % vocabSize;
+    if (rng.nextFloat() < maskFraction) {
+      targets[i] = -1; // Masked target
+      maskedTokens++;
+    } else {
+      targets[i] = rng.next() % vocabSize;
+    }
+  }
+
+  // Ensure at least one active and one masked token
+  if (maskedTokens === 0) {
+    targets[0] = -1;
+    maskedTokens = 1;
+  }
+  if (maskedTokens === M) {
+    targets[M - 1] = 1;
+    maskedTokens = M - 1;
+  }
+  const activeTokens = M - maskedTokens;
+
+  // CPU Forward & Backward
+  cpuModel.forward(inputs, targets, B, T);
+  cpuModel.backward(targets);
+  const cpuGrads = cpuModel.grads;
+
+  // GPU Forward & Backward
+  await gpuModel.forward(inputs, targets, { readbackLoss: false });
+  await gpuModel.backward();
+  const gpuGrads = await gpuModel.getGrads();
+
+  // Compare parameter groups
+  const groups: ParamGroupGradResult[] = [];
+  let worstGroup: ParamGroupGradResult = {
+    name: '',
+    size: 0,
+    maxAbsDiff: -1,
+    maxCpuGrad: 0,
+    relError: -1,
+    passed: true
+  };
+
+  for (const meta of cpuModel.paramList) {
+    let maxDiff = 0;
+    let maxCpu = 0;
+    for (let i = 0; i < meta.size; i++) {
+      const idx = meta.offset + i;
+      const cg = cpuGrads[idx];
+      const gg = gpuGrads[idx];
+      const diff = Math.abs(cg - gg);
+      if (diff > maxDiff) maxDiff = diff;
+      if (Math.abs(cg) > maxCpu) maxCpu = Math.abs(cg);
+    }
+    const relError = maxDiff / Math.max(maxCpu, 1e-4);
+    const passed = maxDiff < 1e-4 || relError < 1e-3;
+
+    const groupRes: ParamGroupGradResult = {
+      name: meta.name,
+      size: meta.size,
+      maxAbsDiff: maxDiff,
+      maxCpuGrad: maxCpu,
+      relError,
+      passed
+    };
+    groups.push(groupRes);
+
+    if (relError > worstGroup.relError) {
+      worstGroup = groupRes;
+    }
+  }
+
+  return {
+    preset: presetKey,
+    totalTokens: M,
+    maskedTokens,
+    activeTokens,
+    groups,
+    worstGroup,
+    overallPassed: groups.every(g => g.passed)
+  };
+}
