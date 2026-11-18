@@ -23,7 +23,11 @@ export type CodexConceptId =
   | 'attention'
   | 'embedding'
   | 'residual_stream'
-  | 'logit_lens';
+  | 'logit_lens'
+  | 'sampling'
+  | 'temperature'
+  | 'top_k_top_p'
+  | 'next_token_distribution';
 
 export interface CodexEntryDef {
   id: CodexConceptId;
@@ -43,7 +47,11 @@ export interface CodexEntryDef {
     | 'attention_matrix'
     | 'embedding_space'
     | 'residual_norm'
-    | 'logit_lens_viewer';
+    | 'logit_lens_viewer'
+    | 'sampling_widget'
+    | 'temperature_widget'
+    | 'top_kp_widget'
+    | 'next_token_dist_widget';
 }
 
 export const CODEX_ENTRIES: Record<CodexConceptId, CodexEntryDef> = {
@@ -201,5 +209,57 @@ export const CODEX_ENTRIES: Record<CodexConceptId, CodexEntryDef> = {
     ],
     formulaPlain: 'Intermediate_Prediction = softmax( LN_f( x_l ) @ tokEmb^T )',
     widgetType: 'logit_lens_viewer'
+  },
+
+  sampling: {
+    id: 'sampling',
+    title: 'Autoregressive Sampling',
+    category: 'Inference // Stochasticity',
+    unlockedAtStep: 'oracle_unlocked',
+    paragraphs: [
+      'Autoregressive generation does not produce complete sentences at once; it rolls a die iteratively, token by token. At every step, the model computes a categorical probability distribution over the vocabulary, samples one token according to this distribution, appends it to the context, and repeats.',
+      'Deterministic greedy decoding (always picking the argmax) quickly falls into repetitive loops and dull clichés. Stochastic sampling breathes life into the model, balancing coherence against serendipity.'
+    ],
+    formulaPlain: 'x_{t+1} ~ Categorical( softmax( z_t ) )',
+    widgetType: 'sampling_widget'
+  },
+
+  temperature: {
+    id: 'temperature',
+    title: 'Sampling Temperature',
+    category: 'Inference // Modulation',
+    unlockedAtStep: 'oracle_unlocked',
+    paragraphs: [
+      'Temperature (T) scales the raw model logits before computing the softmax function. As T approaches 0, the highest-probability token consumes the entire probability mass, collapsing into greedy deterministic argmax. At high T > 1, differences between logits are flattened, spreading probability across improbable and eccentric tokens.',
+      'Tuning temperature allows the scholar to dial between robotic predictability (T=0.2), balanced creativity (T=0.7), and chaotic glossolalia (T >= 1.5).'
+    ],
+    formulaPlain: 'p_i = exp( z_i / T ) / sum_j( exp( z_j / T ) )',
+    widgetType: 'temperature_widget'
+  },
+
+  top_k_top_p: {
+    id: 'top_k_top_p',
+    title: 'Top-K & Nucleus (Top-P) Filtering',
+    category: 'Inference // Truncation',
+    unlockedAtStep: 'oracle_unlocked',
+    paragraphs: [
+      'Raw softmax leaves an endless tail of hundreds of improbable tokens with tiny non-zero probabilities. Without truncation, rare and nonsensical tokens will eventually be drawn during long generations, completely derailing coherence.',
+      'Top-K restricts candidate tokens strictly to the K highest-probability choices. Top-P (nucleus sampling) dynamically trims the vocabulary to the smallest subset of tokens whose cumulative probability exceeds threshold p, allowing broad exploration when uncertainty is high and strict focus when the next word is obvious.'
+    ],
+    formulaPlain: 'V^(p) = min { V\' subset V : sum_{i in V\'} p_i >= p }',
+    widgetType: 'top_kp_widget'
+  },
+
+  next_token_distribution: {
+    id: 'next_token_distribution',
+    title: 'Next-Token Distribution & Entropy',
+    category: 'Inference // Foundations',
+    unlockedAtStep: 'oracle_unlocked',
+    paragraphs: [
+      'The core output of a causal language model is not text, but a probability distribution over the entire vocabulary for what follows the prompt. The width and shape of this distribution reflect the model’s certainty.',
+      'Shannon entropy (H = -sum p_i log2 p_i) measures this uncertainty in bits. When predicting after "To be, or not to ", entropy drops near zero as "be" dominates. At branching narrative junctures, entropy spikes, reflecting genuine branching potential.'
+    ],
+    formulaPlain: 'H(X) = - sum_{i=1}^{V} p_i * log_2( p_i )',
+    widgetType: 'next_token_dist_widget'
   }
 };
