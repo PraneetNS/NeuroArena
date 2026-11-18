@@ -122,6 +122,14 @@ export const KEYMAP: Record<string, KeyBinding> = {
     description: 'Open Neural Observatory instruments',
     category: 'interface'
   },
+  oracle: {
+    action: 'oracle',
+    code: 'KeyR',
+    keyLabel: 'R',
+    gamepadGlyph: '(LT)',
+    description: 'Commune with the Oracle Stone',
+    category: 'interface'
+  },
 
   camp_exit: {
     action: 'camp_exit',
