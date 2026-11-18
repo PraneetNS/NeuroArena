@@ -1,0 +1,52 @@
+# Prometheus Alerting Rules for Neural ODE, HyperGAT, Neuro-Symbolic Logic & Proof-of-Gameplay
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: neuroarena-ode-hypergraph-alerts
+  namespace: neuroarena-system
+  labels:
+    role: alert-rules
+    app: neuroarena
+spec:
+  groups:
+    - name: neuroarena.ml.neuralode.rules
+      rules:
+        - alert: NeuralODEIntegratorStepDivergence
+          expr: rate(neuroarena_neural_ode_rejected_steps_total[2m]) / rate(neuroarena_neural_ode_steps_total[2m]) > 0.20
+          for: 30s
+          labels:
+            severity: warning
+            subsystem: neural-ode
+          annotations:
+            summary: "Neural ODE adaptive Dormand-Prince step rejection rate elevated"
+            description: "Over 20% of continuous ODE trajectory integration steps are rejected due to local truncation error exceeding tolerance in pod {{ $labels.pod }}."
+
+        - alert: HypergraphSpectralGapCollapse
+          expr: neuroarena_hypergraph_spectral_gap < 0.05
+          for: 45s
+          labels:
+            severity: warning
+            subsystem: hypergraph-attention
+          annotations:
+            summary: "Spatio-Temporal Hypergraph algebraic connectivity collapsed"
+            description: "Hypergraph incidence Laplacian lambda_2 dropped below 0.05, indicating severe multi-agent swarm partition or squad isolation."
+
+        - alert: NeuroSymbolicSafetyInterventionSpike
+          expr: rate(neuroarena_symbolic_safety_interventions_total[2m]) > 10.0
+          for: 1m
+          labels:
+            severity: critical
+            subsystem: neuro-symbolic-safety
+          annotations:
+            summary: "Spike in neuro-symbolic safety barrier interventions"
+            description: "Unconstrained neural policy is repeatedly violating speed or perimeter bounds (>10 interventions/sec). Safety shield active."
+
+        - alert: ProofOfGameplayMerkleRejectionHigh
+          expr: rate(neuroarena_pogp_merkle_mismatch_total[5m]) > 2.0
+          for: 1m
+          labels:
+            severity: critical
+            subsystem: proof-of-gameplay
+          annotations:
+            summary: "High rate of Proof-of-Gameplay cryptographic verification failures"
+            description: "Clients are failing zero-knowledge kinematic execution trace or Merkle attestation audits. Potential active exploit or client tampering."

@@ -1,0 +1,42 @@
+groups:
+- name: neuroarena_ml_and_inference_alerts
+  rules:
+  - alert: InferenceQueueSlaViolation
+    expr: neuroarena_dynamic_batch_sla_violations_total > 5
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Dynamic inference micro-batching SLA threshold violated (>15ms tick latency)"
+
+  - alert: HighInferenceLatencyP95
+    expr: neuroarena_inference_p95_latency_ms > 12
+    for: 2m
+    labels:
+      severity: warning
+    annotations:
+      summary: "P95 neural inference latency elevated above 12ms SLA budget"
+
+  - alert: NegativeTransferAnomaly
+    expr: neuroarena_curriculum_transferability_score < 0.35
+    for: 3m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Agent transferability dropped below threshold; severe domain divergence detected"
+
+  - alert: ReplayAttestationFailureSpike
+    expr: rate(neuroarena_replay_attestation_failures_total[5m]) > 2
+    for: 1m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Elevated replay Merkle root / signature verification rejections indicating potential client tampering"
+
+  - alert: ConceptDriftTriggeredRetrain
+    expr: rate(neuroarena_concept_drift_events_total[10m]) > 1
+    for: 2m
+    labels:
+      severity: info
+    annotations:
+      summary: "Statistical concept drift detected by Page-Hinkley test, worker recalibration started"

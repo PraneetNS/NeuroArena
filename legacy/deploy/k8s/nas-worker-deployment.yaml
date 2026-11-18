@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: neuroarena-nas-worker
+  namespace: neuroarena-prod
+  labels:
+    app: neuroarena-nas-worker
+    tier: background-worker
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: neuroarena-nas-worker
+  template:
+    metadata:
+      labels:
+        app: neuroarena-nas-worker
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: nas-worker
+          image: ghcr.io/praneetns/neuroarena-nas-worker:v1.0.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: REDIS_HOST
+              value: "redis-cluster.neuroarena-prod.svc.cluster.local"
+            - name: QUANTIZATION_PRECISION
+              value: "INT8"
+            - name: NAS_MAX_POPULATION
+              value: "64"
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "512Mi"
+            limits:
+              cpu: "2000m"
+              memory: "2048Mi"
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 9090
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 9090
+            initialDelaySeconds: 5
+            periodSeconds: 10
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: neuroarena-nas-worker-hpa
+  namespace: neuroarena-prod
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: neuroarena-nas-worker
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 75

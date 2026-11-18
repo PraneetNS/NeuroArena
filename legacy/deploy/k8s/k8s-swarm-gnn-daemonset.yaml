@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: neuroarena-swarm-gnn-worker
+  namespace: neuroarena
+  labels:
+    app: neuroarena-swarm-gnn-worker
+    tier: edge-ai-compute
+spec:
+  selector:
+    matchLabels:
+      app: neuroarena-swarm-gnn-worker
+  template:
+    metadata:
+      labels:
+        app: neuroarena-swarm-gnn-worker
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
+    spec:
+      tolerations:
+        - key: "node-role.kubernetes.io/edge"
+          operator: "Exists"
+          effect: "NoSchedule"
+      containers:
+        - name: swarm-gnn-engine
+          image: neuroarena/swarm-gnn-worker:v2.4.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: GNN_FEATURE_DIM
+              value: "6"
+            - name: GNN_HIDDEN_DIM
+              value: "16"
+            - name: GNN_COMMUNICATION_RADIUS
+              value: "35.0"
+            - name: WEBTRANSPORT_PORT
+              value: "4433"
+            - name: BFT_MAX_BYZANTINE_FRACTION
+              value: "0.33"
+            - name: EWC_FISHER_LAMBDA
+              value: "500.0"
+          ports:
+            - name: quic-transport
+              containerPort: 4433
+              protocol: UDP
+            - name: metrics
+              containerPort: 9090
+              protocol: TCP
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "512Mi"
+            limits:
+              cpu: "2000m"
+              memory: "2048Mi"
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 9090
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 9090
+            initialDelaySeconds: 15
+            periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: neuroarena-swarm-gnn-service
+  namespace: neuroarena
+  labels:
+    app: neuroarena-swarm-gnn-worker
+spec:
+  type: ClusterIP
+  ports:
+    - name: quic-udp
+      port: 4433
+      targetPort: 4433
+      protocol: UDP
+    - name: metrics-tcp
+      port: 9090
+      targetPort: 9090
+      protocol: TCP
+  selector:
+    app: neuroarena-swarm-gnn-worker

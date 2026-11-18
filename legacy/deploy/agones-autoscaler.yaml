@@ -1,0 +1,17 @@
+apiVersion: "autoscaling.agones.dev/v1"
+kind: FleetAutoscaler
+metadata:
+  name: neuroarena-fleet-autoscaler
+  namespace: default
+spec:
+  fleetName: neuroarena-fleet
+  policy:
+    type: Buffer
+    buffer:
+      bufferSize: 10
+      minReplicas: 5
+      maxReplicas: 100
+  sync:
+    type: FixedInterval
+    fixedInterval:
+      seconds: 15

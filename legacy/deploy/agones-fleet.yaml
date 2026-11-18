@@ -1,0 +1,59 @@
+apiVersion: "agones.dev/v1"
+kind: Fleet
+metadata:
+  name: neuroarena-game-fleet
+  namespace: neuroarena-prod
+spec:
+  replicas: 10
+  scheduling: Packed
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 0%
+  template:
+    spec:
+      ports:
+        - name: default
+          portPolicy: Dynamic
+          containerPort: 2567
+          protocol: TCP
+      health:
+        initialDelaySeconds: 15
+        periodSeconds: 5
+        failureThreshold: 3
+      template:
+        spec:
+          containers:
+            - name: neuroarena-node-pod
+              image: ghcr.io/praneetns/neuroarena-server:v2.0.0
+              resources:
+                requests:
+                  memory: "512Mi"
+                  cpu: "500m"
+                limits:
+                  memory: "1536Mi"
+                  cpu: "1500m"
+              env:
+                - name: NODE_ENV
+                  value: "production"
+                - name: PORT
+                  value: "2567"
+                - name: REDIS_HOST
+                  value: "redis-cluster-service.neuroarena-prod.svc.cluster.local"
+                - name: REDIS_PORT
+                  value: "6379"
+---
+apiVersion: "autoscaling.agones.dev/v1"
+kind: FleetAutoscaler
+metadata:
+  name: neuroarena-fleet-autoscaler
+  namespace: neuroarena-prod
+spec:
+  fleetName: neuroarena-game-fleet
+  policy:
+    type: Buffer
+    buffer:
+      bufferSize: 20
+      minReplicas: 10
+      maxReplicas: 500

@@ -1,0 +1,61 @@
+# OpenTelemetry Collector Configuration for NeuroArena ML & Neural Physics Pipelines
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-collector-ml-config
+  namespace: neuroarena-system
+data:
+  otel-collector-config.yaml: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+      prometheus:
+        config:
+          scrape_configs:
+            - job_name: 'neuroarena-pinn-maml-nodes'
+              scrape_interval: 10s
+              static_configs:
+                - targets: ['neuroarena-server.neuroarena-system.svc.cluster.local:9090']
+
+    processors:
+      batch:
+        send_batch_size: 1024
+        timeout: 5s
+      memory_limiter:
+        check_interval: 1s
+        limit_percentage: 80
+        spike_limit_percentage: 20
+      attributes:
+        actions:
+          - key: environment
+            value: production
+            action: insert
+          - key: subsystem
+            value: ml-physics-engine
+            action: insert
+
+    exporters:
+      prometheus:
+        endpoint: 0.0.0.0:8889
+        namespace: neuroarena
+      otlp/jaeger:
+        endpoint: jaeger-collector.neuroarena-system.svc.cluster.local:4317
+        tls:
+          insecure: true
+      logging:
+        verbosity: normal
+
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [memory_limiter, batch, attributes]
+          exporters: [otlp/jaeger, logging]
+        metrics:
+          receivers: [otlp, prometheus]
+          processors: [memory_limiter, batch, attributes]
+          exporters: [prometheus]

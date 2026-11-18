@@ -1,0 +1,26 @@
+groups:
+- name: neuroarena_production_alerts
+  rules:
+  - alert: HighPacketLossRate
+    expr: rate(neuroarena_packets_dropped_total[1m]) / rate(neuroarena_packets_received_total[1m]) > 0.05
+    for: 2m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High network packet loss detected in game server fleet (>5%)"
+
+  - alert: AntiCheatAnomalySpike
+    expr: rate(neuroarena_anticheat_flags_total[5m]) > 10
+    for: 1m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Surge in anti-cheat validation failures (possible exploit bot wave)"
+
+  - alert: ColyseusRoomOvercapacity
+    expr: sum(neuroarena_active_rooms) / sum(neuroarena_max_rooms_capacity) > 0.85
+    for: 3m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Fleet utilization exceeding 85%, triggering Agones scale up"

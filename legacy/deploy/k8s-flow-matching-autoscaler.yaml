@@ -1,0 +1,45 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: neuroarena-flow-matching-autoscaler
+  namespace: neuroarena-prod
+  labels:
+    app: neuroarena-server
+    component: generative-flow-matching
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: neuroarena-server
+  minReplicaCount: 3
+  maxReplicaCount: 25
+  cooldownPeriod: 60
+  pollingInterval: 15
+  advanced:
+    horizontalPodAutoscalerConfig:
+      behavior:
+        scaleUp:
+          stabilizationWindowSeconds: 0
+          policies:
+            - type: Percent
+              value: 100
+              periodSeconds: 15
+        scaleDown:
+          stabilizationWindowSeconds: 180
+          policies:
+            - type: Percent
+              value: 20
+              periodSeconds: 60
+  triggers:
+    - type: prometheus
+      metadata:
+        serverAddress: http://prometheus-k8s.monitoring.svc.cluster.local:9090
+        metricName: neuroarena_flow_matching_queue_latency_seconds
+        query: histogram_quantile(0.95, sum(rate(neuroarena_flow_matching_duration_seconds_bucket[1m])) by (le))
+        threshold: '0.045' # Scale out if P95 flow matching inference exceeds 45ms
+    - type: prometheus
+      metadata:
+        serverAddress: http://prometheus-k8s.monitoring.svc.cluster.local:9090
+        metricName: neuroarena_mfg_convergence_pressure
+        query: sum(rate(neuroarena_mfg_iteration_count[1m]))
+        threshold: '120.0' # Scale out if mean-field iterations exceed 120 iter/s
