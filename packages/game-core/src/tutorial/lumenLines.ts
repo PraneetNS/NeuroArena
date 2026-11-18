@@ -103,6 +103,14 @@ export const LUMEN_DIALOGUE: Record<string, LumenLine> = {
  * Returns dynamic Mentor/Lumen line reflecting exact observed finding ID and real numbers.
  */
 export function getCampMentorsNoteLine(findingId?: string, loss?: number, lr?: number, step?: number): LumenLine {
+  if (findingId === 'overfit' || findingId === 'overfitting') {
+    const valRiseStr = loss !== undefined ? `+${loss.toFixed(3)}` : '+0.05';
+    return {
+      text: `The validation loss climbed while training loss fell. The model began memorizing passages instead of learning general grammar.`,
+      subtext: `Finding: [${findingId}] at step ${step ?? 750} (val rose by ${valRiseStr}). Read the Mentor’s Note on the board.`,
+      hint: 'Click "Restore Best Checkpoint" on the Mentor’s Note to rewind weights to the point of lowest validation loss.'
+    };
+  }
   if (findingId === 'stall') {
     return {
       text: `The lantern dimmed as loss stalled near ${loss !== undefined ? loss.toFixed(2) : 'baseline'}. Optimization ceased progress.`,

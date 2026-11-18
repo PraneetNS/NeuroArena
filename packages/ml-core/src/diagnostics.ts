@@ -748,26 +748,28 @@ export function diagnose(
   }
 
   // --------------------------------------------------------------------------
-  // 4. OVERFITTING (val-train gap trend)
+  // 4. OVERFITTING (val-train gap trend & validation rise from minimum)
   // --------------------------------------------------------------------------
   let valTrainGap = 0;
   let isOverfitting = false;
+  let valRiseFromMin = 0;
+  let minValLoss = Infinity;
 
-  if (latestMetric && latestMetric.valLoss !== undefined) {
-    valTrainGap = latestMetric.valLoss - latestMetric.trainLoss;
-    // Overfitting threshold: gap > 1.2 while train loss has decreased substantially
-    if (valTrainGap > 1.2 && latestMetric.trainLoss < 2.0) {
-      isOverfitting = true;
-    }
-  } else if (metrics.length >= 2) {
-    // Check historical val points
-    const valPoints = metrics.filter(m => m.valLoss !== undefined);
-    if (valPoints.length > 0) {
-      const lastVal = valPoints[valPoints.length - 1];
-      valTrainGap = (lastVal.valLoss ?? 0) - lastVal.trainLoss;
-      if (valTrainGap > 1.2 && lastVal.trainLoss < 2.0) {
-        isOverfitting = true;
+  // Track historical val points to find minimum and rise
+  const valMetrics = metrics.filter(m => m.valLoss !== undefined && m.valLoss > 0);
+  if (valMetrics.length >= 2) {
+    for (const vm of valMetrics) {
+      if ((vm.valLoss ?? Infinity) < minValLoss) {
+        minValLoss = vm.valLoss!;
       }
+    }
+    const latestValMetric = valMetrics[valMetrics.length - 1];
+    valTrainGap = (latestValMetric.valLoss ?? 0) - latestValMetric.trainLoss;
+    valRiseFromMin = (latestValMetric.valLoss ?? 0) - minValLoss;
+
+    // Overfitting criteria: gap >= 1.2 AND val has risen from its minimum by >= 0.03
+    if (valTrainGap >= 1.2 && valRiseFromMin >= 0.03) {
+      isOverfitting = true;
     }
   }
 
@@ -777,17 +779,19 @@ export function diagnose(
       severity: 'warn',
       title: 'Overfitting Detected',
       evidence: [
-        { metric: 'valTrainGap', value: valTrainGap.toFixed(2), threshold: '< 1.2' },
-        { metric: 'finalTrainLoss', value: (latestMetric?.trainLoss ?? 0).toFixed(2), threshold: 'closely matches val' }
+        { metric: 'valTrainGap', value: valTrainGap.toFixed(2), threshold: '< 1.20' },
+        { metric: 'valRiseFromMin', value: `+${valRiseFromMin.toFixed(3)}`, threshold: '< 0.030' },
+        { metric: 'minValLoss', value: minValLoss.toFixed(3), threshold: 'monotonic decrease' }
       ],
       plainExplanation:
-        'The validation loss is substantially higher than the training loss, indicating the model is memorizing training quirks instead of learning general patterns. Regularization and additional training data diversity are recommended.',
+        'Validation loss has begun climbing away from its observed minimum while training loss continues downward. The network is memorizing specific phrasing from the training set rather than generalizing.',
       likelyCauses: [
-        'Model capacity is disproportionately large for dataset size',
-        'Insufficient weight decay regularization',
-        'Training dataset lacks sufficient lexical variety'
+        'Training continued past the generalization minimum without early stopping',
+        'Dataset size (60k tokens) is saturated by the Scout parameter capacity (446k)',
+        'Weight decay regularization is insufficient to constrain weight norm growth'
       ],
       suggestedFixes: [
+        { label: 'Restore Best Checkpoint', parameterChange: { parameter: 'restoreBestCheckpoint', suggestedValue: 1 } },
         { label: 'Increase weight decay to 0.1', parameterChange: { parameter: 'weightDecay', suggestedValue: 0.1 } },
         { label: 'Expand training corpus or add data augmentations' }
       ],

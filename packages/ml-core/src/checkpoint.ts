@@ -10,6 +10,7 @@
 
 import { GPTConfig } from './types.js';
 import { TinyGPT } from './model.js';
+import { fetchValidatedAsset } from './assetLoader.js';
 
 export interface ElderCheckpointManifest {
   magic: string; // 'NACP'
@@ -231,12 +232,11 @@ export async function loadElderCheckpoint(assetPath = '/assets/elder_preset_s.bi
 
   // Browser fetch environment
   if (typeof window !== 'undefined' && typeof fetch !== 'undefined') {
-    const res = await fetch(assetPath);
-    if (!res.ok) {
-      throw new Error(`Failed to fetch Elder checkpoint at ${assetPath}: ${res.statusText}`);
-    }
-    const buf = await res.arrayBuffer();
-    bytes = new Uint8Array(buf);
+    const validated = await fetchValidatedAsset(assetPath, {
+      expectedContentType: 'application/octet-stream',
+      minBytes: 1500000
+    });
+    bytes = validated.bytes;
   } else {
     // Node.js environment
     try {

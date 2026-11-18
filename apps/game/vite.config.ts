@@ -1,9 +1,36 @@
 import { defineConfig } from 'vite';
 import path from 'path';
+import fs from 'fs';
 import react from '@vitejs/plugin-react';
 
+function strictStatic404Plugin() {
+  return {
+    name: 'strict-static-404',
+    configureServer(server: any) {
+      server.middlewares.use((req: any, res: any, next: any) => {
+        const rawUrl = (req.url || '').split('?')[0];
+        const match = rawUrl.match(/\.([a-zA-Z0-9_-]+)$/);
+        if (match) {
+          const ext = match[1].toLowerCase();
+          if (ext !== 'html' && ext !== 'htm' && !rawUrl.startsWith('/@') && !rawUrl.startsWith('/node_modules')) {
+            const publicPath = path.resolve(__dirname, 'public', '.' + rawUrl);
+            const rootPath = path.resolve(__dirname, '.' + rawUrl);
+            if (!fs.existsSync(publicPath) && !fs.existsSync(rootPath)) {
+              res.statusCode = 404;
+              res.setHeader('Content-Type', 'text/plain');
+              res.end(`404 Not Found: Static asset ${rawUrl} does not exist`);
+              return;
+            }
+          }
+        }
+        next();
+      });
+    }
+  };
+}
+
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), strictStatic404Plugin()],
 
   server: {
     port: 3000,

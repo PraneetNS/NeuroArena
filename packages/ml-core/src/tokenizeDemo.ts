@@ -21,7 +21,7 @@ const __dirname = path.dirname(__filename);
 const possiblePaths = [
   path.resolve(__dirname, '../data/input.txt'),
   path.resolve(process.cwd(), 'packages/ml-core/data/input.txt'),
-  path.resolve(process.cwd(), 'Packages/ml-core/data/input.txt'),
+  path.resolve(process.cwd(), 'packages/ml-core/data/input.txt'),
   path.resolve(process.cwd(), 'data/input.txt')
 ];
 

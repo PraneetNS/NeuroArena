@@ -484,6 +484,7 @@ export const Workbench: React.FC<WorkbenchProps> = ({ vaultManager, runtime, onC
   const [codexModalNode, setCodexModalNode] = useState<GraphNodeType | null>(null);
   const [isObservatoryOpen, setIsObservatoryOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'info' | 'error' | 'success' } | null>(null);
+  const [assetError, setAssetError] = useState<{ title: string; message: string; details?: any } | null>(null);
 
   // Autopsy & Run Manager Modals
   const [isAutopsyOpen, setIsAutopsyOpen] = useState(false);
@@ -1059,6 +1060,12 @@ export const Workbench: React.FC<WorkbenchProps> = ({ vaultManager, runtime, onC
         } else if (state === 'error') {
           setIsRunning(false);
           setIsPaused(false);
+          if (error && (error.includes('AssetLoader') || error.includes('AssetValidation') || error.includes('SPA fallback') || error.includes('integrity'))) {
+            setAssetError({
+              title: 'Data Asset Integrity Violation',
+              message: error
+            });
+          }
           showToast(`Runtime Error: ${error || 'Training divergence'}`, 'error');
         }
       }
@@ -1089,6 +1096,13 @@ export const Workbench: React.FC<WorkbenchProps> = ({ vaultManager, runtime, onC
         onStartCamp(runtimeRef.current, graph);
       }
     } catch (err: any) {
+      if (err.name === 'AssetValidationError' || err.message?.includes('AssetLoader') || err.message?.includes('HTML')) {
+        setAssetError({
+          title: 'Data Asset Integrity Violation',
+          message: err.message,
+          details: err.details
+        });
+      }
       showToast(err.message, 'error');
     }
   };
@@ -1488,6 +1502,84 @@ export const Workbench: React.FC<WorkbenchProps> = ({ vaultManager, runtime, onC
         customModelName="Active Trained Model"
         bpeTokenizer={(runtime as any)?.bpe}
       />
+
+      {/* Asset Integrity Violation Fullscreen Error Modal */}
+      {assetError && (
+        <div
+          role="alertdialog"
+          aria-modal="true"
+          className="na-asset-error-overlay"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(10, 10, 12, 0.88)',
+            backdropFilter: 'blur(8px)',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '24px'
+          }}
+        >
+          <div
+            style={{
+              maxWidth: '560px',
+              width: '100%',
+              backgroundColor: '#1E1412',
+              border: '1px solid #D9564A',
+              borderRadius: '12px',
+              padding: '24px',
+              boxShadow: '0 12px 32px rgba(0, 0, 0, 0.6)',
+              color: '#F0EDE6',
+              fontFamily: 'var(--na-font-ui)'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '28px' }}>🚫</span>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#D9564A' }}>
+                  {assetError.title}
+                </h3>
+                <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#9AA3AE' }}>
+                  Integrity check failed: Neural training blocked to prevent corruption.
+                </p>
+              </div>
+            </div>
+            <div
+              style={{
+                backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                border: '1px solid rgba(217, 86, 74, 0.3)',
+                borderRadius: '6px',
+                padding: '12px',
+                fontSize: '12px',
+                fontFamily: 'var(--na-font-mono)',
+                color: '#E8E4DA',
+                marginBottom: '20px',
+                wordBreak: 'break-word',
+                lineHeight: 1.5
+              }}
+            >
+              {assetError.message}
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+              <button
+                onClick={() => setAssetError(null)}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '6px',
+                  backgroundColor: '#D9564A',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                Dismiss & Review Pipeline
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Feedback Toast Notification */}
       {toastMessage && (

@@ -534,6 +534,12 @@ export class RealRuntime implements WorkbenchRuntime {
       return;
     }
 
+    if (this.trainTokens.length < 128) {
+      this.runningState = 'error';
+      this.emitState('error', 'Asset Integrity Error: Training corpus contains insufficient tokens (< 128). Training cannot proceed on corrupted or missing data.');
+      return;
+    }
+
     const tData = (trainerNode?.data as TrainerNodeData) || {};
     this.maxSteps = tData.maxSteps || 600;
     this.currentStep = 0;

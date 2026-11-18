@@ -8,7 +8,7 @@ export default [
       'Assets/**',
       'ProjectSettings/**',
       'web/**',
-      'Packages/manifest.json'
+      'packages/manifest.json'
     ]
   },
   {

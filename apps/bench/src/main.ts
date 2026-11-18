@@ -30,20 +30,14 @@ import '@na/ui/styles';
 };
 (window as any).runTrainingParitySuite = async (steps = 300) => {
   const ctx = await mlCore.GpuContext.create();
-  let text = 'Default Shakespeare placeholder';
-  try {
-    const res = await fetch('/shakespeare.txt');
-    if (res.ok) text = await res.text();
-  } catch (e) {
-    console.warn('Failed to fetch /shakespeare.txt, using sample', e);
-  }
-  return mlCore.runTrainingParity(ctx, text, steps);
+  const asset = await mlCore.fetchValidatedAsset('/shakespeare.txt');
+  return mlCore.runTrainingParity(ctx, asset.text(), steps);
 };
 
 (window as any).runReferenceRun = async (condition: 'healthy' | 'overfit' | 'diverge' | 'duplicated') => {
   const ctx = await mlCore.GpuContext.create();
-  const res = await fetch('/shakespeare.txt');
-  const rawText = await res.text();
+  const asset = await mlCore.fetchValidatedAsset('/shakespeare.txt');
+  const rawText = asset.text();
 
   let trainText = rawText;
   if (condition === 'duplicated') {
@@ -350,13 +344,8 @@ class BenchmarkApp {
 
     try {
       const ctx = await mlCore.GpuContext.create();
-      let text = '';
-      try {
-        const res = await fetch('/shakespeare.txt');
-        text = await res.text();
-      } catch (e) {
-        text = 'Default Shakespeare text for training comparison';
-      }
+      const asset = await mlCore.fetchValidatedAsset('/shakespeare.txt');
+      const text = asset.text();
 
       this.trainingParityReport = await mlCore.runTrainingParity(ctx, text, 300);
       this.statusMessage = `✓ 300-step Training Complete! Final CPU Loss: ${this.trainingParityReport.finalCpuLoss.toFixed(4)} | Final GPU Loss: ${this.trainingParityReport.finalGpuLoss.toFixed(4)}`;
@@ -396,13 +385,8 @@ class BenchmarkApp {
     this.render();
 
     try {
-      let text = '';
-      const res = await fetch('/shakespeare.txt');
-      if (res.ok) {
-        text = await res.text();
-      } else {
-        throw new Error('Failed to load /shakespeare.txt');
-      }
+      const asset = await mlCore.fetchValidatedAsset('/shakespeare.txt');
+      const text = asset.text();
 
       // Train BPE-1024 tokenizer on corpus
       const bpe = new mlCore.ByteBPE();

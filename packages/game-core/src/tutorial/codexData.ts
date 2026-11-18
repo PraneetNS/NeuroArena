@@ -119,9 +119,9 @@ export const CODEX_ENTRIES: Record<CodexConceptId, CodexEntryDef> = {
     unlockedAtStep: 'camp_mentors_note',
     paragraphs: [
       'The learning rate determines the stride length taken down the loss landscape along calculated gradients. Too small a stride leaves the model frozen in place; too large a stride catapults the weights into numerical overflow.',
-      'Modern architectures use cosine decay schedules: warming up gently from zero to protect unstable initial weights, then gradually annealing downward to settle cleanly into local minima.'
+      'Scale-Invariance & Gradient Clipping in Adam: A common misconception is that gradient norm clipping will tame an excessively large learning rate under adaptive optimizers like Adam. In reality, Adam updates each coordinate by η · m̂ / (√v̂ + ε). When gradient clipping scales all gradients down by a factor α = C / ||g|| < 1, both the first moment estimate m̂ and the second moment root √v̂ scale proportionally by α after a few steps. The scale factor α cancels out in the numerator and denominator: (α g) / (α |g|) = sign(g). Thus, Adam’s effective per-coordinate update step remains approximately ±η regardless of gradient magnitude. While gradient clipping prevents numerical overflow in the float accumulators, it cannot stop an optimizer with excessive η from taking catastrophic strides across the loss landscape.'
     ],
-    formulaPlain: 'New_Weights = Current_Weights - Learning_Rate × Gradient',
+    formulaPlain: 'Adam_Coordinate_Step ≈ -η × sign(Gradient) [Scale-Invariant to Clipping]',
     widgetType: 'lr_ball_curve'
   },
 

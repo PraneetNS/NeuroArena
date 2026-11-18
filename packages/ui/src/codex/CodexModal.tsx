@@ -519,6 +519,21 @@ export const CodexModal: React.FC<CodexModalProps> = ({
                   <div style={{ fontSize: '12px', color: ball.color, marginTop: '8px', fontWeight: 500 }}>
                     {ball.label}
                   </div>
+                  <div style={{
+                    marginTop: '16px',
+                    padding: '12px 14px',
+                    backgroundColor: 'rgba(232, 163, 61, 0.08)',
+                    border: '1px solid rgba(232, 163, 61, 0.25)',
+                    borderRadius: 'var(--na-radius-sm)',
+                    fontSize: '12px',
+                    lineHeight: '1.6',
+                    color: '#E8E4DA'
+                  }}>
+                    <strong style={{ color: 'var(--na-accent)' }}>Architectural Note: Scale-Invariance &amp; Gradient Clipping in Adam</strong>
+                    <p style={{ margin: '6px 0 0 0' }}>
+                      A common misconception is that gradient norm clipping will tame an excessively large learning rate under adaptive optimizers like Adam. In reality, Adam updates each coordinate by η · m̂ / (√v̂ + ε). When gradient clipping scales all gradients down by a factor α = C / ||g|| &lt; 1, both the first moment estimate m̂ and the second moment root √v̂ scale proportionally by α after a few steps. The scale factor α cancels out in the numerator and denominator: (α g) / (α |g|) = sign(g). Thus, Adam’s effective per-coordinate update step remains approximately ±η regardless of gradient magnitude. While gradient clipping prevents numerical overflow in the float accumulators, it cannot stop an optimizer with excessive η from taking catastrophic strides across the loss landscape.
+                    </p>
+                  </div>
                 </div>
               )}
 
