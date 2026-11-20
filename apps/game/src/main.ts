@@ -827,7 +827,7 @@ class NeuroArenaGame {
 
   private handleInteraction(): void {
     if (this.world.oracleStone?.isPlayerNearby) {
-      this.audio.playTerminalInteract();
+      this.audio.playOracleCommune();
       this.toggleOracle(true);
       return;
     }
@@ -1341,7 +1341,7 @@ class NeuroArenaGame {
   public toggleOracle(open?: boolean): void {
     const nextState = open !== undefined ? open : !this.isOracleOpen;
     if (nextState !== this.isOracleOpen) {
-      if (nextState) this.audio.playUIOpen();
+      if (nextState) this.audio.playOracleCommune();
       else this.audio.playUIClose();
     }
     this.isOracleOpen = nextState;
