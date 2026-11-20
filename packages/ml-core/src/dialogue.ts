@@ -249,3 +249,42 @@ export function collateDialogueMiniBatch(
 
   return { inputs, targets, activeTokens, maskedTokens };
 }
+
+/**
+ * Computes exact cross-entropy loss and perplexity on a dialogue turn's logits.
+ * Ignores all masked tokens (target = -1).
+ */
+export function evaluateDialogueLossOnLogits(
+  logits: Float32Array | Float64Array,
+  targets: Int32Array,
+  vocabSize: number
+): { meanLoss: number; perplexity: number; activeTokens: number } {
+  let totalLoss = 0;
+  let activeTokens = 0;
+  const T = targets.length;
+
+  for (let t = 0; t < T; t++) {
+    const tgt = targets[t];
+    if (tgt === -1 || tgt < 0 || tgt >= vocabSize) continue;
+
+    const rowOffset = t * vocabSize;
+    let maxLogit = -Infinity;
+    for (let v = 0; v < vocabSize; v++) {
+      const l = logits[rowOffset + v];
+      if (l > maxLogit) maxLogit = l;
+    }
+
+    let sumExp = 0;
+    for (let v = 0; v < vocabSize; v++) {
+      sumExp += Math.exp(logits[rowOffset + v] - maxLogit);
+    }
+
+    const logProb = (logits[rowOffset + tgt] - maxLogit) - Math.log(sumExp);
+    totalLoss += -logProb;
+    activeTokens++;
+  }
+
+  const meanLoss = activeTokens > 0 ? totalLoss / activeTokens : 0;
+  const perplexity = Math.exp(meanLoss);
+  return { meanLoss, perplexity, activeTokens };
+}
