@@ -98,20 +98,23 @@ export class OracleStone {
     this.floatingCrystal.rotation.y += dt * 0.8;
     this.floatingCrystal.rotation.x = Math.sin(this.animTimer * 1.5) * 0.15;
 
-    // Slowly rotate runic rings in opposing directions
-    if (this.runicRings[0]) this.runicRings[0].rotation.z += dt * 0.4;
-    if (this.runicRings[1]) this.runicRings[1].rotation.z -= dt * 0.6;
-    if (this.runicRings[2]) this.runicRings[2].rotation.z += dt * 0.5;
-
-    // Light pulse
-    const pulse = 1.6 + Math.sin(this.animTimer * 2.5) * 0.6;
-    this.pulseLight.intensity = pulse;
-
-    // Proximity detection
+    // Proximity detection & resonant glow intensification
+    let proximityFactor = 0;
     if (playerPos) {
       const dist = this.group.position.distanceTo(playerPos);
       this.isPlayerNearby = dist <= this.interactionDistance;
+      proximityFactor = Math.max(0, Math.min(1.0, 1.0 - dist / 10.0));
     }
+
+    // Slowly rotate runic rings in opposing directions, accelerated by proximity
+    const ringSpeedMult = 1.0 + proximityFactor * 1.5;
+    if (this.runicRings[0]) this.runicRings[0].rotation.z += dt * 0.4 * ringSpeedMult;
+    if (this.runicRings[1]) this.runicRings[1].rotation.z -= dt * 0.6 * ringSpeedMult;
+    if (this.runicRings[2]) this.runicRings[2].rotation.z += dt * 0.5 * ringSpeedMult;
+
+    // Light pulse intensified by player proximity
+    const basePulse = 1.6 + Math.sin(this.animTimer * 2.5) * 0.6;
+    this.pulseLight.intensity = basePulse + proximityFactor * 2.2;
 
     return this.isPlayerNearby;
   }
