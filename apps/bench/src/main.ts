@@ -1137,6 +1137,93 @@ class BenchmarkApp {
 
         </div>
 
+        <!-- Dialogue Fine-Tuning & Loss Masking Dashboard -->
+        <div style="background: rgba(21, 26, 33, 0.6); padding: 1.4rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.05); display: flex; flex-direction: column; gap: 1.2rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255, 255, 255, 0.06); padding-bottom: 0.8rem;">
+            <div>
+              <div style="font-size: 1rem; font-weight: 700; color: #E8E4DA;">Dialogue Fine-Tuning & Loss Masking (The Elder)</div>
+              <div style="font-size: 0.8rem; color: #9AA3AE; margin-top: 0.2rem;">
+                Target tokens masked with index -1 on player prompts; loss applied strictly on speaker replies
+              </div>
+            </div>
+            <div style="font-family: var(--font-mono); font-size: 0.8rem; color: #4FB3A9;">
+              Base General Val Loss: <strong>2.505</strong>
+            </div>
+          </div>
+
+          <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 0.82rem;">
+              <thead>
+                <tr style="border-bottom: 1px solid #2A333F; color: #9AA3AE; text-align: left; background: rgba(0, 0, 0, 0.2);">
+                  <th style="padding: 0.6rem 0.8rem;">SPEAKER</th>
+                  <th style="padding: 0.6rem 0.8rem;">HELD-OUT UNIT</th>
+                  <th style="padding: 0.6rem 0.8rem;">TRAIN TOKENS</th>
+                  <th style="padding: 0.6rem 0.8rem;">HELD-OUT TOKENS</th>
+                  <th style="padding: 0.6rem 0.8rem;">HELD-OUT LOSS</th>
+                  <th style="padding: 0.6rem 0.8rem;">GENERAL VAL</th>
+                  <th style="padding: 0.6rem 0.8rem;">FORGETTING DRIFT</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
+                  <td style="padding: 0.6rem 0.8rem; font-weight: 700; color: #E8E4DA;">HAMLET</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">Act V (Hamlet)</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #4FB3A9;">17,505 (253 turns)</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">7,099 (93 turns)</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #E8A33D;">0.555 → 0.630</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #D9564A; font-weight: 700;">2.929</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #D9564A; font-weight: 700;">+0.424</td>
+                </tr>
+                <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
+                  <td style="padding: 0.6rem 0.8rem; font-weight: 700; color: #E8E4DA;">FALSTAFF</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">Henry IV Part 2</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #4FB3A9;">28,512 (403 turns)</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">5,585 (63 turns)</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #E8A33D;">0.412 → 0.447</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #D9564A; font-weight: 700;">2.835</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #D9564A; font-weight: 700;">+0.330</td>
+                </tr>
+                <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
+                  <td style="padding: 0.6rem 0.8rem; font-weight: 700; color: #E8E4DA;">PORTIA</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">Act IV Trial Scene</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #4FB3A9;">6,557 (66 turns)</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">4,936 (67 turns)</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">Available</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">—</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">—</td>
+                </tr>
+                <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
+                  <td style="padding: 0.6rem 0.8rem; font-weight: 700; color: #E8E4DA;">ROSALIND</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">Act V (As You Like It)</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #4FB3A9;">11,886 (175 turns)</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">1,719 (23 turns)</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">Available</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">—</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">—</td>
+                </tr>
+                <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
+                  <td style="padding: 0.6rem 0.8rem; font-weight: 700; color: #E8E4DA;">IAGO</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">Act V (Othello)</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #4FB3A9;">16,428 (232 turns)</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">2,013 (37 turns)</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">Available</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">—</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">—</td>
+                </tr>
+                <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
+                  <td style="padding: 0.6rem 0.8rem; font-weight: 700; color: #E8E4DA;">PROSPERO</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">Act V (The Tempest)</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #4FB3A9;">9,250 (89 turns)</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">2,597 (26 turns)</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">Available</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">—</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">—</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
     `;
   }
