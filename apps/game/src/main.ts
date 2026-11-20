@@ -126,6 +126,7 @@ class NeuroArenaGame {
   private player: Player;
   private audio: SoundEngine;
   private shardHumTimer = 0;
+  private oracleHumTimer = 0;
   private companion: CompanionDrone;
 
   private shards: NeuralShard[] = [];
@@ -1569,6 +1570,17 @@ class NeuroArenaGame {
       }
     } else {
       this.shardHumTimer = Math.max(0, this.shardHumTimer - dt);
+    }
+
+    // Subtle resonant celestial hum when near the Oracle Stone
+    if (this.world.oracleStone?.isPlayerNearby) {
+      this.oracleHumTimer += dt;
+      if (this.oracleHumTimer >= 3.2) {
+        this.oracleHumTimer = 0;
+        this.audio.playOracleHum();
+      }
+    } else {
+      this.oracleHumTimer = Math.max(0, this.oracleHumTimer - dt);
     }
 
     this.activeNearbyShard = null;
