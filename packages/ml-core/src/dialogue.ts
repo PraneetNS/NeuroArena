@@ -288,3 +288,89 @@ export function evaluateDialogueLossOnLogits(
   const perplexity = Math.exp(meanLoss);
   return { meanLoss, perplexity, activeTokens };
 }
+
+export interface SpeakerLexicalProfile {
+  speaker: string;
+  totalTokens: number;
+  uniqueTokens: number;
+  topTokenFrequencies: Array<{ tokenId: number; count: number; frequency: number }>;
+}
+
+/**
+ * Computes the lexical profile and token frequency distribution of a speaker's turns.
+ */
+export function computeSpeakerLexicalProfile(
+  batches: DialogueBatch[],
+  vocabSize: number,
+  topN = 10
+): SpeakerLexicalProfile {
+  const counts = new Uint32Array(vocabSize);
+  let totalTokens = 0;
+  const speaker = batches[0]?.speaker ?? 'UNKNOWN';
+
+  for (const b of batches) {
+    for (let t = 0; t < b.targets.length; t++) {
+      const tgt = b.targets[t];
+      if (tgt >= 0 && tgt < vocabSize) {
+        counts[tgt]++;
+        totalTokens++;
+      }
+    }
+  }
+
+  let uniqueTokens = 0;
+  const items: Array<{ tokenId: number; count: number; frequency: number }> = [];
+  for (let v = 0; v < vocabSize; v++) {
+    const c = counts[v];
+    if (c > 0) {
+      uniqueTokens++;
+      items.push({ tokenId: v, count: c, frequency: totalTokens > 0 ? c / totalTokens : 0 });
+    }
+  }
+
+  items.sort((a, b) => b.count - a.count);
+  const topTokenFrequencies = items.slice(0, topN);
+
+  return {
+    speaker,
+    totalTokens,
+    uniqueTokens,
+    topTokenFrequencies
+  };
+}
+
+/**
+ * Computes Jaccard vocabulary similarity between two speaker batches.
+ */
+export function calculateSpeakerJaccardSimilarity(
+  batchesA: DialogueBatch[],
+  batchesB: DialogueBatch[],
+  vocabSize: number
+): number {
+  const setA = new Set<number>();
+  const setB = new Set<number>();
+
+  for (const b of batchesA) {
+    for (let t = 0; t < b.targets.length; t++) {
+      const tgt = b.targets[t];
+      if (tgt >= 0 && tgt < vocabSize) setA.add(tgt);
+    }
+  }
+
+  for (const b of batchesB) {
+    for (let t = 0; t < b.targets.length; t++) {
+      const tgt = b.targets[t];
+      if (tgt >= 0 && tgt < vocabSize) setB.add(tgt);
+    }
+  }
+
+  if (setA.size === 0 && setB.size === 0) return 1.0;
+  let intersection = 0;
+  for (const id of setA) {
+    if (setB.has(id)) intersection++;
+  }
+
+  const union = setA.size + setB.size - intersection;
+  return union > 0 ? intersection / union : 0;
+}
+
