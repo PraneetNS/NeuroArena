@@ -43,6 +43,7 @@ export type TutorialEventType =
   | 'model_trained'
   | 'model_prompted'
   | 'codex_opened'
+  | 'oracle_communed'
   | 'mentor_checkpoint_claimed';
 
 export interface TutorialEvent {
@@ -91,6 +92,8 @@ export interface TutorialTelemetrySession {
   totalDurationSec: number;
   completedSteps: StepTelemetryEntry[];
   stalledStepsCount: number;
+  oracleCommunesCount?: number;
+  oracleTokensGenerated?: number;
   hardwareSummary?: string;
 }
 

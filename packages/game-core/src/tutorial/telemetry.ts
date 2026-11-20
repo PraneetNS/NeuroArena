@@ -91,6 +91,12 @@ export class TutorialTelemetry {
     this.persistSession();
   }
 
+  public recordOracleCommune(tokensGenerated = 0): void {
+    this.currentSession.oracleCommunesCount = (this.currentSession.oracleCommunesCount || 0) + 1;
+    this.currentSession.oracleTokensGenerated = (this.currentSession.oracleTokensGenerated || 0) + tokensGenerated;
+    this.persistSession();
+  }
+
   public getSession(): TutorialTelemetrySession {
     return this.currentSession;
   }
