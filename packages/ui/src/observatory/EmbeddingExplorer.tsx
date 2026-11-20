@@ -749,15 +749,34 @@ export const EmbeddingExplorer: React.FC<EmbeddingExplorerProps> = ({
                       "{tokenStrings[n.tokenId] || `[${n.tokenId}]`}"
                     </span>
                   </div>
-                  <span
-                    style={{
-                      fontFamily: 'var(--na-font-mono)',
-                      fontSize: '11px',
-                      color: 'var(--na-accent-cool)'
-                    }}
-                  >
-                    {n.similarity.toFixed(3)}
-                  </span>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+                    <span
+                      style={{
+                        fontFamily: 'var(--na-font-mono)',
+                        fontSize: '11px',
+                        color: 'var(--na-accent-cool)'
+                      }}
+                    >
+                      {n.similarity.toFixed(3)}
+                    </span>
+                    <div
+                      style={{
+                        width: '42px',
+                        height: '3px',
+                        backgroundColor: 'var(--na-surface)',
+                        borderRadius: '2px',
+                        overflow: 'hidden'
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: `${Math.max(0, Math.min(100, ((n.similarity + 1) / 2) * 100))}%`,
+                          height: '100%',
+                          backgroundColor: 'var(--na-accent-cool)'
+                        }}
+                      />
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
