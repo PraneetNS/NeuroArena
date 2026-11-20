@@ -202,3 +202,50 @@ export function buildDialogueDataset(
     heldOutBatches
   };
 }
+
+/**
+ * Collates individual dialogue turns into a batched tensor [B * T] with loss masking.
+ * Unoccupied slots are masked with target = -1.
+ */
+export function collateDialogueMiniBatch(
+  batches: DialogueBatch[],
+  batchSize: number,
+  contextLen: number
+): {
+  inputs: Uint32Array;
+  targets: Int32Array;
+  activeTokens: number;
+  maskedTokens: number;
+} {
+  const total = batchSize * contextLen;
+  const inputs = new Uint32Array(total);
+  const targets = new Int32Array(total);
+  targets.fill(-1);
+
+  let activeTokens = 0;
+  let maskedTokens = 0;
+
+  for (let b = 0; b < batchSize; b++) {
+    const item = batches[b % batches.length];
+    const offset = b * contextLen;
+    for (let t = 0; t < contextLen; t++) {
+      const idx = offset + t;
+      if (item && t < item.inputs.length) {
+        inputs[idx] = item.inputs[t];
+        const tgt = item.targets[t];
+        targets[idx] = tgt;
+        if (tgt !== -1 && tgt >= 0) {
+          activeTokens++;
+        } else {
+          maskedTokens++;
+        }
+      } else {
+        inputs[idx] = 0;
+        targets[idx] = -1;
+        maskedTokens++;
+      }
+    }
+  }
+
+  return { inputs, targets, activeTokens, maskedTokens };
+}
