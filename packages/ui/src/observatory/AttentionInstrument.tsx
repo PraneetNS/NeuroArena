@@ -15,6 +15,7 @@ export const AttentionInstrument: React.FC<AttentionInstrumentProps> = ({
   onSelectLayerHead
 }) => {
   const [selectedTokenIdx, setSelectedTokenIdx] = useState<number | null>(null);
+  const [minWeightThreshold, setMinWeightThreshold] = useState<number>(0.02);
   const [hoveredBeam, setHoveredBeam] = useState<{
     source: number;
     target: number;
@@ -79,7 +80,7 @@ export const AttentionInstrument: React.FC<AttentionInstrumentProps> = ({
     for (let target = 0; target < T; target++) {
       for (let source = 0; source <= target; source++) {
         const weight = probs[target * T + source];
-        if (weight < 0.01) continue; // Skip negligible noise for render performance
+        if (weight < minWeightThreshold) continue; // Skip beams below interactive cutoff threshold
 
         const pSource = tokenCoords[source];
         const pTarget = tokenCoords[target];
@@ -103,7 +104,7 @@ export const AttentionInstrument: React.FC<AttentionInstrumentProps> = ({
       }
     }
     return list;
-  }, [probs, tokenCoords, T]);
+  }, [probs, tokenCoords, T, minWeightThreshold]);
 
   return (
     <div style={{ display: 'flex', gap: 'var(--na-space-4)', height: '100%', overflow: 'hidden' }}>
@@ -184,6 +185,24 @@ export const AttentionInstrument: React.FC<AttentionInstrumentProps> = ({
                   </button>
                 ))}
               </div>
+            </div>
+
+            {/* Weight Cutoff Threshold Slider */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--na-space-2)' }}>
+              <span style={{ fontSize: 'var(--na-text-xs)', color: 'var(--na-muted)' }}>Cutoff:</span>
+              <input
+                type="range"
+                min="0.01"
+                max="0.25"
+                step="0.01"
+                value={minWeightThreshold}
+                onChange={(e) => setMinWeightThreshold(parseFloat(e.target.value) || 0.01)}
+                style={{ width: '64px', cursor: 'pointer' }}
+                title={`Filter out attention beams below ${(minWeightThreshold * 100).toFixed(0)}% weight`}
+              />
+              <span style={{ fontSize: 'var(--na-text-xs)', fontFamily: 'var(--na-font-mono)', color: 'var(--na-accent-cool)' }}>
+                {(minWeightThreshold * 100).toFixed(0)}%
+              </span>
             </div>
           </div>
 
