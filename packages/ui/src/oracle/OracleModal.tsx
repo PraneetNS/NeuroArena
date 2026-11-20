@@ -76,11 +76,28 @@ export const OracleModal: React.FC<OracleModalProps> = ({
   ]);
   const [activeBranchId, setActiveBranchId] = useState('root');
   const [selectedTokenIndex, setSelectedTokenIndex] = useState<number | null>(null);
+  const [copiedTranscript, setCopiedTranscript] = useState(false);
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const activeBranch = branches.find((b) => b.id === activeBranchId) || branches[0];
   const activeTokens = activeBranch.tokens;
+
+  const avgEntropy = activeTokens.length > 0
+    ? (activeTokens.reduce((acc, t) => acc + t.entropy, 0) / activeTokens.length).toFixed(2)
+    : '0.00';
+  const avgSurprise = activeTokens.length > 0
+    ? (activeTokens.reduce((acc, t) => acc + t.surprise, 0) / activeTokens.length).toFixed(2)
+    : '0.00';
+
+  const handleCopyTranscript = () => {
+    const fullText = activeBranch.prompt + activeBranch.tokens.map((t) => t.token).join('');
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(fullText);
+      setCopiedTranscript(true);
+      setTimeout(() => setCopiedTranscript(false), 2000);
+    }
+  };
 
   // Keybindings listener: Escape to close
   useEffect(() => {
@@ -313,6 +330,51 @@ export const OracleModal: React.FC<OracleModalProps> = ({
                 </button>
               )}
             </div>
+
+            {/* Branch Metrics Badge */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 'var(--na-space-3)',
+                padding: 'var(--na-space-1) var(--na-space-3)',
+                backgroundColor: 'var(--na-surface)',
+                border: '1px solid var(--na-line)',
+                borderRadius: 'var(--na-radius-sm)',
+                fontFamily: 'var(--na-font-mono)',
+                fontSize: '11px',
+                color: 'var(--na-muted)'
+              }}
+            >
+              <span>Tokens: <strong style={{ color: 'var(--na-text)' }}>{activeTokens.length}</strong></span>
+              <span>•</span>
+              <span>Avg H: <strong style={{ color: 'var(--na-accent-cool)' }}>{avgEntropy}</strong></span>
+              <span>•</span>
+              <span>Avg S: <strong style={{ color: 'var(--na-accent)' }}>{avgSurprise}</strong></span>
+            </div>
+
+            {/* Copy Transcript Button */}
+            <button
+              onClick={handleCopyTranscript}
+              style={{
+                backgroundColor: copiedTranscript ? 'var(--na-accent-cool)' : 'var(--na-surface)',
+                color: copiedTranscript ? 'var(--na-ink)' : 'var(--na-text)',
+                border: '1px solid var(--na-line)',
+                borderRadius: 'var(--na-radius-sm)',
+                padding: 'var(--na-space-1) var(--na-space-3)',
+                fontSize: 'var(--na-text-xs)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                fontWeight: 600,
+                transition: 'all 0.15s ease'
+              }}
+              title="Copy prompt and generated continuation to clipboard"
+            >
+              <span>{copiedTranscript ? '✓' : '📋'}</span>
+              <span>{copiedTranscript ? 'Copied' : 'Copy'}</span>
+            </button>
 
             <button
               onClick={onClose}
