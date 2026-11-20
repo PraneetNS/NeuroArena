@@ -737,7 +737,8 @@ export class ShardWorld {
   public triggerSweepNet(playerPos: THREE.Vector3): boolean {
     if (this.sweepCooldownTimer > 0 || this.isSweeping) return false;
 
-    // Find all uncollected shards within 18m
+    // Find all uncollected shards within 18m using squared distance fast path
+    const sweepRadiusSq = this.SWEEP_RADIUS * this.SWEEP_RADIUS;
     const candidates = this.worldState.spatialGrid.queryRadius(
       playerPos.x,
       playerPos.z,
@@ -746,7 +747,7 @@ export class ShardWorld {
       if (this.vault.hasShard(s.id)) return false;
       const dx = s.position.x - playerPos.x;
       const dz = s.position.z - playerPos.z;
-      return Math.sqrt(dx * dx + dz * dz) <= this.SWEEP_RADIUS;
+      return (dx * dx + dz * dz) <= sweepRadiusSq;
     });
 
     this.sweepCandidateShards = candidates;
