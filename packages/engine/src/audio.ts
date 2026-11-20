@@ -571,4 +571,73 @@ export class SoundEngine {
   public playAwakenSurge(): void {
     this.playTrainingSuccess();
   }
+
+  /**
+   * Procedural resonant celestial chime when communing with the Oracle Stone.
+   * Synthesizes a pure harmonic overtone series (216 Hz, 324 Hz, 432 Hz, 648 Hz).
+   */
+  public playOracleCommune(): void {
+    if (this.isMutedState) return;
+    const ctx = this.getContext();
+    if (!ctx || !this.sfxGain) return;
+
+    const now = ctx.currentTime;
+    const freqs = [216, 324, 432, 648];
+    const duration = 2.2;
+
+    const masterChimeGain = ctx.createGain();
+    masterChimeGain.gain.setValueAtTime(0.18, now);
+    masterChimeGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+    masterChimeGain.connect(this.sfxGain);
+
+    freqs.forEach((freq, idx) => {
+      const osc = ctx.createOscillator();
+      const oscGain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now);
+      // Subtle pitch bend upwards giving an ethereal quality
+      osc.frequency.exponentialRampToValueAtTime(freq * 1.008, now + duration);
+
+      const amp = 0.25 / (idx + 1);
+      oscGain.gain.setValueAtTime(amp, now);
+      oscGain.gain.exponentialRampToValueAtTime(0.001, now + duration - idx * 0.2);
+
+      osc.connect(oscGain);
+      oscGain.connect(masterChimeGain);
+
+      osc.start(now);
+      osc.stop(now + duration);
+    });
+  }
+
+  /**
+   * Subtle ambient resonance hum when standing in close proximity to the Oracle Stone.
+   */
+  public playOracleHum(): void {
+    if (this.isMutedState) return;
+    const ctx = this.getContext();
+    if (!ctx || !this.sfxGain) return;
+
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const filter = ctx.createBiquadFilter();
+
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(108, now);
+
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(240, now);
+
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(0.045, now + 0.3);
+    gain.gain.exponentialRampToValueAtTime(0.0005, now + 1.2);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.sfxGain);
+
+    osc.start(now);
+    osc.stop(now + 1.2);
+  }
 }
