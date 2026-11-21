@@ -32,6 +32,7 @@ export interface OracleModalProps {
   onOpenCodex?: (entryId?: string) => void;
   initialPrompt?: string;
   speaker?: string;
+  onForkBranch?: (stepIndex: number, candidate: CandidateTokenMeta) => void;
   onGenerateLive?: (
     prompt: string,
     params: {
@@ -53,6 +54,7 @@ export const OracleModal: React.FC<OracleModalProps> = ({
   onOpenCodex,
   initialPrompt = 'To be, or not to ',
   speaker,
+  onForkBranch,
   onGenerateLive
 }) => {
   const [prompt, setPrompt] = useState(initialPrompt);
@@ -228,6 +230,7 @@ export const OracleModal: React.FC<OracleModalProps> = ({
     setBranches((prev) => [...prev, newBranch]);
     setActiveBranchId(newBranchId);
     setSelectedTokenIndex(stepIndex);
+    onForkBranch?.(stepIndex, candidate);
   };
 
   const inspectedToken =
