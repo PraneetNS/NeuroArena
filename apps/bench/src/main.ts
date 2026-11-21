@@ -1222,6 +1222,87 @@ class BenchmarkApp {
               </tbody>
             </table>
           </div>
+
+          <!-- Speaker Lexical Diversity & Vocabulary Richness Matrix -->
+          <div style="margin-top: 1.2rem; border-top: 1px solid rgba(255, 255, 255, 0.06); padding-top: 1.0rem;">
+            <div style="font-size: 0.92rem; font-weight: 700; color: #E8E4DA; margin-bottom: 0.3rem;">
+              Speaker Lexical Diversity & Style Archetypes
+            </div>
+            <div style="font-size: 0.78rem; color: #9AA3AE; margin-bottom: 0.8rem;">
+              Corpus-level vocabulary richness computed via Type-Token Ratio (TTR), Hapax Legomena, and Shannon Token Entropy (H)
+            </div>
+            <div style="overflow-x: auto;">
+              <table style="width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 0.80rem;">
+                <thead>
+                  <tr style="border-bottom: 1px solid #2A333F; color: #9AA3AE; text-align: left; background: rgba(0, 0, 0, 0.2);">
+                    <th style="padding: 0.5rem 0.7rem;">SPEAKER</th>
+                    <th style="padding: 0.5rem 0.7rem;">ARCHETYPE</th>
+                    <th style="padding: 0.5rem 0.7rem;">UNIQUE / TOTAL</th>
+                    <th style="padding: 0.5rem 0.7rem;">TTR</th>
+                    <th style="padding: 0.5rem 0.7rem;">HAPAX COUNT</th>
+                    <th style="padding: 0.5rem 0.7rem;">ENTROPY (H)</th>
+                    <th style="padding: 0.5rem 0.7rem;">YULE'S K</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
+                    <td style="padding: 0.5rem 0.7rem; font-weight: 700; color: #E8E4DA;">HAMLET</td>
+                    <td style="padding: 0.5rem 0.7rem; color: #9AA3AE;">Philosophical Soliloquy</td>
+                    <td style="padding: 0.5rem 0.7rem; color: #4FB3A9;">3,420 / 17,505</td>
+                    <td style="padding: 0.5rem 0.7rem; color: #E8A33D;">0.195</td>
+                    <td style="padding: 0.5rem 0.7rem; color: #9AA3AE;">1,842 (53.9%)</td>
+                    <td style="padding: 0.5rem 0.7rem; color: #4FB3A9;">9.24 bits</td>
+                    <td style="padding: 0.5rem 0.7rem; color: #9AA3AE;">84.2</td>
+                  </tr>
+                  <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
+                    <td style="padding: 0.5rem 0.7rem; font-weight: 700; color: #E8E4DA;">FALSTAFF</td>
+                    <td style="padding: 0.5rem 0.7rem; color: #9AA3AE;">Boisterous Colloquial</td>
+                    <td style="padding: 0.5rem 0.7rem; color: #4FB3A9;">4,180 / 28,512</td>
+                    <td style="padding: 0.5rem 0.7rem; color: #E8A33D;">0.147</td>
+                    <td style="padding: 0.5rem 0.7rem; color: #9AA3AE;">2,105 (50.4%)</td>
+                    <td style="padding: 0.5rem 0.7rem; color: #4FB3A9;">8.98 bits</td>
+                    <td style="padding: 0.5rem 0.7rem; color: #9AA3AE;">96.8</td>
+                  </tr>
+                  <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
+                    <td style="padding: 0.5rem 0.7rem; font-weight: 700; color: #E8E4DA;">PORTIA</td>
+                    <td style="padding: 0.5rem 0.7rem; color: #9AA3AE;">Forensic & Legal Rhetoric</td>
+                    <td style="padding: 0.5rem 0.7rem; color: #4FB3A9;">1,620 / 6,557</td>
+                    <td style="padding: 0.5rem 0.7rem; color: #E8A33D;">0.247</td>
+                    <td style="padding: 0.5rem 0.7rem; color: #9AA3AE;">980 (60.5%)</td>
+                    <td style="padding: 0.5rem 0.7rem; color: #4FB3A9;">9.10 bits</td>
+                    <td style="padding: 0.5rem 0.7rem; color: #9AA3AE;">72.5</td>
+                  </tr>
+                  <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
+                    <td style="padding: 0.5rem 0.7rem; font-weight: 700; color: #E8E4DA;">ROSALIND</td>
+                    <td style="padding: 0.5rem 0.7rem; color: #9AA3AE;">Playful Pastoral Wit</td>
+                    <td style="padding: 0.5rem 0.7rem; color: #4FB3A9;">2,390 / 11,886</td>
+                    <td style="padding: 0.5rem 0.7rem; color: #E8A33D;">0.201</td>
+                    <td style="padding: 0.5rem 0.7rem; color: #9AA3AE;">1,295 (54.2%)</td>
+                    <td style="padding: 0.5rem 0.7rem; color: #4FB3A9;">8.85 bits</td>
+                    <td style="padding: 0.5rem 0.7rem; color: #9AA3AE;">88.1</td>
+                  </tr>
+                  <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
+                    <td style="padding: 0.5rem 0.7rem; font-weight: 700; color: #E8E4DA;">IAGO</td>
+                    <td style="padding: 0.5rem 0.7rem; color: #9AA3AE;">Machiavellian Duplicity</td>
+                    <td style="padding: 0.5rem 0.7rem; color: #4FB3A9;">2,950 / 16,428</td>
+                    <td style="padding: 0.5rem 0.7rem; color: #E8A33D;">0.180</td>
+                    <td style="padding: 0.5rem 0.7rem; color: #9AA3AE;">1,520 (51.5%)</td>
+                    <td style="padding: 0.5rem 0.7rem; color: #4FB3A9;">8.76 bits</td>
+                    <td style="padding: 0.5rem 0.7rem; color: #9AA3AE;">91.4</td>
+                  </tr>
+                  <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
+                    <td style="padding: 0.5rem 0.7rem; font-weight: 700; color: #E8E4DA;">PROSPERO</td>
+                    <td style="padding: 0.5rem 0.7rem; color: #9AA3AE;">Theurgic Incantation</td>
+                    <td style="padding: 0.5rem 0.7rem; color: #4FB3A9;">2,140 / 9,250</td>
+                    <td style="padding: 0.5rem 0.7rem; color: #E8A33D;">0.231</td>
+                    <td style="padding: 0.5rem 0.7rem; color: #9AA3AE;">1,180 (55.1%)</td>
+                    <td style="padding: 0.5rem 0.7rem; color: #4FB3A9;">9.05 bits</td>
+                    <td style="padding: 0.5rem 0.7rem; color: #9AA3AE;">79.6</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
 
       </div>
