@@ -108,13 +108,23 @@ export class OracleStone {
 
     // Slowly rotate runic rings in opposing directions, accelerated by proximity
     const ringSpeedMult = 1.0 + proximityFactor * 1.5;
-    if (this.runicRings[0]) this.runicRings[0].rotation.z += dt * 0.4 * ringSpeedMult;
-    if (this.runicRings[1]) this.runicRings[1].rotation.z -= dt * 0.6 * ringSpeedMult;
-    if (this.runicRings[2]) this.runicRings[2].rotation.z += dt * 0.5 * ringSpeedMult;
+    if (this.runicRings[0]) {
+      this.runicRings[0].rotation.z += dt * 0.4 * ringSpeedMult;
+      this.runicRings[0].rotation.x = Math.sin(this.animTimer * 0.8) * 0.08;
+    }
+    if (this.runicRings[1]) {
+      this.runicRings[1].rotation.z -= dt * 0.6 * ringSpeedMult;
+      this.runicRings[1].rotation.y = Math.cos(this.animTimer * 0.9) * 0.08;
+    }
+    if (this.runicRings[2]) {
+      this.runicRings[2].rotation.z += dt * 0.5 * ringSpeedMult;
+      this.runicRings[2].rotation.x = Math.sin(this.animTimer * 1.1) * 0.06;
+    }
 
     // Light pulse intensified by player proximity
     const basePulse = 1.6 + Math.sin(this.animTimer * 2.5) * 0.6;
     this.pulseLight.intensity = basePulse + proximityFactor * 2.2;
+    this.pulseLight.distance = 8.5 + proximityFactor * 3.5;
 
     return this.isPlayerNearby;
   }
