@@ -1354,7 +1354,11 @@ class NeuroArenaGame {
       React.createElement(OracleModal, {
         isOpen: this.isOracleOpen,
         onClose: () => this.toggleOracle(false),
-        onOpenCodex: (entryId?: string) => this.toggleCodex(true, entryId as CodexConceptId)
+        onOpenCodex: (entryId?: string) => this.toggleCodex(true, entryId as CodexConceptId),
+        onForkBranch: () => {
+          this.audio.playOracleBranchFork();
+          this.director.getTelemetry().recordOracleBranchFork();
+        }
       })
     );
   }
