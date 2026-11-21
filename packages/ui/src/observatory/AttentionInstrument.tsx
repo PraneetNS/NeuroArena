@@ -208,6 +208,36 @@ export const AttentionInstrument: React.FC<AttentionInstrumentProps> = ({
 
           {/* Active Head Summary Tag */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--na-space-2)' }}>
+            {headMetrics?.entropy != null && (
+              <span
+                style={{
+                  fontSize: 'var(--na-text-xs)',
+                  fontFamily: 'var(--na-font-mono)',
+                  color: 'var(--na-accent-cool)',
+                  backgroundColor: 'var(--na-raised)',
+                  padding: '3px 8px',
+                  borderRadius: 'var(--na-radius-sm)',
+                  border: '1px solid var(--na-line)'
+                }}
+                title="Average attention Shannon entropy in bits across valid token positions"
+              >
+                H: {headMetrics.entropy.toFixed(2)}b
+              </span>
+            )}
+            <span
+              style={{
+                fontSize: 'var(--na-text-xs)',
+                fontFamily: 'var(--na-font-mono)',
+                color: 'var(--na-muted)',
+                backgroundColor: 'var(--na-raised)',
+                padding: '3px 8px',
+                borderRadius: 'var(--na-radius-sm)',
+                border: '1px solid var(--na-line)'
+              }}
+              title="Number of active attention beams exceeding cutoff threshold"
+            >
+              {arcs.length} beams
+            </span>
             {headMetrics?.label && (
               <span
                 style={{
