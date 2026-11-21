@@ -756,4 +756,46 @@ export class GpuKvModel {
       }
     }
   }
+
+  /**
+   * Releases all allocated WebGPU buffers and uniform storage to prevent VRAM memory leaks.
+   */
+  public destroy(): void {
+    const buffers = [
+      this.paramsBuffer,
+      this.kvCacheBuf,
+      this.xBuf,
+      this.ln1Buf,
+      this.qBuf,
+      this.attnOutBuf,
+      this.midBuf,
+      this.ln2Buf,
+      this.w1Buf,
+      this.finalLnBuf,
+      this.logitsBuf,
+      this.logitsStagingBuf,
+      this.modelDimsBuf,
+      this.embedUniBuf,
+      this.geluCountBuf,
+      this.finalLnUniBuf,
+      this.tiedHeadUniBuf,
+      ...this.ln1UniBuffers,
+      ...this.qkvUniBuffers,
+      ...this.attnUniBuffers,
+      ...this.woUniBuffers,
+      ...this.ln2UniBuffers,
+      ...this.w1UniBuffers,
+      ...this.w2UniBuffers
+    ];
+
+    for (const buf of buffers) {
+      if (buf) {
+        try {
+          buf.destroy();
+        } catch {
+          // Ignore if already destroyed
+        }
+      }
+    }
+  }
 }
