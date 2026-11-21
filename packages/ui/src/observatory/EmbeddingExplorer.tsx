@@ -573,6 +573,22 @@ export const EmbeddingExplorer: React.FC<EmbeddingExplorerProps> = ({
             >
               top 3 components explain {top3VariancePct} percent of variance
             </span>
+
+            {/* Model Dimensions Badge */}
+            <span
+              style={{
+                fontFamily: 'var(--na-font-mono)',
+                fontSize: 'var(--na-text-xs)',
+                color: 'var(--na-muted)',
+                backgroundColor: 'var(--na-surface)',
+                padding: '2px 6px',
+                borderRadius: 'var(--na-radius-sm)',
+                border: '1px solid var(--na-line)'
+              }}
+              title={`Embedding matrix dimension: ${vocabSize} tokens x ${dModel} embedding channels`}
+            >
+              {vocabSize}×{dModel}d
+            </span>
           </div>
 
           {/* Category Filter Pills */}
