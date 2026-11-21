@@ -374,3 +374,68 @@ export function calculateSpeakerJaccardSimilarity(
   return union > 0 ? intersection / union : 0;
 }
 
+export interface SpeakerLexicalRichness {
+  speaker: string;
+  totalTokens: number;
+  uniqueTokens: number;
+  typeTokenRatio: number;
+  hapaxLegomenaCount: number;
+  hapaxRatio: number;
+  entropy: number;
+  yulesK: number;
+}
+
+/**
+ * Computes comprehensive lexical richness and diversity metrics for a speaker.
+ */
+export function computeSpeakerLexicalRichness(
+  batches: DialogueBatch[],
+  vocabSize: number
+): SpeakerLexicalRichness {
+  const counts = new Uint32Array(vocabSize);
+  let totalTokens = 0;
+  const speaker = batches[0]?.speaker ?? 'UNKNOWN';
+
+  for (const b of batches) {
+    for (let t = 0; t < b.targets.length; t++) {
+      const tgt = b.targets[t];
+      if (tgt >= 0 && tgt < vocabSize) {
+        counts[tgt]++;
+        totalTokens++;
+      }
+    }
+  }
+
+  let uniqueTokens = 0;
+  let hapaxLegomenaCount = 0;
+  let entropy = 0;
+  let sumFreqSquared = 0;
+
+  for (let v = 0; v < vocabSize; v++) {
+    const c = counts[v];
+    if (c > 0) {
+      uniqueTokens++;
+      if (c === 1) hapaxLegomenaCount++;
+      const p = c / totalTokens;
+      entropy -= p * Math.log2(p);
+      sumFreqSquared += c * c;
+    }
+  }
+
+  const typeTokenRatio = totalTokens > 0 ? uniqueTokens / totalTokens : 0;
+  const hapaxRatio = uniqueTokens > 0 ? hapaxLegomenaCount / uniqueTokens : 0;
+  const yulesK = totalTokens > 1 ? (10000 * (sumFreqSquared - totalTokens)) / (totalTokens * totalTokens) : 0;
+
+  return {
+    speaker,
+    totalTokens,
+    uniqueTokens,
+    typeTokenRatio,
+    hapaxLegomenaCount,
+    hapaxRatio,
+    entropy,
+    yulesK
+  };
+}
+
+
