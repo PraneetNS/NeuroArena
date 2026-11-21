@@ -97,6 +97,11 @@ export class TutorialTelemetry {
     this.persistSession();
   }
 
+  public recordOracleBranchFork(): void {
+    this.currentSession.oracleBranchesForked = (this.currentSession.oracleBranchesForked || 0) + 1;
+    this.persistSession();
+  }
+
   public getSession(): TutorialTelemetrySession {
     return this.currentSession;
   }

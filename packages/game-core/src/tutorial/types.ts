@@ -94,6 +94,7 @@ export interface TutorialTelemetrySession {
   stalledStepsCount: number;
   oracleCommunesCount?: number;
   oracleTokensGenerated?: number;
+  oracleBranchesForked?: number;
   hardwareSummary?: string;
 }
 
