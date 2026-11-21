@@ -640,4 +640,36 @@ export class SoundEngine {
     osc.start(now);
     osc.stop(now + 1.2);
   }
+
+  /**
+   * Crystalline shimmer chime when branching / forking dialogue from an alternative token.
+   * Dual sine burst at high celestial harmonics (864 Hz, 1296 Hz) with short exponential decay.
+   */
+  public playOracleBranchFork(): void {
+    if (this.isMutedState) return;
+    const ctx = this.getContext();
+    if (!ctx || !this.sfxGain) return;
+
+    const now = ctx.currentTime;
+    const sfxGain = this.sfxGain;
+    const freqs = [864, 1296];
+    const duration = 0.45;
+
+    freqs.forEach((freq, idx) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + idx * 0.04);
+      osc.frequency.exponentialRampToValueAtTime(freq * 1.05, now + idx * 0.04 + duration);
+
+      gain.gain.setValueAtTime(0.09, now + idx * 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.04 + duration);
+
+      osc.connect(gain);
+      gain.connect(sfxGain);
+
+      osc.start(now + idx * 0.04);
+      osc.stop(now + idx * 0.04 + duration);
+    });
+  }
 }
