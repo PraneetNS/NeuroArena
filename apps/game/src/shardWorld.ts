@@ -261,6 +261,7 @@ export class ShardWorld {
 
   private dummy = new THREE.Object3D();
   private glyphDummy = new THREE.Object3D();
+  private scratchColor = new THREE.Color();
   private pickups: ActivePickup[] = [];
 
   // Interaction & Scan state
@@ -549,7 +550,7 @@ export class ShardWorld {
         let scaleY = 1.0;
         let scaleZ = 1.0;
         let rotZ = 0;
-        let visualColor = baseColor.clone();
+        const visualColor = this.scratchColor.copy(baseColor);
 
         // Far-field distance LOD scale attenuation
         if (distSq > 140 * 140) {
