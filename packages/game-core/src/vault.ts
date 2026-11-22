@@ -256,6 +256,35 @@ export class VaultManager {
     }
   }
 
+  /**
+   * Computes the number of collected shards in a specific region / biome.
+   */
+  public getRegionShardCount(regionId: string): number {
+    return this.entries.filter(e => e.regionId === regionId).length;
+  }
+
+  /**
+   * Computes the completion percentage of a specific region given total expected shards.
+   */
+  public getRegionCompletionPercent(regionId: string, totalShardsInRegion: number): number {
+    if (totalShardsInRegion <= 0) return 0;
+    const count = this.getRegionShardCount(regionId);
+    return Math.min(100, Math.round((count / totalShardsInRegion) * 100));
+  }
+
+  /**
+   * Computes the count of clean kept shards vs flagged / discarded shards.
+   */
+  public getKeptShardBreakdown(): { kept: number; discarded: number; total: number } {
+    let kept = 0;
+    let discarded = 0;
+    for (const e of this.entries) {
+      if (e.status === 'keep') kept++;
+      else discarded++;
+    }
+    return { kept, discarded, total: this.entries.length };
+  }
+
   public removeEntry(shardId: string): void {
     const idx = this.entries.findIndex(e => e.shardId === shardId);
     if (idx !== -1) {
