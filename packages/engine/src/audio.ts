@@ -672,4 +672,33 @@ export class SoundEngine {
       osc.stop(now + idx * 0.04 + duration);
     });
   }
+
+  /**
+   * Procedural resonant shimmer when passing close to an uncollected knowledge shard.
+   * Subtle high-frequency pure sine sparkle (1760 Hz) with soft envelope.
+   */
+  public playShardResonate(): void {
+    if (this.isMutedState) return;
+    const ctx = this.getContext();
+    if (!ctx || !this.sfxGain) return;
+
+    const now = ctx.currentTime;
+    const sfxGain = this.sfxGain;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(1760, now);
+    osc.frequency.exponentialRampToValueAtTime(2200, now + 0.18);
+
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(0.035, now + 0.04);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
+
+    osc.connect(gain);
+    gain.connect(sfxGain);
+
+    osc.start(now);
+    osc.stop(now + 0.28);
+  }
 }
