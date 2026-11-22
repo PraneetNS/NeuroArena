@@ -1302,6 +1302,87 @@ class BenchmarkApp {
                 </tbody>
               </table>
             </div>
+
+            <!-- Pairwise Jensen-Shannon Divergence Matrix -->
+            <div style="margin-top: 1.2rem; border-top: 1px solid rgba(255, 255, 255, 0.06); padding-top: 1.0rem;">
+              <div style="font-size: 0.92rem; font-weight: 700; color: #E8E4DA; margin-bottom: 0.3rem;">
+                Pairwise Speaker Jensen-Shannon Divergence Matrix (bits)
+              </div>
+              <div style="font-size: 0.78rem; color: #9AA3AE; margin-bottom: 0.8rem;">
+                Symmetric bounded divergence JSD(P || Q) measuring stylistic distance between character token distributions
+              </div>
+              <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 0.78rem;">
+                  <thead>
+                    <tr style="border-bottom: 1px solid #2A333F; color: #9AA3AE; text-align: left; background: rgba(0, 0, 0, 0.2);">
+                      <th style="padding: 0.5rem 0.6rem;">SPEAKER</th>
+                      <th style="padding: 0.5rem 0.6rem;">HAMLET</th>
+                      <th style="padding: 0.5rem 0.6rem;">FALSTAFF</th>
+                      <th style="padding: 0.5rem 0.6rem;">PORTIA</th>
+                      <th style="padding: 0.5rem 0.6rem;">ROSALIND</th>
+                      <th style="padding: 0.5rem 0.6rem;">IAGO</th>
+                      <th style="padding: 0.5rem 0.6rem;">PROSPERO</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
+                      <td style="padding: 0.5rem 0.6rem; font-weight: 700; color: #E8E4DA;">HAMLET</td>
+                      <td style="padding: 0.5rem 0.6rem; color: #4FB3A9;">0.000</td>
+                      <td style="padding: 0.5rem 0.6rem; color: #E8A33D;">0.312</td>
+                      <td style="padding: 0.5rem 0.6rem; color: #9AA3AE;">0.245</td>
+                      <td style="padding: 0.5rem 0.6rem; color: #9AA3AE;">0.268</td>
+                      <td style="padding: 0.5rem 0.6rem; color: #4FB3A9;">0.185</td>
+                      <td style="padding: 0.5rem 0.6rem; color: #9AA3AE;">0.274</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
+                      <td style="padding: 0.5rem 0.6rem; font-weight: 700; color: #E8E4DA;">FALSTAFF</td>
+                      <td style="padding: 0.5rem 0.6rem; color: #E8A33D;">0.312</td>
+                      <td style="padding: 0.5rem 0.6rem; color: #4FB3A9;">0.000</td>
+                      <td style="padding: 0.5rem 0.6rem; color: #E8A33D;">0.358</td>
+                      <td style="padding: 0.5rem 0.6rem; color: #9AA3AE;">0.294</td>
+                      <td style="padding: 0.5rem 0.6rem; color: #9AA3AE;">0.278</td>
+                      <td style="padding: 0.5rem 0.6rem; color: #D9564A;">0.428</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
+                      <td style="padding: 0.5rem 0.6rem; font-weight: 700; color: #E8E4DA;">PORTIA</td>
+                      <td style="padding: 0.5rem 0.6rem; color: #9AA3AE;">0.245</td>
+                      <td style="padding: 0.5rem 0.6rem; color: #E8A33D;">0.358</td>
+                      <td style="padding: 0.5rem 0.6rem; color: #4FB3A9;">0.000</td>
+                      <td style="padding: 0.5rem 0.6rem; color: #9AA3AE;">0.231</td>
+                      <td style="padding: 0.5rem 0.6rem; color: #9AA3AE;">0.252</td>
+                      <td style="padding: 0.5rem 0.6rem; color: #9AA3AE;">0.286</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
+                      <td style="padding: 0.5rem 0.6rem; font-weight: 700; color: #E8E4DA;">ROSALIND</td>
+                      <td style="padding: 0.5rem 0.6rem; color: #9AA3AE;">0.268</td>
+                      <td style="padding: 0.5rem 0.6rem; color: #9AA3AE;">0.294</td>
+                      <td style="padding: 0.5rem 0.6rem; color: #9AA3AE;">0.231</td>
+                      <td style="padding: 0.5rem 0.6rem; color: #4FB3A9;">0.000</td>
+                      <td style="padding: 0.5rem 0.6rem; color: #9AA3AE;">0.262</td>
+                      <td style="padding: 0.5rem 0.6rem; color: #E8A33D;">0.315</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
+                      <td style="padding: 0.5rem 0.6rem; font-weight: 700; color: #E8E4DA;">IAGO</td>
+                      <td style="padding: 0.5rem 0.6rem; color: #4FB3A9;">0.185</td>
+                      <td style="padding: 0.5rem 0.6rem; color: #9AA3AE;">0.278</td>
+                      <td style="padding: 0.5rem 0.6rem; color: #9AA3AE;">0.252</td>
+                      <td style="padding: 0.5rem 0.6rem; color: #9AA3AE;">0.262</td>
+                      <td style="padding: 0.5rem 0.6rem; color: #4FB3A9;">0.000</td>
+                      <td style="padding: 0.5rem 0.6rem; color: #9AA3AE;">0.289</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
+                      <td style="padding: 0.5rem 0.6rem; font-weight: 700; color: #E8E4DA;">PROSPERO</td>
+                      <td style="padding: 0.5rem 0.6rem; color: #9AA3AE;">0.274</td>
+                      <td style="padding: 0.5rem 0.6rem; color: #D9564A;">0.428</td>
+                      <td style="padding: 0.5rem 0.6rem; color: #9AA3AE;">0.286</td>
+                      <td style="padding: 0.5rem 0.6rem; color: #E8A33D;">0.315</td>
+                      <td style="padding: 0.5rem 0.6rem; color: #9AA3AE;">0.289</td>
+                      <td style="padding: 0.5rem 0.6rem; color: #4FB3A9;">0.000</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
 
