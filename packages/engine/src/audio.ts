@@ -701,4 +701,37 @@ export class SoundEngine {
     osc.start(now);
     osc.stop(now + 0.28);
   }
+
+  /**
+   * Procedural major-third chime when unlocking or discovering a new Codex concept.
+   * D5 (587.33 Hz) transitioning into F#5 (739.99 Hz) with soft bell envelope.
+   */
+  public playCodexDiscovery(): void {
+    if (this.isMutedState) return;
+    const ctx = this.getContext();
+    if (!ctx || !this.sfxGain) return;
+
+    const now = ctx.currentTime;
+    const sfxGain = this.sfxGain;
+    const notes = [587.33, 739.99];
+
+    notes.forEach((freq, idx) => {
+      const startTime = now + idx * 0.12;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, startTime);
+
+      gain.gain.setValueAtTime(0.001, startTime);
+      gain.gain.linearRampToValueAtTime(0.12, startTime + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.85);
+
+      osc.connect(gain);
+      gain.connect(sfxGain);
+
+      osc.start(startTime);
+      osc.stop(startTime + 0.85);
+    });
+  }
 }
