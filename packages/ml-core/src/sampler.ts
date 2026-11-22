@@ -12,6 +12,7 @@ export interface GenerateOptions {
   temperature?: number;
   topK?: number;
   topP?: number;
+  repetitionPenalty?: number;
   rng?: Xoshiro128StarStar;
 }
 
@@ -34,6 +35,7 @@ export async function* generate(
   const temperature = Math.max(1e-4, options.temperature ?? 0.8);
   const topK = options.topK ?? 10;
   const topP = options.topP ?? 0.9;
+  const repetitionPenalty = options.repetitionPenalty ?? 1.0;
   const rng = options.rng ?? new Xoshiro128StarStar(Date.now() & 0xffffffff);
 
   const tokens: number[] = Array.from(promptIds);
@@ -55,6 +57,19 @@ export async function* generate(
     const scaledLogits = new Float64Array(vocabSize);
     for (let v = 0; v < vocabSize; v++) {
       scaledLogits[v] = logits[lastOffset + v] / temperature;
+    }
+
+    if (repetitionPenalty !== 1.0) {
+      const seen = new Set(currentContext);
+      for (const id of seen) {
+        if (id >= 0 && id < vocabSize) {
+          if (scaledLogits[id] > 0) {
+            scaledLogits[id] /= repetitionPenalty;
+          } else {
+            scaledLogits[id] *= repetitionPenalty;
+          }
+        }
+      }
     }
 
     // 4. Top-K filtering
@@ -117,6 +132,7 @@ export interface SamplerGenerateOptions {
   temperature?: number;
   topK?: number;
   topP?: number;
+  repetitionPenalty?: number;
   rng?: Xoshiro128StarStar;
   onToken?: (tokenChar: string, tokenId: number, topCandidates: import('./types.js').CandidateProb[]) => void;
 }
@@ -138,6 +154,7 @@ export class Sampler {
     const temperature = Math.max(1e-4, options.temperature ?? 0.8);
     const topK = options.topK ?? 10;
     const topP = options.topP ?? 0.9;
+    const repetitionPenalty = options.repetitionPenalty ?? 1.0;
     const rng = options.rng ?? new Xoshiro128StarStar(Date.now() & 0xffffffff);
 
     const contextLen = model.config.contextLen;
@@ -161,6 +178,19 @@ export class Sampler {
       const scaledLogits = new Float64Array(vocabSize);
       for (let v = 0; v < vocabSize; v++) {
         scaledLogits[v] = logits[lastOffset + v] / temperature;
+      }
+
+      if (repetitionPenalty !== 1.0) {
+        const seen = new Set(currentContext);
+        for (const id of seen) {
+          if (id >= 0 && id < vocabSize) {
+            if (scaledLogits[id] > 0) {
+              scaledLogits[id] /= repetitionPenalty;
+            } else {
+              scaledLogits[id] *= repetitionPenalty;
+            }
+          }
+        }
       }
 
       const candidates = Array.from({ length: vocabSize }, (_, i) => ({
