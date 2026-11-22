@@ -551,6 +551,15 @@ export class ShardWorld {
         let rotZ = 0;
         let visualColor = baseColor.clone();
 
+        // Far-field distance LOD scale attenuation
+        if (distSq > 140 * 140) {
+          const lodDistNorm = (distSq - 140 * 140) / ((CULL_RADIUS * CULL_RADIUS) - 140 * 140);
+          const lodFactor = Math.max(0.65, 1.0 - Math.min(1.0, lodDistNorm) * 0.35);
+          scaleX *= lodFactor;
+          scaleY *= lodFactor;
+          scaleZ *= lodFactor;
+        }
+
         const isTarget = shard === this.currentTargetShard;
 
         if (distSq < 65 * 65) {
