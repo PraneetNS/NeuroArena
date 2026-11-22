@@ -39,6 +39,7 @@ export interface OracleModalProps {
       temperature: number;
       topK: number;
       topP: number;
+      repetitionPenalty?: number;
       maxTokens: number;
       seed: number;
       speaker?: string;
@@ -62,6 +63,7 @@ export const OracleModal: React.FC<OracleModalProps> = ({
   const [topK, setTopK] = useState(10);
   const [topP, setTopP] = useState(0.9);
   const [maxTokens, setMaxTokens] = useState(50);
+  const [repetitionPenalty, setRepetitionPenalty] = useState(1.0);
   const [seed, setSeed] = useState(1337);
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -139,7 +141,7 @@ export const OracleModal: React.FC<OracleModalProps> = ({
       if (onGenerateLive) {
         await onGenerateLive(
           effectivePrompt,
-          { temperature, topK, topP, maxTokens, seed, speaker },
+          { temperature, topK, topP, repetitionPenalty, maxTokens, seed, speaker },
           (newToken) => {
             setBranches((prev) =>
               prev.map((b) => {
@@ -854,6 +856,26 @@ export const OracleModal: React.FC<OracleModalProps> = ({
                   disabled={isGenerating}
                   onChange={(e) => setTopP(parseFloat(e.target.value))}
                   style={{ width: '100%', accentColor: 'var(--na-accent-cool)' }}
+                />
+              </div>
+
+              {/* Repetition Penalty */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                  <span style={{ color: 'var(--na-text-secondary)' }}>Repetition Penalty:</span>
+                  <span style={{ fontFamily: 'var(--na-font-mono)', color: 'var(--na-accent)', fontWeight: 600 }}>
+                    {repetitionPenalty.toFixed(2)}
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="1.0"
+                  max="1.5"
+                  step="0.05"
+                  value={repetitionPenalty}
+                  disabled={isGenerating}
+                  onChange={(e) => setRepetitionPenalty(parseFloat(e.target.value))}
+                  style={{ width: '100%', accentColor: 'var(--na-accent)' }}
                 />
               </div>
 
