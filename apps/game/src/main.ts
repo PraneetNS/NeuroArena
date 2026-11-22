@@ -1535,7 +1535,11 @@ class NeuroArenaGame {
     this.lumen.pointAt(tutState.lumenTargetPos || null);
 
     // 3. Update ShardWorld instanced markers & interactions
+    const prevTargetShard = this.lastInteractionState?.targetShard;
     this.lastInteractionState = this.shardWorld.update(dt, time, this.player.position);
+    if (!prevTargetShard && this.lastInteractionState.targetShard) {
+      this.audio.playShardResonate();
+    }
     this.renderShardHUD();
 
     // Dynamic spatial biome soundscape cross-fade
