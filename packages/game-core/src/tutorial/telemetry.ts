@@ -102,6 +102,11 @@ export class TutorialTelemetry {
     this.persistSession();
   }
 
+  public recordSamplingAdjustment(): void {
+    this.currentSession.samplingAdjustmentsCount = (this.currentSession.samplingAdjustmentsCount || 0) + 1;
+    this.persistSession();
+  }
+
   public getSession(): TutorialTelemetrySession {
     return this.currentSession;
   }

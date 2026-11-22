@@ -95,6 +95,7 @@ export interface TutorialTelemetrySession {
   oracleCommunesCount?: number;
   oracleTokensGenerated?: number;
   oracleBranchesForked?: number;
+  samplingAdjustmentsCount?: number;
   hardwareSummary?: string;
 }
 
