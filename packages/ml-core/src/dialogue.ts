@@ -383,6 +383,7 @@ export interface SpeakerLexicalRichness {
   hapaxRatio: number;
   entropy: number;
   yulesK: number;
+  simpsonsIndex: number;
 }
 
 /**
@@ -425,6 +426,7 @@ export function computeSpeakerLexicalRichness(
   const typeTokenRatio = totalTokens > 0 ? uniqueTokens / totalTokens : 0;
   const hapaxRatio = uniqueTokens > 0 ? hapaxLegomenaCount / uniqueTokens : 0;
   const yulesK = totalTokens > 1 ? (10000 * (sumFreqSquared - totalTokens)) / (totalTokens * totalTokens) : 0;
+  const simpsonsIndex = totalTokens > 1 ? 1.0 - (sumFreqSquared - totalTokens) / (totalTokens * (totalTokens - 1)) : 0;
 
   return {
     speaker,
@@ -434,7 +436,8 @@ export function computeSpeakerLexicalRichness(
     hapaxLegomenaCount,
     hapaxRatio,
     entropy,
-    yulesK
+    yulesK,
+    simpsonsIndex
   };
 }
 
