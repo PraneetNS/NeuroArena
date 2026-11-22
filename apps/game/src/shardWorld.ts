@@ -419,6 +419,8 @@ export class ShardWorld {
     const CULL_RADIUS = 220; // Visibility radius
     const INTERACTION_RADIUS = 3.8; // Distance to harvest
     const SCAN_QUERY_RADIUS = 28.0; // Distance to scan
+    const interactRadiusSq = INTERACTION_RADIUS * INTERACTION_RADIUS;
+    const scanRadiusSq = SCAN_QUERY_RADIUS * SCAN_QUERY_RADIUS;
 
     // 1. Spatial hash query for candidate interaction targets
     const nearbyShards = this.worldState.spatialGrid.queryRadius(
@@ -428,28 +430,29 @@ export class ShardWorld {
     );
 
     let nearestInteractShard: Shard | null = null;
-    let minInteractDist = Infinity;
+    let minInteractDistSq = Infinity;
 
     let nearestScanShard: Shard | null = null;
-    let minScanDist = Infinity;
+    let minScanDistSq = Infinity;
 
     for (const shard of nearbyShards) {
       if (this.vault.hasShard(shard.id)) continue;
 
       const dx = shard.position.x - playerPos.x;
       const dz = shard.position.z - playerPos.z;
-      const dist = Math.sqrt(dx * dx + dz * dz);
+      const distSq = dx * dx + dz * dz;
 
-      if (dist < INTERACTION_RADIUS && dist < minInteractDist) {
-        minInteractDist = dist;
+      if (distSq < interactRadiusSq && distSq < minInteractDistSq) {
+        minInteractDistSq = distSq;
         nearestInteractShard = shard;
       }
-      if (dist < SCAN_QUERY_RADIUS && dist < minScanDist) {
-        minScanDist = dist;
+      if (distSq < scanRadiusSq && distSq < minScanDistSq) {
+        minScanDistSq = distSq;
         nearestScanShard = shard;
       }
     }
 
+    const minInteractDist = minInteractDistSq < Infinity ? Math.sqrt(minInteractDistSq) : Infinity;
     this.currentTargetShard = nearestInteractShard;
     this.currentTargetDist = minInteractDist;
 
