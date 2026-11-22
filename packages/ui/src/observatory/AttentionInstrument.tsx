@@ -209,20 +209,46 @@ export const AttentionInstrument: React.FC<AttentionInstrumentProps> = ({
           {/* Active Head Summary Tag */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--na-space-2)' }}>
             {headMetrics?.entropy != null && (
-              <span
+              <div
                 style={{
-                  fontSize: 'var(--na-text-xs)',
-                  fontFamily: 'var(--na-font-mono)',
-                  color: 'var(--na-accent-cool)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 'var(--na-space-1)',
                   backgroundColor: 'var(--na-raised)',
-                  padding: '3px 8px',
+                  padding: '2px 6px',
                   borderRadius: 'var(--na-radius-sm)',
                   border: '1px solid var(--na-line)'
                 }}
-                title="Average attention Shannon entropy in bits across valid token positions"
+                title={`Head entropy: ${headMetrics.entropy.toFixed(2)} bits (${Math.min(100, Math.max(0, (headMetrics.entropy / Math.log2(Math.max(2, T))) * 100)).toFixed(0)}% of theoretical uniform maximum ${Math.log2(Math.max(2, T)).toFixed(1)}b)`}
               >
-                H: {headMetrics.entropy.toFixed(2)}b
-              </span>
+                <span
+                  style={{
+                    fontSize: 'var(--na-text-xs)',
+                    fontFamily: 'var(--na-font-mono)',
+                    color: 'var(--na-accent-cool)'
+                  }}
+                >
+                  H: {headMetrics.entropy.toFixed(2)}b
+                </span>
+                <div
+                  style={{
+                    width: '32px',
+                    height: '4px',
+                    backgroundColor: 'var(--na-line)',
+                    borderRadius: '2px',
+                    overflow: 'hidden'
+                  }}
+                >
+                  <div
+                    style={{
+                      width: `${Math.min(100, Math.max(0, (headMetrics.entropy / Math.log2(Math.max(2, T))) * 100))}%`,
+                      height: '100%',
+                      backgroundColor: 'var(--na-accent-cool)',
+                      borderRadius: '2px'
+                    }}
+                  />
+                </div>
+              </div>
             )}
             <span
               style={{
