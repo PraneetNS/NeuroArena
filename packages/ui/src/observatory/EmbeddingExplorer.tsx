@@ -97,6 +97,14 @@ export const EmbeddingExplorer: React.FC<EmbeddingExplorerProps> = ({
     return cats;
   }, [vocabSize, tokenStrings]);
 
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const cat of tokenCategories) {
+      counts[cat] = (counts[cat] || 0) + 1;
+    }
+    return counts;
+  }, [tokenCategories]);
+
   // 4. Nearest neighbors for hovered token
   const nearestNeighbors = useMemo(() => {
     if (hoveredTokenIdx === null) return [];
@@ -621,7 +629,7 @@ export const EmbeddingExplorer: React.FC<EmbeddingExplorerProps> = ({
                   cursor: 'pointer'
                 }}
               >
-                {CATEGORY_METAS[cat].label}
+                {CATEGORY_METAS[cat].label} ({categoryCounts[cat] || 0})
               </button>
             ))}
           </div>
