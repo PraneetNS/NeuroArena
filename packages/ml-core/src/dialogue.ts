@@ -489,5 +489,55 @@ export function calculateSpeakerKLDivergence(
   return Math.max(0, kl);
 }
 
+/**
+ * Calculates symmetric, bounded Jensen-Shannon (JS) divergence in bits between two speaker distributions.
+ * JSD(P || Q) = 0.5 * D_KL(P || M) + 0.5 * D_KL(Q || M), where M = 0.5 * (P + Q).
+ * Result is strictly bounded in [0, 1].
+ */
+export function calculateSpeakerJSDivergence(
+  batchesP: DialogueBatch[],
+  batchesQ: DialogueBatch[],
+  vocabSize: number,
+  smoothingAlpha = 0.01
+): number {
+  const countsP = new Float64Array(vocabSize);
+  const countsQ = new Float64Array(vocabSize);
+  let totalP = 0;
+  let totalQ = 0;
+
+  for (const b of batchesP) {
+    for (let t = 0; t < b.targets.length; t++) {
+      const tgt = b.targets[t];
+      if (tgt >= 0 && tgt < vocabSize) {
+        countsP[tgt]++;
+        totalP++;
+      }
+    }
+  }
+
+  for (const b of batchesQ) {
+    for (let t = 0; t < b.targets.length; t++) {
+      const tgt = b.targets[t];
+      if (tgt >= 0 && tgt < vocabSize) {
+        countsQ[tgt]++;
+        totalQ++;
+      }
+    }
+  }
+
+  const denomP = totalP + vocabSize * smoothingAlpha;
+  const denomQ = totalQ + vocabSize * smoothingAlpha;
+  let jsd = 0;
+
+  for (let v = 0; v < vocabSize; v++) {
+    const p = (countsP[v] + smoothingAlpha) / denomP;
+    const q = (countsQ[v] + smoothingAlpha) / denomQ;
+    const m = 0.5 * (p + q);
+    jsd += 0.5 * (p * Math.log2(p / m) + q * Math.log2(q / m));
+  }
+
+  return Math.min(1.0, Math.max(0, jsd));
+}
+
 
 
