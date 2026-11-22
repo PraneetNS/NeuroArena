@@ -441,4 +441,53 @@ export function computeSpeakerLexicalRichness(
   };
 }
 
+/**
+ * Calculates Kullback-Leibler (KL) divergence D_KL(P || Q) in bits between two speaker token distributions.
+ * Applies Laplace smoothing to prevent division by zero or log of zero.
+ */
+export function calculateSpeakerKLDivergence(
+  batchesP: DialogueBatch[],
+  batchesQ: DialogueBatch[],
+  vocabSize: number,
+  smoothingAlpha = 0.01
+): number {
+  const countsP = new Float64Array(vocabSize);
+  const countsQ = new Float64Array(vocabSize);
+  let totalP = 0;
+  let totalQ = 0;
+
+  for (const b of batchesP) {
+    for (let t = 0; t < b.targets.length; t++) {
+      const tgt = b.targets[t];
+      if (tgt >= 0 && tgt < vocabSize) {
+        countsP[tgt]++;
+        totalP++;
+      }
+    }
+  }
+
+  for (const b of batchesQ) {
+    for (let t = 0; t < b.targets.length; t++) {
+      const tgt = b.targets[t];
+      if (tgt >= 0 && tgt < vocabSize) {
+        countsQ[tgt]++;
+        totalQ++;
+      }
+    }
+  }
+
+  const denomP = totalP + vocabSize * smoothingAlpha;
+  const denomQ = totalQ + vocabSize * smoothingAlpha;
+  let kl = 0;
+
+  for (let v = 0; v < vocabSize; v++) {
+    const probP = (countsP[v] + smoothingAlpha) / denomP;
+    const probQ = (countsQ[v] + smoothingAlpha) / denomQ;
+    kl += probP * Math.log2(probP / probQ);
+  }
+
+  return Math.max(0, kl);
+}
+
+
 
