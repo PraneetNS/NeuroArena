@@ -449,3 +449,43 @@ export function crossEntropy(
 
   return totalLoss * invActive;
 }
+
+/**
+ * Numerically stable softmax: out[i] = exp(x[i] - max) / sum(exp(x[j] - max))
+ */
+export function computeSoftmax(
+  x: Float32Array | Float64Array | number[],
+  out: Float32Array | Float64Array,
+  length: number,
+  offset = 0
+): void {
+  let maxVal = -Infinity;
+  for (let i = 0; i < length; i++) {
+    const val = x[offset + i];
+    if (val > maxVal) maxVal = val;
+  }
+
+  let sumExp = 0;
+  for (let i = 0; i < length; i++) {
+    const e = Math.exp(x[offset + i] - maxVal);
+    out[offset + i] = e;
+    sumExp += e;
+  }
+
+  const invSum = sumExp > 0 ? 1.0 / sumExp : 0;
+  for (let i = 0; i < length; i++) {
+    out[offset + i] *= invSum;
+  }
+}
+
+/**
+ * In-place numerically stable softmax.
+ */
+export function softmaxInPlace(
+  arr: Float32Array | Float64Array,
+  length: number,
+  offset = 0
+): void {
+  computeSoftmax(arr, arr, length, offset);
+}
+
