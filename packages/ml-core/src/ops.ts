@@ -489,3 +489,49 @@ export function softmaxInPlace(
   computeSoftmax(arr, arr, length, offset);
 }
 
+/**
+ * Computes cosine similarity between two vectors a and b: (a . b) / (||a|| * ||b||).
+ * Returns values strictly bounded in [-1.0, 1.0].
+ */
+export function cosineSimilarity(
+  a: Float32Array | Float64Array,
+  b: Float32Array | Float64Array,
+  length: number,
+  offsetA = 0,
+  offsetB = 0
+): number {
+  let dot = 0;
+  let normA = 0;
+  let normB = 0;
+
+  for (let i = 0; i < length; i++) {
+    const va = a[offsetA + i];
+    const vb = b[offsetB + i];
+    dot += va * vb;
+    normA += va * va;
+    normB += vb * vb;
+  }
+
+  const denom = Math.sqrt(normA * normB);
+  if (denom === 0) return 0;
+  return Math.min(1.0, Math.max(-1.0, dot / denom));
+}
+
+/**
+ * Computes pairwise Euclidean distance between two vectors: sqrt(sum((a_i - b_i)^2)).
+ */
+export function euclideanDistance(
+  a: Float32Array | Float64Array,
+  b: Float32Array | Float64Array,
+  length: number,
+  offsetA = 0,
+  offsetB = 0
+): number {
+  let sumSq = 0;
+  for (let i = 0; i < length; i++) {
+    const diff = a[offsetA + i] - b[offsetB + i];
+    sumSq += diff * diff;
+  }
+  return Math.sqrt(sumSq);
+}
+
