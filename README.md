@@ -113,6 +113,16 @@ NeuroArena incorporates an in-world **Oracle Stone** monolith communing station 
 - **Branching Exploration Tree**: Allows players to fork generation from alternative candidate tokens at any step and switch between alternate narrative branches.
 - **Surprise Tinting**: Tokens are highlighted by information-theoretic surprise ($-\log_2 P(\text{token})$), visually differentiating expected continuations from creative leaps.
 - **Dialogue Fine-Tuning with Loss Masking**: Supports target ignore index (`-1`), computing cross-entropy and analytical gradients strictly on speaker reply turns while masking player prompts.
+- **Observatory Suite**: Includes the Attention Arc Instrument (causal attention beams, directional filters, entropy badges) and the 3D Embedding Space Explorer (PCA projection, cosine nearest neighbors, quick token search).
+
+### Measured WebGPU Benchmarks (NVIDIA RTX 3050 Laptop GPU)
+| Test Target | Baseline Config | Measured Throughput / Rel Error | Parity Status |
+| :--- | :--- | :--- | :---: |
+| **KV-Cache Generation (Scout)** | 200 tokens, 412k params | 6.38 tok/s cached vs 6.26 tok/s uncached (RelErr: $4.363 \times 10^{-7}$) | **PASS** |
+| **KV-Cache Generation (Elder S)** | 200 tokens, 940k params | 6.35 tok/s cached vs 6.18 tok/s uncached (RelErr: $1.903 \times 10^{-6}$) | **PASS** |
+| **Masked Gradient Parity** | Preset C, 40% masking | Worst group: `blocks.1.W2` (RelErr: $1.370 \times 10^{-6}$) | **PASS** |
+| **Hamlet Dialogue Fine-Tuning** | 250 steps, $\text{LR}=3 \times 10^{-4}$ | Held-Out: $2.3000 \to 3.0397$ \| General Val: $2.5035 \to 3.3592$ | **PASS** |
+| **Falstaff Dialogue Fine-Tuning** | 250 steps, $\text{LR}=3 \times 10^{-4}$ | Held-Out: $2.1007 \to 2.4750$ \| General Val: $2.5035 \to 3.0696$ | **PASS** |
 
 ---
 
