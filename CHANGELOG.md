@@ -7,6 +7,22 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [5.0.0] - 2026-11-23
+
+### Added
+- **Oracle (O1) Autoregressive Generation & WebGPU KV-Cache Engine (`packages/ml-core/`, `apps/game/`, `apps/bench/`)**
+  - **GPU Matrix-Vector KV-Cache Generation**: Implemented per-layer $K$ and $V$ buffers $[H, T, \text{headDim}]$ in WebGPU, prefill pass for prompts, single-token matrix-vector decoding, and $T-1$ re-prefill for learned positional embeddings.
+  - **Empirical WebGPU Parity on NVIDIA GeForce RTX 3050 Laptop GPU**:
+    - Scout model ($L=4, H=4, D=128$): relative error **$4.363 \times 10^{-7} < 10^{-3}$**, **6.38 tok/s** (PASS).
+    - Preset S / Elder model ($L=6, H=6, D=192$): relative error **$1.903 \times 10^{-6} < 10^{-3}$**, **6.35 tok/s** (PASS).
+  - **Cross-Entropy Loss Masking (`target = -1`)**: Added ignore-index support across CPU and GPU shaders. Verified gradient parity across all 20 parameter groups (worst case: `blocks.1.W2` at **$1.370 \times 10^{-6} < 10^{-3}$**).
+  - **Shakespeare Dialogue Dataset (90.73% Train Split)**: Structural holdout scheme for 6 iconic speakers (Hamlet, Falstaff, Portia, Rosalind, Iago, Prospero) with turn metrics, lexical richness (TTR, Yule's K, Simpson's Index), and Jensen-Shannon divergence matrices.
+  - **Elder Dialogue Fine-Tuning & Catastrophic Forgetting Drift**: Evaluated Hamlet and Falstaff adaptation at $\text{LR}=3 \times 10^{-4}$ (250 steps), measuring held-out improvement alongside general validation perplexity drift ($+0.8558$ Hamlet, $+0.5661$ Falstaff).
+  - **OracleStone Monolith Entity (`packages/engine/src/entities/oracleStone.ts`)**: 3D basalt monolith with rotating runic rings, levitating octahedron crystal, orbiting runic spark motes, proximity-intensified point light, and expanding ground aura shockwaves.
+  - **Oracle Timeline Modal (`packages/ui/src/oracle/OracleModal.tsx`)**: Manuscript scroll prompt editor, next-token candidate distribution bars, Shannon entropy gauges, multi-branch timeline tree forking, and markdown transcript export.
+  - **Spatial Hashing & Instanced Mesh Culling HUD (`apps/game/src/shardWorld.ts`, `statsOverlay.ts`)**: $O(1)$ amortized 32m cell spatial hashing, multi-tier distance LOD ($d > 180\text{m}$ culled, $d \le 35\text{m}$ text glyphs), and live HUD culling telemetry.
+  - **Client-Side Telemetry (`packages/game-core/src/tutorial/telemetry.ts`)**: Privacy-first IndexedDB session logging with stall detection, Oracle latency tracking, and zero remote data transmission.
+
 ### Added
 - **Stylized Painterly Open-World Experience & WebGPU Render Loop**
   - **CC0 Rigged Character & Blend Tree AnimationMixer**: Integrated Quaternius CC0 rigged scholar (<10k triangles, 29 bones) with smooth cross-fading for idle, walk, run, jump, land, gather, and turn-in-place animations.
