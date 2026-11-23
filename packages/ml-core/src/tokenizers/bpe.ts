@@ -350,6 +350,69 @@ export class ByteBPE {
 
     return tok;
   }
+
+  /**
+   * Returns a breakdown of vocabulary composition:
+   * raw byte tokens, multi-byte merge tokens, average token byte length, and max token byte length.
+   */
+  public getVocabComposition(): {
+    vocabSize: number;
+    baseBytesCount: number;
+    mergesCount: number;
+    avgTokenBytes: number;
+    maxTokenBytes: number;
+  } {
+    let totalBytes = 0;
+    let maxBytes = 0;
+    for (let id = 0; id < this.vocabSize; id++) {
+      const bytes = this.tokenBytes.get(id);
+      const len = bytes ? bytes.length : 1;
+      totalBytes += len;
+      if (len > maxBytes) maxBytes = len;
+    }
+    return {
+      vocabSize: this.vocabSize,
+      baseBytesCount: 256,
+      mergesCount: this.merges.length,
+      avgTokenBytes: this.vocabSize > 0 ? totalBytes / this.vocabSize : 0,
+      maxTokenBytes: maxBytes
+    };
+  }
+
+  /**
+   * Analyzes token distribution over a sample text:
+   * computes compression ratio (raw bytes / token count), tokens per character, and token frequencies.
+   */
+  public analyzeTextTokens(text: string): {
+    rawByteLength: number;
+    tokenCount: number;
+    compressionRatio: number;
+    uniqueTokensUsed: number;
+    topTokenIds: Array<{ id: number; text: string; count: number }>;
+  } {
+    const rawBytes = this.textEncoder.encode(text);
+    const tokens = this.encode(text);
+    const freq = new Map<number, number>();
+    for (const t of tokens) {
+      freq.set(t, (freq.get(t) || 0) + 1);
+    }
+    const sorted = Array.from(freq.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([id, count]) => ({
+        id,
+        text: this.decode([id]),
+        count
+      }));
+
+    return {
+      rawByteLength: rawBytes.length,
+      tokenCount: tokens.length,
+      compressionRatio: tokens.length > 0 ? rawBytes.length / tokens.length : 1,
+      uniqueTokensUsed: freq.size,
+      topTokenIds: sorted
+    };
+  }
 }
 
 // Backward-compatibility alias
