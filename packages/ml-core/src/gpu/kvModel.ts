@@ -758,6 +758,56 @@ export class GpuKvModel {
   }
 
   /**
+   * Returns precise GPU memory allocation stats for this KV generator instance.
+   */
+  public getMemoryFootprintBytes(): {
+    paramsBytes: number;
+    kvCacheBytes: number;
+    activationWorkBytes: number;
+    uniformBytes: number;
+    totalGpuBytes: number;
+  } {
+    const { dModel, nLayers, contextLen, dFF, vocabSize } = this.config;
+    const kvTotalFloats = nLayers * 2 * contextLen * dModel;
+    const kvCacheBytes = kvTotalFloats * 4;
+    const paramsBytes = this.paramsBuffer.size;
+    const activationWorkBytes = (dModel * 6 + dFF + vocabSize * 2) * 4;
+    const uniformBytes = (nLayers * 7 + 5) * 64; // Approximated uniform buffer sizes
+    const totalGpuBytes = paramsBytes + kvCacheBytes + activationWorkBytes + uniformBytes;
+
+    return {
+      paramsBytes,
+      kvCacheBytes,
+      activationWorkBytes,
+      uniformBytes,
+      totalGpuBytes
+    };
+  }
+
+  /**
+   * Returns cache capacity and head dimension geometry.
+   */
+  public getCacheCapacityInfo(): {
+    contextLen: number;
+    headDim: number;
+    nHeads: number;
+    nLayers: number;
+    kvCacheFloatsPerToken: number;
+  } {
+    const { contextLen, dModel, nHeads, nLayers } = this.config;
+    const headDim = dModel / nHeads;
+    const kvCacheFloatsPerToken = nLayers * 2 * dModel;
+
+    return {
+      contextLen,
+      headDim,
+      nHeads,
+      nLayers,
+      kvCacheFloatsPerToken
+    };
+  }
+
+  /**
    * Releases all allocated WebGPU buffers and uniform storage to prevent VRAM memory leaks.
    */
   public destroy(): void {
