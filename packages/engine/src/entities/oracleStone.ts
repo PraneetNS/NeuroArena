@@ -22,6 +22,11 @@ export class OracleStone {
   private sparkCount = 48;
   private sparkBurstTimer = 0;
 
+  // Ground Aura Shockwave
+  private auraRingMesh: THREE.Mesh;
+  private auraPulseProgress = 1.0;
+  private auraPulseSpeed = 1.8;
+
   constructor(position: THREE.Vector3 = new THREE.Vector3(0, 0, 0), runeColorHex = 0x4fb3a9) {
     this.group = new THREE.Group();
     this.group.position.copy(position);
@@ -120,12 +125,28 @@ export class OracleStone {
     });
     this.sparkPoints = new THREE.Points(sparkGeo, sparkMat);
     this.group.add(this.sparkPoints);
+
+    // 7. Ground Aura Shockwave Ring
+    const auraGeo = new THREE.RingGeometry(0.8, 1.05, 32);
+    auraGeo.rotateX(-Math.PI / 2);
+    const auraMat = new THREE.MeshBasicMaterial({
+      color: runeColorHex,
+      transparent: true,
+      opacity: 0,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+    this.auraRingMesh = new THREE.Mesh(auraGeo, auraMat);
+    this.auraRingMesh.position.y = 0.05;
+    this.auraRingMesh.scale.set(1, 1, 1);
+    this.group.add(this.auraRingMesh);
   }
 
   /**
    * Triggers an explosive burst of runic motes when player communes with the stone.
    */
   public triggerCommunePulse(): void {
+    this.triggerAuraPulse(1.8);
     this.sparkBurstTimer = 1.5;
     for (let i = 0; i < this.sparkCount; i++) {
       const angle = Math.random() * Math.PI * 2;
@@ -140,6 +161,7 @@ export class OracleStone {
    * Triggers a concentric shockwave ripple when a branch is forked in the Oracle UI.
    */
   public triggerBranchForkRipple(branchDepth = 1): void {
+    this.triggerAuraPulse(2.4);
     this.sparkBurstTimer = 0.8;
     const rippleSpeed = 0.8 + Math.min(2.0, branchDepth * 0.25);
     for (let i = 0; i < this.sparkCount; i++) {
@@ -148,6 +170,14 @@ export class OracleStone {
       this.sparkVelocities[i * 3 + 1] = Math.sin(this.animTimer * 4 + i) * 0.4;
       this.sparkVelocities[i * 3 + 2] = Math.sin(angle) * rippleSpeed;
     }
+  }
+
+  /**
+   * Triggers an expanding ground aura shockwave.
+   */
+  public triggerAuraPulse(speed = 2.0): void {
+    this.auraPulseProgress = 0.0;
+    this.auraPulseSpeed = speed;
   }
 
   /**
@@ -223,6 +253,19 @@ export class OracleStone {
       }
     }
     sparkPosAttr.needsUpdate = true;
+
+    // 8. Update Ground Aura Shockwave
+    if (this.auraPulseProgress < 1.0) {
+      this.auraPulseProgress += dt * this.auraPulseSpeed;
+      const progress = Math.min(1.0, this.auraPulseProgress);
+      const scale = 1.0 + progress * 4.5;
+      this.auraRingMesh.scale.set(scale, scale, 1);
+      const mat = this.auraRingMesh.material as THREE.MeshBasicMaterial;
+      mat.opacity = (1.0 - progress) * 0.75;
+    } else {
+      const mat = this.auraRingMesh.material as THREE.MeshBasicMaterial;
+      mat.opacity = 0;
+    }
 
     return this.isPlayerNearby;
   }
