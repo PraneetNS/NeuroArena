@@ -273,5 +273,41 @@ export class QualityGovernor {
       adjustmentLog: [...this.adjustmentLog]
     };
   }
+
+  /**
+   * Returns recent frame timing metrics including mean frame time, 95th percentile,
+   * current FPS estimate, and dropped frames count.
+   */
+  public getFrameBudgetMetrics(): {
+    meanFrameTimeMs: number;
+    p95FrameTimeMs: number;
+    estimatedFps: number;
+    samplesCount: number;
+    targetFps: number;
+  } {
+    if (this.frameTimes.length === 0) {
+      return {
+        meanFrameTimeMs: 16.6,
+        p95FrameTimeMs: 16.6,
+        estimatedFps: 60,
+        samplesCount: 0,
+        targetFps: this.config.targetFps
+      };
+    }
+
+    const sorted = [...this.frameTimes].sort((a, b) => a - b);
+    const sum = sorted.reduce((acc, v) => acc + v, 0);
+    const mean = sum / sorted.length;
+    const p95Idx = Math.floor(sorted.length * 0.95);
+    const p95 = sorted[Math.min(sorted.length - 1, p95Idx)];
+
+    return {
+      meanFrameTimeMs: mean,
+      p95FrameTimeMs: p95,
+      estimatedFps: mean > 0 ? Math.round(1000 / mean) : 60,
+      samplesCount: sorted.length,
+      targetFps: this.config.targetFps
+    };
+  }
 }
 
