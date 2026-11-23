@@ -264,6 +264,10 @@ export class ShardWorld {
   private scratchColor = new THREE.Color();
   private pickups: ActivePickup[] = [];
 
+  // Performance and Culling Metrics
+  public visibleInstancesCount = 0;
+  public culledInstancesCount = 0;
+
   // Interaction & Scan state
   private holdTimer = 0.0;
   private readonly HOLD_DURATION = 0.6; // 0.6 seconds to harvest
@@ -479,6 +483,9 @@ export class ShardWorld {
     const holdProgress = Math.min(100, (this.holdTimer / this.HOLD_DURATION) * 100);
 
     // 3. Update Instanced Meshes (bobbing, rotation, culling, scan tinting)
+    this.visibleInstancesCount = 0;
+    this.culledInstancesCount = 0;
+
     for (const [regionId, data] of this.regionMeshes.entries()) {
       const { instancedMesh, glyphMesh, shards, baseColor, shardVisible, glyphVisible } = data;
       let meshNeedsUpdate = false;
@@ -516,6 +523,7 @@ export class ShardWorld {
         const distSq = dx * dx + dz * dz;
 
         if (distSq > CULL_RADIUS * CULL_RADIUS) {
+          this.culledInstancesCount++;
           // Outside culling radius: update only on state transition
           if (shardVisible[i] !== 0) {
             this.dummy.position.set(shard.position.x, -9999, shard.position.z);
@@ -536,6 +544,7 @@ export class ShardWorld {
           continue;
         }
 
+        this.visibleInstancesCount++;
         shardVisible[i] = 1;
 
         // Inside visibility radius: animate bobbing and rotation
@@ -909,5 +918,18 @@ export class ShardWorld {
   public toggleScanMode(): boolean {
     this.isScanMode = !this.isScanMode;
     return this.isScanMode;
+  }
+
+  /**
+   * Returns telemetry regarding instanced mesh culling efficiency.
+   */
+  public getCullingMetrics(): { visible: number; culled: number; total: number; cullRatio: number } {
+    const total = this.visibleInstancesCount + this.culledInstancesCount;
+    return {
+      visible: this.visibleInstancesCount,
+      culled: this.culledInstancesCount,
+      total,
+      cullRatio: total > 0 ? this.culledInstancesCount / total : 0
+    };
   }
 }
