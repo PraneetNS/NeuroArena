@@ -27,6 +27,8 @@ export interface OverlayStatsData extends EnvironmentStats {
   cameraPos: { x: number; y: number; z: number };
   groundHeight: number;
   governorStatus?: string;
+  shardsVisible?: number;
+  shardsTotal?: number;
 }
 
 export class TerrainStatsOverlay {
@@ -55,6 +57,7 @@ export class TerrainStatsOverlay {
   private featFoliageEl!: HTMLElement;
   private featWaterEl!: HTMLElement;
   private featPostEl!: HTMLElement;
+  private featShardsEl!: HTMLElement;
 
   private btnAuto!: HTMLButtonElement;
   private btnLow!: HTMLButtonElement;
@@ -208,6 +211,10 @@ export class TerrainStatsOverlay {
             <span style="color: #9AA3AE;">Water Plane (Reflective)</span>
             <span id="feat-water" style="color: #4FB3A9;">--</span>
           </div>
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(255,255,255,0.06); padding: 2px 0;">
+            <span style="color: #9AA3AE;">Instanced Shards (Culling)</span>
+            <span id="feat-shards" style="color: #4FB3A9;">-- vis</span>
+          </div>
           <div style="display: flex; justify-content: space-between; padding: 2px 0;">
             <span style="color: #9AA3AE;">Post-Processing & Other</span>
             <span id="feat-post" style="color: #C084FC;">--</span>
@@ -251,6 +258,7 @@ export class TerrainStatsOverlay {
     this.featFoliageEl = this.root.querySelector('#feat-foliage')!;
     this.featWaterEl = this.root.querySelector('#feat-water')!;
     this.featPostEl = this.root.querySelector('#feat-post')!;
+    this.featShardsEl = this.root.querySelector('#feat-shards')!;
     this.governorValEl = this.root.querySelector('#stat-governor')!;
 
     this.btnAuto = this.root.querySelector('#tier-auto')!;
@@ -417,6 +425,9 @@ export class TerrainStatsOverlay {
     this.featFoliageEl.textContent = `${stats.foliageInstances} objs, ${(stats.foliageTris / 1000).toFixed(0)}k tris (${stats.foliageDrawCalls} DC)`;
     this.featWaterEl.textContent = `${(stats.waterTris / 1000).toFixed(0)}k tris (${stats.waterDrawCalls} DC)`;
     this.featPostEl.textContent = `${stats.activePostPasses} active passes`;
+    if (this.featShardsEl && stats.shardsVisible !== undefined) {
+      this.featShardsEl.textContent = `${stats.shardsVisible} vis / ${stats.shardsTotal ?? 1900}`;
+    }
 
     this.posValEl.textContent = `(${Math.round(stats.cameraPos.x)}, ${Math.round(stats.cameraPos.y)}, ${Math.round(stats.cameraPos.z)})`;
     this.groundValEl.textContent = `${stats.groundHeight.toFixed(1)} m`;
