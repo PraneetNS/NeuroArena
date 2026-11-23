@@ -43,6 +43,8 @@ export const EmbeddingExplorer: React.FC<EmbeddingExplorerProps> = ({
   // Interaction State
   const [hoveredTokenIdx, setHoveredTokenIdx] = useState<number | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<TokenCategory | 'all'>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [neighborCount, setNeighborCount] = useState<number>(8);
 
   // Camera Orbit State
   const cameraRef = useRef({
@@ -108,8 +110,23 @@ export const EmbeddingExplorer: React.FC<EmbeddingExplorerProps> = ({
   // 4. Nearest neighbors for hovered token
   const nearestNeighbors = useMemo(() => {
     if (hoveredTokenIdx === null) return [];
-    return findNearestNeighbors(hoveredTokenIdx, tokEmb, vocabSize, dModel, 8);
-  }, [hoveredTokenIdx, tokEmb, vocabSize, dModel]);
+    return findNearestNeighbors(hoveredTokenIdx, tokEmb, vocabSize, dModel, neighborCount);
+  }, [hoveredTokenIdx, tokEmb, vocabSize, dModel, neighborCount]);
+
+  // Token search matches
+  const matchingTokens = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    const q = searchQuery.toLowerCase().trim();
+    const matches: number[] = [];
+    for (let i = 0; i < vocabSize; i++) {
+      const str = tokenStrings[i] || `[${i}]`;
+      if (str.toLowerCase().includes(q) || String(i) === q) {
+        matches.push(i);
+        if (matches.length >= 8) break;
+      }
+    }
+    return matches;
+  }, [searchQuery, tokenStrings, vocabSize]);
 
   // 5. Canvas Rendering Loop
   useEffect(() => {
@@ -599,8 +616,8 @@ export const EmbeddingExplorer: React.FC<EmbeddingExplorerProps> = ({
             </span>
           </div>
 
-          {/* Category Filter Pills */}
-          <div style={{ display: 'flex', gap: 'var(--na-space-1)', alignItems: 'center' }}>
+          {/* Category Filter Pills & Token Search */}
+          <div style={{ display: 'flex', gap: 'var(--na-space-1)', alignItems: 'center', flexWrap: 'wrap' }}>
             <button
               onClick={() => setSelectedCategory('all')}
               style={{
@@ -632,6 +649,66 @@ export const EmbeddingExplorer: React.FC<EmbeddingExplorerProps> = ({
                 {CATEGORY_METAS[cat].label} ({categoryCounts[cat] || 0})
               </button>
             ))}
+
+            {/* Quick Token Search Box & Top-K Neighbors */}
+            <div style={{ display: 'inline-flex', alignItems: 'center', marginLeft: 'auto', gap: '4px' }}>
+              <div style={{ display: 'inline-flex', borderRadius: 'var(--na-radius-sm)', border: '1px solid var(--na-line)', overflow: 'hidden' }}>
+                {[5, 8, 12].map(k => (
+                  <button
+                    key={k}
+                    onClick={() => setNeighborCount(k)}
+                    style={{
+                      padding: '2px 5px',
+                      fontSize: 'var(--na-text-xs)',
+                      fontFamily: 'var(--na-font-mono)',
+                      backgroundColor: neighborCount === k ? 'var(--na-accent-muted)' : 'transparent',
+                      color: neighborCount === k ? 'var(--na-accent)' : 'var(--na-muted)',
+                      border: 'none',
+                      cursor: 'pointer'
+                    }}
+                    title={`Show top ${k} nearest neighbors`}
+                  >
+                    K:{k}
+                  </button>
+                ))}
+              </div>
+              <input
+                type="text"
+                placeholder="Search token..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{
+                  padding: '2px 8px',
+                  fontSize: 'var(--na-text-xs)',
+                  fontFamily: 'var(--na-font-mono)',
+                  backgroundColor: 'var(--na-surface)',
+                  color: 'var(--na-text)',
+                  border: '1px solid var(--na-line)',
+                  borderRadius: 'var(--na-radius-sm)',
+                  outline: 'none',
+                  width: '110px'
+                }}
+              />
+              {matchingTokens.map(idx => (
+                <button
+                  key={idx}
+                  onClick={() => setHoveredTokenIdx(idx)}
+                  style={{
+                    padding: '2px 6px',
+                    fontSize: 'var(--na-text-xs)',
+                    fontFamily: 'var(--na-font-mono)',
+                    backgroundColor: hoveredTokenIdx === idx ? 'var(--na-accent)' : 'var(--na-surface)',
+                    color: hoveredTokenIdx === idx ? 'var(--na-ink)' : 'var(--na-accent-cool)',
+                    border: '1px solid var(--na-line)',
+                    borderRadius: 'var(--na-radius-sm)',
+                    cursor: 'pointer'
+                  }}
+                  title={`Focus token ${idx}: "${tokenStrings[idx] || ''}"`}
+                >
+                  {tokenStrings[idx] || `[${idx}]`}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
