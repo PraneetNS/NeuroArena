@@ -441,6 +441,37 @@ class BenchmarkApp {
     }
   }
 
+  public exportFullTelemetryJson(): void {
+    const fullTelemetry = {
+      timestamp: new Date().toISOString(),
+      userAgent: navigator.userAgent,
+      hardwareConcurrency: navigator.hardwareConcurrency,
+      parity: this.parityReport,
+      gradient: this.gradReport,
+      trainingParity: this.trainingReport,
+      kvCacheParity: this.kvParityReport,
+      maskedGradientParity: this.maskedGradReport,
+      benchmarks: this.benchmarkReport,
+      labStatus: {
+        isTraining: this.isLabTraining,
+        step: this.latestStats?.step ?? 0,
+        trainLoss: this.latestStats?.trainLoss ?? null,
+        valLoss: this.latestValStats?.valLoss ?? null,
+        checkpoints: this.checkpoints
+      }
+    };
+
+    const blob = new Blob([JSON.stringify(fullTelemetry, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `bench_full_telemetry_${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    this.statusMessage = '✓ Exported full benchmark suite telemetry JSON';
+    this.render();
+  }
+
   // --- Training Lab Actions ---
   public async startLabTraining(): Promise<void> {
     if (this.isLabTraining) return;
@@ -847,6 +878,9 @@ class BenchmarkApp {
             <button id="tab-benchmarks" style="padding: 0.5rem 1rem; border-radius: 4px; border: none; cursor: pointer; font-family: var(--font-mono); font-size: 0.82rem; font-weight: 600; background: ${this.activeTab === 'benchmarks' ? '#1D242D' : 'transparent'}; color: ${this.activeTab === 'benchmarks' ? '#E8E4DA' : '#9AA3AE'};">
               TFLOPS & Throughput
             </button>
+            <button id="btn-export-telemetry" style="padding: 0.5rem 0.8rem; border-radius: 4px; border: 1px solid rgba(255, 255, 255, 0.1); cursor: pointer; font-family: var(--font-mono); font-size: 0.78rem; font-weight: 600; background: rgba(79, 179, 169, 0.15); color: #4FB3A9;" title="Download full telemetry, parity, and benchmark reports as JSON">
+              Export Telemetry 💾
+            </button>
           </div>
         </div>
 
@@ -889,6 +923,7 @@ class BenchmarkApp {
     this.root.querySelector('#btn-copy-kv')?.addEventListener('click', () => this.copyJson(this.kvParityReport, 'btn-copy-kv'));
     this.root.querySelector('#btn-copy-maskgrad')?.addEventListener('click', () => this.copyJson(this.maskedGradReport, 'btn-copy-maskgrad'));
     this.root.querySelector('#btn-copy-bench')?.addEventListener('click', () => this.copyJson(this.benchmarkReport, 'btn-copy-bench'));
+    this.root.querySelector('#btn-export-telemetry')?.addEventListener('click', () => this.exportFullTelemetryJson());
 
     // Training Lab bindings
     this.attachTrainingLabEventListeners();
