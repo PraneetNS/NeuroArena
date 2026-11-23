@@ -15,6 +15,13 @@ export class OracleStone {
   private pulseLight: THREE.PointLight;
   private animTimer = 0;
 
+  // Orbiting Runic Spark Motes
+  private sparkPoints: THREE.Points;
+  private sparkPositions: Float32Array;
+  private sparkVelocities: Float32Array;
+  private sparkCount = 48;
+  private sparkBurstTimer = 0;
+
   constructor(position: THREE.Vector3 = new THREE.Vector3(0, 0, 0), runeColorHex = 0x4fb3a9) {
     this.group = new THREE.Group();
     this.group.position.copy(position);
@@ -84,6 +91,63 @@ export class OracleStone {
     this.pulseLight = new THREE.PointLight(runeColorHex, 2.2, 8.5, 1.8);
     this.pulseLight.position.set(0, 4.1, 0);
     this.group.add(this.pulseLight);
+
+    // 6. Orbiting Runic Spark Motes
+    const sparkGeo = new THREE.BufferGeometry();
+    this.sparkPositions = new Float32Array(this.sparkCount * 3);
+    this.sparkVelocities = new Float32Array(this.sparkCount * 3);
+
+    for (let i = 0; i < this.sparkCount; i++) {
+      const angle = (i / this.sparkCount) * Math.PI * 2;
+      const radius = 0.6 + Math.random() * 0.4;
+      this.sparkPositions[i * 3 + 0] = Math.cos(angle) * radius;
+      this.sparkPositions[i * 3 + 1] = 4.1 + (Math.random() - 0.5) * 0.5;
+      this.sparkPositions[i * 3 + 2] = Math.sin(angle) * radius;
+
+      this.sparkVelocities[i * 3 + 0] = -Math.sin(angle) * 0.6;
+      this.sparkVelocities[i * 3 + 1] = (Math.random() - 0.5) * 0.2;
+      this.sparkVelocities[i * 3 + 2] = Math.cos(angle) * 0.6;
+    }
+    sparkGeo.setAttribute('position', new THREE.BufferAttribute(this.sparkPositions, 3));
+
+    const sparkMat = new THREE.PointsMaterial({
+      color: runeColorHex,
+      size: 0.12,
+      transparent: true,
+      opacity: 0.85,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+    this.sparkPoints = new THREE.Points(sparkGeo, sparkMat);
+    this.group.add(this.sparkPoints);
+  }
+
+  /**
+   * Triggers an explosive burst of runic motes when player communes with the stone.
+   */
+  public triggerCommunePulse(): void {
+    this.sparkBurstTimer = 1.5;
+    for (let i = 0; i < this.sparkCount; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 1.2 + Math.random() * 1.8;
+      this.sparkVelocities[i * 3 + 0] = Math.cos(angle) * speed;
+      this.sparkVelocities[i * 3 + 1] = (Math.random() - 0.2) * speed * 0.8;
+      this.sparkVelocities[i * 3 + 2] = Math.sin(angle) * speed;
+    }
+  }
+
+  /**
+   * Triggers a concentric shockwave ripple when a branch is forked in the Oracle UI.
+   */
+  public triggerBranchForkRipple(branchDepth = 1): void {
+    this.sparkBurstTimer = 0.8;
+    const rippleSpeed = 0.8 + Math.min(2.0, branchDepth * 0.25);
+    for (let i = 0; i < this.sparkCount; i++) {
+      const angle = (i / this.sparkCount) * Math.PI * 2;
+      this.sparkVelocities[i * 3 + 0] = Math.cos(angle) * rippleSpeed;
+      this.sparkVelocities[i * 3 + 1] = Math.sin(this.animTimer * 4 + i) * 0.4;
+      this.sparkVelocities[i * 3 + 2] = Math.sin(angle) * rippleSpeed;
+    }
   }
 
   /**
@@ -125,6 +189,40 @@ export class OracleStone {
     const basePulse = 1.6 + Math.sin(this.animTimer * 2.5) * 0.6;
     this.pulseLight.intensity = basePulse + proximityFactor * 2.2;
     this.pulseLight.distance = 8.5 + proximityFactor * 3.5;
+
+    // 7. Update Orbiting / Bursting Spark Motes
+    const sparkPosAttr = this.sparkPoints.geometry.attributes.position as THREE.BufferAttribute;
+    const sparkArr = sparkPosAttr.array as Float32Array;
+
+    if (this.sparkBurstTimer > 0) {
+      this.sparkBurstTimer -= dt;
+      // Damped expansion
+      for (let i = 0; i < this.sparkCount; i++) {
+        const idx = i * 3;
+        sparkArr[idx + 0] += this.sparkVelocities[idx + 0] * dt;
+        sparkArr[idx + 1] += this.sparkVelocities[idx + 1] * dt;
+        sparkArr[idx + 2] += this.sparkVelocities[idx + 2] * dt;
+        this.sparkVelocities[idx + 0] *= 0.94;
+        this.sparkVelocities[idx + 1] *= 0.94;
+        this.sparkVelocities[idx + 2] *= 0.94;
+      }
+    } else {
+      // Harmonic orbit around crystal
+      const orbitSpeed = 1.2 + proximityFactor * 1.5;
+      for (let i = 0; i < this.sparkCount; i++) {
+        const idx = i * 3;
+        const angle = (i / this.sparkCount) * Math.PI * 2 + this.animTimer * orbitSpeed;
+        const radius = 0.65 + Math.sin(this.animTimer * 2 + i) * 0.15;
+        const targetX = Math.cos(angle) * radius;
+        const targetY = 4.1 + bobOffset + Math.sin(this.animTimer * 3 + i * 0.5) * 0.25;
+        const targetZ = Math.sin(angle) * radius;
+
+        sparkArr[idx + 0] += (targetX - sparkArr[idx + 0]) * Math.min(1.0, dt * 4.0);
+        sparkArr[idx + 1] += (targetY - sparkArr[idx + 1]) * Math.min(1.0, dt * 4.0);
+        sparkArr[idx + 2] += (targetZ - sparkArr[idx + 2]) * Math.min(1.0, dt * 4.0);
+      }
+    }
+    sparkPosAttr.needsUpdate = true;
 
     return this.isPlayerNearby;
   }
