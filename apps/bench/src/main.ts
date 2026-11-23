@@ -862,8 +862,11 @@ class BenchmarkApp {
                 Web Worker & OPFS Runtime
               </span>
             </div>
-            <div style="font-size: 0.85rem; color: #9AA3AE; margin-top: 0.4rem;">
-              Float32 WebGPU Compute Pipelines, Asynchronous Training Loop, OPFS Checkpoints & Live Inference
+            <div style="font-size: 0.85rem; color: #9AA3AE; margin-top: 0.4rem; display: flex; gap: 0.8rem; align-items: center; flex-wrap: wrap;">
+              <span>Float32 WebGPU Compute Pipelines, Asynchronous Training Loop, OPFS Checkpoints & Live Inference</span>
+              <span id="gpu-adapter-badge" style="background: rgba(79, 179, 169, 0.12); color: #4FB3A9; border: 1px solid rgba(79, 179, 169, 0.28); padding: 0.15rem 0.5rem; font-size: 0.72rem; border-radius: 4px; font-family: var(--font-mono); font-weight: 600;">
+                WebGPU: Hardware Accelerated
+              </span>
             </div>
           </div>
 
