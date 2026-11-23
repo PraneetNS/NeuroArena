@@ -539,5 +539,62 @@ export function calculateSpeakerJSDivergence(
   return Math.min(1.0, Math.max(0, jsd));
 }
 
+export interface SpeakerBatchTurnMetrics {
+  speaker: string;
+  totalBatches: number;
+  totalReplyTokens: number;
+  avgReplyTokensPerBatch: number;
+  minReplyTokens: number;
+  maxReplyTokens: number;
+  tokensStdDev: number;
+}
+
+/**
+ * Computes dialogue turn length distribution metrics (mean, min, max, std dev) for a speaker.
+ */
+export function computeSpeakerTurnMetrics(batches: DialogueBatch[]): SpeakerBatchTurnMetrics {
+  if (batches.length === 0) {
+    return {
+      speaker: 'UNKNOWN',
+      totalBatches: 0,
+      totalReplyTokens: 0,
+      avgReplyTokensPerBatch: 0,
+      minReplyTokens: 0,
+      maxReplyTokens: 0,
+      tokensStdDev: 0
+    };
+  }
+
+  const speaker = batches[0].speaker;
+  let totalReplyTokens = 0;
+  let minReplyTokens = Infinity;
+  let maxReplyTokens = 0;
+
+  for (const b of batches) {
+    const count = b.replyTokenCount;
+    totalReplyTokens += count;
+    if (count < minReplyTokens) minReplyTokens = count;
+    if (count > maxReplyTokens) maxReplyTokens = count;
+  }
+
+  const avg = totalReplyTokens / batches.length;
+  let varianceSum = 0;
+  for (const b of batches) {
+    const diff = b.replyTokenCount - avg;
+    varianceSum += diff * diff;
+  }
+  const stdDev = Math.sqrt(varianceSum / batches.length);
+
+  return {
+    speaker,
+    totalBatches: batches.length,
+    totalReplyTokens,
+    avgReplyTokensPerBatch: avg,
+    minReplyTokens: minReplyTokens === Infinity ? 0 : minReplyTokens,
+    maxReplyTokens,
+    tokensStdDev: stdDev
+  };
+}
+
 
 
