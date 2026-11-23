@@ -381,6 +381,8 @@ export const OracleModal: React.FC<OracleModalProps> = ({
                 color: 'var(--na-muted)'
               }}
             >
+              <span>Depth: <strong style={{ color: 'var(--na-accent-warm)' }}>{activeBranchId.split('_').length}</strong></span>
+              <span>•</span>
               <span>Tokens: <strong style={{ color: 'var(--na-text)' }}>{activeTokens.length}</strong></span>
               <span>•</span>
               <span>Avg H: <strong style={{ color: 'var(--na-accent-cool)' }}>{avgEntropy}</strong></span>
