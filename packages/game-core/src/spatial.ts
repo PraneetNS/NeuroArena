@@ -78,6 +78,87 @@ export class SpatialHashGrid {
     return results;
   }
 
+  /**
+   * Finds the single closest shard to (x, z) within maxRadius.
+   */
+  public findNearest(
+    x: number,
+    z: number,
+    maxRadius = 100.0
+  ): { shard: Shard; distance: number; distSq: number } | null {
+    const candidates = this.queryRadius(x, z, maxRadius);
+    if (candidates.length === 0) return null;
+
+    let nearest: Shard | null = null;
+    let minDistSq = Infinity;
+
+    for (const s of candidates) {
+      const dx = s.position.x - x;
+      const dz = s.position.z - z;
+      const dSq = dx * dx + dz * dz;
+      if (dSq < minDistSq) {
+        minDistSq = dSq;
+        nearest = s;
+      }
+    }
+
+    if (!nearest) return null;
+    return {
+      shard: nearest,
+      distance: Math.sqrt(minDistSq),
+      distSq: minDistSq
+    };
+  }
+
+  /**
+   * Queries all shards inside an axis-aligned bounding box.
+   */
+  public queryBoundingBox(
+    minX: number,
+    minZ: number,
+    maxX: number,
+    maxZ: number
+  ): Shard[] {
+    const minGx = Math.floor(minX / this.cellSize);
+    const maxGx = Math.floor(maxX / this.cellSize);
+    const minGz = Math.floor(minZ / this.cellSize);
+    const maxGz = Math.floor(maxZ / this.cellSize);
+
+    const results: Shard[] = [];
+    for (let gx = minGx; gx <= maxGx; gx++) {
+      for (let gz = minGz; gz <= maxGz; gz++) {
+        const cell = this.grid.get(this.key(gx, gz));
+        if (cell) {
+          for (const s of cell) {
+            if (
+              s.position.x >= minX &&
+              s.position.x <= maxX &&
+              s.position.z >= minZ &&
+              s.position.z <= maxZ
+            ) {
+              results.push(s);
+            }
+          }
+        }
+      }
+    }
+    return results;
+  }
+
+  /**
+   * Returns count of non-empty grid cells.
+   */
+  public getOccupiedCellCount(): number {
+    return this.grid.size;
+  }
+
+  /**
+   * Returns total count of indexed shards.
+   */
+  public getTotalIndexedCount(): number {
+    return this.shardToKey.size;
+  }
+
   public clear(): void {
     this.grid.clear();
     this.shardToKey.clear();
