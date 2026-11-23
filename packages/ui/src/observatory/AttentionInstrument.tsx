@@ -15,6 +15,7 @@ export const AttentionInstrument: React.FC<AttentionInstrumentProps> = ({
   onSelectLayerHead
 }) => {
   const [selectedTokenIdx, setSelectedTokenIdx] = useState<number | null>(null);
+  const [directionFilter, setDirectionFilter] = useState<'all' | 'incoming' | 'outgoing'>('all');
   const [minWeightThreshold, setMinWeightThreshold] = useState<number>(0.02);
   const [hoveredBeam, setHoveredBeam] = useState<{
     source: number;
@@ -34,6 +35,20 @@ export const AttentionInstrument: React.FC<AttentionInstrumentProps> = ({
 
   const probs = currentHeadData?.probs;
   const headMetrics = currentHeadData?.metrics;
+
+  const avgEntropy = useMemo(() => {
+    if (!probs) return 0;
+    let totalH = 0;
+    for (let t = 0; t < T; t++) {
+      let rowH = 0;
+      for (let s = 0; s <= t; s++) {
+        const p = probs[t * T + s];
+        if (p > 1e-6) rowH -= p * Math.log2(p);
+      }
+      totalH += rowH;
+    }
+    return totalH / Math.max(1, T);
+  }, [probs, T]);
 
   // Track token element X coordinates for exact SVG curve anchor points
   const [tokenCoords, setTokenCoords] = useState<{ x: number; y: number }[]>([]);
@@ -264,6 +279,19 @@ export const AttentionInstrument: React.FC<AttentionInstrumentProps> = ({
             >
               {arcs.length} beams
             </span>
+            <span
+              style={{
+                fontSize: 'var(--na-text-xs)',
+                color: avgEntropy < 2.0 ? 'var(--na-accent)' : 'var(--na-muted)',
+                backgroundColor: 'var(--na-card-bg)',
+                padding: '3px 8px',
+                borderRadius: 'var(--na-radius-full)',
+                border: '1px solid var(--na-line)'
+              }}
+              title="Mean Shannon entropy across queries (lower indicates sharper, more focused attention)"
+            >
+              H: {avgEntropy.toFixed(2)} bits
+            </span>
             {headMetrics?.label && (
               <span
                 style={{
@@ -279,20 +307,40 @@ export const AttentionInstrument: React.FC<AttentionInstrumentProps> = ({
               </span>
             )}
             {selectedTokenIdx !== null && (
-              <button
-                onClick={() => setSelectedTokenIdx(null)}
-                style={{
-                  padding: '2px 6px',
-                  fontSize: 'var(--na-text-xs)',
-                  color: 'var(--na-muted)',
-                  backgroundColor: 'transparent',
-                  border: '1px solid var(--na-line)',
-                  borderRadius: 'var(--na-radius-sm)',
-                  cursor: 'pointer'
-                }}
-              >
-                Clear Filter (Pos {selectedTokenIdx})
-              </button>
+              <div style={{ display: 'inline-flex', gap: '4px', alignItems: 'center' }}>
+                <div style={{ display: 'inline-flex', borderRadius: 'var(--na-radius-sm)', border: '1px solid var(--na-line)', overflow: 'hidden' }}>
+                  {(['all', 'incoming', 'outgoing'] as const).map(dir => (
+                    <button
+                      key={dir}
+                      onClick={() => setDirectionFilter(dir)}
+                      style={{
+                        padding: '2px 6px',
+                        fontSize: 'var(--na-text-xs)',
+                        color: directionFilter === dir ? 'var(--na-accent)' : 'var(--na-muted)',
+                        backgroundColor: directionFilter === dir ? 'var(--na-accent-muted)' : 'transparent',
+                        border: 'none',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {dir}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setSelectedTokenIdx(null)}
+                  style={{
+                    padding: '2px 6px',
+                    fontSize: 'var(--na-text-xs)',
+                    color: 'var(--na-muted)',
+                    backgroundColor: 'transparent',
+                    border: '1px solid var(--na-line)',
+                    borderRadius: 'var(--na-radius-sm)',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Clear (Pos {selectedTokenIdx})
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -311,7 +359,12 @@ export const AttentionInstrument: React.FC<AttentionInstrumentProps> = ({
             {arcs.map((arc, idx) => {
               const isSource = selectedTokenIdx !== null && arc.source === selectedTokenIdx;
               const isTarget = selectedTokenIdx !== null && arc.target === selectedTokenIdx;
-              const isIsolated = selectedTokenIdx === null || isSource || isTarget;
+              let isIsolated = selectedTokenIdx === null;
+              if (selectedTokenIdx !== null) {
+                if (directionFilter === 'all') isIsolated = isSource || isTarget;
+                else if (directionFilter === 'incoming') isIsolated = isTarget;
+                else if (directionFilter === 'outgoing') isIsolated = isSource;
+              }
 
               if (!isIsolated) return null;
 
