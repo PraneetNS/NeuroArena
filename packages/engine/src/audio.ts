@@ -675,9 +675,9 @@ export class SoundEngine {
 
   /**
    * Procedural resonant shimmer when passing close to an uncollected knowledge shard.
-   * Subtle high-frequency pure sine sparkle (1760 Hz) with soft envelope.
+   * Subtle high-frequency pure sine sparkle (1760 Hz) with soft envelope and pitch scaling.
    */
-  public playShardResonate(): void {
+  public playShardResonate(pitchMultiplier = 1.0): void {
     if (this.isMutedState) return;
     const ctx = this.getContext();
     if (!ctx || !this.sfxGain) return;
@@ -687,9 +687,10 @@ export class SoundEngine {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
 
+    const baseFreq = 1760 * Math.max(0.5, Math.min(2.0, pitchMultiplier));
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(1760, now);
-    osc.frequency.exponentialRampToValueAtTime(2200, now + 0.18);
+    osc.frequency.setValueAtTime(baseFreq, now);
+    osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.25, now + 0.18);
 
     gain.gain.setValueAtTime(0.001, now);
     gain.gain.linearRampToValueAtTime(0.035, now + 0.04);
@@ -700,6 +701,42 @@ export class SoundEngine {
 
     osc.start(now);
     osc.stop(now + 0.28);
+  }
+
+  /**
+   * Procedural deep resonant sub-bass harmonic pulse for Oracle communion shocks.
+   */
+  public playOraclePulse(intensity = 1.0): void {
+    if (this.isMutedState) return;
+    const ctx = this.getContext();
+    if (!ctx || !this.sfxGain) return;
+
+    const now = ctx.currentTime;
+    const sfxGain = this.sfxGain;
+    const osc = ctx.createOscillator();
+    const filter = ctx.createBiquadFilter();
+    const gain = ctx.createGain();
+
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(86.4, now);
+    osc.frequency.exponentialRampToValueAtTime(43.2, now + 0.6);
+
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(320, now);
+    filter.frequency.exponentialRampToValueAtTime(90, now + 0.6);
+    filter.Q.value = 4.0;
+
+    const targetGain = Math.min(0.25, 0.14 * intensity);
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(targetGain, now + 0.06);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.75);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(sfxGain);
+
+    osc.start(now);
+    osc.stop(now + 0.75);
   }
 
   /**
