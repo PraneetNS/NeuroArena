@@ -264,3 +264,96 @@ export class Sampler {
   }
 }
 
+/**
+ * Diagnostics computed on raw logits for sampling parameter introspection.
+ */
+export interface SamplingDiagnostics {
+  entropy: number;
+  perplexity: number;
+  top1Prob: number;
+  top5Mass: number;
+  top10Mass: number;
+  effectiveVocab: number;
+}
+
+/**
+ * Computes sampling diagnostics including Shannon entropy, perplexity,
+ * and top-N probability mass concentrations.
+ */
+export function computeSamplingDiagnostics(
+  logits: Float32Array | Float64Array,
+  temperature = 1.0
+): SamplingDiagnostics {
+  const vocabSize = logits.length;
+  const temp = Math.max(1e-4, temperature);
+
+  let maxLogit = -Infinity;
+  for (let i = 0; i < vocabSize; i++) {
+    if (logits[i] > maxLogit) maxLogit = logits[i];
+  }
+
+  let sumExp = 0;
+  const probs = new Float64Array(vocabSize);
+  for (let i = 0; i < vocabSize; i++) {
+    const p = Math.exp((logits[i] - maxLogit) / temp);
+    probs[i] = p;
+    sumExp += p;
+  }
+
+  const invSum = 1.0 / (sumExp + 1e-12);
+  let entropy = 0;
+  for (let i = 0; i < vocabSize; i++) {
+    probs[i] *= invSum;
+    const p = probs[i];
+    if (p > 1e-12) {
+      entropy -= p * Math.log2(p);
+    }
+  }
+
+  // Sort top values
+  const sorted = Array.from(probs).sort((a, b) => b - a);
+  const top1Prob = sorted[0] || 0;
+  let top5Mass = 0;
+  let top10Mass = 0;
+  for (let i = 0; i < Math.min(5, vocabSize); i++) top5Mass += sorted[i];
+  for (let i = 0; i < Math.min(10, vocabSize); i++) top10Mass += sorted[i];
+
+  return {
+    entropy,
+    perplexity: Math.pow(2, entropy),
+    top1Prob,
+    top5Mass,
+    top10Mass,
+    effectiveVocab: Math.round(Math.pow(2, entropy))
+  };
+}
+
+/**
+ * Annealed temperature schedule for autoregressive token generation.
+ */
+export class AnnealedSampler {
+  public static calculateTemperature(
+    step: number,
+    totalSteps: number,
+    startTemp: number,
+    endTemp: number,
+    schedule: 'linear' | 'cosine' | 'exponential' = 'cosine'
+  ): number {
+    if (totalSteps <= 1) return endTemp;
+    const progress = Math.min(1.0, Math.max(0.0, step / (totalSteps - 1)));
+
+    switch (schedule) {
+      case 'linear':
+        return startTemp + (endTemp - startTemp) * progress;
+      case 'exponential':
+        return startTemp * Math.pow(endTemp / Math.max(1e-4, startTemp), progress);
+      case 'cosine':
+      default: {
+        const factor = 0.5 * (1 + Math.cos(Math.PI * progress));
+        return endTemp + (startTemp - endTemp) * factor;
+      }
+    }
+  }
+}
+
+
