@@ -97,8 +97,26 @@ export class TutorialTelemetry {
     this.persistSession();
   }
 
-  public recordOracleBranchFork(): void {
+  public recordOracleBranchFork(depth = 1): void {
     this.currentSession.oracleBranchesForked = (this.currentSession.oracleBranchesForked || 0) + 1;
+    if (depth > (this.currentSession.oracleMaxBranchDepth || 0)) {
+      this.currentSession.oracleMaxBranchDepth = depth;
+    }
+    this.persistSession();
+  }
+
+  public recordOracleGenerationLatency(latencyMs: number, branchDepth?: number, meanSurprise?: number): void {
+    this.currentSession.oracleTotalLatencyMs = (this.currentSession.oracleTotalLatencyMs || 0) + latencyMs;
+    if (branchDepth !== undefined && branchDepth > (this.currentSession.oracleMaxBranchDepth || 0)) {
+      this.currentSession.oracleMaxBranchDepth = branchDepth;
+    }
+    if (meanSurprise !== undefined && Number.isFinite(meanSurprise)) {
+      const prevCount = this.currentSession.oracleSurpriseSamplesCount || 0;
+      const prevAvg = this.currentSession.oracleAverageSurprise || 0;
+      const newCount = prevCount + 1;
+      this.currentSession.oracleAverageSurprise = (prevAvg * prevCount + meanSurprise) / newCount;
+      this.currentSession.oracleSurpriseSamplesCount = newCount;
+    }
     this.persistSession();
   }
 

@@ -96,6 +96,10 @@ export interface TutorialTelemetrySession {
   oracleTokensGenerated?: number;
   oracleBranchesForked?: number;
   samplingAdjustmentsCount?: number;
+  oracleTotalLatencyMs?: number;
+  oracleMaxBranchDepth?: number;
+  oracleAverageSurprise?: number;
+  oracleSurpriseSamplesCount?: number;
   hardwareSummary?: string;
 }
 
