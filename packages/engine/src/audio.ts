@@ -771,4 +771,42 @@ export class SoundEngine {
       osc.stop(startTime + 0.85);
     });
   }
+
+  /**
+   * Spatial stereo audio pulse for directional world events.
+   * Uses Web Audio StereoPannerNode with pan in [-1.0 (left), 1.0 (right)].
+   */
+  public playSpatialPulse(pan: number, frequency = 220, duration = 0.4): void {
+    if (this.isMutedState) return;
+    const ctx = this.getContext();
+    if (!ctx || !this.sfxGain) return;
+
+    const clampedPan = Math.max(-1.0, Math.min(1.0, pan));
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(frequency, now);
+    osc.frequency.exponentialRampToValueAtTime(frequency * 0.8, now + duration);
+
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(0.08, now + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+    // Stereo panning if supported by browser Web Audio API
+    if (typeof ctx.createStereoPanner === 'function') {
+      const panner = ctx.createStereoPanner();
+      panner.pan.setValueAtTime(clampedPan, now);
+      osc.connect(gain);
+      gain.connect(panner);
+      panner.connect(this.sfxGain);
+    } else {
+      osc.connect(gain);
+      gain.connect(this.sfxGain);
+    }
+
+    osc.start(now);
+    osc.stop(now + duration);
+  }
 }
