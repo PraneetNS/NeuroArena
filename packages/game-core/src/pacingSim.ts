@@ -340,3 +340,30 @@ if (isMain) {
   }
   console.log('='.repeat(88));
 }
+
+/**
+ * Computes estimated time required to traverse between two world coordinates given player speed.
+ */
+export function estimateTraversalTimeSec(
+  from: [number, number],
+  to: [number, number],
+  playerSpeed = 8.5 // meters per second
+): number {
+  const dx = to[0] - from[0];
+  const dz = to[1] - from[1];
+  const distance = Math.sqrt(dx * dx + dz * dz);
+  return playerSpeed > 0 ? distance / playerSpeed : Infinity;
+}
+
+/**
+ * Computes projected harvest yield in clean tokens given elapsed exploration time and harvest rate.
+ */
+export function projectHarvestYield(
+  elapsedMinutes: number,
+  averageTokensPerMinute = 28500
+): { projectedTokens: number; projectedShards: number } {
+  const projectedTokens = Math.round(elapsedMinutes * averageTokensPerMinute);
+  // Average ~1,300 tokens per shard
+  const projectedShards = Math.round(projectedTokens / 1300);
+  return { projectedTokens, projectedShards };
+}
