@@ -103,6 +103,36 @@ export const OracleModal: React.FC<OracleModalProps> = ({
     }
   };
 
+  const handleDownloadMarkdown = () => {
+    const fullText = activeBranch.prompt + activeBranch.tokens.map((t) => t.token).join('');
+    const mdContent = `# Oracle Stone Communion Transcript\n\n` +
+      `**Speaker Model**: ${speaker || 'Elder (Preset S)'}\n` +
+      `**Active Branch**: ${activeBranch.label}\n` +
+      `**Sampling Config**: Temperature=${temperature}, Top-K=${topK}, Top-P=${topP}, RepetitionPenalty=${repetitionPenalty}\n` +
+      `**Metrics**: Tokens=${activeTokens.length}, Avg Entropy=${avgEntropy} bits, Avg Surprise=${avgSurprise}\n\n` +
+      `---\n\n` +
+      `### Prompt\n\n\`\`\`\n${activeBranch.prompt}\n\`\`\`\n\n` +
+      `### Model Continuation\n\n\`\`\`\n${fullText}\n\`\`\`\n\n` +
+      `---\n*Exported from NeuroArena Oracle Stone*\n`;
+
+    const blob = new Blob([mdContent], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `oracle_communion_${Date.now()}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const PROMPT_PRESETS = [
+    { label: 'Hamlet: Soliloquy', text: 'To be, or not to ' },
+    { label: 'Falstaff: Honour', text: 'Honour is a ' },
+    { label: 'Portia: Mercy', text: "The quality of mercy is not strain'd,\n" },
+    { label: 'Jaques: The Stage', text: "All the world's a stage,\nAnd all the men and women merely players;\n" },
+    { label: 'Prospero: Revels', text: "Our revels now are ended. These our actors,\nAs I foretold you, were all spirits and\n" },
+    { label: 'Dialogue: Life', text: "PLAYER:\nWhat think you of this mortal life?\nHAMLET:\n" }
+  ];
+
   // Keybindings listener: Escape to close
   useEffect(() => {
     if (!isOpen) return;
@@ -381,6 +411,29 @@ export const OracleModal: React.FC<OracleModalProps> = ({
               <span>{copiedTranscript ? 'Copied' : 'Copy'}</span>
             </button>
 
+            {/* Export Markdown File Button */}
+            <button
+              onClick={handleDownloadMarkdown}
+              style={{
+                backgroundColor: 'var(--na-surface)',
+                color: 'var(--na-text)',
+                border: '1px solid var(--na-line)',
+                borderRadius: 'var(--na-radius-sm)',
+                padding: 'var(--na-space-1) var(--na-space-3)',
+                fontSize: 'var(--na-text-xs)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                fontWeight: 600,
+                transition: 'all 0.15s ease'
+              }}
+              title="Download conversation transcript as markdown file"
+            >
+              <span>💾</span>
+              <span>Export .md</span>
+            </button>
+
             <button
               onClick={onClose}
               style={{
@@ -450,9 +503,28 @@ export const OracleModal: React.FC<OracleModalProps> = ({
                 >
                   Scholar's Prompt
                 </label>
-                <span style={{ fontSize: 'var(--na-text-xs)', color: 'var(--na-muted)' }}>
-                  Prefix context fed to GPU prefill
-                </span>
+                <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                  {PROMPT_PRESETS.map((preset) => (
+                    <button
+                      key={preset.label}
+                      disabled={isGenerating}
+                      onClick={() => setPrompt(preset.text)}
+                      style={{
+                        padding: '1px 6px',
+                        fontSize: '10px',
+                        fontFamily: 'var(--na-font-mono)',
+                        backgroundColor: prompt === preset.text ? 'var(--na-accent-muted)' : 'var(--na-surface)',
+                        color: prompt === preset.text ? 'var(--na-accent)' : 'var(--na-muted)',
+                        border: '1px solid var(--na-line)',
+                        borderRadius: 'var(--na-radius-sm)',
+                        cursor: isGenerating ? 'not-allowed' : 'pointer'
+                      }}
+                      title={preset.text}
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
               </div>
               <textarea
                 value={prompt}
