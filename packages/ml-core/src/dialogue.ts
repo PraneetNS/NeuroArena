@@ -596,5 +596,79 @@ export function computeSpeakerTurnMetrics(batches: DialogueBatch[]): SpeakerBatc
   };
 }
 
+export interface DialogueLexicalDiversity {
+  speaker: string;
+  typeTokenRatio: number;
+  uniqueVocabulary: number;
+  totalTokens: number;
+  entropy: number;
+  hapaxLegomenaRatio: number;
+}
+
+/**
+ * Computes lexical diversity and vocabulary richness (TTR, Shannon entropy, Hapax ratio)
+ * over dialogue batches for fine-tuned or evaluated speakers.
+ */
+export function computeDialogueLexicalDiversity(
+  batches: DialogueBatch[]
+): DialogueLexicalDiversity {
+  if (batches.length === 0) {
+    return {
+      speaker: 'UNKNOWN',
+      typeTokenRatio: 0,
+      uniqueVocabulary: 0,
+      totalTokens: 0,
+      entropy: 0,
+      hapaxLegomenaRatio: 0
+    };
+  }
+
+  const speaker = batches[0].speaker;
+  const tokenFreq = new Map<number, number>();
+  let totalReplyTokens = 0;
+
+  for (const batch of batches) {
+    const targets = batch.targets;
+    for (let i = 0; i < targets.length; i++) {
+      if (targets[i] !== -1) {
+        const tok = targets[i];
+        tokenFreq.set(tok, (tokenFreq.get(tok) || 0) + 1);
+        totalReplyTokens++;
+      }
+    }
+  }
+
+  if (totalReplyTokens === 0) {
+    return {
+      speaker,
+      typeTokenRatio: 0,
+      uniqueVocabulary: 0,
+      totalTokens: 0,
+      entropy: 0,
+      hapaxLegomenaRatio: 0
+    };
+  }
+
+  const unique = tokenFreq.size;
+  const ttr = unique / totalReplyTokens;
+
+  let singletons = 0;
+  let entropy = 0;
+  for (const count of tokenFreq.values()) {
+    if (count === 1) singletons++;
+    const p = count / totalReplyTokens;
+    entropy -= p * Math.log2(p);
+  }
+
+  return {
+    speaker,
+    typeTokenRatio: ttr,
+    uniqueVocabulary: unique,
+    totalTokens: totalReplyTokens,
+    entropy,
+    hapaxLegomenaRatio: singletons / unique
+  };
+}
+
 
 
