@@ -50,6 +50,20 @@ export const AttentionInstrument: React.FC<AttentionInstrumentProps> = ({
     return totalH / Math.max(1, T);
   }, [probs, T]);
 
+  const perTokenEntropies = useMemo(() => {
+    if (!probs) return [];
+    const entropies: number[] = [];
+    for (let t = 0; t < T; t++) {
+      let rowH = 0;
+      for (let s = 0; s <= t; s++) {
+        const p = probs[t * T + s];
+        if (p > 1e-6) rowH -= p * Math.log2(p);
+      }
+      entropies.push(rowH);
+    }
+    return entropies;
+  }, [probs, T]);
+
   // Track token element X coordinates for exact SVG curve anchor points
   const [tokenCoords, setTokenCoords] = useState<{ x: number; y: number }[]>([]);
 
@@ -292,6 +306,42 @@ export const AttentionInstrument: React.FC<AttentionInstrumentProps> = ({
             >
               H: {avgEntropy.toFixed(2)} bits
             </span>
+            {perTokenEntropies.length > 1 && (
+              <span
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  backgroundColor: 'var(--na-card-bg)',
+                  padding: '2px 8px',
+                  borderRadius: 'var(--na-radius-full)',
+                  border: '1px solid var(--na-line)'
+                }}
+                title="Token-by-token attention entropy sparkline (0 to T-1)"
+              >
+                <span style={{ fontSize: 'var(--na-text-xs)', color: 'var(--na-muted)' }}>profile:</span>
+                <svg width="48" height="14" style={{ overflow: 'visible', verticalAlign: 'middle' }}>
+                  {(() => {
+                    const maxH = Math.max(0.1, ...perTokenEntropies);
+                    const pts = perTokenEntropies.map((h, i) => {
+                      const x = (i / (perTokenEntropies.length - 1)) * 48;
+                      const y = 13 - (h / maxH) * 11;
+                      return `${x.toFixed(1)},${y.toFixed(1)}`;
+                    }).join(' ');
+                    return (
+                      <polyline
+                        points={pts}
+                        fill="none"
+                        stroke="var(--na-accent)"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    );
+                  })()}
+                </svg>
+              </span>
+            )}
             {headMetrics?.label && (
               <span
                 style={{
