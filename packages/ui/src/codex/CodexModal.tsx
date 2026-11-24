@@ -973,6 +973,77 @@ export const CodexModal: React.FC<CodexModalProps> = ({
                 );
               })()}
 
+              {/* Widget: Min-P Truncation */}
+              {currentEntry.id === 'min_p' && (() => {
+                const [demoMinP, setDemoMinP] = useState<number>(0.15);
+                const candidates = [
+                  { token: 'be', prob: 0.38 },
+                  { token: 'the', prob: 0.18 },
+                  { token: 'die', prob: 0.08 },
+                  { token: 'sleep', prob: 0.05 },
+                  { token: 'live', prob: 0.03 },
+                  { token: 'see', prob: 0.015 },
+                  { token: 'know', prob: 0.012 },
+                  { token: 'stand', prob: 0.008 }
+                ];
+                const pMax = candidates[0].prob;
+                const threshold = pMax * demoMinP;
+                const kept = candidates.filter(c => c.prob >= threshold);
+                const keptMass = kept.reduce((a, b) => a + b.prob, 0);
+
+                return (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--na-space-3)' }}>
+                    <div style={{ fontSize: 'var(--na-text-xs)', color: 'var(--na-text-secondary)' }}>
+                      Min-P Dynamic Cutoff: Threshold = max(p) &times; MinP = {(pMax * 100).toFixed(1)}% &times; {demoMinP.toFixed(2)} = <strong style={{ color: 'var(--na-accent)' }}>{(threshold * 100).toFixed(2)}%</strong>
+                    </div>
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '4px' }}>
+                        <span style={{ color: 'var(--na-muted)' }}>Min-P Threshold:</span>
+                        <span style={{ color: 'var(--na-accent)', fontFamily: 'var(--na-font-mono)', fontWeight: 700 }}>{demoMinP.toFixed(2)}</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0.01"
+                        max="0.50"
+                        step="0.01"
+                        value={demoMinP}
+                        onChange={(e) => setDemoMinP(parseFloat(e.target.value))}
+                        style={{ width: '100%', accentColor: 'var(--na-accent)' }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', backgroundColor: 'var(--na-raised)', borderRadius: 'var(--na-radius-sm)', border: '1px solid var(--na-line)', fontSize: '11px' }}>
+                      <span style={{ color: 'var(--na-muted)' }}>Retained Candidates ({kept.length}/{candidates.length}):</span>
+                      <span style={{ color: 'var(--na-accent-cool)', fontFamily: 'var(--na-font-mono)', fontWeight: 700 }}>{(keptMass * 100).toFixed(1)}% Mass</span>
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                      {candidates.map((c, idx) => {
+                        const isKept = c.prob >= threshold;
+                        return (
+                          <div
+                            key={idx}
+                            style={{
+                              padding: '4px 8px',
+                              backgroundColor: isKept ? 'var(--na-raised)' : 'var(--na-surface)',
+                              border: `1px solid ${isKept ? 'var(--na-accent)' : 'var(--na-line)'}`,
+                              borderRadius: 'var(--na-radius-sm)',
+                              opacity: isKept ? 1 : 0.35,
+                              textDecoration: isKept ? 'none' : 'line-through',
+                              fontSize: '11px',
+                              fontFamily: 'var(--na-font-mono)',
+                              display: 'flex',
+                              gap: '4px'
+                            }}
+                          >
+                            <span style={{ color: isKept ? 'var(--na-text)' : 'var(--na-faint)' }}>"{c.token}"</span>
+                            <span style={{ color: isKept ? 'var(--na-accent-cool)' : 'var(--na-faint)' }}>{(c.prob * 100).toFixed(1)}%</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
+
               {/* Widget: Stochastic Sampling */}
               {currentEntry.id === 'sampling' && (() => {
                 return (
