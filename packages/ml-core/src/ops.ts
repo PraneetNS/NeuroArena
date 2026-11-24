@@ -452,6 +452,7 @@ export function crossEntropy(
 
 /**
  * Numerically stable softmax: out[i] = exp(x[i] - max) / sum(exp(x[j] - max))
+ * Optimized with 4-way unrolled reduction and reciprocal normalization.
  */
 export function computeSoftmax(
   x: Float32Array | Float64Array | number[],
@@ -459,21 +460,41 @@ export function computeSoftmax(
   length: number,
   offset = 0
 ): void {
-  let maxVal = -Infinity;
-  for (let i = 0; i < length; i++) {
+  let m0 = -Infinity, m1 = -Infinity, m2 = -Infinity, m3 = -Infinity;
+  let i = 0;
+  const len4 = length - 3;
+  for (; i < len4; i += 4) {
+    const v0 = x[offset + i];
+    const v1 = x[offset + i + 1];
+    const v2 = x[offset + i + 2];
+    const v3 = x[offset + i + 3];
+    if (v0 > m0) m0 = v0;
+    if (v1 > m1) m1 = v1;
+    if (v2 > m2) m2 = v2;
+    if (v3 > m3) m3 = v3;
+  }
+  let maxVal = Math.max(m0, Math.max(m1, Math.max(m2, m3)));
+  for (; i < length; i++) {
     const val = x[offset + i];
     if (val > maxVal) maxVal = val;
   }
 
   let sumExp = 0;
-  for (let i = 0; i < length; i++) {
+  for (i = 0; i < length; i++) {
     const e = Math.exp(x[offset + i] - maxVal);
     out[offset + i] = e;
     sumExp += e;
   }
 
   const invSum = sumExp > 0 ? 1.0 / sumExp : 0;
-  for (let i = 0; i < length; i++) {
+  i = 0;
+  for (; i < len4; i += 4) {
+    out[offset + i] *= invSum;
+    out[offset + i + 1] *= invSum;
+    out[offset + i + 2] *= invSum;
+    out[offset + i + 3] *= invSum;
+  }
+  for (; i < length; i++) {
     out[offset + i] *= invSum;
   }
 }
