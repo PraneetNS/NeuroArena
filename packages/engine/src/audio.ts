@@ -611,12 +611,17 @@ export class SoundEngine {
   }
 
   /**
-   * Subtle ambient resonance hum when standing in close proximity to the Oracle Stone.
+   * Subtle ambient resonance hum when standing in proximity to the Oracle Stone.
+   * Supports smooth inverse distance spatial attenuation (audible within 12 meters).
    */
-  public playOracleHum(): void {
+  public playOracleHum(distance = 3.0): void {
     if (this.isMutedState) return;
     const ctx = this.getContext();
     if (!ctx || !this.sfxGain) return;
+
+    const maxAudibleDist = 12.0;
+    const attenuation = Math.max(0.0, Math.min(1.0, 1.0 - distance / maxAudibleDist));
+    if (attenuation <= 0.01) return;
 
     const now = ctx.currentTime;
     const osc = ctx.createOscillator();
@@ -627,10 +632,11 @@ export class SoundEngine {
     osc.frequency.setValueAtTime(108, now);
 
     filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(240, now);
+    filter.frequency.setValueAtTime(180 + attenuation * 120, now);
 
+    const peakGain = 0.055 * attenuation;
     gain.gain.setValueAtTime(0.001, now);
-    gain.gain.linearRampToValueAtTime(0.045, now + 0.3);
+    gain.gain.linearRampToValueAtTime(peakGain, now + 0.3);
     gain.gain.exponentialRampToValueAtTime(0.0005, now + 1.2);
 
     osc.connect(filter);
