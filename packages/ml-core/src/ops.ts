@@ -490,8 +490,40 @@ export function softmaxInPlace(
 }
 
 /**
+ * High-performance vector dot product with 4-way loop unrolling for SIMD/JIT optimization.
+ */
+export function vectorDot(
+  a: Float32Array | Float64Array,
+  b: Float32Array | Float64Array,
+  length: number,
+  offsetA = 0,
+  offsetB = 0
+): number {
+  let s0 = 0;
+  let s1 = 0;
+  let s2 = 0;
+  let s3 = 0;
+
+  let i = 0;
+  const len4 = length - 3;
+  for (; i < len4; i += 4) {
+    s0 += a[offsetA + i] * b[offsetB + i];
+    s1 += a[offsetA + i + 1] * b[offsetB + i + 1];
+    s2 += a[offsetA + i + 2] * b[offsetB + i + 2];
+    s3 += a[offsetA + i + 3] * b[offsetB + i + 3];
+  }
+
+  let remainder = 0;
+  for (; i < length; i++) {
+    remainder += a[offsetA + i] * b[offsetB + i];
+  }
+
+  return s0 + s1 + s2 + s3 + remainder;
+}
+
+/**
  * Computes cosine similarity between two vectors a and b: (a . b) / (||a|| * ||b||).
- * Returns values strictly bounded in [-1.0, 1.0].
+ * Returns values strictly bounded in [-1.0, 1.0] with 4-way unrolled accumulation.
  */
 export function cosineSimilarity(
   a: Float32Array | Float64Array,
@@ -500,17 +532,50 @@ export function cosineSimilarity(
   offsetA = 0,
   offsetB = 0
 ): number {
-  let dot = 0;
-  let normA = 0;
-  let normB = 0;
+  let dot0 = 0, dot1 = 0, dot2 = 0, dot3 = 0;
+  let normA0 = 0, normA1 = 0, normA2 = 0, normA3 = 0;
+  let normB0 = 0, normB1 = 0, normB2 = 0, normB3 = 0;
 
-  for (let i = 0; i < length; i++) {
+  let i = 0;
+  const len4 = length - 3;
+  for (; i < len4; i += 4) {
+    const va0 = a[offsetA + i];
+    const vb0 = b[offsetB + i];
+    dot0 += va0 * vb0;
+    normA0 += va0 * va0;
+    normB0 += vb0 * vb0;
+
+    const va1 = a[offsetA + i + 1];
+    const vb1 = b[offsetB + i + 1];
+    dot1 += va1 * vb1;
+    normA1 += va1 * va1;
+    normB1 += vb1 * vb1;
+
+    const va2 = a[offsetA + i + 2];
+    const vb2 = b[offsetB + i + 2];
+    dot2 += va2 * vb2;
+    normA2 += va2 * va2;
+    normB2 += vb2 * vb2;
+
+    const va3 = a[offsetA + i + 3];
+    const vb3 = b[offsetB + i + 3];
+    dot3 += va3 * vb3;
+    normA3 += va3 * va3;
+    normB3 += vb3 * vb3;
+  }
+
+  let remDot = 0, remNormA = 0, remNormB = 0;
+  for (; i < length; i++) {
     const va = a[offsetA + i];
     const vb = b[offsetB + i];
-    dot += va * vb;
-    normA += va * va;
-    normB += vb * vb;
+    remDot += va * vb;
+    remNormA += va * va;
+    remNormB += vb * vb;
   }
+
+  const dot = dot0 + dot1 + dot2 + dot3 + remDot;
+  const normA = normA0 + normA1 + normA2 + normA3 + remNormA;
+  const normB = normB0 + normB1 + normB2 + normB3 + remNormB;
 
   const denom = Math.sqrt(normA * normB);
   if (denom === 0) return 0;
