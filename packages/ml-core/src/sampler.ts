@@ -12,6 +12,7 @@ export interface GenerateOptions {
   temperature?: number;
   topK?: number;
   topP?: number;
+  minP?: number;
   repetitionPenalty?: number;
   rng?: Xoshiro128StarStar;
 }
@@ -35,6 +36,7 @@ export async function* generate(
   const temperature = Math.max(1e-4, options.temperature ?? 0.8);
   const topK = options.topK ?? 10;
   const topP = options.topP ?? 0.9;
+  const minP = options.minP ?? 0.0;
   const repetitionPenalty = options.repetitionPenalty ?? 1.0;
   const rng = options.rng ?? new Xoshiro128StarStar(Date.now() & 0xffffffff);
 
@@ -84,13 +86,27 @@ export async function* generate(
     // 5. Softmax over Top-K candidates
     const maxVal = kFiltered[0].val;
     let sumExp = 0;
-    const probs = kFiltered.map(c => {
+    const rawProbs = kFiltered.map(c => {
       const p = Math.exp(c.val - maxVal);
       sumExp += p;
       return { id: c.id, p };
     });
-    for (const item of probs) {
+    for (const item of rawProbs) {
       item.p /= sumExp;
+    }
+
+    // 5b. Min-P (relative dynamic threshold) filtering
+    let probs = rawProbs;
+    if (minP > 0 && probs.length > 0) {
+      const topPMax = probs[0].p;
+      const minThreshold = topPMax * minP;
+      const filtered = probs.filter(item => item.p >= minThreshold);
+      if (filtered.length > 0) {
+        let pSum = 0;
+        for (const f of filtered) pSum += f.p;
+        for (const f of filtered) f.p /= pSum;
+        probs = filtered;
+      }
     }
 
     // 6. Top-P (nucleus) filtering
