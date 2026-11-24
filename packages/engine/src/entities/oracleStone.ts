@@ -22,6 +22,11 @@ export class OracleStone {
   private sparkCount = 48;
   private sparkBurstTimer = 0;
 
+  // Ambient Rising Ether Motes
+  private etherPoints: THREE.Points;
+  private etherPositions: Float32Array;
+  private etherCount = 36;
+
   // Ground Aura Shockwave
   private auraRingMesh: THREE.Mesh;
   private auraPulseProgress = 1.0;
@@ -125,6 +130,29 @@ export class OracleStone {
     });
     this.sparkPoints = new THREE.Points(sparkGeo, sparkMat);
     this.group.add(this.sparkPoints);
+
+    // 6b. Ambient Rising Ether Motes (spiral from plinth to crystal)
+    const etherGeo = new THREE.BufferGeometry();
+    this.etherPositions = new Float32Array(this.etherCount * 3);
+    for (let i = 0; i < this.etherCount; i++) {
+      const angle = (i / this.etherCount) * Math.PI * 2;
+      const radius = 0.35 + (i % 5) * 0.08;
+      this.etherPositions[i * 3 + 0] = Math.cos(angle) * radius;
+      this.etherPositions[i * 3 + 1] = 0.5 + (i / this.etherCount) * 3.6;
+      this.etherPositions[i * 3 + 2] = Math.sin(angle) * radius;
+    }
+    etherGeo.setAttribute('position', new THREE.BufferAttribute(this.etherPositions, 3));
+
+    const etherMat = new THREE.PointsMaterial({
+      color: runeColorHex,
+      size: 0.08,
+      transparent: true,
+      opacity: 0.65,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+    this.etherPoints = new THREE.Points(etherGeo, etherMat);
+    this.group.add(this.etherPoints);
 
     // 7. Ground Aura Shockwave Ring
     const auraGeo = new THREE.RingGeometry(0.8, 1.05, 32);
@@ -253,6 +281,24 @@ export class OracleStone {
       }
     }
     sparkPosAttr.needsUpdate = true;
+
+    // 7b. Update Ambient Rising Ether Motes
+    const etherPosAttr = this.etherPoints.geometry.attributes.position as THREE.BufferAttribute;
+    const etherArr = etherPosAttr.array as Float32Array;
+    const riseSpeed = 0.5 + proximityFactor * 0.4;
+    for (let i = 0; i < this.etherCount; i++) {
+      const idx = i * 3;
+      etherArr[idx + 1] += dt * riseSpeed;
+      const angle = this.animTimer * 0.75 + i * 0.35;
+      const r = 0.42 + Math.sin(this.animTimer * 1.5 + i) * 0.12;
+      etherArr[idx + 0] = Math.cos(angle) * r;
+      etherArr[idx + 2] = Math.sin(angle) * r;
+
+      if (etherArr[idx + 1] > 4.3) {
+        etherArr[idx + 1] = 0.4;
+      }
+    }
+    etherPosAttr.needsUpdate = true;
 
     // 8. Update Ground Aura Shockwave
     if (this.auraPulseProgress < 1.0) {
