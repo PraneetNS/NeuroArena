@@ -27,6 +27,7 @@ export type CodexConceptId =
   | 'sampling'
   | 'temperature'
   | 'top_k_top_p'
+  | 'min_p'
   | 'next_token_distribution';
 
 export interface CodexEntryDef {
@@ -51,6 +52,7 @@ export interface CodexEntryDef {
     | 'sampling_widget'
     | 'temperature_widget'
     | 'top_kp_widget'
+    | 'min_p_widget'
     | 'next_token_dist_widget';
 }
 
@@ -248,6 +250,19 @@ export const CODEX_ENTRIES: Record<CodexConceptId, CodexEntryDef> = {
     ],
     formulaPlain: 'V^(p) = min { V\' subset V : sum_{i in V\'} p_i >= p }',
     widgetType: 'top_kp_widget'
+  },
+
+  min_p: {
+    id: 'min_p',
+    title: 'Min-P Dynamic Truncation',
+    category: 'Inference // Dynamic Truncation',
+    unlockedAtStep: 'oracle_unlocked',
+    paragraphs: [
+      'While Top-P sums probabilities until a fixed mass threshold is met, Min-P dynamically prunes candidates relative to the highest token probability: only tokens with p_i >= p_max * min_p are retained.',
+      'This creates self-adjusting context sensitivity: when the model is confident (p_max = 0.90), a 0.05 min_p aggressively prunes any token below 0.045, preventing hallucinations. When uncertain (p_max = 0.10), the threshold drops to 0.005, permitting rich narrative diversity without arbitrary top-k cutoffs.'
+    ],
+    formulaPlain: 'Threshold = max(p) * min_p ; Filter: { i in V : p_i >= Threshold }',
+    widgetType: 'min_p_widget'
   },
 
   next_token_distribution: {
