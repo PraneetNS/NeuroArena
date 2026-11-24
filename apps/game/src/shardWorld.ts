@@ -256,6 +256,8 @@ export class ShardWorld {
       baseColor: THREE.Color;
       shardVisible: Uint8Array;
       glyphVisible: Uint8Array;
+      bounds: { cx: number; cz: number; radius: number };
+      allCulled: boolean;
     }
   > = new Map();
 
@@ -402,6 +404,25 @@ export class ShardWorld {
       glyphMesh.instanceMatrix.needsUpdate = true;
       if (glyphMesh.instanceColor) glyphMesh.instanceColor.needsUpdate = true;
 
+      // Compute spatial bounding sphere for whole-region culling
+      let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
+      for (const shard of regionShards) {
+        if (shard.position.x < minX) minX = shard.position.x;
+        if (shard.position.x > maxX) maxX = shard.position.x;
+        if (shard.position.z < minZ) minZ = shard.position.z;
+        if (shard.position.z > maxZ) maxZ = shard.position.z;
+      }
+      const cx = (minX + maxX) * 0.5;
+      const cz = (minZ + maxZ) * 0.5;
+      let maxDistSq = 0;
+      for (const shard of regionShards) {
+        const dx = shard.position.x - cx;
+        const dz = shard.position.z - cz;
+        const dSq = dx * dx + dz * dz;
+        if (dSq > maxDistSq) maxDistSq = dSq;
+      }
+      const radius = Math.sqrt(maxDistSq);
+
       this.scene.add(instancedMesh);
       this.scene.add(glyphMesh);
       this.regionMeshes.set(regionId, {
@@ -412,7 +433,9 @@ export class ShardWorld {
         shards: regionShards,
         baseColor: new THREE.Color(config.color),
         shardVisible: new Uint8Array(count),
-        glyphVisible: new Uint8Array(count)
+        glyphVisible: new Uint8Array(count),
+        bounds: { cx, cz, radius },
+        allCulled: false
       });
     }
   }
@@ -487,7 +510,40 @@ export class ShardWorld {
     this.culledInstancesCount = 0;
 
     for (const [regionId, data] of this.regionMeshes.entries()) {
-      const { instancedMesh, glyphMesh, shards, baseColor, shardVisible, glyphVisible } = data;
+      const { instancedMesh, glyphMesh, shards, baseColor, shardVisible, glyphVisible, bounds } = data;
+      const regDx = bounds.cx - playerPos.x;
+      const regDz = bounds.cz - playerPos.z;
+      const regDistSq = regDx * regDx + regDz * regDz;
+      const cullThreshold = CULL_RADIUS + bounds.radius;
+
+      // Whole-region spatial bounding rejection
+      if (regDistSq > cullThreshold * cullThreshold) {
+        this.culledInstancesCount += shards.length;
+        if (!data.allCulled) {
+          for (let i = 0; i < shards.length; i++) {
+            if (shardVisible[i] !== 0) {
+              this.dummy.position.set(0, -9999, 0);
+              this.dummy.scale.set(0, 0, 0);
+              this.dummy.updateMatrix();
+              instancedMesh.setMatrixAt(i, this.dummy.matrix);
+              shardVisible[i] = 0;
+            }
+            if (glyphVisible[i] !== 0) {
+              this.glyphDummy.position.set(0, -9999, 0);
+              this.glyphDummy.scale.set(0, 0, 0);
+              this.glyphDummy.updateMatrix();
+              glyphMesh.setMatrixAt(i, this.glyphDummy.matrix);
+              glyphVisible[i] = 0;
+            }
+          }
+          instancedMesh.instanceMatrix.needsUpdate = true;
+          glyphMesh.instanceMatrix.needsUpdate = true;
+          data.allCulled = true;
+        }
+        continue;
+      }
+      data.allCulled = false;
+
       let meshNeedsUpdate = false;
       let colorNeedsUpdate = false;
       let glyphMeshNeedsUpdate = false;
