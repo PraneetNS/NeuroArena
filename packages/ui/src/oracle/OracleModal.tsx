@@ -89,6 +89,15 @@ export const OracleModal: React.FC<OracleModalProps> = ({
   const activeBranch = branches.find((b) => b.id === activeBranchId) || branches[0];
   const activeTokens = activeBranch.tokens;
 
+  // Compute lineage breadcrumbs from root to active branch
+  const activeLineage: OracleBranch[] = [];
+  let curr: OracleBranch | undefined = activeBranch;
+  while (curr) {
+    activeLineage.unshift(curr);
+    if (!curr.parentId) break;
+    curr = branches.find((b) => b.id === curr!.parentId);
+  }
+
   const avgEntropy = activeTokens.length > 0
     ? (activeTokens.reduce((acc, t) => acc + t.entropy, 0) / activeTokens.length).toFixed(2)
     : '0.00';
@@ -495,6 +504,42 @@ export const OracleModal: React.FC<OracleModalProps> = ({
               gap: 'var(--na-space-4)'
             }}
           >
+            {/* Branch Lineage Breadcrumb */}
+            {activeLineage.length > 1 && (
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 'var(--na-space-1)',
+                  fontSize: 'var(--na-text-xs)',
+                  color: 'var(--na-text-secondary)',
+                  backgroundColor: 'var(--na-raised)',
+                  padding: 'var(--na-space-1) var(--na-space-3)',
+                  borderRadius: 'var(--na-radius-sm)',
+                  border: '1px solid var(--na-line)'
+                }}
+              >
+                <span style={{ color: 'var(--na-muted)' }}>Lineage:</span>
+                {activeLineage.map((item, idx) => (
+                  <React.Fragment key={item.id}>
+                    {idx > 0 && <span style={{ color: 'var(--na-muted)' }}>&gt;</span>}
+                    <span
+                      onClick={() => setActiveBranchId(item.id)}
+                      style={{
+                        cursor: 'pointer',
+                        color: item.id === activeBranchId ? 'var(--na-accent)' : 'var(--na-text-secondary)',
+                        fontWeight: item.id === activeBranchId ? 600 : 400,
+                        textDecoration: item.id === activeBranchId ? 'underline' : 'none'
+                      }}
+                      title={item.forkStep >= 0 ? `Forked at token #${item.forkStep + 1}` : 'Root'}
+                    >
+                      {item.label}{item.forkStep >= 0 ? ` (#${item.forkStep + 1})` : ''}
+                    </span>
+                  </React.Fragment>
+                ))}
+              </div>
+            )}
+
             {/* Branch Switcher Tabs */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--na-space-2)', flexWrap: 'wrap' }}>
               <span style={{ fontSize: 'var(--na-text-xs)', color: 'var(--na-muted)', textTransform: 'uppercase' }}>
