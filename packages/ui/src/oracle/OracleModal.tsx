@@ -39,6 +39,7 @@ export interface OracleModalProps {
       temperature: number;
       topK: number;
       topP: number;
+      minP?: number;
       repetitionPenalty?: number;
       maxTokens: number;
       seed: number;
@@ -62,6 +63,7 @@ export const OracleModal: React.FC<OracleModalProps> = ({
   const [temperature, setTemperature] = useState(0.8);
   const [topK, setTopK] = useState(10);
   const [topP, setTopP] = useState(0.9);
+  const [minP, setMinP] = useState(0.05);
   const [maxTokens, setMaxTokens] = useState(50);
   const [repetitionPenalty, setRepetitionPenalty] = useState(1.0);
   const [seed, setSeed] = useState(1337);
@@ -171,7 +173,7 @@ export const OracleModal: React.FC<OracleModalProps> = ({
       if (onGenerateLive) {
         await onGenerateLive(
           effectivePrompt,
-          { temperature, topK, topP, repetitionPenalty, maxTokens, seed, speaker },
+          { temperature, topK, topP, minP, repetitionPenalty, maxTokens, seed, speaker },
           (newToken) => {
             setBranches((prev) =>
               prev.map((b) => {
@@ -955,6 +957,26 @@ export const OracleModal: React.FC<OracleModalProps> = ({
                   value={topP}
                   disabled={isGenerating}
                   onChange={(e) => setTopP(parseFloat(e.target.value))}
+                  style={{ width: '100%', accentColor: 'var(--na-accent-cool)' }}
+                />
+              </div>
+
+              {/* Min-P (Relative Threshold) */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                  <span style={{ color: 'var(--na-text-secondary)' }}>Min-P Threshold:</span>
+                  <span style={{ fontFamily: 'var(--na-font-mono)', color: 'var(--na-accent-cool)', fontWeight: 600 }}>
+                    {minP.toFixed(2)}
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="0.0"
+                  max="0.5"
+                  step="0.01"
+                  value={minP}
+                  disabled={isGenerating}
+                  onChange={(e) => setMinP(parseFloat(e.target.value))}
                   style={{ width: '100%', accentColor: 'var(--na-accent-cool)' }}
                 />
               </div>
