@@ -20,7 +20,8 @@ graph LR
     RepPenalty --> Temp[Temperature Scaling]
     Temp --> TopK[Top-K Truncation]
     TopK --> Softmax[Softmax Normalization]
-    Softmax --> TopP[Nucleus Top-P Filtering]
+    Softmax --> MinP[Min-P Relative Truncation]
+    MinP --> TopP[Nucleus Top-P Filtering]
     TopP --> Sample[Multinomial Sampling]
 ```
 
@@ -50,10 +51,25 @@ Converts logits to intermediate probabilities:
 
 $$p_v = \frac{\exp(z'_v - \max_{j} z'_j)}{\sum_{k \in V_K} \exp(z'_k - \max_{j} z'_j)}$$
 
-### Stage 5: Nucleus Top-P Filtering
-Selects the smallest subset $V_P \subseteq V_K$ whose cumulative mass meets threshold $P$:
+### Stage 4b: Min-P Relative Dynamic Truncation
+Unlike fixed cumulative thresholds that fail across sharp and flat distributions, Min-P sets a dynamic floor proportional to the top candidate's probability:
 
-$$\sum_{v \in V_P} p_v \ge P$$
+$$\tau_{\text{min-p}} = p_{\max} \cdot P_{\text{min-ratio}}, \quad \text{where } p_{\max} = \max_{j} p_j$$
+
+$$V_{\text{min-p}} = \{ v \in V_K \mid p_v \ge \tau_{\text{min-p}} \}$$
+
+The surviving candidate probabilities are immediately renormalized:
+
+$$\tilde{p}_v = \frac{p_v}{\sum_{j \in V_{\text{min-p}}} p_j}, \quad \forall v \in V_{\text{min-p}}$$
+
+**Dynamic Self-Adjustment Properties:**
+- **High Certainty ($p_{\max} \approx 0.90$)**: $\tau = 0.90 \times 0.05 = 0.045$. Weak tail hallucination candidates are decisively eliminated without relying on arbitrary Top-P cutoff boundaries.
+- **High Uncertainty ($p_{\max} \approx 0.08$)**: $\tau = 0.08 \times 0.05 = 0.004$. Preserves wide narrative divergence and grammatical alternatives across flat distributions.
+
+### Stage 5: Nucleus Top-P Filtering
+Selects the smallest subset $V_P \subseteq V_{\text{min-p}}$ whose cumulative mass meets threshold $P$:
+
+$$\sum_{v \in V_P} \tilde{p}_v \ge P$$
 
 The subset probabilities are then renormalized to sum strictly to $1.0$.
 
