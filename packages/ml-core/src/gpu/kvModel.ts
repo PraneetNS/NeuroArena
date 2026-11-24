@@ -106,6 +106,11 @@ export class GpuKvModel {
   private finalLnBindGroup: GPUBindGroup;
   private tiedHeadBindGroup: GPUBindGroup;
 
+  // Pre-allocated scratch buffers to eliminate per-step heap garbage collection
+  private scratchEmbedData = new Uint32Array(4);
+  private scratchQkvData = new Uint32Array(8);
+  private scratchAttnData = new Uint32Array(4);
+
   constructor(
     context: GpuContext,
     config: GPTConfig,
@@ -452,12 +457,12 @@ export class GpuKvModel {
     const tokMeta = this.offsets.get('tokEmb')!;
     const posMeta = this.offsets.get('posEmb')!;
 
-    // 1. Update Uniforms for this step
-    this.context.device.queue.writeBuffer(
-      this.embedUniBuf,
-      0,
-      new Uint32Array([tokenId, pos, tokMeta.offset, posMeta.offset])
-    );
+    // 1. Update Uniforms for this step using pre-allocated typed arrays
+    this.scratchEmbedData[0] = tokenId;
+    this.scratchEmbedData[1] = pos;
+    this.scratchEmbedData[2] = tokMeta.offset;
+    this.scratchEmbedData[3] = posMeta.offset;
+    this.context.device.queue.writeBuffer(this.embedUniBuf, 0, this.scratchEmbedData);
 
     for (let l = 0; l < nLayers; l++) {
       const wq = this.offsets.get(`blocks.${l}.Wq`)!;
@@ -467,16 +472,21 @@ export class GpuKvModel {
       const wv = this.offsets.get(`blocks.${l}.Wv`)!;
       const bv = this.offsets.get(`blocks.${l}.bv`)!;
 
-      this.context.device.queue.writeBuffer(
-        this.qkvUniBuffers[l],
-        0,
-        new Uint32Array([l, pos, wq.offset, bq.offset, wk.offset, bk.offset, wv.offset, bv.offset])
-      );
-      this.context.device.queue.writeBuffer(
-        this.attnUniBuffers[l],
-        0,
-        new Uint32Array([l, pos, 0, 0])
-      );
+      this.scratchQkvData[0] = l;
+      this.scratchQkvData[1] = pos;
+      this.scratchQkvData[2] = wq.offset;
+      this.scratchQkvData[3] = bq.offset;
+      this.scratchQkvData[4] = wk.offset;
+      this.scratchQkvData[5] = bk.offset;
+      this.scratchQkvData[6] = wv.offset;
+      this.scratchQkvData[7] = bv.offset;
+      this.context.device.queue.writeBuffer(this.qkvUniBuffers[l], 0, this.scratchQkvData);
+
+      this.scratchAttnData[0] = l;
+      this.scratchAttnData[1] = pos;
+      this.scratchAttnData[2] = 0;
+      this.scratchAttnData[3] = 0;
+      this.context.device.queue.writeBuffer(this.attnUniBuffers[l], 0, this.scratchAttnData);
     }
 
     // 2. Dispatch Passes
@@ -544,32 +554,44 @@ export class GpuKvModel {
   }
 
   /**
-   * Runs a single-token step and reads back the resulting vocab logits.
+   * Runs a single-token step.
+   * If readback = true (default), copies logits and maps them asynchronously.
+   * If readback = false, dispatches the step asynchronously without blocking on staging readback,
+   * avoiding pipeline bubbles during multi-token prompt prefill.
    */
-  public async step(tokenId: number, pos: number): Promise<Float32Array> {
+  public async step(tokenId: number, pos: number, readback: false): Promise<null>;
+  public async step(tokenId: number, pos: number, readback?: true): Promise<Float32Array>;
+  public async step(tokenId: number, pos: number, readback?: boolean): Promise<Float32Array | null>;
+  public async step(tokenId: number, pos: number, readback = true): Promise<Float32Array | null> {
     const device = this.context.device;
     const encoder = device.createCommandEncoder({ label: `GpuKvStepEncoder_${pos}` });
     this.encodeStep(encoder, tokenId, pos);
 
-    encoder.copyBufferToBuffer(
-      this.logitsBuf,
-      0,
-      this.logitsStagingBuf,
-      0,
-      this.config.vocabSize * 4
-    );
-    device.queue.submit([encoder.finish()]);
+    if (readback) {
+      encoder.copyBufferToBuffer(
+        this.logitsBuf,
+        0,
+        this.logitsStagingBuf,
+        0,
+        this.config.vocabSize * 4
+      );
+      device.queue.submit([encoder.finish()]);
 
-    await this.logitsStagingBuf.mapAsync(GPUMapMode.READ);
-    const mapped = new Float32Array(this.logitsStagingBuf.getMappedRange());
-    const result = new Float32Array(mapped);
-    this.logitsStagingBuf.unmap();
-    return result;
+      await this.logitsStagingBuf.mapAsync(GPUMapMode.READ);
+      const mapped = new Float32Array(this.logitsStagingBuf.getMappedRange());
+      const result = new Float32Array(mapped);
+      this.logitsStagingBuf.unmap();
+      return result;
+    } else {
+      device.queue.submit([encoder.finish()]);
+      return null;
+    }
   }
 
   /**
    * Ingests a prompt sequence of length L, populating the KV cache
    * for tokens 0 .. L-1, returning the logits for the last token (L-1).
+   * Asynchronously streams intermediate tokens without CPU readback stalls.
    */
   public async prefill(promptIds: number[] | Uint32Array | Uint16Array): Promise<Float32Array> {
     const L = promptIds.length;
@@ -578,11 +600,12 @@ export class GpuKvModel {
       throw new Error(`Prompt length ${L} exceeds context length ${this.config.contextLen}`);
     }
 
-    let lastLogits: Float32Array | null = null;
-    for (let p = 0; p < L; p++) {
-      lastLogits = await this.step(promptIds[p], p);
+    // Fast asynchronous prefill: dispatch tokens 0 .. L-2 without CPU readback stalls
+    for (let p = 0; p < L - 1; p++) {
+      await this.step(promptIds[p], p, false);
     }
-    return lastLogits!;
+    const lastLogits = await this.step(promptIds[L - 1], L - 1, true);
+    return lastLogits;
   }
 
   /**
