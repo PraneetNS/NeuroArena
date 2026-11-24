@@ -125,6 +125,13 @@ export class TutorialTelemetry {
     this.persistSession();
   }
 
+  public recordMinPAdjustment(minP: number): void {
+    this.currentSession.samplingAdjustmentsCount = (this.currentSession.samplingAdjustmentsCount || 0) + 1;
+    this.currentSession.minPAdjustmentsCount = (this.currentSession.minPAdjustmentsCount || 0) + 1;
+    this.currentSession.lastMinPSetting = minP;
+    this.persistSession();
+  }
+
   public getSession(): TutorialTelemetrySession {
     return this.currentSession;
   }
