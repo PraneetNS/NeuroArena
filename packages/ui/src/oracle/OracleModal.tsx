@@ -83,6 +83,7 @@ export const OracleModal: React.FC<OracleModalProps> = ({
   const [activeBranchId, setActiveBranchId] = useState('root');
   const [selectedTokenIndex, setSelectedTokenIndex] = useState<number | null>(null);
   const [copiedTranscript, setCopiedTranscript] = useState(false);
+  const [genTokensPerSec, setGenTokensPerSec] = useState<number | null>(null);
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -177,6 +178,8 @@ export const OracleModal: React.FC<OracleModalProps> = ({
 
     const currentBranchId = branchToUpdate || activeBranchId;
     const effectivePrompt = customPrompt ?? prompt;
+    const genStartTime = performance.now();
+    let genCount = 0;
 
     try {
       if (onGenerateLive) {
@@ -184,6 +187,11 @@ export const OracleModal: React.FC<OracleModalProps> = ({
           effectivePrompt,
           { temperature, topK, topP, minP, repetitionPenalty, maxTokens, seed, speaker },
           (newToken) => {
+            genCount++;
+            const elapsed = (performance.now() - genStartTime) / 1000;
+            if (elapsed > 0.05) {
+              setGenTokensPerSec(Math.round((genCount / elapsed) * 10) / 10);
+            }
             setBranches((prev) =>
               prev.map((b) => {
                 if (b.id !== currentBranchId) return b;
@@ -425,6 +433,12 @@ export const OracleModal: React.FC<OracleModalProps> = ({
               <span>Avg H: <strong style={{ color: 'var(--na-accent-cool)' }}>{avgEntropy}</strong></span>
               <span>•</span>
               <span>Avg S: <strong style={{ color: 'var(--na-accent)' }}>{avgSurprise}</strong></span>
+              {genTokensPerSec !== null && (
+                <>
+                  <span>•</span>
+                  <span>Speed: <strong style={{ color: 'var(--na-accent-cool)' }}>{genTokensPerSec} t/s</strong></span>
+                </>
+              )}
             </div>
 
             {/* Copy Transcript Button */}
