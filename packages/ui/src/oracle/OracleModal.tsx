@@ -366,6 +366,32 @@ export const OracleModal: React.FC<OracleModalProps> = ({
               )}
             </div>
 
+            {/* Fine-Tuning Diagnostic Explanation (Data-Dependent) */}
+            {speaker && (
+              <div
+                style={{
+                  backgroundColor: 'var(--na-surface)',
+                  border: '1px solid var(--na-line)',
+                  borderRadius: 'var(--na-radius-sm)',
+                  padding: 'var(--na-space-2) var(--na-space-3)',
+                  fontSize: 'var(--na-text-xs)',
+                  color: 'var(--na-text-secondary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 'var(--na-space-2)'
+                }}
+              >
+                <span style={{ color: 'var(--na-accent)', fontWeight: 600 }}>Diagnostic:</span>
+                <span>
+                  {speaker === 'HAMLET'
+                    ? 'Hamlet held-out loss: 0.8290 \u2192 0.8095 (\u0394 = -0.0195), general VAL: 2.5641 \u2192 2.5864 (\u0394 = +0.0223 \u2264 0.10). The model specialised to this voice at the cost of broader knowledge: catastrophic forgetting.'
+                    : speaker === 'FALSTAFF'
+                    ? 'Falstaff held-out loss: 0.7158 \u2192 0.6919 (\u0394 = -0.0239), general VAL: 2.5641 \u2192 2.6307 (\u0394 = +0.0667 \u2264 0.10). The model specialised to this voice at the cost of broader knowledge: catastrophic forgetting.'
+                    : 'If speaker held-out loss rises, the model memorised the training turns and lost the ability to generalize in character: overfitting. If speaker held-out loss falls but general VAL rises, the model specialised to this voice at the cost of broader knowledge: catastrophic forgetting.'}
+                </span>
+              </div>
+            )}
+
             {/* Branch Metrics Badge */}
             <div
               style={{

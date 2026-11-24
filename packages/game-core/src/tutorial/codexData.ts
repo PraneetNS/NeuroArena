@@ -135,12 +135,12 @@ export const CODEX_ENTRIES: Record<CodexConceptId, CodexEntryDef> = {
 
   overfitting: {
     id: 'overfitting',
-    title: 'Overfitting & Generalization',
+    title: 'Overfitting & Fine-Tuning Forgetting',
     category: 'Diagnostics // Failure Modes',
     unlockedAtStep: 'apply_fix_retrain',
     paragraphs: [
-      'Overfitting occurs when a high-capacity model memorizes exact training phrases rather than underlying grammar and facts. It answers familiar sequences flawlessly, but breaks on even minor phrasing changes.',
-      'Signs of overfitting appear when training loss continues downward while validation loss arcs upward. Countermeasures include larger clean corpora, weight decay, and early stopping.'
+      'Overfitting occurs when a high-capacity model memorizes exact training sequences rather than underlying grammatical structure. In fine-tuning, if speaker held-out loss rises, the model memorised the training turns and lost the ability to generalize in character: overfitting.',
+      'Conversely, if speaker held-out loss falls but general VAL loss rises, the model specialised to this voice at the cost of broader knowledge: catastrophic forgetting. In empirical sweeps (Hamlet best LR 5e-5, 25% replay: held-out loss 0.8290 -> 0.8095, general VAL +0.0223; Falstaff best LR 1e-4, 0% replay: held-out loss 0.7158 -> 0.6919, general VAL +0.0667), early stopping and replay regularization bound general degradation within the 0.10 tolerance limit.'
     ],
     formulaPlain: 'Generalization_Gap = Loss_Validation - Loss_Training',
     widgetType: 'overfit_curve'
