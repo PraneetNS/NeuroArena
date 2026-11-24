@@ -18,4 +18,5 @@ export * from './vault.js';
 export * from './cleaner.js';
 export * from './shingles.js';
 export * from './keymap.js';
+export * from './speakerProfiles.js';
 export * from './tutorial/index.js';
