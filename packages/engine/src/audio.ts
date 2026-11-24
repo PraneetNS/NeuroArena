@@ -643,7 +643,8 @@ export class SoundEngine {
 
   /**
    * Crystalline shimmer chime when branching / forking dialogue from an alternative token.
-   * Dual sine burst at high celestial harmonics (864 Hz, 1296 Hz) with short exponential decay.
+   * Multi-stage harmonic resonance: fundamental (864 Hz), perfect fifth (1296 Hz),
+   * octave overtone (1728 Hz), and celestial shimmer (2592 Hz) with exponential decay.
    */
   public playOracleBranchFork(): void {
     if (this.isMutedState) return;
@@ -652,24 +653,29 @@ export class SoundEngine {
 
     const now = ctx.currentTime;
     const sfxGain = this.sfxGain;
-    const freqs = [864, 1296];
-    const duration = 0.45;
+    const harmonics = [
+      { freq: 864, delay: 0.0, gain: 0.085, dur: 0.45 },
+      { freq: 1296, delay: 0.03, gain: 0.065, dur: 0.42 },
+      { freq: 1728, delay: 0.06, gain: 0.045, dur: 0.38 },
+      { freq: 2592, delay: 0.09, gain: 0.025, dur: 0.32 },
+    ];
 
-    freqs.forEach((freq, idx) => {
+    harmonics.forEach(({ freq, delay, gain: peakGain, dur }) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, now + idx * 0.04);
-      osc.frequency.exponentialRampToValueAtTime(freq * 1.05, now + idx * 0.04 + duration);
+      const startTime = now + delay;
+      osc.frequency.setValueAtTime(freq, startTime);
+      osc.frequency.exponentialRampToValueAtTime(freq * 1.03, startTime + dur);
 
-      gain.gain.setValueAtTime(0.09, now + idx * 0.04);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.04 + duration);
+      gain.gain.setValueAtTime(peakGain, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + dur);
 
       osc.connect(gain);
       gain.connect(sfxGain);
 
-      osc.start(now + idx * 0.04);
-      osc.stop(now + idx * 0.04 + duration);
+      osc.start(startTime);
+      osc.stop(startTime + dur);
     });
   }
 
