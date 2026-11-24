@@ -48,13 +48,14 @@ export class GpuInferenceSampler {
   }
 
   /**
-   * Samples a single token from logits using Temperature, Top-K, and Top-P filtering.
+   * Samples a single token from logits using Temperature, Top-K, Top-P, and Min-P filtering.
    */
   public static sampleNextToken(
     logits: Float32Array,
     temperature = 0.8,
     topK = 10,
     topP = 0.9,
+    minP = 0.0,
     rng: Xoshiro128StarStar
   ): number {
     const vocabSize = logits.length;
@@ -87,10 +88,24 @@ export class GpuInferenceSampler {
       item.p /= sumExp;
     }
 
+    // 3b. Min-P relative dynamic threshold filtering
+    let filteredProbs = probs;
+    if (minP > 0 && probs.length > 0) {
+      const topProb = probs[0].p;
+      const threshold = topProb * minP;
+      const survivors = probs.filter(item => item.p >= threshold);
+      if (survivors.length > 0) {
+        let survSum = 0;
+        for (const item of survivors) survSum += item.p;
+        for (const item of survivors) item.p /= survSum;
+        filteredProbs = survivors;
+      }
+    }
+
     // 4. Top-P (nucleus) filtering
     let cumProb = 0;
-    const nucleus: typeof probs = [];
-    for (const item of probs) {
+    const nucleus: typeof filteredProbs = [];
+    for (const item of filteredProbs) {
       nucleus.push(item);
       cumProb += item.p;
       if (cumProb >= topP) break;
@@ -127,6 +142,7 @@ export class GpuInferenceSampler {
     const temperature = request.temperature ?? 0.8;
     const topK = request.topK ?? 10;
     const topP = request.topP ?? 0.9;
+    const minP = request.minP ?? 0.0;
     const seed = request.seed ?? (Date.now() & 0xffffffff);
     const rng = new Xoshiro128StarStar(seed);
 
@@ -181,6 +197,7 @@ export class GpuInferenceSampler {
         temperature,
         topK,
         topP,
+        minP,
         rng
       );
 

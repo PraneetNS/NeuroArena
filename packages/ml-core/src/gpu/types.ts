@@ -84,6 +84,7 @@ export interface SampleRequest {
   temperature?: number;
   topK?: number;
   topP?: number;
+  minP?: number;
   seed?: number;
 }
 

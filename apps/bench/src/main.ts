@@ -295,6 +295,7 @@ class BenchmarkApp {
   private sampleTemperature = 0.8;
   private sampleTopK = 10;
   private sampleTopP = 0.9;
+  private sampleMinP = 0.05;
   private sampleOutput = '';
   private isSampling = false;
 
@@ -635,6 +636,7 @@ class BenchmarkApp {
       temperature: this.sampleTemperature,
       topK: this.sampleTopK,
       topP: this.sampleTopP,
+      minP: this.sampleMinP,
       maxNewTokens: 100
     });
   }
@@ -1007,6 +1009,11 @@ class BenchmarkApp {
       const el = document.getElementById('sample-topp-val');
       if (el) el.textContent = this.sampleTopP.toFixed(2);
     });
+    this.root.querySelector('#input-sample-minp')?.addEventListener('input', (e: any) => {
+      this.sampleMinP = parseFloat(e.target.value) || 0.05;
+      const el = document.getElementById('sample-minp-val');
+      if (el) el.textContent = this.sampleMinP.toFixed(2);
+    });
     this.root.querySelector('#btn-lab-sample')?.addEventListener('click', () => this.triggerLabSample());
   }
 
@@ -1139,7 +1146,7 @@ class BenchmarkApp {
           </div>
 
           <!-- Sampling Controls Row -->
-          <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 1rem; font-family: var(--font-mono); font-size: 0.82rem;">
+          <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 1rem; font-family: var(--font-mono); font-size: 0.82rem;">
             <div>
               <label style="color: #9AA3AE; display: block; margin-bottom: 0.3rem;">PROMPT</label>
               <input id="input-sample-prompt" type="text" value="${this.samplePrompt}" style="width: 100%; padding: 0.5rem; background: #0E1116; color: #E8E4DA; border: 1px solid #2A333F; border-radius: 4px;" />
@@ -1164,6 +1171,13 @@ class BenchmarkApp {
                 <span id="sample-topp-val" style="color: #4FB3A9;">${this.sampleTopP.toFixed(2)}</span>
               </div>
               <input id="input-sample-topp" type="range" min="0.1" max="1.0" step="0.05" value="${this.sampleTopP}" style="width: 100%; cursor: pointer;" />
+            </div>
+            <div>
+              <div style="display: flex; justify-content: space-between; margin-bottom: 0.3rem;">
+                <label style="color: #9AA3AE;">MIN-P</label>
+                <span id="sample-minp-val" style="color: #4FB3A9;">${this.sampleMinP.toFixed(2)}</span>
+              </div>
+              <input id="input-sample-minp" type="range" min="0.0" max="0.5" step="0.01" value="${this.sampleMinP}" style="width: 100%; cursor: pointer;" />
             </div>
           </div>
 
