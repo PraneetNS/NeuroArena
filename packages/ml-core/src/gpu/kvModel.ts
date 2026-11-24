@@ -831,6 +831,38 @@ export class GpuKvModel {
   }
 
   /**
+   * Returns runtime telemetry regarding the GPU KV-cache allocation and slot utilization.
+   */
+  public getCacheTelemetry(): {
+    contextLen: number;
+    nLayers: number;
+    dModel: number;
+    headDim: number;
+    nHeads: number;
+    bytesPerToken: number;
+    totalVramBytes: number;
+    totalCacheSlots: number;
+    elementSizeBytes: number;
+  } {
+    const headDim = this.config.dModel / this.config.nHeads;
+    const bytesPerToken = 2 * this.config.nLayers * this.config.dModel * 4;
+    const totalVramBytes = bytesPerToken * this.config.contextLen;
+    const totalCacheSlots = this.config.nLayers * this.config.nHeads * this.config.contextLen;
+
+    return {
+      contextLen: this.config.contextLen,
+      nLayers: this.config.nLayers,
+      dModel: this.config.dModel,
+      headDim,
+      nHeads: this.config.nHeads,
+      bytesPerToken,
+      totalVramBytes,
+      totalCacheSlots,
+      elementSizeBytes: 4
+    };
+  }
+
+  /**
    * Releases all allocated WebGPU buffers and uniform storage to prevent VRAM memory leaks.
    */
   public destroy(): void {
