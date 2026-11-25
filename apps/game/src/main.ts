@@ -156,6 +156,9 @@ class NeuroArenaGame {
   private oracleContainer: HTMLElement;
   private oracleRoot: ReactDOM.Root;
   private isOracleOpen = false;
+  private oracleKvModel: any = null;
+  private oracleTokenizer: any = null;
+  private isOraclePrewarmed = false;
 
   private lastInteractionState: ShardInteractionState = {
     targetShard: null,
@@ -1339,11 +1342,44 @@ class NeuroArenaGame {
     );
   }
 
+  private async getOracleGenerator(): Promise<{
+    model: any;
+    tokenizer: any;
+  }> {
+    if (this.oracleKvModel && this.oracleTokenizer) {
+      return { model: this.oracleKvModel, tokenizer: this.oracleTokenizer };
+    }
+    const ctx = await mlCore.GpuContext.create();
+    const [bpeRes, elder] = await Promise.all([
+      fetch('/data/bpe_1024.json').catch(() => null),
+      mlCore.loadElderCheckpoint('/assets/elder_preset_s.bin')
+    ]);
+    let tok: any;
+    if (bpeRes && bpeRes.ok) {
+      const bpeJson = await bpeRes.text();
+      tok = mlCore.ByteBPE.fromJSON(bpeJson);
+    } else {
+      tok = new mlCore.ByteBPE('bpe1024-v2');
+    }
+    const kvModel = new mlCore.GpuKvModel(ctx, elder.manifest.config, elder.weights, tok);
+    // Pre-warm WebGPU pipelines with dummy 1-token step so first live generation has zero compilation latency
+    await kvModel.step(10, 0);
+    this.oracleKvModel = kvModel;
+    this.oracleTokenizer = tok;
+    this.isOraclePrewarmed = true;
+    return { model: kvModel, tokenizer: tok };
+  }
+
   public toggleOracle(open?: boolean): void {
     const nextState = open !== undefined ? open : !this.isOracleOpen;
     if (nextState !== this.isOracleOpen) {
-      if (nextState) this.audio.playOracleCommune();
-      else this.audio.playUIClose();
+      if (nextState) {
+        this.audio.playOracleCommune();
+        // Eagerly pre-warm shaders & pipelines in background so first generation has zero latency
+        this.getOracleGenerator().catch((err) => console.warn('Oracle pre-warm error:', err));
+      } else {
+        this.audio.playUIClose();
+      }
     }
     this.isOracleOpen = nextState;
     this.renderOracle();
@@ -1358,6 +1394,16 @@ class NeuroArenaGame {
         onForkBranch: () => {
           this.audio.playOracleBranchFork();
           this.director.getTelemetry().recordOracleBranchFork();
+        },
+        onGenerateLive: async (promptText, options, onToken, signal) => {
+          const { model } = await this.getOracleGenerator();
+          for await (const tokenStep of model.generate(promptText, {
+            ...options,
+            signal
+          })) {
+            if (signal?.aborted) break;
+            onToken(tokenStep as any);
+          }
         }
       })
     );

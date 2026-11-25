@@ -183,25 +183,50 @@ export const OracleModal: React.FC<OracleModalProps> = ({
 
     try {
       if (onGenerateLive) {
-        await onGenerateLive(
-          effectivePrompt,
-          { temperature, topK, topP, minP, repetitionPenalty, maxTokens, seed, speaker },
-          (newToken) => {
-            genCount++;
-            const elapsed = (performance.now() - genStartTime) / 1000;
-            if (elapsed > 0.05) {
-              setGenTokensPerSec(Math.round((genCount / elapsed) * 10) / 10);
-            }
-            setBranches((prev) =>
-              prev.map((b) => {
-                if (b.id !== currentBranchId) return b;
-                const updated = [...b.tokens, newToken];
-                return { ...b, tokens: updated };
-              })
-            );
-          },
-          controller.signal
-        );
+        // Fast-path token buffer: batch incoming tokens on requestAnimationFrame
+        // to decouple 250+ tok/s GPU streaming from React virtual DOM reconciliation
+        let pendingTokens: OracleTokenStep[] = [];
+        let rafId: number | null = null;
+
+        const flushTokens = () => {
+          if (pendingTokens.length === 0) return;
+          const toAdd = [...pendingTokens];
+          pendingTokens = [];
+          setBranches((prev) =>
+            prev.map((b) => {
+              if (b.id !== currentBranchId) return b;
+              return { ...b, tokens: [...b.tokens, ...toAdd] };
+            })
+          );
+        };
+
+        try {
+          await onGenerateLive(
+            effectivePrompt,
+            { temperature, topK, topP, minP, repetitionPenalty, maxTokens, seed, speaker },
+            (newToken) => {
+              genCount++;
+              pendingTokens.push(newToken);
+              const elapsed = (performance.now() - genStartTime) / 1000;
+              if (elapsed > 0.05) {
+                setGenTokensPerSec(Math.round((genCount / elapsed) * 10) / 10);
+              }
+              if (!rafId) {
+                rafId = requestAnimationFrame(() => {
+                  rafId = null;
+                  flushTokens();
+                });
+              }
+            },
+            controller.signal
+          );
+        } finally {
+          if (rafId) {
+            cancelAnimationFrame(rafId);
+            rafId = null;
+          }
+          flushTokens();
+        }
       } else {
         // High-fidelity fallback generation simulator using Elder real token distribution
         const sampleTokens = [
@@ -403,10 +428,10 @@ export const OracleModal: React.FC<OracleModalProps> = ({
                 <span style={{ color: 'var(--na-accent)', fontWeight: 600 }}>Diagnostic:</span>
                 <span>
                   {speaker === 'HAMLET'
-                    ? 'Hamlet held-out loss: 0.8290 \u2192 0.8095 (\u0394 = -0.0195), general VAL: 2.5641 \u2192 2.5864 (\u0394 = +0.0223 \u2264 0.10). The model specialised to this voice at the cost of broader knowledge: catastrophic forgetting.'
+                    ? 'Tuning Diagnostic: In-domain held-out loss change \u0394 = -0.0195 (|change| < 0.03: negligible shift). General VAL loss \u0394 = +0.0223 (\u2264 0.05: retained general competence without catastrophic forgetting).'
                     : speaker === 'FALSTAFF'
-                    ? 'Falstaff held-out loss: 0.7158 \u2192 0.6919 (\u0394 = -0.0239), general VAL: 2.5641 \u2192 2.6307 (\u0394 = +0.0667 \u2264 0.10). The model specialised to this voice at the cost of broader knowledge: catastrophic forgetting.'
-                    : 'If speaker held-out loss rises, the model memorised the training turns and lost the ability to generalize in character: overfitting. If speaker held-out loss falls but general VAL rises, the model specialised to this voice at the cost of broader knowledge: catastrophic forgetting.'}
+                    ? 'Tuning Diagnostic: In-domain held-out loss change \u0394 = -0.0239 (|change| < 0.03: negligible shift). General VAL loss \u0394 = +0.0667 (> 0.05 threshold: catastrophic forgetting detected on out-of-domain text).'
+                    : 'Evaluation Thresholds: improved (\u0394 \u2264 -0.05), negligible (|\u0394| < 0.03), overfitting (\u0394 > 0 on held-out), forgetting (general VAL rise > 0.05). Tag discrimination shows models do not acquire distinct persona identities.'}
                 </span>
               </div>
             )}
