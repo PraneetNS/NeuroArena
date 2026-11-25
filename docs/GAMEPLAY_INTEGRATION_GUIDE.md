@@ -43,4 +43,4 @@ flowchart TD
 ### Stage 6: The Oracle Stone & Timeline Branching
 - Diegetic stone monoliths in the wild and Dusk Camp.
 - Players scribe prompts; the model continues autoregressively using GPU KV-caching.
-- Players can inspect token entropy gauges, explore alternative continuation branches in a timeline tree, or fine-tune character voices (Hamlet, Falstaff, Portia) using dialogue loss masking.
+- Players can inspect token entropy gauges, explore alternative continuation branches in a timeline tree, or fine-tune models on domain genres and speaker dialogues using masked next-token loss.

@@ -141,10 +141,10 @@ export const CODEX_ENTRIES: Record<CodexConceptId, CodexEntryDef> = {
     category: 'Diagnostics // Failure Modes',
     unlockedAtStep: 'apply_fix_retrain',
     paragraphs: [
-      'Overfitting occurs when a high-capacity model memorizes exact training sequences rather than underlying grammatical structure. In fine-tuning, if speaker held-out loss rises, the model memorised the training turns and lost the ability to generalize in character: overfitting.',
-      'Conversely, if speaker held-out loss falls but general VAL loss rises, the model specialised to this voice at the cost of broader knowledge: catastrophic forgetting. In empirical sweeps (Hamlet best LR 5e-5, 25% replay: held-out loss 0.8290 -> 0.8095, general VAL +0.0223; Falstaff best LR 1e-4, 0% replay: held-out loss 0.7158 -> 0.6919, general VAL +0.0667), early stopping and replay regularization bound general degradation within the 0.10 tolerance limit.'
+      'Evaluation of fine-tuning follows four strict quantitative thresholds: "improved" (in-domain held-out loss down by at least 0.05 nats), "negligible" (|change| below 0.03 nats), "overfitting" (in-domain held-out loss rises), and "forgetting" (general VAL loss increases by more than 0.05 nats).',
+      'In empirical tuning sweeps on dialogue subsets, held-out shifts remained within the negligible regime (|Δ| < 0.03 nats), while out-of-domain forgetting emerged when general replay was omitted (e.g. general VAL rise > 0.05). Speaker-tag discrimination matrices confirm that models do not acquire distinct character identities: correct tags are rarely lowest in their row and perform comparably to nonsense tag controls.'
     ],
-    formulaPlain: 'Generalization_Gap = Loss_Validation - Loss_Training',
+    formulaPlain: 'Thresholds: Improved (Δ ≤ -0.05), Negligible (|Δ| < 0.03), Forgetting (VAL_Rise > 0.05)',
     widgetType: 'overfit_curve'
   },
 
@@ -215,14 +215,14 @@ export const CODEX_ENTRIES: Record<CodexConceptId, CodexEntryDef> = {
 
   sampling: {
     id: 'sampling',
-    title: 'Autoregressive Sampling',
+    title: 'Autoregressive Sampling & KV-Cache',
     category: 'Inference // Stochasticity',
     unlockedAtStep: 'oracle_unlocked',
     paragraphs: [
       'Autoregressive generation does not produce complete sentences at once; it rolls a die iteratively, token by token. At every step, the model computes a categorical probability distribution over the vocabulary, samples one token according to this distribution, appends it to the context, and repeats.',
-      'Deterministic greedy decoding (always picking the argmax) quickly falls into repetitive loops and dull clichés. Stochastic sampling breathes life into the model, balancing coherence against serendipity.'
+      'Deterministic greedy decoding falls into repetitive loops, while stochastic sampling breathes life into the text. KV-Cache Speedup: While KV-caching keeps decode time flat (~3.05 ms/token, >320 tok/s on Preset S and M), on tiny models like Scout (446,304 parameters, d_model=96) the cache yields ~1.0x speedup because GPU arithmetic (<0.5 ms) is so lightweight that driver submission and staging buffer readbacks dominate execution time.'
     ],
-    formulaPlain: 'x_{t+1} ~ Categorical( softmax( z_t ) )',
+    formulaPlain: 'x_{t+1} ~ Categorical( softmax( z_t ) ) ; KV_Pos = t',
     widgetType: 'sampling_widget'
   },
 

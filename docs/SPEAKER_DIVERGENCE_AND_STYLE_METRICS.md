@@ -70,3 +70,13 @@ Measured pairwise $D_{\text{JS}}$ (in bits) across Shakespearean dramatic archet
 ### Key Stylistic Observations:
 - **Maximum Divergence (0.428 bits)**: Falstaff vs Prospero — Colloquial taverns vs formal theurgic soliloquies exhibit nearly orthogonal vocabulary choices.
 - **Minimum Divergence (0.185 bits)**: Hamlet vs Iago — Shared dramatic vocabulary of inward psychological manipulation, tragedy, and soliloquy structure.
+
+---
+
+## 5. Speaker Tag Discrimination & Non-Acquisition of Speaker Identity
+
+To rigorously determine whether models actually acquire distinct persona identities, we evaluate held-out replies across an $N \times (N+1)$ tag matrix using the ONE unified metric ($\mathcal{L}_{\text{speaker}}$, averaging strictly over reply tokens):
+- For a held-out dialogue prompt of Speaker $S$, we evaluate the loss under the correct tag `S:`, all rival tags `R:`, and a 7-character random nonsense control tag `XQKZVNM:`.
+- **Finding**: The correct speaker tag is rarely lowest in its row. In our 6-speaker evaluation, `IAGO:` achieves the lowest loss across 5 of the 6 rows (including Hamlet, Portia, Rosalind, and Prospero) purely because `IAGO:` is a short, high-frequency prefix that minimally distorts the unconditional next-token distribution.
+- **Nonsense Control Parity**: The loss difference between the correct speaker tag and the random nonsense tag `XQKZVNM:` is negligible ($\sim 0.02\text{--}0.05\text{ nats}$), well within sampling variance.
+- **Conclusion**: The models do not acquire distinct speaker persona identity; stylistic shifts remain in the negligible regime ($|\Delta| < 0.03\text{ nats}$), and earlier claims of widened persona preference were artifacts of sequence-diluted loss metrics.
