@@ -4,9 +4,9 @@
  * Sits on the Camp workbench table:
  * - Handcrafted metal and glass lantern.
  * - Frame struts have physical etched notch rings corresponding to:
- *   - UNIGRAM Baseline (4.472)
- *   - BIGRAM Baseline (3.286)
- *   - TRIGRAM Baseline (2.834)
+ *   - UNIGRAM Baseline (5.758)
+ *   - BIGRAM Baseline (4.001)
+ *   - TRIGRAM Baseline (3.959)
  * - Flame height maps directly to smoothed train loss.
  * - Flame flickers proportionally to rolling loss variance.
  * - When a loss spike occurs, the flame flares high and radiant orange-white for 1.5s!

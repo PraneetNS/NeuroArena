@@ -7,9 +7,16 @@
 
 export const BASELINES = {
   uniform: 6.9315, // ln(1024)
-  unigram: 4.472,
-  bigram: 3.286,
-  trigram: 2.834
+  unigram: 5.758,  // Empirical unigram val loss with add-1 smoothing on bpe1024-v2 (2.4921 / char)
+  bigram: 4.001,   // Empirical bigram val loss with add-0.1 smoothing on bpe1024-v2 (1.7314 / char)
+  trigram: 3.959   // Empirical trigram val loss with add-0.02 smoothing on bpe1024-v2 (1.7133 / char)
+} as const;
+
+export const BASELINES_PER_CHAR = {
+  uniform: 2.9998,
+  unigram: 2.4921,
+  bigram: 1.7314,
+  trigram: 1.7133
 } as const;
 
 export type BaselineType = keyof typeof BASELINES;

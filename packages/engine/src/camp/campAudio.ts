@@ -301,7 +301,7 @@ export class CampAudio {
       const now = ctx.currentTime;
       let notes: number[];
 
-      if (this.currentSmoothedLoss > 3.5) {
+      if (this.currentSmoothedLoss > BASELINES.bigram) {
         // C-minor contemplative motif
         notes = [261.63, 311.13, 392.0, 523.25]; // C4, Eb4, G4, C5
       } else if (this.currentSmoothedLoss > BASELINES.trigram) {

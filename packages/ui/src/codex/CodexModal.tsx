@@ -698,7 +698,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({
                       <line x1="40" y1="100" x2="380" y2="100" stroke="var(--na-line)" strokeDasharray="4 4" />
                       
                       <line x1="40" y1="68" x2="380" y2="68" stroke="var(--na-muted)" strokeDasharray="2 2" />
-                      <text x="382" y="71" fill="var(--na-muted)" fontSize="8" fontFamily="var(--na-font-mono)">Unigram 4.472</text>
+                      <text x="382" y="71" fill="var(--na-muted)" fontSize="8" fontFamily="var(--na-font-mono)">Unigram {BASELINES.unigram}</text>
 
                       <text x="32" y="24" fill="var(--na-muted)" fontSize="9" textAnchor="end" fontFamily="var(--na-font-mono)">6.5</text>
                       <text x="32" y="64" fill="var(--na-muted)" fontSize="9" textAnchor="end" fontFamily="var(--na-font-mono)">4.5</text>

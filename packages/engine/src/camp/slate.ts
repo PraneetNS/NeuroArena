@@ -182,9 +182,9 @@ export class CampSlate {
     ctx.lineWidth = 1;
     ctx.strokeRect(plotX, plotY, plotW, plotH);
 
-    // Determine scale: 1.5 to 5.5
+    // Determine scale: 1.5 to 6.5
     const minLoss = 1.8;
-    const maxLoss = 5.2;
+    const maxLoss = 6.2;
 
     const getY = (val: number) => {
       const norm = (val - minLoss) / (maxLoss - minLoss);
@@ -195,7 +195,7 @@ export class CampSlate {
     ctx.fillStyle = '#64748b';
     ctx.font = '13px monospace';
     ctx.textAlign = 'right';
-    for (let l = 2.0; l <= 5.0; l += 1.0) {
+    for (let l = 2.0; l <= 6.0; l += 1.0) {
       const gy = getY(l);
       ctx.strokeStyle = 'rgba(148, 163, 184, 0.1)';
       ctx.beginPath();

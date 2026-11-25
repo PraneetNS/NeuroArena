@@ -154,10 +154,10 @@ export const CODEX_ENTRIES: Record<CodexConceptId, CodexEntryDef> = {
     category: 'Evaluation // Benchmarks',
     unlockedAtStep: 'evaluator_inspection',
     paragraphs: [
-      'A loss value is meaningless without reference points. Uniform random guessing on a 1,024-token vocabulary yields ln(1024) ≈ 6.931. An empirical unigram frequency baseline yields 4.472.',
-      'Surpassing the unigram baseline proves the model learned which words are common, not how they fit together. The bigram gate (3.286) awaits in Region 1 with the promise of grammar.'
+      'A loss value is meaningless without reference points. Uniform random guessing on a 1,024-token vocabulary yields ln(1024) ≈ 6.931. An empirical unigram frequency baseline yields 5.758 (2.492 / char).',
+      'Surpassing the unigram baseline proves the model learned which words are common, not how they fit together. The bigram gate (4.001) awaits in Region 1 with the promise of grammar.'
     ],
-    formulaPlain: 'Tutorial_Gate: Val_Loss < 4.472 (Unigram)',
+    formulaPlain: 'Tutorial_Gate: Val_Loss < 5.758 (Unigram)',
     widgetType: 'baseline_bars'
   },
 

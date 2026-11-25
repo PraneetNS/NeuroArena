@@ -87,7 +87,7 @@ export const LUMEN_DIALOGUE: Record<string, LumenLine> = {
   },
 
   reward_unlocked: {
-    text: 'Your model surpassed the unigram baseline (4.472): it learned common words.',
+    text: 'Your model surpassed the unigram baseline (5.758): it learned common words.',
     subtext: 'Region 1 holds the bigram gate—the true beginning of syntax and grammar.',
     hint: 'Press {KEY_CODEX} anytime to study the Codex, or follow the beacon into Region 1.'
   },
@@ -116,7 +116,7 @@ export function getCampMentorsNoteLine(findingId?: string, loss?: number, lr?: n
     const curStep = step ?? 150;
     const curLR = lr ?? 0.0001;
     const lossDrop = Math.max(0, 6.931 - curLoss).toFixed(3);
-    const unigramGap = Math.max(0, curLoss - 4.472).toFixed(3);
+    const unigramGap = Math.max(0, curLoss - 5.758).toFixed(3);
     const lrStr = curLR.toExponential(1);
     return {
       text: `At learning rate ${lrStr}, the loss dropped by ${lossDrop} over ${curStep} steps to ${curLoss.toFixed(3)}, still ${unigramGap} above the unigram baseline.`,
