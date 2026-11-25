@@ -38,15 +38,15 @@ export const CORPUS_PROVENANCE = {
     valPercentage: 9.27
   },
   bpe1024Tokens: {
-    total: 2957826,
-    train: 2680959,
-    val: 276867,
-    valPercentage: 9.36
+    total: 2295073,
+    train: 2080093,
+    val: 214980,
+    valPercentage: 9.37
   },
   charsPerToken: {
-    train: 1.814,
-    val: 1.794,
-    overall: 1.812
+    train: 2.338,
+    val: 2.311,
+    overall: 2.335
   }
 } as const;
 

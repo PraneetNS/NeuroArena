@@ -3,11 +3,24 @@
  * regex word pre-splitting, fast memoized encoding, lossless decoding, and JSON serialization.
  */
 
-// Regular expression to pre-split text into words, whitespace runs, and punctuation
-// Merges never cross word boundaries
-const WORD_REGEX = /\s+|[^\s\w]+|\w+/g;
+// Pre-tokenizer regex v1 (legacy whitespace split)
+export const PRE_TOKENIZER_V1_REGEX = /\s+|[^\s\w]+|\w+/g;
+
+// Pre-tokenizer regex v2 (GPT-2 style: single leading space attaches to next piece)
+export const PRE_TOKENIZER_V2_REGEX = / ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+/gu;
+
+export type BpeVersion = 'bpe1024-v1' | 'bpe1024-v2';
+
+export function getPreTokenizerRegex(version: BpeVersion = 'bpe1024-v2'): RegExp {
+  return version === 'bpe1024-v1'
+    ? /\s+|[^\s\w]+|\w+/g
+    : / ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+/gu;
+}
+
+export const WORD_REGEX = PRE_TOKENIZER_V2_REGEX;
 
 export class ByteBPE {
+  public version: BpeVersion = 'bpe1024-v2';
   // Mapping from pairKey ((id1 << 16) | id2) to new token id
   public pairToId: Map<number, number> = new Map();
   // Mapping from pairKey ((id1 << 16) | id2) to merge rank (0-indexed order of creation)
@@ -26,7 +39,8 @@ export class ByteBPE {
   private textEncoder = new TextEncoder();
   private textDecoder = new TextDecoder('utf-8', { fatal: false });
 
-  constructor() {
+  constructor(version: BpeVersion = 'bpe1024-v2') {
+    this.version = version;
     this.reset();
   }
 
@@ -52,12 +66,14 @@ export class ByteBPE {
    * Trains BPE merges on raw text corpus up to targetVocabSize (e.g. 1024 or 2048).
    * Pre-splits text into words with a regex so merges do not cross word boundaries.
    */
-  public train(corpus: string, targetVocabSize = 1024, minFrequency = 2): void {
+  public train(corpus: string, targetVocabSize = 1024, minFrequency = 2, version?: BpeVersion): void {
+    if (version) this.version = version;
     this.reset();
     if (!corpus) return;
 
     // 1. Pre-split corpus into words and compute frequency of each unique word
-    const words = corpus.match(WORD_REGEX) || [];
+    const regex = getPreTokenizerRegex(this.version);
+    const words = corpus.match(regex) || [];
     const wordCounts = new Map<string, number>();
     for (let i = 0; i < words.length; i++) {
       const w = words[i];
@@ -249,7 +265,8 @@ export class ByteBPE {
   public encode(text: string): Uint16Array {
     if (!text) return new Uint16Array(0);
 
-    const words = text.match(WORD_REGEX) || [];
+    const regex = getPreTokenizerRegex(this.version);
+    const words = text.match(regex) || [];
     const allTokens: number[] = [];
 
     for (let i = 0; i < words.length; i++) {
@@ -316,6 +333,7 @@ export class ByteBPE {
     return JSON.stringify(
       {
         type: 'byte_bpe',
+        version: this.version,
         vocabSize: this.vocabSize,
         merges: this.merges
       },
@@ -329,8 +347,10 @@ export class ByteBPE {
    */
   public static fromJSON(jsonStr: string): ByteBPE {
     const data = JSON.parse(jsonStr);
-    const tok = new ByteBPE();
+    const version: BpeVersion = data.version || 'bpe1024-v1';
+    const tok = new ByteBPE(version);
     tok.reset();
+    tok.version = version;
 
     for (let rank = 0; rank < data.merges.length; rank++) {
       const [p1, p2, newId] = data.merges[rank];

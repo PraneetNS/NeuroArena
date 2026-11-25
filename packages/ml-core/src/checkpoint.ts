@@ -24,6 +24,7 @@ export interface ElderCheckpointManifest {
   valLoss: number;
   tokensSeen: number;
   trainedAt: string;
+  tokenizerVersion?: string; // e.g. 'bpe1024-v2' or 'bpe1024-v1'
 }
 
 // Universal Float32 <-> Float16 converter fallback
@@ -185,7 +186,10 @@ export function serializeCheckpoint(
 /**
  * Deserializes a binary checkpoint into manifest metadata and Float32 weights.
  */
-export function deserializeCheckpoint(bytes: Uint8Array): {
+export function deserializeCheckpoint(
+  bytes: Uint8Array,
+  expectedTokenizerVersion?: string
+): {
   manifest: ElderCheckpointManifest;
   weights: Float32Array;
 } {
@@ -207,6 +211,14 @@ export function deserializeCheckpoint(bytes: Uint8Array): {
   const metaBytes = bytes.subarray(headerLen, headerLen + metaLen);
   const metaJson = new TextDecoder().decode(metaBytes);
   const manifest = JSON.parse(metaJson) as ElderCheckpointManifest;
+
+  // Loud error on tokenizer version mismatch
+  const manifestTokVer = manifest.tokenizerVersion || 'bpe1024-v1';
+  if (expectedTokenizerVersion && manifestTokVer !== expectedTokenizerVersion) {
+    throw new Error(
+      `FATAL TOKENIZER MISMATCH: Checkpoint requires tokenizer '${manifestTokVer}', but active runtime requires '${expectedTokenizerVersion}'. Weights cannot be used with mismatched token vocabularies!`
+    );
+  }
 
   const weightsBytes = bytes.subarray(headerLen + metaLen);
   const weights = unpackFp16(weightsBytes);
@@ -230,7 +242,10 @@ export function createModelFromCheckpoint(
 /**
  * Loads the Elder checkpoint either from public assets or from Node.js filesystem.
  */
-export async function loadElderCheckpoint(assetPath = '/assets/elder_preset_s.bin'): Promise<{
+export async function loadElderCheckpoint(
+  assetPath = '/assets/elder_preset_s.bin',
+  expectedTokenizerVersion: string | null = 'bpe1024-v2'
+): Promise<{
   manifest: ElderCheckpointManifest;
   weights: Float32Array;
   model: TinyGPT;
@@ -257,7 +272,7 @@ export async function loadElderCheckpoint(assetPath = '/assets/elder_preset_s.bi
     }
   }
 
-  const checkpoint = deserializeCheckpoint(bytes);
+  const checkpoint = deserializeCheckpoint(bytes, expectedTokenizerVersion ?? undefined);
   const model = createModelFromCheckpoint(checkpoint);
 
   return {

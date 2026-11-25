@@ -33,10 +33,10 @@ export const ASSET_MANIFEST: Record<string, AssetManifestEntry> = {
   },
   '/data/bpe_1024.json': {
     path: '/data/bpe_1024.json',
-    bytes: 34370,
+    bytes: 34361,
     minBytes: 25000,
-    sha256: 'ef39600ffab225624cd969de3cb3e71aa2a8d66f33a438a9ce472fc289303938',
+    sha256: '5f63788d1f7b412b9a224be47e62643e3aeec17f53d6cd4f930470046b08007d',
     contentType: 'application/json',
-    description: 'Pretrained ByteBPE-1024 Vocabulary and Merge Tables'
+    description: 'Pretrained ByteBPE-1024 Vocabulary and Merge Tables (bpe1024-v2)'
   }
 };
