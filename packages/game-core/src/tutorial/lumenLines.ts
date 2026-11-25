@@ -57,7 +57,7 @@ export const LUMEN_DIALOGUE: Record<string, LumenLine> = {
   },
 
   tokenizer_demo: {
-    text: 'Inspect the Tokenizer. The model never sees letters—only numbers.',
+    text: 'Inspect the Tokenizer. Leading spaces attach to pieces, turning words into numbered IDs.',
     subtext: 'Type any thought into the inspection box to watch it fragment into token IDs.',
     hint: 'Click the Tokenizer node to view the Byte-Pair vocabulary split in real time.'
   },

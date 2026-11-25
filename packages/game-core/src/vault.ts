@@ -416,7 +416,7 @@ export class VaultManager {
       if (tokenizer) {
         totalTokens += tokenizer.encode(e.text).length;
       } else {
-        totalTokens += Math.max(1, Math.round(e.text.length / 4));
+        totalTokens += Math.max(1, Math.round(e.text.length / 2.338));
       }
 
       const words = e.text.toLowerCase().match(/[a-zA-Z0-9]+/g) || [];

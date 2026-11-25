@@ -64,9 +64,9 @@ export const CODEX_ENTRIES: Record<CodexConceptId, CodexEntryDef> = {
     unlockedAtStep: 'tokenizer_demo',
     paragraphs: [
       'Neural networks do not perceive ink or characters. Before text enters a model, byte sequences are grouped into numbered integers called tokens. Common words become a single token, while rare or foreign words fragment into smaller constituent subwords.',
-      'Tokenization determines the computational bandwidth of the transformer. A compact vocabulary packs more meaning into every positional step, while byte fallbacks ensure the architecture never encounters an unknown character.'
+      'In modern BPE (bpe1024-v2), a single leading space attaches directly to the following word or punctuation piece (e.g., " the" instead of " " followed by "the"). This prevents whitespace from consuming isolated tokens, expanding effective context length to 2.338 characters per token.'
     ],
-    formulaPlain: 'Token ID = Vocabulary_Index(Subword_String)',
+    formulaPlain: 'Token ID = Vocabulary_Index(Leading_Space_Subword)',
     widgetType: 'token_splitter'
   },
 

@@ -766,7 +766,7 @@ export class ShardWorld {
               const entry = this.vault.harvest(shard);
               if (entry) {
                 collected++;
-                tokensAdded += Math.max(1, Math.round(shard.text.length / 4));
+                tokensAdded += Math.max(1, Math.round(shard.text.length / 2.338));
                 this.triggerHarvest(shard, playerPos);
               } else {
                 skipped++; // Vault at maximum page capacity

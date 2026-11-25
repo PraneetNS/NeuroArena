@@ -23,7 +23,7 @@ for (const r of REGIONS) {
   let totalTokens = 0;
 
   for (const s of shards) {
-    const tokens = Math.max(1, Math.round(s.text.length / 4));
+    const tokens = Math.max(1, Math.round(s.text.length / 2.338));
     totalTokens += tokens;
     const scan = scanShard(s, vault.getState());
     if (evaluateLensRule(scan.signals, rule)) {
@@ -66,7 +66,7 @@ for (const r of REGIONS) {
   let sweptTokens = 0;
   let sweptCount = 0;
   for (const s of inRange) {
-    const tokens = Math.max(1, Math.round(s.text.length / 4));
+    const tokens = Math.max(1, Math.round(s.text.length / 2.338));
     const scan = scanShard(s, vault.getState());
     if (evaluateLensRule(scan.signals, rule)) {
       sweptCount++;

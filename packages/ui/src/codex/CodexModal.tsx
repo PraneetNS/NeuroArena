@@ -32,9 +32,9 @@ export const CodexModal: React.FC<CodexModalProps> = ({
   const [codexTemp, setCodexTemp] = useState<number>(0.8);
   const [codexTopK, setCodexTopK] = useState<number>(5);
   const [codexTopP, setCodexTopP] = useState<number>(0.85);
-  const [sampledTokens, setSampledTokens] = useState<string[]>(['be', 'the', 'be']);
+  const [sampledTokens, setSampledTokens] = useState<string[]>([' be', ' the', ' be']);
   const [lastSampled, setLastSampled] = useState<{ token: string; prob: number; count: number }>({
-    token: 'be',
+    token: ' be',
     prob: 0.38,
     count: 3
   });
@@ -44,13 +44,15 @@ export const CodexModal: React.FC<CodexModalProps> = ({
   const entries = Object.values(CODEX_ENTRIES);
   const currentEntry: CodexEntryDef = CODEX_ENTRIES[selectedId] || CODEX_ENTRIES.token;
 
-  // Simple token splitter demo: simulates BPE subwords
+  // Simple token splitter demo: simulates bpe1024-v2 leading-space subwords
   const getSimulatedTokens = (text: string) => {
-    const words = text.split(/(\s+|[.,!?;:])/).filter(Boolean);
+    const regex = / ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+/gu;
+    const matches = text.match(regex) || [];
     let idCounter = 120;
-    return words.map((w) => {
+    return matches.map((w) => {
       const id = (idCounter += 17) % 1024;
-      return { text: w, id };
+      const visual = w.startsWith(' ') ? '␣' + w.slice(1) : w;
+      return { text: w, visual, id, hasSpace: w.startsWith(' ') };
     });
   };
 
@@ -87,23 +89,23 @@ export const CodexModal: React.FC<CodexModalProps> = ({
     { depth: 4, stage: 'Layer 3 MLP', topToken: 'glows', prob: 0.89, note: 'High confidence crystallisation' }
   ];
 
-  // Real Elder model measured distribution for prompt "To be, or not to "
+  // Real Elder model measured distribution for prompt "To be, or not to " (bpe1024-v2 leading-space pieces)
   const ELDER_PROMPT_DIST = [
-    { token: 'be', logit: 3.829 },
-    { token: 'the', logit: 3.163 },
-    { token: 'see', logit: 2.514 },
-    { token: 'do', logit: 2.360 },
-    { token: 'me', logit: 2.358 },
-    { token: 'a', logit: 2.199 },
-    { token: 'my', logit: 2.077 },
-    { token: 'w', logit: 1.915 },
-    { token: 'you', logit: 1.905 },
-    { token: 'make', logit: 1.888 },
-    { token: 'come', logit: 1.810 },
-    { token: 'have', logit: 1.765 },
-    { token: 'hear', logit: 1.720 },
-    { token: 'stand', logit: 1.685 },
-    { token: 'die', logit: 1.642 }
+    { token: ' be', logit: 3.829 },
+    { token: ' the', logit: 3.163 },
+    { token: ' see', logit: 2.514 },
+    { token: ' do', logit: 2.360 },
+    { token: ' me', logit: 2.358 },
+    { token: ' a', logit: 2.199 },
+    { token: ' my', logit: 2.077 },
+    { token: ' w', logit: 1.915 },
+    { token: ' you', logit: 1.905 },
+    { token: ' make', logit: 1.888 },
+    { token: ' come', logit: 1.810 },
+    { token: ' have', logit: 1.765 },
+    { token: ' hear', logit: 1.720 },
+    { token: ' stand', logit: 1.685 },
+    { token: ' die', logit: 1.642 }
   ];
 
   const getScaledProbs = (temp: number) => {
@@ -565,7 +567,10 @@ export const CodexModal: React.FC<CodexModalProps> = ({
                           fontSize: '12px'
                         }}
                       >
-                        <span style={{ color: 'var(--na-text)', fontWeight: 600 }}>{t.text}</span>
+                        <span style={{ color: 'var(--na-text)', fontWeight: 600 }}>
+                          {t.hasSpace && <span style={{ color: 'var(--na-accent)', marginRight: '2px' }}>␣</span>}
+                          {t.hasSpace ? t.text.slice(1) : t.text}
+                        </span>
                         <span style={{ fontSize: '10px', color: 'var(--na-accent-cool)', fontFamily: 'var(--na-font-mono)', marginTop: '2px' }}>
                           id: {t.id}
                         </span>
@@ -977,14 +982,14 @@ export const CodexModal: React.FC<CodexModalProps> = ({
               {currentEntry.id === 'min_p' && (() => {
                 const [demoMinP, setDemoMinP] = useState<number>(0.15);
                 const candidates = [
-                  { token: 'be', prob: 0.38 },
-                  { token: 'the', prob: 0.18 },
-                  { token: 'die', prob: 0.08 },
-                  { token: 'sleep', prob: 0.05 },
-                  { token: 'live', prob: 0.03 },
-                  { token: 'see', prob: 0.015 },
-                  { token: 'know', prob: 0.012 },
-                  { token: 'stand', prob: 0.008 }
+                  { token: ' be', prob: 0.38 },
+                  { token: ' the', prob: 0.18 },
+                  { token: ' die', prob: 0.08 },
+                  { token: ' sleep', prob: 0.05 },
+                  { token: ' live', prob: 0.03 },
+                  { token: ' see', prob: 0.015 },
+                  { token: ' know', prob: 0.012 },
+                  { token: ' stand', prob: 0.008 }
                 ];
                 const pMax = candidates[0].prob;
                 const threshold = pMax * demoMinP;
