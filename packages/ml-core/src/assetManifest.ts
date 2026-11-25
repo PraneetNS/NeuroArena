@@ -25,11 +25,11 @@ export const ASSET_MANIFEST: Record<string, AssetManifestEntry> = {
   },
   '/assets/elder_preset_s.bin': {
     path: '/assets/elder_preset_s.bin',
-    bytes: 1881993,
+    bytes: 1881992,
     minBytes: 1500000,
-    sha256: 'c878628647b375948998c35531c101bff9e4d6ace64f81af3afda34ae4046cdc',
+    sha256: 'c0ca1f442eac3277fb72c9c7b18803e97b8268c80584d1cb194db73605e8f6d6',
     contentType: 'application/octet-stream',
-    description: 'The Elder 12,000-step trained checkpoint binary (FP16 weights + NACP header)'
+    description: 'The Elder 12,000-step trained checkpoint binary (bpe1024-v2 FP16 weights + NACP header)'
   },
   '/data/bpe_1024.json': {
     path: '/data/bpe_1024.json',
