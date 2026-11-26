@@ -1,5 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { KEYMAP } from '@na/game-core';
+import {
+  AUSTEN_HEATMAP_TOKENS,
+  CANONICAL_AUSTEN_COMPARISONS,
+  generateSyntheticCurve,
+  HeatmapWordToken
+} from './austenData.js';
 
 export interface CandidateTokenMeta {
   id: number;
@@ -84,6 +90,14 @@ export const OracleModal: React.FC<OracleModalProps> = ({
   const [selectedTokenIndex, setSelectedTokenIndex] = useState<number | null>(null);
   const [copiedTranscript, setCopiedTranscript] = useState(false);
   const [genTokensPerSec, setGenTokensPerSec] = useState<number | null>(null);
+
+  // Tab & Fine-Tune panel state
+  const [activeTab, setActiveTab] = useState<'communion' | 'finetune'>('communion');
+  const [ftLr, setFtLr] = useState<number>(3e-4);
+  const [ftSteps, setFtSteps] = useState<number>(3000);
+  const [ftReplay, setFtReplay] = useState<number>(0.50);
+  const [ftPromptIdx, setFtPromptIdx] = useState<number>(0);
+  const [hoveredHeatmapToken, setHoveredHeatmapToken] = useState<HeatmapWordToken | null>(null);
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -359,18 +373,63 @@ export const OracleModal: React.FC<OracleModalProps> = ({
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--na-space-3)' }}>
             <span style={{ fontSize: 'var(--na-text-xl)', color: 'var(--na-accent)' }}>✦</span>
             <div>
-              <h2
-                style={{
-                  fontFamily: 'var(--na-font-display)',
-                  fontSize: 'var(--na-text-xl)',
-                  color: 'var(--na-text)',
-                  margin: 0
-                }}
-              >
-                The Oracle Stone {speaker ? `— Tuning: ${speaker}` : ''}
-              </h2>
-              <div style={{ fontSize: 'var(--na-text-xs)', color: 'var(--na-muted)' }}>
-                Live Autoregressive KV-Cache Inference & Sampling Laboratory
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--na-space-3)' }}>
+                <h2
+                  style={{
+                    fontFamily: 'var(--na-font-display)',
+                    fontSize: 'var(--na-text-xl)',
+                    color: 'var(--na-text)',
+                    margin: 0
+                  }}
+                >
+                  The Oracle Stone
+                </h2>
+                {/* Tab Switcher */}
+                <div
+                  style={{
+                    display: 'flex',
+                    backgroundColor: 'var(--na-surface)',
+                    borderRadius: 'var(--na-radius-sm)',
+                    padding: '2px',
+                    border: '1px solid var(--na-line)'
+                  }}
+                >
+                  <button
+                    onClick={() => setActiveTab('communion')}
+                    style={{
+                      backgroundColor: activeTab === 'communion' ? 'var(--na-raised)' : 'transparent',
+                      color: activeTab === 'communion' ? 'var(--na-accent)' : 'var(--na-muted)',
+                      border: 'none',
+                      borderRadius: 'var(--na-radius-sm)',
+                      padding: '4px 10px',
+                      fontSize: 'var(--na-text-xs)',
+                      fontWeight: 600,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    🔮 Communion (Inference)
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('finetune')}
+                    style={{
+                      backgroundColor: activeTab === 'finetune' ? 'var(--na-raised)' : 'transparent',
+                      color: activeTab === 'finetune' ? 'var(--na-accent-cool)' : 'var(--na-muted)',
+                      border: 'none',
+                      borderRadius: 'var(--na-radius-sm)',
+                      padding: '4px 10px',
+                      fontSize: 'var(--na-text-xs)',
+                      fontWeight: 600,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    📈 Domain Adaptation (Fine-Tune)
+                  </button>
+                </div>
+              </div>
+              <div style={{ fontSize: 'var(--na-text-xs)', color: 'var(--na-muted)', marginTop: '2px' }}>
+                {activeTab === 'communion'
+                  ? 'Live Autoregressive KV-Cache Inference & Sampling Laboratory'
+                  : 'Jane Austen (Pride and Prejudice) Adaptation — Dual-Curve Dynamics & Loss Heatmap'}
               </div>
             </div>
           </div>
@@ -394,7 +453,7 @@ export const OracleModal: React.FC<OracleModalProps> = ({
               <span>This model continues text. It does not answer questions.</span>
               {onOpenCodex && (
                 <button
-                  onClick={() => onOpenCodex('sampling')}
+                  onClick={() => onOpenCodex(activeTab === 'communion' ? 'sampling' : 'fine_tuning')}
                   style={{
                     background: 'none',
                     border: 'none',
@@ -409,32 +468,6 @@ export const OracleModal: React.FC<OracleModalProps> = ({
                 </button>
               )}
             </div>
-
-            {/* Fine-Tuning Diagnostic Explanation (Data-Dependent) */}
-            {speaker && (
-              <div
-                style={{
-                  backgroundColor: 'var(--na-surface)',
-                  border: '1px solid var(--na-line)',
-                  borderRadius: 'var(--na-radius-sm)',
-                  padding: 'var(--na-space-2) var(--na-space-3)',
-                  fontSize: 'var(--na-text-xs)',
-                  color: 'var(--na-text-secondary)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 'var(--na-space-2)'
-                }}
-              >
-                <span style={{ color: 'var(--na-accent)', fontWeight: 600 }}>Diagnostic:</span>
-                <span>
-                  {speaker === 'HAMLET'
-                    ? 'Tuning Diagnostic: In-domain held-out loss change \u0394 = -0.0195 (|change| < 0.03: negligible shift). General VAL loss \u0394 = +0.0223 (\u2264 0.05: retained general competence without catastrophic forgetting).'
-                    : speaker === 'FALSTAFF'
-                    ? 'Tuning Diagnostic: In-domain held-out loss change \u0394 = -0.0239 (|change| < 0.03: negligible shift). General VAL loss \u0394 = +0.0667 (> 0.05 threshold: catastrophic forgetting detected on out-of-domain text).'
-                    : 'Evaluation Thresholds: improved (\u0394 \u2264 -0.05), negligible (|\u0394| < 0.03), overfitting (\u0394 > 0 on held-out), forgetting (general VAL rise > 0.05). Tag discrimination shows models do not acquire distinct persona identities.'}
-                </span>
-              </div>
-            )}
 
             {/* Branch Metrics Badge */}
             <div
@@ -530,7 +563,8 @@ export const OracleModal: React.FC<OracleModalProps> = ({
         </div>
 
         {/* Modal Body */}
-        <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+        {activeTab === 'communion' ? (
+          <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
           {/* Left Column: Manuscript Scroll & Branch Tree */}
           <div
             style={{
@@ -1148,7 +1182,719 @@ export const OracleModal: React.FC<OracleModalProps> = ({
             </div>
           </div>
         </div>
-      </div>
+      ) : (
+        /* Domain Adaptation (Fine-Tune) Tab Body */
+        <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+          {/* Left Column: Config Selector, Dual-Curve Chart & Prompt Comparison */}
+          <div
+            style={{
+              flex: '1.2',
+              display: 'flex',
+              flexDirection: 'column',
+              borderRight: '1px solid var(--na-line)',
+              padding: 'var(--na-space-5)',
+              overflowY: 'auto',
+              gap: 'var(--na-space-4)'
+            }}
+          >
+            {/* Context & Hyperparameter Selector */}
+            <div
+              style={{
+                backgroundColor: 'var(--na-surface)',
+                border: '1px solid var(--na-line)',
+                borderRadius: 'var(--na-radius-md)',
+                padding: 'var(--na-space-4)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 'var(--na-space-3)'
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span
+                  style={{
+                    fontSize: 'var(--na-text-xs)',
+                    color: 'var(--na-accent)',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em'
+                  }}
+                >
+                  Domain Adaptation Controls (Pride & Prejudice)
+                </span>
+                <span
+                  style={{
+                    fontSize: '11px',
+                    fontFamily: 'var(--na-font-mono)',
+                    color:
+                      ftLr === 1e-4 && ftReplay === 0.25
+                        ? 'var(--na-accent)'
+                        : ftLr === 3e-4 && ftReplay === 0.5
+                        ? 'var(--na-accent-cool)'
+                        : 'var(--na-muted)',
+                    backgroundColor: 'var(--na-raised)',
+                    padding: '2px 8px',
+                    borderRadius: 'var(--na-radius-sm)',
+                    border: '1px solid var(--na-line)'
+                  }}
+                >
+                  {ftLr === 1e-4 && ftReplay === 0.25
+                    ? '★ Selected Pareto Optimum'
+                    : ftLr === 3e-4 && ftReplay === 0.5
+                    ? '🛡 Conservative Pareto'
+                    : ftReplay === 0
+                    ? '⚠ Severe Forgetting Hazard'
+                    : 'Custom Sweep Point'}
+                </span>
+              </div>
+
+              {/* Learning Rate Selector */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--na-space-3)' }}>
+                <span style={{ fontSize: '12px', color: 'var(--na-text-secondary)', minWidth: '100px' }}>
+                  Learning Rate:
+                </span>
+                <div style={{ display: 'flex', gap: 'var(--na-space-2)' }}>
+                  {[1e-4, 3e-4, 1e-3].map((lr) => (
+                    <button
+                      key={lr}
+                      onClick={() => setFtLr(lr)}
+                      style={{
+                        padding: '4px 10px',
+                        fontSize: '11px',
+                        fontFamily: 'var(--na-font-mono)',
+                        backgroundColor: ftLr === lr ? 'var(--na-accent)' : 'var(--na-raised)',
+                        color: ftLr === lr ? 'var(--na-ink)' : 'var(--na-text)',
+                        border: `1px solid ${ftLr === lr ? 'var(--na-accent)' : 'var(--na-line)'}`,
+                        borderRadius: 'var(--na-radius-sm)',
+                        cursor: 'pointer',
+                        fontWeight: ftLr === lr ? 700 : 400
+                      }}
+                    >
+                      {lr === 1e-4 ? '1e-4 (Gentle)' : lr === 3e-4 ? '3e-4 (Standard)' : '1e-3 (Aggressive)'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Total Steps Selector */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--na-space-3)' }}>
+                <span style={{ fontSize: '12px', color: 'var(--na-text-secondary)', minWidth: '100px' }}>
+                  Training Steps:
+                </span>
+                <div style={{ display: 'flex', gap: 'var(--na-space-2)' }}>
+                  {[100, 300, 1000, 3000].map((steps) => (
+                    <button
+                      key={steps}
+                      onClick={() => setFtSteps(steps)}
+                      style={{
+                        padding: '4px 10px',
+                        fontSize: '11px',
+                        fontFamily: 'var(--na-font-mono)',
+                        backgroundColor: ftSteps === steps ? 'var(--na-accent-cool)' : 'var(--na-raised)',
+                        color: ftSteps === steps ? 'var(--na-ink)' : 'var(--na-text)',
+                        border: `1px solid ${ftSteps === steps ? 'var(--na-accent-cool)' : 'var(--na-line)'}`,
+                        borderRadius: 'var(--na-radius-sm)',
+                        cursor: 'pointer',
+                        fontWeight: ftSteps === steps ? 700 : 400
+                      }}
+                    >
+                      {steps} steps
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Shakespeare Replay Buffer Selector */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--na-space-3)' }}>
+                <span style={{ fontSize: '12px', color: 'var(--na-text-secondary)', minWidth: '100px' }}>
+                  Replay Regularizer:
+                </span>
+                <div style={{ display: 'flex', gap: 'var(--na-space-2)' }}>
+                  {[
+                    { val: 0.0, label: '0% Replay (Catastrophic Forget)' },
+                    { val: 0.25, label: '25% Replay (Balanced Pareto)' },
+                    { val: 0.50, label: '50% Replay (Conservative)' }
+                  ].map((item) => (
+                    <button
+                      key={item.val}
+                      onClick={() => setFtReplay(item.val)}
+                      style={{
+                        padding: '4px 10px',
+                        fontSize: '11px',
+                        fontFamily: 'var(--na-font-mono)',
+                        backgroundColor: ftReplay === item.val ? 'var(--na-accent-warm)' : 'var(--na-raised)',
+                        color: ftReplay === item.val ? 'var(--na-ink)' : 'var(--na-text)',
+                        border: `1px solid ${ftReplay === item.val ? 'var(--na-accent-warm)' : 'var(--na-line)'}`,
+                        borderRadius: 'var(--na-radius-sm)',
+                        cursor: 'pointer',
+                        fontWeight: ftReplay === item.val ? 700 : 400
+                      }}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Dual-Curve Loss Chart */}
+            {(() => {
+              const { points, minStep, minAusten } = generateSyntheticCurve(ftLr, ftReplay);
+              const padLeft = 45;
+              const padRight = 20;
+              const padTop = 15;
+              const padBottom = 25;
+              const totalW = 560;
+              const totalH = 180;
+              const plotW = totalW - padLeft - padRight;
+              const plotH = totalH - padTop - padBottom;
+              const yMin = 2.0;
+              const yMax = 6.5;
+
+              const getX = (step: number) => padLeft + (step / 3000) * plotW;
+              const getY = (loss: number) => padTop + ((yMax - Math.min(yMax, Math.max(yMin, loss))) / (yMax - yMin)) * plotH;
+
+              const dAusten = points
+                .map((p, i) => `${i === 0 ? 'M' : 'L'} ${getX(p.step).toFixed(1)} ${getY(p.austenHeldOut).toFixed(1)}`)
+                .join(' ');
+
+              const dShake = points
+                .map((p, i) => `${i === 0 ? 'M' : 'L'} ${getX(p.step).toFixed(1)} ${getY(p.shakeVal).toFixed(1)}`)
+                .join(' ');
+
+              const minX = getX(minStep);
+              const minY = getY(minAusten);
+              const curX = getX(ftSteps);
+
+              return (
+                <div
+                  style={{
+                    backgroundColor: 'var(--na-surface)',
+                    border: '1px solid var(--na-line)',
+                    borderRadius: 'var(--na-radius-md)',
+                    padding: 'var(--na-space-4)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 'var(--na-space-2)'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: 'var(--na-text-xs)', color: 'var(--na-accent-cool)', fontWeight: 600, textTransform: 'uppercase' }}>
+                      Dual-Curve Loss Trajectory (Austen Held-Out vs Shakespeare VAL)
+                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--na-space-3)', fontSize: '11px', fontFamily: 'var(--na-font-mono)' }}>
+                      <span style={{ color: 'var(--na-accent-cool)' }}>― Austen Held-Out</span>
+                      <span style={{ color: 'var(--na-accent-warm)' }}>― Shakespeare General VAL</span>
+                      <span style={{ color: 'var(--na-accent)' }}>⚑ Early-Stop Best</span>
+                    </div>
+                  </div>
+
+                  <div style={{ width: '100%', overflowX: 'auto' }}>
+                    <svg viewBox={`0 0 ${totalW} ${totalH}`} style={{ width: '100%', height: '180px', display: 'block' }}>
+                      {/* Grid Lines */}
+                      {[2.5, 3.5, 4.5, 5.5].map((yVal) => (
+                        <g key={yVal}>
+                          <line
+                            x1={padLeft}
+                            y1={getY(yVal)}
+                            x2={totalW - padRight}
+                            y2={getY(yVal)}
+                            stroke="var(--na-line)"
+                            strokeDasharray="3 3"
+                            strokeWidth="1"
+                          />
+                          <text
+                            x={padLeft - 6}
+                            y={getY(yVal) + 3}
+                            textAnchor="end"
+                            fill="var(--na-muted)"
+                            fontSize="9"
+                            fontFamily="var(--na-font-mono)"
+                          >
+                            {yVal.toFixed(1)}
+                          </text>
+                        </g>
+                      ))}
+
+                      {/* X-axis tick marks */}
+                      {[0, 1000, 2000, 3000].map((xVal) => (
+                        <g key={xVal}>
+                          <line
+                            x1={getX(xVal)}
+                            y1={padTop}
+                            x2={getX(xVal)}
+                            y2={totalH - padBottom}
+                            stroke="var(--na-line)"
+                            strokeDasharray="2 2"
+                            strokeWidth="1"
+                          />
+                          <text
+                            x={getX(xVal)}
+                            y={totalH - padBottom + 14}
+                            textAnchor="middle"
+                            fill="var(--na-muted)"
+                            fontSize="9"
+                            fontFamily="var(--na-font-mono)"
+                          >
+                            {xVal}
+                          </text>
+                        </g>
+                      ))}
+
+                      {/* Shakespeare VAL Curve */}
+                      <path d={dShake} fill="none" stroke="var(--na-accent-warm)" strokeWidth="2.2" strokeLinecap="round" />
+
+                      {/* Austen Held-Out Curve */}
+                      <path d={dAusten} fill="none" stroke="var(--na-accent-cool)" strokeWidth="2.2" strokeLinecap="round" />
+
+                      {/* Selected Checkpoint Marker */}
+                      <line
+                        x1={curX}
+                        y1={padTop}
+                        x2={curX}
+                        y2={totalH - padBottom}
+                        stroke="var(--na-text-secondary)"
+                        strokeDasharray="4 2"
+                        strokeWidth="1.2"
+                      />
+                      <circle cx={curX} cy={getY(points.find((p) => p.step === ftSteps)?.austenHeldOut || 3.0)} r="4" fill="var(--na-accent-cool)" />
+
+                      {/* Early Stop / Best Checkpoint Marker */}
+                      <line
+                        x1={minX}
+                        y1={padTop}
+                        x2={minX}
+                        y2={totalH - padBottom}
+                        stroke="var(--na-accent)"
+                        strokeDasharray="2 2"
+                        strokeWidth="1.5"
+                      />
+                      <circle cx={minX} cy={minY} r="5" fill="var(--na-accent)" stroke="var(--na-surface)" strokeWidth="1.5" />
+                      <text
+                        x={minX}
+                        y={Math.max(padTop + 12, minY - 8)}
+                        textAnchor="middle"
+                        fill="var(--na-accent)"
+                        fontSize="9"
+                        fontWeight="700"
+                        fontFamily="var(--na-font-mono)"
+                      >
+                        Restore Best ({minAusten.toFixed(2)} nats @ {minStep})
+                      </text>
+                    </svg>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Prompt Comparison View */}
+            {(() => {
+              const comp = CANONICAL_AUSTEN_COMPARISONS[ftPromptIdx] || CANONICAL_AUSTEN_COMPARISONS[0];
+              return (
+                <div
+                  style={{
+                    backgroundColor: 'var(--na-surface)',
+                    border: '1px solid var(--na-line)',
+                    borderRadius: 'var(--na-radius-md)',
+                    padding: 'var(--na-space-4)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 'var(--na-space-3)'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span
+                      style={{
+                        fontSize: 'var(--na-text-xs)',
+                        color: 'var(--na-accent)',
+                        fontWeight: 700,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em'
+                      }}
+                    >
+                      Style Shift & Continuation Comparison
+                    </span>
+                    <div style={{ display: 'flex', gap: 'var(--na-space-2)' }}>
+                      {CANONICAL_AUSTEN_COMPARISONS.map((c, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => setFtPromptIdx(idx)}
+                          style={{
+                            padding: '2px 8px',
+                            fontSize: '10px',
+                            fontFamily: 'var(--na-font-mono)',
+                            backgroundColor: ftPromptIdx === idx ? 'var(--na-accent-muted)' : 'var(--na-raised)',
+                            color: ftPromptIdx === idx ? 'var(--na-accent)' : 'var(--na-muted)',
+                            border: `1px solid ${ftPromptIdx === idx ? 'var(--na-accent)' : 'var(--na-line)'}`,
+                            borderRadius: 'var(--na-radius-sm)',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          Prompt #{idx + 1} ({c.sourceChapter.split(' ')[0]} {c.sourceChapter.split(' ')[1]})
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Prompt Text */}
+                  <div
+                    style={{
+                      padding: 'var(--na-space-2) var(--na-space-3)',
+                      backgroundColor: 'var(--na-raised)',
+                      border: '1px solid var(--na-line)',
+                      borderRadius: 'var(--na-radius-sm)',
+                      fontSize: '12px',
+                      fontFamily: 'var(--na-font-display)',
+                      fontStyle: 'italic',
+                      color: 'var(--na-text)'
+                    }}
+                  >
+                    <span style={{ color: 'var(--na-muted)', fontFamily: 'var(--na-font-mono)', fontStyle: 'normal', fontSize: '11px' }}>
+                      Prompt [{comp.sourceChapter}]:{' '}
+                    </span>
+                    "{comp.prompt}"
+                  </div>
+
+                  {/* Side-by-Side Outputs */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--na-space-3)' }}>
+                    {/* Untuned Base Elder-H */}
+                    <div
+                      style={{
+                        padding: 'var(--na-space-3)',
+                        backgroundColor: 'var(--na-raised)',
+                        border: '1px solid var(--na-line)',
+                        borderRadius: 'var(--na-radius-sm)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '6px'
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--na-warning)' }}>
+                          Base Elder-H (Shakespeare Pretraining)
+                        </span>
+                        <span style={{ fontSize: '10px', fontFamily: 'var(--na-font-mono)', color: 'var(--na-muted)' }}>
+                          Untuned
+                        </span>
+                      </div>
+                      <div
+                        style={{
+                          fontSize: '12px',
+                          lineHeight: '1.6',
+                          color: 'var(--na-text-secondary)',
+                          fontFamily: 'var(--na-font-display)',
+                          whiteSpace: 'pre-wrap'
+                        }}
+                      >
+                        {comp.baseElder}
+                      </div>
+                    </div>
+
+                    {/* Adapted Elder-H */}
+                    <div
+                      style={{
+                        padding: 'var(--na-space-3)',
+                        backgroundColor: 'var(--na-raised)',
+                        border: '1px solid var(--na-accent-cool-muted)',
+                        borderRadius: 'var(--na-radius-sm)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '6px'
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--na-accent-cool)' }}>
+                          Adapted Elder-H (Austen Fine-Tuned)
+                        </span>
+                        <span style={{ fontSize: '10px', fontFamily: 'var(--na-font-mono)', color: 'var(--na-accent-cool)' }}>
+                          ★ 25% Replay
+                        </span>
+                      </div>
+                      <div
+                        style={{
+                          fontSize: '12px',
+                          lineHeight: '1.6',
+                          color: 'var(--na-text)',
+                          fontFamily: 'var(--na-font-display)',
+                          whiteSpace: 'pre-wrap'
+                        }}
+                      >
+                        {comp.adaptedElder}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Diagnostic Explanation */}
+                  <div
+                    style={{
+                      fontSize: '11px',
+                      color: 'var(--na-text-secondary)',
+                      backgroundColor: 'var(--na-raised)',
+                      padding: 'var(--na-space-2) var(--na-space-3)',
+                      borderRadius: 'var(--na-radius-sm)',
+                      borderLeft: '3px solid var(--na-accent-cool)',
+                      fontFamily: 'var(--na-font-mono)'
+                    }}
+                  >
+                    <strong>Observed Transition: </strong>
+                    {comp.notes}
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+
+          {/* Right Column: Per-Token Loss Delta Heatmap & Empirical Findings */}
+          <div
+            style={{
+              flex: '1',
+              display: 'flex',
+              flexDirection: 'column',
+              backgroundColor: 'var(--na-raised)',
+              padding: 'var(--na-space-5)',
+              overflowY: 'auto',
+              gap: 'var(--na-space-4)'
+            }}
+          >
+            {/* Per-Token Loss Delta Heatmap */}
+            <div
+              style={{
+                backgroundColor: 'var(--na-surface)',
+                border: '1px solid var(--na-line)',
+                borderRadius: 'var(--na-radius-md)',
+                padding: 'var(--na-space-4)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 'var(--na-space-3)'
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span
+                  style={{
+                    fontSize: 'var(--na-text-xs)',
+                    color: 'var(--na-accent-cool)',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em'
+                  }}
+                >
+                  Per-Token Loss Shift Heatmap (Held-Out Passage)
+                </span>
+                <span style={{ fontSize: '11px', color: 'var(--na-muted)' }}>
+                  Hover over tokens
+                </span>
+              </div>
+
+              {/* Heatmap Legend */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 'var(--na-space-3)',
+                  fontSize: '11px',
+                  fontFamily: 'var(--na-font-mono)',
+                  padding: '4px 8px',
+                  backgroundColor: 'var(--na-raised)',
+                  borderRadius: 'var(--na-radius-sm)'
+                }}
+              >
+                <span style={{ color: 'var(--na-muted)' }}>Δ Loss:</span>
+                <span style={{ color: 'var(--na-accent-cool)' }}>■ Δ &lt; -2.0 nats (Major Gain)</span>
+                <span style={{ color: 'var(--na-accent)' }}>■ Δ &lt; -0.5 nats (Moderate)</span>
+                <span style={{ color: 'var(--na-muted)' }}>■ Neutral</span>
+              </div>
+
+              {/* Interactive Passage */}
+              <div
+                style={{
+                  padding: 'var(--na-space-4)',
+                  backgroundColor: 'var(--na-raised)',
+                  border: '1px solid var(--na-line)',
+                  borderRadius: 'var(--na-radius-md)',
+                  fontFamily: 'var(--na-font-display)',
+                  fontSize: 'var(--na-text-md)',
+                  lineHeight: '1.8',
+                  color: 'var(--na-text)'
+                }}
+              >
+                {AUSTEN_HEATMAP_TOKENS.map((tok, idx) => {
+                  const isHovered = hoveredHeatmapToken === tok;
+                  const isHighGain = tok.delta <= -2.0;
+                  const isMidGain = tok.delta <= -0.5 && tok.delta > -2.0;
+
+                  return (
+                    <span
+                      key={idx}
+                      onMouseEnter={() => setHoveredHeatmapToken(tok)}
+                      onClick={() => setHoveredHeatmapToken(tok)}
+                      style={{
+                        cursor: 'pointer',
+                        padding: '1px 3px',
+                        margin: '0 1px',
+                        borderRadius: 'var(--na-radius-sm)',
+                        backgroundColor: isHovered
+                          ? 'var(--na-accent-muted)'
+                          : isHighGain
+                          ? 'var(--na-accent-cool-muted)'
+                          : isMidGain
+                          ? 'var(--na-accent-muted)'
+                          : 'transparent',
+                        borderBottom: isHighGain
+                          ? '2px solid var(--na-accent-cool)'
+                          : isMidGain
+                          ? '2px solid var(--na-accent)'
+                          : '1px dotted var(--na-line)',
+                        color: isHovered
+                          ? 'var(--na-accent)'
+                          : isHighGain
+                          ? 'var(--na-accent-cool)'
+                          : isMidGain
+                          ? 'var(--na-accent)'
+                          : 'var(--na-text)',
+                        fontWeight: isHighGain ? 600 : 400,
+                        transition: 'all var(--na-duration-fast)'
+                      }}
+                      title={`"${tok.word}": Base ${tok.baseLoss.toFixed(2)} → Tuned ${tok.tunedLoss.toFixed(2)} (Δ ${tok.delta.toFixed(2)})`}
+                    >
+                      {tok.word}
+                    </span>
+                  );
+                })}
+              </div>
+
+              {/* Token Inspector Detail Card */}
+              <div
+                style={{
+                  padding: 'var(--na-space-3)',
+                  backgroundColor: 'var(--na-raised)',
+                  border: '1px solid var(--na-line)',
+                  borderRadius: 'var(--na-radius-sm)',
+                  fontFamily: 'var(--na-font-mono)',
+                  fontSize: '11px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '4px'
+                }}
+              >
+                {hoveredHeatmapToken ? (
+                  <>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--na-text)' }}>
+                        Token: "{hoveredHeatmapToken.word}"
+                      </span>
+                      <span
+                        style={{
+                          fontWeight: 700,
+                          color: hoveredHeatmapToken.delta < 0 ? 'var(--na-accent-cool)' : 'var(--na-warning)',
+                          fontSize: '12px'
+                        }}
+                      >
+                        Δ {hoveredHeatmapToken.delta > 0 ? '+' : ''}{hoveredHeatmapToken.delta.toFixed(2)} nats ({((hoveredHeatmapToken.delta / hoveredHeatmapToken.baseLoss) * 100).toFixed(1)}%)
+                      </span>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--na-space-2)', color: 'var(--na-muted)' }}>
+                      <div>Base Elder-H: <strong style={{ color: 'var(--na-text)' }}>{hoveredHeatmapToken.baseLoss.toFixed(2)} nats</strong></div>
+                      <div>Austen Adapted: <strong style={{ color: 'var(--na-accent-cool)' }}>{hoveredHeatmapToken.tunedLoss.toFixed(2)} nats</strong></div>
+                    </div>
+                    {hoveredHeatmapToken.explanation && (
+                      <div
+                        style={{
+                          marginTop: '4px',
+                          padding: '2px 6px',
+                          backgroundColor: 'var(--na-surface)',
+                          borderRadius: '2px',
+                          color: 'var(--na-accent)'
+                        }}
+                      >
+                        ✦ {hoveredHeatmapToken.explanation}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div style={{ color: 'var(--na-muted)', textAlign: 'center', padding: '6px 0' }}>
+                    Hover over or click any token above to inspect cross-entropy loss changes.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Empirical Findings & Metrics Card */}
+            <div
+              style={{
+                backgroundColor: 'var(--na-surface)',
+                border: '1px solid var(--na-line)',
+                borderRadius: 'var(--na-radius-md)',
+                padding: 'var(--na-space-4)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 'var(--na-space-3)'
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 'var(--na-text-xs)',
+                  color: 'var(--na-accent)',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em'
+                }}
+              >
+                WebGPU Empirical Verification (RTX 3050)
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '11px', fontFamily: 'var(--na-font-mono)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', borderBottom: '1px solid var(--na-line)' }}>
+                  <span style={{ color: 'var(--na-muted)' }}>Untuned Elder-H Base:</span>
+                  <span style={{ color: 'var(--na-text)' }}>4.690 nats (Austen) | 3.164 (Shake)</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', borderBottom: '1px solid var(--na-line)' }}>
+                  <span style={{ color: 'var(--na-muted)' }}>Pareto Optimum (25% Replay):</span>
+                  <span style={{ color: 'var(--na-accent-cool)', fontWeight: 600 }}>2.471 nats (-2.219 nats, Shake +0.142)</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', borderBottom: '1px solid var(--na-line)' }}>
+                  <span style={{ color: 'var(--na-muted)' }}>Conservative Point (50% Replay):</span>
+                  <span style={{ color: 'var(--na-accent)', fontWeight: 600 }}>2.507 nats (-2.183 nats, Shake +0.107)</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', borderBottom: '1px solid var(--na-line)' }}>
+                  <span style={{ color: 'var(--na-muted)' }}>From-Scratch Control (3k Steps):</span>
+                  <span style={{ color: 'var(--na-warning)' }}>3.268 nats (Pretraining Gain: +0.797)</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', borderBottom: '1px solid var(--na-line)' }}>
+                  <span style={{ color: 'var(--na-muted)' }}>Austen Character Name Rate:</span>
+                  <span style={{ color: 'var(--na-accent-cool)' }}>0.0% → 20.5% (95% CI: [15.5%, 26.6%])</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', borderBottom: '1px solid var(--na-line)' }}>
+                  <span style={{ color: 'var(--na-muted)' }}>Shakespeare Theatrical Tag Rate:</span>
+                  <span style={{ color: 'var(--na-warning)' }}>18.5% → 0.5% (95% CI: [0.1%, 2.8%])</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0' }}>
+                  <span style={{ color: 'var(--na-muted)' }}>Verbatim 20-Token Memorization:</span>
+                  <span style={{ color: 'var(--na-text)' }}>0 / 200 (0.0% exact matches)</span>
+                </div>
+              </div>
+
+              {onOpenCodex && (
+                <button
+                  onClick={() => onOpenCodex('domain_shift')}
+                  style={{
+                    backgroundColor: 'var(--na-raised)',
+                    border: '1px solid var(--na-accent-cool)',
+                    borderRadius: 'var(--na-radius-sm)',
+                    padding: 'var(--na-space-2)',
+                    fontSize: '11px',
+                    color: 'var(--na-accent-cool)',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                    textAlign: 'center'
+                  }}
+                >
+                  Consult Codex: Domain Shift & Replay →
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
-  );
+  </div>
+);
 };
