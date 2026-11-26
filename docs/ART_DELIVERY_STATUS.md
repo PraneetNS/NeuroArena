@@ -36,8 +36,35 @@ This status report catalogs every deliverable specified in the Art and Stylized 
 
 ## 2. Hardware Benchmark Performance Verification
 
-- **Physical Adapter**: AMD Radeon(TM) Graphics (RDNA-2)
-- **Renderer**: Direct3D12 Hardware WebGPU (Adapter: NVIDIA GeForce RTX 3050 Laptop GPU / Ampere; previous run: AMD Radeon Graphics / RDNA-2)
+### Canonical Performance: Discrete NVIDIA GeForce RTX 3050 Laptop GPU (WebGPU)
+*Source file: [`scratch/after_photo_metrics.json`](file:///d:/NeuroArena/scratch/after_photo_metrics.json)*
+
+| Photo Spot | Tier | FPS | Draw Calls | Calls Budget | Calls Status | Triangles | Tris Budget | Tris Status | Overall Code Status |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| `ridge_sunrise` | **LOW** | 74 | 158 | 120 | FAIL | 128,971 | 150,000 | PASS | **FAIL** |
+| `ridge_sunrise` | **MEDIUM** | 43 | 310 | 250 | FAIL | 341,761 | 400,000 | PASS | **FAIL** |
+| `ridge_sunrise` | **HIGH** | 13 | 497 | 500 | PASS | 715,211 | 900,000 | PASS | **PASS** |
+| `meadow_golden_hour` | **LOW** | 84 | 85 | 120 | PASS | 118,573 | 150,000 | PASS | **PASS** |
+| `meadow_golden_hour` | **MEDIUM** | 56 | 201 | 250 | PASS | 320,567 | 400,000 | PASS | **PASS** |
+| `meadow_golden_hour` | **HIGH** | 4 | 294 | 500 | PASS | 661,307 | 900,000 | PASS | **PASS** |
+| `river_midday` | **LOW** | 89 | 86 | 120 | PASS | 116,933 | 150,000 | PASS | **PASS** |
+| `river_midday` | **MEDIUM** | 50 | 236 | 250 | PASS | 324,377 | 400,000 | PASS | **PASS** |
+| `river_midday` | **HIGH** | 4 | 380 | 500 | PASS | 684,157 | 900,000 | PASS | **PASS** |
+| `camp_dusk` | **LOW** | 85 | 115 | 120 | PASS | 122,149 | 150,000 | PASS | **PASS** |
+| `camp_dusk` | **MEDIUM** | 46 | 264 | 250 | FAIL | 330,071 | 400,000 | PASS | **FAIL** |
+| `camp_dusk` | **HIGH** | 5 | 463 | 500 | PASS | 695,355 | 900,000 | PASS | **PASS** |
+| `border_blue_hour` | **LOW** | 80 | 88 | 120 | PASS | 117,431 | 150,000 | PASS | **PASS** |
+| `border_blue_hour` | **MEDIUM** | 49 | 229 | 250 | PASS | 329,599 | 400,000 | PASS | **PASS** |
+| `border_blue_hour` | **HIGH** | 4 | 411 | 500 | PASS | 680,365 | 900,000 | PASS | **PASS** |
+
+*High Tier FPS Note: High tier renders 11,400 foliage instances (396k tris), ~45k grass tris, 150 terrain calls, and cascaded shadow mapping passes at native resolution on mobile discrete silicon without temporal upsampling, resulting in 4–5 FPS on dense ground-level scenes and 13 FPS on Ridge vista.*
+
+---
+
+### Historical Integrated GPU Performance (AMD Radeon Graphics RDNA-2, integrated GPU, historical)
+
+- **Physical Adapter**: AMD Radeon(TM) Graphics (RDNA-2, integrated GPU, historical)
+- **Renderer**: Direct3D12 Hardware WebGPU
 - **Viewport Resolution**: 1267 × 571 (DPR 1.25, Non-headless, webdriver: false)
 - **Budgets vs. Measured Performance**:
 

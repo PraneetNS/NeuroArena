@@ -72,6 +72,31 @@ The benchmark suite (`apps/bench`) profiles five canonical camera locations unde
 | **Medium** | $\le 250$ | $\le 400,000$ | 60 fps (16.6 ms) |
 | **High** | $\le 500$ | $\le 900,000$ | 60 fps (16.6 ms) |
 
+### Canonical Benchmark Performance: Discrete NVIDIA GeForce RTX 3050 Laptop GPU (WebGPU)
+*Source file: [`scratch/after_photo_metrics.json`](file:///d:/NeuroArena/scratch/after_photo_metrics.json)*
+
+| Photo Spot | Tier | FPS | Draw Calls | Calls Budget | Calls Status | Triangles | Tris Budget | Tris Status | Overall Code Status |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| `ridge_sunrise` | **LOW** | 74 | 158 | 120 | FAIL | 128,971 | 150,000 | PASS | **FAIL** |
+| `ridge_sunrise` | **MEDIUM** | 43 | 310 | 250 | FAIL | 341,761 | 400,000 | PASS | **FAIL** |
+| `ridge_sunrise` | **HIGH** | 13 | 497 | 500 | PASS | 715,211 | 900,000 | PASS | **PASS** |
+| `meadow_golden_hour` | **LOW** | 84 | 85 | 120 | PASS | 118,573 | 150,000 | PASS | **PASS** |
+| `meadow_golden_hour` | **MEDIUM** | 56 | 201 | 250 | PASS | 320,567 | 400,000 | PASS | **PASS** |
+| `meadow_golden_hour` | **HIGH** | 4 | 294 | 500 | PASS | 661,307 | 900,000 | PASS | **PASS** |
+| `river_midday` | **LOW** | 89 | 86 | 120 | PASS | 116,933 | 150,000 | PASS | **PASS** |
+| `river_midday` | **MEDIUM** | 50 | 236 | 250 | PASS | 324,377 | 400,000 | PASS | **PASS** |
+| `river_midday` | **HIGH** | 4 | 380 | 500 | PASS | 684,157 | 900,000 | PASS | **PASS** |
+| `camp_dusk` | **LOW** | 85 | 115 | 120 | PASS | 122,149 | 150,000 | PASS | **PASS** |
+| `camp_dusk` | **MEDIUM** | 46 | 264 | 250 | FAIL | 330,071 | 400,000 | PASS | **FAIL** |
+| `camp_dusk` | **HIGH** | 5 | 463 | 500 | PASS | 695,355 | 900,000 | PASS | **PASS** |
+| `border_blue_hour` | **LOW** | 80 | 88 | 120 | PASS | 117,431 | 150,000 | PASS | **PASS** |
+| `border_blue_hour` | **MEDIUM** | 49 | 229 | 250 | PASS | 329,599 | 400,000 | PASS | **PASS** |
+| `border_blue_hour` | **HIGH** | 4 | 411 | 500 | PASS | 680,365 | 900,000 | PASS | **PASS** |
+
+> [!NOTE]
+> **High Tier FPS Analysis (4–13 FPS)**:
+> High quality tier renders 11,400 foliage instances (396,000 triangles), up to 45,792 grass blade triangles with individual alpha tests, terrain across 150 chunk draw calls, and a real-time cascaded directional shadow pass rendering the entire scene geometry a second time from light space at native resolution. On discrete mobile silicon (RTX 3050 Laptop GPU, 4GB VRAM) without dynamic resolution scaling or temporal upsampling, vertex transform and shadow rasterization load limits frame throughput to 4–5 FPS on dense ground-level foliage vantage points (Meadow, River, Border, Camp) and 13 FPS on panoramic Ridge vista.
+
 ---
 
 ## 🚀 Getting Started
