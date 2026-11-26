@@ -2,7 +2,7 @@
  * Canonical Shakespeare Speaker Archetypes & Stylistic Descriptors.
  *
  * Defines personality matrices, vocabulary tendencies, and rhetorical cadences
- * for the six target speakers supported by the Oracle's fine-tuning system.
+ * for canonical Shakespearean dramatic personas in the theatrical pretraining corpus.
  */
 
 export interface SpeakerSamplingConfig {
