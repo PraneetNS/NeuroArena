@@ -137,7 +137,7 @@ NeuroArena incorporates an in-world **Oracle Stone** monolith communing station 
 - **Interactive Next-Token View**: Displays real-time candidate token probabilities, chosen token selection, and live Shannon entropy $H(X) = -\sum p_i \log_2 p_i$.
 - **Branching Exploration Tree**: Allows players to fork generation from alternative candidate tokens at any step and switch between alternate narrative branches.
 - **Surprise Tinting**: Tokens are highlighted by information-theoretic surprise ($-\log_2 P(\text{token})$), visually differentiating expected continuations from creative leaps.
-- **Dialogue Fine-Tuning with Loss Masking**: Supports target ignore index (`-1`), computing cross-entropy and analytical gradients strictly on speaker reply turns while masking player prompts.
+- **Domain Adaptation & Replay Regularization**: Demonstrates continuous domain transfer from Shakespeare to Jane Austen (*Pride and Prejudice*), using an interleaved replay buffer to strictly bound catastrophic forgetting on general validation loss while driving domain held-out cross-entropy from $4.690$ down to $2.471$ nats/token.
 - **Observatory Suite**: Includes the Attention Arc Instrument (causal attention beams, directional filters, entropy badges) and the 3D Embedding Space Explorer (PCA projection, cosine nearest neighbors, quick token search).
 
 ### Measured WebGPU Benchmarks (NVIDIA RTX 3050 Laptop GPU)
@@ -146,8 +146,9 @@ NeuroArena incorporates an in-world **Oracle Stone** monolith communing station 
 | **KV-Cache Generation (Scout)** | 200 tokens, 412k params | 6.38 tok/s cached vs 6.26 tok/s uncached (RelErr: $4.363 \times 10^{-7}$) | **PASS** |
 | **KV-Cache Generation (Elder S)** | 200 tokens, 940k params | 6.35 tok/s cached vs 6.18 tok/s uncached (RelErr: $1.903 \times 10^{-6}$) | **PASS** |
 | **Masked Gradient Parity** | Preset C, 40% masking | Worst group: `blocks.1.W2` (RelErr: $1.370 \times 10^{-6}$) | **PASS** |
-| **Hamlet Dialogue Fine-Tuning** | 250 steps, $\text{LR}=3 \times 10^{-4}$ | Held-Out: $2.3000 \to 3.0397$ \| General Val: $2.5035 \to 3.3592$ | **PASS** |
-| **Falstaff Dialogue Fine-Tuning** | 250 steps, $\text{LR}=3 \times 10^{-4}$ | Held-Out: $2.1007 \to 2.4750$ \| General Val: $2.5035 \to 3.0696$ | **PASS** |
+| **Austen Domain Adaptation (25% Replay)** | 2,975 steps, $\text{LR}=1 \times 10^{-4}$ | Held-Out: $4.690 \to 2.471$ nats \| General Val: $3.164 \to 3.306$ (+0.142 nats) | **PASS** |
+| **Austen Domain Adaptation (50% Replay)** | 3,000 steps, $\text{LR}=3 \times 10^{-4}$ | Held-Out: $4.690 \to 2.507$ nats \| General Val: $3.164 \to 3.271$ (+0.107 nats) | **PASS** |
+| **Austen From-Scratch Control** | 3,000 steps, $\text{LR}=3 \times 10^{-4}$ | Held-Out: $3.268$ nats (Pretraining advantage: +0.797 nats) | **PASS** |
 
 ---
 

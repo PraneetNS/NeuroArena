@@ -12,7 +12,7 @@ flowchart TD
     D -->|Overfitting / Slow-Progress Fix| E[Elder Model Checkpoint]
     E -->|Attention & Embedding Analysis| F[Observatory Instruments]
     E -->|Interactive Autoregressive Inference| G[Oracle Stone Communion]
-    G -->|Loss Masked Adaptation| H[Character Dialogue Fine-Tuning]
+    G -->|Domain Adaptation & Replay| H[Austen Prose Domain Adaptation]
 ```
 
 ---
@@ -43,4 +43,4 @@ flowchart TD
 ### Stage 6: The Oracle Stone & Timeline Branching
 - Diegetic stone monoliths in the wild and Dusk Camp.
 - Players scribe prompts; the model continues autoregressively using GPU KV-caching.
-- Players can inspect token entropy gauges, explore alternative continuation branches in a timeline tree, or fine-tune models on domain genres and speaker dialogues using masked next-token loss.
+- Players can inspect token entropy gauges, explore alternative continuation branches in a timeline tree, or adapt models to new literary domains (such as Jane Austen's Pride and Prejudice) with replay regularization to prevent catastrophic forgetting.
