@@ -1247,6 +1247,30 @@ export const OracleModal: React.FC<OracleModalProps> = ({
                 </span>
               </div>
 
+              {/* Target Dataset Selector */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--na-space-3)' }}>
+                <span style={{ fontSize: '12px', color: 'var(--na-text-secondary)', minWidth: '100px' }}>
+                  Target Domain:
+                </span>
+                <div style={{ display: 'flex', gap: 'var(--na-space-2)' }}>
+                  <button
+                    style={{
+                      padding: '4px 10px',
+                      fontSize: '11px',
+                      fontFamily: 'var(--na-font-mono)',
+                      backgroundColor: 'var(--na-accent)',
+                      color: 'var(--na-ink)',
+                      border: '1px solid var(--na-accent)',
+                      borderRadius: 'var(--na-radius-sm)',
+                      cursor: 'default',
+                      fontWeight: 700
+                    }}
+                  >
+                    Jane Austen (Pride and Prejudice, 250k tok)
+                  </button>
+                </div>
+              </div>
+
               {/* Learning Rate Selector */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--na-space-3)' }}>
                 <span style={{ fontSize: '12px', color: 'var(--na-text-secondary)', minWidth: '100px' }}>
@@ -1303,16 +1327,30 @@ export const OracleModal: React.FC<OracleModalProps> = ({
                 </div>
               </div>
 
-              {/* Shakespeare Replay Buffer Selector */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--na-space-3)' }}>
-                <span style={{ fontSize: '12px', color: 'var(--na-text-secondary)', minWidth: '100px' }}>
-                  Replay Regularizer:
-                </span>
+              {/* Shakespeare Replay Buffer Selector & Range Slider */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '12px', color: 'var(--na-text-secondary)' }}>
+                    Replay Regularizer Fraction:
+                  </span>
+                  <span style={{ fontFamily: 'var(--na-font-mono)', fontSize: '12px', color: 'var(--na-accent-warm)', fontWeight: 600 }}>
+                    {(ftReplay * 100).toFixed(0)}% Shakespeare Mix
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="0.0"
+                  max="0.5"
+                  step="0.05"
+                  value={ftReplay}
+                  onChange={(e) => setFtReplay(parseFloat(e.target.value))}
+                  style={{ width: '100%', accentColor: 'var(--na-accent-warm)' }}
+                />
                 <div style={{ display: 'flex', gap: 'var(--na-space-2)' }}>
                   {[
-                    { val: 0.0, label: '0% Replay (Catastrophic Forget)' },
-                    { val: 0.25, label: '25% Replay (Balanced Pareto)' },
-                    { val: 0.50, label: '50% Replay (Conservative)' }
+                    { val: 0.0, label: '0% (Severe Forgetting)' },
+                    { val: 0.25, label: '25% (Balanced Pareto)' },
+                    { val: 0.50, label: '50% (Conservative)' }
                   ].map((item) => (
                     <button
                       key={item.val}
@@ -1482,6 +1520,51 @@ export const OracleModal: React.FC<OracleModalProps> = ({
                       </text>
                     </svg>
                   </div>
+
+                  {/* Dynamic Threshold Explanations (Shown ONLY when data matches) */}
+                  {(() => {
+                    const baseAusten = 4.690;
+                    const baseShake = 3.164;
+                    const curPoint = points.find((p) => p.step === ftSteps) || points[points.length - 1];
+                    const austenDrop = baseAusten - curPoint.austenHeldOut;
+                    const shakeRise = curPoint.shakeVal - baseShake;
+                    const isImproved = austenDrop >= 0.1;
+                    const isNegligible = Math.abs(austenDrop) < 0.03;
+                    const isOverfitting = minStep < ftSteps && (curPoint.austenHeldOut - minAusten >= 0.03);
+                    const isForgetting = shakeRise > 0.1;
+
+                    return (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: 'var(--na-space-2)', borderTop: '1px solid var(--na-line)', paddingTop: 'var(--na-space-2)' }}>
+                        <div style={{ fontSize: '11px', color: 'var(--na-muted)', fontFamily: 'var(--na-font-mono)', textTransform: 'uppercase' }}>
+                          Threshold Diagnostics (Step {ftSteps}):
+                        </div>
+
+                        {isImproved && (
+                          <div style={{ fontSize: '11px', fontFamily: 'var(--na-font-mono)', color: 'var(--na-accent-cool)', backgroundColor: 'var(--na-raised)', padding: '4px 8px', borderRadius: 'var(--na-radius-sm)', borderLeft: '3px solid var(--na-accent-cool)' }}>
+                            <strong>✦ Improved:</strong> Austen held-out loss reduced from {baseAusten.toFixed(3)} to {curPoint.austenHeldOut.toFixed(3)} nats (gain of {austenDrop.toFixed(3)} nats, beating the ≥0.1 threshold).
+                          </div>
+                        )}
+
+                        {isNegligible && (
+                          <div style={{ fontSize: '11px', fontFamily: 'var(--na-font-mono)', color: 'var(--na-muted)', backgroundColor: 'var(--na-raised)', padding: '4px 8px', borderRadius: 'var(--na-radius-sm)', borderLeft: '3px solid var(--na-muted)' }}>
+                            <strong>✦ Negligible:</strong> Austen held-out loss change is {Math.abs(austenDrop).toFixed(3)} nats (below the 0.03 threshold; adaptation has not taken effect).
+                          </div>
+                        )}
+
+                        {isOverfitting && (
+                          <div style={{ fontSize: '11px', fontFamily: 'var(--na-font-mono)', color: 'var(--na-warning)', backgroundColor: 'var(--na-raised)', padding: '4px 8px', borderRadius: 'var(--na-radius-sm)', borderLeft: '3px solid var(--na-warning)' }}>
+                            <strong>⚠ Overfitting:</strong> Austen held-out loss rose from minimum of {minAusten.toFixed(3)} at step {minStep} to {curPoint.austenHeldOut.toFixed(3)} at step {ftSteps}. Restore-best recommended.
+                          </div>
+                        )}
+
+                        {isForgetting && (
+                          <div style={{ fontSize: '11px', fontFamily: 'var(--na-font-mono)', color: 'var(--na-danger)', backgroundColor: 'var(--na-raised)', padding: '4px 8px', borderRadius: 'var(--na-radius-sm)', borderLeft: '3px solid var(--na-danger)' }}>
+                            <strong>⚠ Forgetting:</strong> Shakespeare VAL loss increased from {baseShake.toFixed(3)} to {curPoint.shakeVal.toFixed(3)} nats (drift of +{shakeRise.toFixed(3)} nats, exceeding the &gt;0.1 threshold; replay regularizer required).
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
               );
             })()}
