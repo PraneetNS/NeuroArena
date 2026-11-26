@@ -1103,6 +1103,122 @@ export const CodexModal: React.FC<CodexModalProps> = ({
                   </div>
                 );
               })()}
+
+              {/* Widget: Domain Adaptation & Fine-Tuning */}
+              {currentEntry.id === 'fine_tuning' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--na-space-3)' }}>
+                  <div style={{ fontSize: 'var(--na-text-xs)', color: 'var(--na-text-secondary)' }}>
+                    Empirical held-out cross-entropy plunge on <em>Pride and Prejudice</em> (Ch. 53–61):
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--na-space-3)' }}>
+                    <div style={{ backgroundColor: 'var(--na-raised)', padding: '12px', borderRadius: 'var(--na-radius-sm)', border: '1px solid var(--na-line)' }}>
+                      <div style={{ fontSize: '10px', color: 'var(--na-muted)', textTransform: 'uppercase' }}>Untuned Base Elder-H</div>
+                      <div style={{ fontSize: '20px', fontFamily: 'var(--na-font-mono)', color: 'var(--na-danger)', fontWeight: 700, marginTop: '4px' }}>
+                        4.690 <span style={{ fontSize: '11px' }}>nats</span>
+                      </div>
+                      <div style={{ fontSize: '10px', color: 'var(--na-muted)', marginTop: '4px' }}>Below Bigram baseline (3.554)</div>
+                    </div>
+
+                    <div style={{ backgroundColor: 'var(--na-raised)', padding: '12px', borderRadius: 'var(--na-radius-sm)', border: '1px solid var(--na-accent)' }}>
+                      <div style={{ fontSize: '10px', color: 'var(--na-accent)', textTransform: 'uppercase' }}>Adapted (3,000 Steps)</div>
+                      <div style={{ fontSize: '20px', fontFamily: 'var(--na-font-mono)', color: 'var(--na-accent)', fontWeight: 700, marginTop: '4px' }}>
+                        2.475 <span style={{ fontSize: '11px' }}>nats</span>
+                      </div>
+                      <div style={{ fontSize: '10px', color: 'var(--na-accent-cool)', marginTop: '4px' }}>+2.214 nats adaptation gain</div>
+                    </div>
+
+                    <div style={{ backgroundColor: 'var(--na-raised)', padding: '12px', borderRadius: 'var(--na-radius-sm)', border: '1px solid var(--na-line)' }}>
+                      <div style={{ fontSize: '10px', color: 'var(--na-muted)', textTransform: 'uppercase' }}>Shakespeare General Val</div>
+                      <div style={{ fontSize: '20px', fontFamily: 'var(--na-font-mono)', color: 'var(--na-accent-cool)', fontWeight: 700, marginTop: '4px' }}>
+                        3.306 <span style={{ fontSize: '11px' }}>nats</span>
+                      </div>
+                      <div style={{ fontSize: '10px', color: 'var(--na-muted)', marginTop: '4px' }}>Rise bounded to +0.142 (≤ 0.15)</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Widget: Experience Replay */}
+              {currentEntry.id === 'replay_buffer' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--na-space-3)' }}>
+                  <div style={{ fontSize: 'var(--na-text-xs)', color: 'var(--na-text-secondary)' }}>
+                    Impact of Shakespeare pretraining replay fraction on pretraining retention:
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {[
+                      { mix: '0% Replay (Pure Austen)', shakeVal: '4.319', drift: '+1.155 nats', color: 'var(--na-danger)', status: 'Catastrophic Forgetting' },
+                      { mix: '25% Shakespeare Replay', shakeVal: '3.306', drift: '+0.142 nats', color: 'var(--na-accent-cool)', status: 'Bounded Under Budget' },
+                      { mix: '50% Shakespeare Replay', shakeVal: '3.245', drift: '+0.081 nats', color: 'var(--na-accent)', status: 'High Pretraining Retention' }
+                    ].map((row, idx) => (
+                      <div key={idx} style={{ padding: '10px 12px', backgroundColor: 'var(--na-raised)', borderRadius: 'var(--na-radius-sm)', border: '1px solid var(--na-line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--na-text)' }}>{row.mix}</div>
+                          <div style={{ fontSize: '11px', color: row.color, marginTop: '2px' }}>{row.status}</div>
+                        </div>
+                        <div style={{ textAlign: 'right', fontFamily: 'var(--na-font-mono)' }}>
+                          <div style={{ fontSize: '13px', fontWeight: 700, color: row.color }}>{row.shakeVal} nats</div>
+                          <div style={{ fontSize: '10px', color: 'var(--na-muted)' }}>Δ = {row.drift}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Widget: Catastrophic Forgetting */}
+              {currentEntry.id === 'catastrophic_forgetting' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--na-space-3)' }}>
+                  <div style={{ fontSize: 'var(--na-text-xs)', color: 'var(--na-text-secondary)' }}>
+                    Validation loss divergence over 3,000 steps without replay regularization (LR = 1e-4, 0% replay):
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    {[
+                      { step: 100, austen: 3.232, shake: 3.453, drift: '+0.289' },
+                      { step: 300, austen: 2.759, shake: 3.703, drift: '+0.539' },
+                      { step: 1000, austen: 2.551, shake: 3.982, drift: '+0.818' },
+                      { step: 3000, austen: 2.446, shake: 4.319, drift: '+1.155' }
+                    ].map((row, idx) => (
+                      <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '6px 10px', backgroundColor: 'var(--na-raised)', borderRadius: 'var(--na-radius-sm)', fontFamily: 'var(--na-font-mono)', fontSize: '11px' }}>
+                        <span style={{ width: '70px', color: 'var(--na-muted)' }}>Step {row.step}</span>
+                        <span style={{ width: '130px', color: 'var(--na-accent)' }}>Austen: {row.austen.toFixed(3)}</span>
+                        <span style={{ width: '150px', color: 'var(--na-danger)' }}>Shakespeare: {row.shake.toFixed(3)}</span>
+                        <span style={{ color: 'var(--na-danger)', fontWeight: 700 }}>Rise: {row.drift}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Widget: Domain Shift & Vocabulary Mismatch */}
+              {currentEntry.id === 'domain_shift' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--na-space-3)' }}>
+                  <div style={{ fontSize: 'var(--na-text-xs)', color: 'var(--na-text-secondary)' }}>
+                    Subword fragmentation on Austen vocabulary under Shakespeare-trained BPE (bpe1024-v2):
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--na-space-3)' }}>
+                    <div style={{ backgroundColor: 'var(--na-raised)', padding: '12px', borderRadius: 'var(--na-radius-sm)', border: '1px solid var(--na-line)' }}>
+                      <div style={{ fontSize: '11px', color: 'var(--na-muted)' }}>Words Split into ≥ 4 Tokens:</div>
+                      <div style={{ fontSize: '22px', fontFamily: 'var(--na-font-mono)', color: 'var(--na-accent)', fontWeight: 700, marginTop: '4px' }}>
+                        17.47%
+                      </div>
+                      <div style={{ fontSize: '10px', color: 'var(--na-muted)', marginTop: '2px' }}>21,504 / 123,103 words</div>
+                    </div>
+
+                    <div style={{ backgroundColor: 'var(--na-raised)', padding: '12px', borderRadius: 'var(--na-radius-sm)', border: '1px solid var(--na-line)' }}>
+                      <div style={{ fontSize: '11px', color: 'var(--na-muted)' }}>Sample Fragmented Words:</div>
+                      <div style={{ fontSize: '11px', fontFamily: 'var(--na-font-mono)', color: 'var(--na-text)', marginTop: '4px', lineHeight: 1.5 }}>
+                        universally (6 toks)<br />
+                        acknowledged (7 toks)<br />
+                        neighbourhood (6 toks)
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
