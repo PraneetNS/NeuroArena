@@ -1189,252 +1189,165 @@ class BenchmarkApp {
 
         </div>
 
-        <!-- Dialogue Fine-Tuning & Loss Masking Dashboard -->
+        <!-- Jane Austen Domain Adaptation & Replay Regularization Dashboard -->
         <div style="background: rgba(21, 26, 33, 0.6); padding: 1.4rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.05); display: flex; flex-direction: column; gap: 1.2rem;">
           <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255, 255, 255, 0.06); padding-bottom: 0.8rem;">
             <div>
-              <div style="font-size: 1rem; font-weight: 700; color: #E8E4DA;">Dialogue Fine-Tuning & Loss Masking (The Elder)</div>
+              <div style="font-size: 1rem; font-weight: 700; color: #E8E4DA;">Jane Austen Domain Adaptation & Replay Regularization (Elder-H)</div>
               <div style="font-size: 0.8rem; color: #9AA3AE; margin-top: 0.2rem;">
-                Target tokens masked with index -1 on player prompts; loss applied strictly on speaker replies
+                Continuous domain transfer from Shakespeare to Pride & Prejudice (250,839 tuning tokens; 45,841 held-out tokens)
               </div>
             </div>
             <div style="font-family: var(--font-mono); font-size: 0.8rem; color: #4FB3A9;">
-              Base General Val Loss: <strong>2.505</strong>
+              Untuned Austen Base: <strong>4.690 nats</strong> | Shake Val: <strong>3.164 nats</strong>
             </div>
           </div>
 
+          <!-- Baselines & Vocabulary Fragmentation Overview -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.8rem;">
+            <div style="background: rgba(0, 0, 0, 0.25); border: 1px solid #2A333F; border-radius: 4px; padding: 0.7rem;">
+              <div style="font-size: 0.72rem; color: #9AA3AE; text-transform: uppercase;">Untuned Elder-H</div>
+              <div style="font-family: var(--font-mono); font-size: 1.1rem; font-weight: 700; color: #E8A33D; margin-top: 2px;">4.6897 nats</div>
+              <div style="font-size: 0.7rem; color: #9AA3AE;">2.384 nats/char (Domain gap)</div>
+            </div>
+            <div style="background: rgba(0, 0, 0, 0.25); border: 1px solid #2A333F; border-radius: 4px; padding: 0.7rem;">
+              <div style="font-size: 0.72rem; color: #9AA3AE; text-transform: uppercase;">Austen Bigram Baseline</div>
+              <div style="font-family: var(--font-mono); font-size: 1.1rem; font-weight: 700; color: #4FB3A9; margin-top: 2px;">3.5543 nats</div>
+              <div style="font-size: 0.7rem; color: #9AA3AE;">1.491 nats/char (In-domain)</div>
+            </div>
+            <div style="background: rgba(0, 0, 0, 0.25); border: 1px solid #2A333F; border-radius: 4px; padding: 0.7rem;">
+              <div style="font-size: 0.72rem; color: #9AA3AE; text-transform: uppercase;">Austen Trigram Baseline</div>
+              <div style="font-family: var(--font-mono); font-size: 1.1rem; font-weight: 700; color: #4FB3A9; margin-top: 2px;">3.7413 nats</div>
+              <div style="font-size: 0.7rem; color: #9AA3AE;">1.570 nats/char (In-domain)</div>
+            </div>
+            <div style="background: rgba(0, 0, 0, 0.25); border: 1px solid #2A333F; border-radius: 4px; padding: 0.7rem;">
+              <div style="font-size: 0.72rem; color: #9AA3AE; text-transform: uppercase;">Vocabulary Fragmentation</div>
+              <div style="font-family: var(--font-mono); font-size: 1.1rem; font-weight: 700; color: #D9564A; margin-top: 2px;">17.47%</div>
+              <div style="font-size: 0.7rem; color: #9AA3AE;">21,504 words split into ≥4 tokens</div>
+            </div>
+          </div>
+
+          <!-- Pareto Frontier Sweep Table -->
           <div style="overflow-x: auto;">
             <table style="width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 0.82rem;">
               <thead>
                 <tr style="border-bottom: 1px solid #2A333F; color: #9AA3AE; text-align: left; background: rgba(0, 0, 0, 0.2);">
-                  <th style="padding: 0.6rem 0.8rem;">SPEAKER</th>
-                  <th style="padding: 0.6rem 0.8rem;">HELD-OUT UNIT</th>
-                  <th style="padding: 0.6rem 0.8rem;">TRAIN TOKENS</th>
-                  <th style="padding: 0.6rem 0.8rem;">HELD-OUT TOKENS</th>
-                  <th style="padding: 0.6rem 0.8rem;">HELD-OUT LOSS</th>
-                  <th style="padding: 0.6rem 0.8rem;">GENERAL VAL</th>
+                  <th style="padding: 0.6rem 0.8rem;">CONFIG</th>
+                  <th style="padding: 0.6rem 0.8rem;">LEARNING RATE</th>
+                  <th style="padding: 0.6rem 0.8rem;">REPLAY RATIO</th>
+                  <th style="padding: 0.6rem 0.8rem;">STEPS</th>
+                  <th style="padding: 0.6rem 0.8rem;">AUSTEN HELD-OUT</th>
+                  <th style="padding: 0.6rem 0.8rem;">SHAKESPEARE VAL</th>
                   <th style="padding: 0.6rem 0.8rem;">FORGETTING DRIFT</th>
+                  <th style="padding: 0.6rem 0.8rem;">PARETO STATUS</th>
                 </tr>
               </thead>
               <tbody>
-                <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
-                  <td style="padding: 0.6rem 0.8rem; font-weight: 700; color: #E8E4DA;">HAMLET</td>
-                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">Act V (Hamlet)</td>
-                  <td style="padding: 0.6rem 0.8rem; color: #4FB3A9;">17,505 (253 turns)</td>
-                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">7,099 (93 turns)</td>
-                  <td style="padding: 0.6rem 0.8rem; color: #E8A33D;">0.555 → 0.630</td>
-                  <td style="padding: 0.6rem 0.8rem; color: #D9564A; font-weight: 700;">2.929</td>
-                  <td style="padding: 0.6rem 0.8rem; color: #D9564A; font-weight: 700;">+0.424</td>
+                <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04); background: rgba(79, 179, 169, 0.08);">
+                  <td style="padding: 0.6rem 0.8rem; font-weight: 700; color: #4FB3A9;">ADAPTED-25 (CHOSEN)</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #E8E4DA;">1e-4</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #4FB3A9; font-weight: 700;">25% Replay</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">2,975</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #4FB3A9; font-weight: 700;">2.4710 nats</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #E8E4DA;">3.3057 nats</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #4FB3A9; font-weight: 700;">+0.1418 nats (≤0.15)</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #4FB3A9; font-weight: 700;">★ Pareto Best Gain</td>
                 </tr>
                 <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
-                  <td style="padding: 0.6rem 0.8rem; font-weight: 700; color: #E8E4DA;">FALSTAFF</td>
-                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">Henry IV Part 2</td>
-                  <td style="padding: 0.6rem 0.8rem; color: #4FB3A9;">28,512 (403 turns)</td>
-                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">5,585 (63 turns)</td>
-                  <td style="padding: 0.6rem 0.8rem; color: #E8A33D;">0.412 → 0.447</td>
-                  <td style="padding: 0.6rem 0.8rem; color: #D9564A; font-weight: 700;">2.835</td>
-                  <td style="padding: 0.6rem 0.8rem; color: #D9564A; font-weight: 700;">+0.330</td>
+                  <td style="padding: 0.6rem 0.8rem; font-weight: 700; color: #E8E4DA;">ADAPTED-50 (CONSERVATIVE)</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #E8E4DA;">3e-4</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #4FB3A9;">50% Replay</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">3,000</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #4FB3A9;">2.5066 nats</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #E8E4DA;">3.2711 nats</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #4FB3A9;">+0.1071 nats</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #E8E4DA;">🛡 Conservative Safe</td>
                 </tr>
                 <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
-                  <td style="padding: 0.6rem 0.8rem; font-weight: 700; color: #E8E4DA;">PORTIA</td>
-                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">Act IV Trial Scene</td>
-                  <td style="padding: 0.6rem 0.8rem; color: #4FB3A9;">6,557 (66 turns)</td>
-                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">4,936 (67 turns)</td>
-                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">Available</td>
-                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">—</td>
-                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">—</td>
+                  <td style="padding: 0.6rem 0.8rem; font-weight: 700; color: #E8E4DA;">ADAPTED-0 (NO REPLAY)</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #E8E4DA;">1e-4</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #D9564A;">0% Replay</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">3,000</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #E8A33D;">2.6105 nats</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #D9564A; font-weight: 700;">4.3188 nats</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #D9564A; font-weight: 700;">+1.1549 nats</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #D9564A;">⚠ Severe Forgetting</td>
                 </tr>
                 <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
-                  <td style="padding: 0.6rem 0.8rem; font-weight: 700; color: #E8E4DA;">ROSALIND</td>
-                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">Act V (As You Like It)</td>
-                  <td style="padding: 0.6rem 0.8rem; color: #4FB3A9;">11,886 (175 turns)</td>
-                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">1,719 (23 turns)</td>
-                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">Available</td>
-                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">—</td>
-                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">—</td>
+                  <td style="padding: 0.6rem 0.8rem; font-weight: 700; color: #E8E4DA;">HIGH-LR (NO REPLAY)</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #E8E4DA;">3e-4</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #D9564A;">0% Replay</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">3,000</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #E8A33D;">2.5542 nats</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #D9564A; font-weight: 700;">5.0321 nats</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #D9564A; font-weight: 700;">+1.8682 nats</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #D9564A;">⚠ General Collapse</td>
                 </tr>
                 <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
-                  <td style="padding: 0.6rem 0.8rem; font-weight: 700; color: #E8E4DA;">IAGO</td>
-                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">Act V (Othello)</td>
-                  <td style="padding: 0.6rem 0.8rem; color: #4FB3A9;">16,428 (232 turns)</td>
-                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">2,013 (37 turns)</td>
-                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">Available</td>
-                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">—</td>
-                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">—</td>
+                  <td style="padding: 0.6rem 0.8rem; font-weight: 700; color: #E8E4DA;">AGGRESSIVE (NO REPLAY)</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #E8E4DA;">1e-3</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #D9564A;">0% Replay</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">3,000</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #E8A33D;">2.8210 nats</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #D9564A; font-weight: 700;">5.9340 nats</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #D9564A; font-weight: 700;">+2.7701 nats</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #D9564A;">⚠ Total Amnesia</td>
                 </tr>
                 <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
-                  <td style="padding: 0.6rem 0.8rem; font-weight: 700; color: #E8E4DA;">PROSPERO</td>
-                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">Act V (The Tempest)</td>
-                  <td style="padding: 0.6rem 0.8rem; color: #4FB3A9;">9,250 (89 turns)</td>
-                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">2,597 (26 turns)</td>
-                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">Available</td>
-                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">—</td>
-                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">—</td>
+                  <td style="padding: 0.6rem 0.8rem; font-weight: 700; color: #E8E4DA;">FROM-SCRATCH CONTROL</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #E8E4DA;">3e-4</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">0% (Austen Only)</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">3,000</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #D9564A;">3.2683 nats</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #D9564A; font-weight: 700;">6.6801 nats</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #9AA3AE;">N/A (Untrained)</td>
+                  <td style="padding: 0.6rem 0.8rem; color: #E8A33D;">Pretraining Gain: +0.797</td>
                 </tr>
               </tbody>
             </table>
           </div>
 
-          <!-- Speaker Lexical Diversity & Vocabulary Richness Matrix -->
+          <!-- Free-Run Evaluation & Style Shift Rate -->
           <div style="margin-top: 1.2rem; border-top: 1px solid rgba(255, 255, 255, 0.06); padding-top: 1.0rem;">
             <div style="font-size: 0.92rem; font-weight: 700; color: #E8E4DA; margin-bottom: 0.3rem;">
-              Speaker Lexical Diversity & Style Archetypes
+              Generative Style Shift & Objective Entity Rates (200 generations, T=0.8)
             </div>
             <div style="font-size: 0.78rem; color: #9AA3AE; margin-bottom: 0.8rem;">
-              Corpus-level vocabulary richness computed via Type-Token Ratio (TTR), Hapax Legomena, and Shannon Token Entropy (H)
+              Measuring empirical transition from theatrical verse tags to 19th-century Regency domestic entities with 95% Wilson confidence intervals
             </div>
             <div style="overflow-x: auto;">
               <table style="width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 0.80rem;">
                 <thead>
                   <tr style="border-bottom: 1px solid #2A333F; color: #9AA3AE; text-align: left; background: rgba(0, 0, 0, 0.2);">
-                    <th style="padding: 0.5rem 0.7rem;">SPEAKER</th>
-                    <th style="padding: 0.5rem 0.7rem;">ARCHETYPE</th>
-                    <th style="padding: 0.5rem 0.7rem;">UNIQUE / TOTAL</th>
-                    <th style="padding: 0.5rem 0.7rem;">TTR</th>
-                    <th style="padding: 0.5rem 0.7rem;">HAPAX COUNT</th>
-                    <th style="padding: 0.5rem 0.7rem;">ENTROPY (H)</th>
-                    <th style="padding: 0.5rem 0.7rem;">YULE'S K</th>
+                    <th style="padding: 0.5rem 0.7rem;">MODEL VARIANT</th>
+                    <th style="padding: 0.5rem 0.7rem;">AUSTEN CHARACTER NAMES</th>
+                    <th style="padding: 0.5rem 0.7rem;">95% WILSON CI</th>
+                    <th style="padding: 0.5rem 0.7rem;">THEATRICAL SPEAKER TAGS</th>
+                    <th style="padding: 0.5rem 0.7rem;">95% WILSON CI</th>
+                    <th style="padding: 0.5rem 0.7rem;">VERBATIM 20-TOK MEMORIZATION</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
-                    <td style="padding: 0.5rem 0.7rem; font-weight: 700; color: #E8E4DA;">HAMLET</td>
-                    <td style="padding: 0.5rem 0.7rem; color: #9AA3AE;">Philosophical Soliloquy</td>
-                    <td style="padding: 0.5rem 0.7rem; color: #4FB3A9;">3,420 / 17,505</td>
-                    <td style="padding: 0.5rem 0.7rem; color: #E8A33D;">0.195</td>
-                    <td style="padding: 0.5rem 0.7rem; color: #9AA3AE;">1,842 (53.9%)</td>
-                    <td style="padding: 0.5rem 0.7rem; color: #4FB3A9;">9.24 bits</td>
-                    <td style="padding: 0.5rem 0.7rem; color: #9AA3AE;">84.2</td>
+                    <td style="padding: 0.5rem 0.7rem; font-weight: 700; color: #E8E4DA;">Base Elder-H (Shakespeare)</td>
+                    <td style="padding: 0.5rem 0.7rem; color: #9AA3AE;">0 / 200 (0.0%)</td>
+                    <td style="padding: 0.5rem 0.7rem; color: #9AA3AE;">[0.00%, 1.88%]</td>
+                    <td style="padding: 0.5rem 0.7rem; color: #D9564A; font-weight: 700;">45 / 243 (18.5%)</td>
+                    <td style="padding: 0.5rem 0.7rem; color: #D9564A;">[13.73%, 24.46%]</td>
+                    <td style="padding: 0.5rem 0.7rem; color: #4FB3A9;">0 / 200 (0.0%)</td>
                   </tr>
-                  <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
-                    <td style="padding: 0.5rem 0.7rem; font-weight: 700; color: #E8E4DA;">FALSTAFF</td>
-                    <td style="padding: 0.5rem 0.7rem; color: #9AA3AE;">Boisterous Colloquial</td>
-                    <td style="padding: 0.5rem 0.7rem; color: #4FB3A9;">4,180 / 28,512</td>
-                    <td style="padding: 0.5rem 0.7rem; color: #E8A33D;">0.147</td>
-                    <td style="padding: 0.5rem 0.7rem; color: #9AA3AE;">2,105 (50.4%)</td>
-                    <td style="padding: 0.5rem 0.7rem; color: #4FB3A9;">8.98 bits</td>
-                    <td style="padding: 0.5rem 0.7rem; color: #9AA3AE;">96.8</td>
-                  </tr>
-                  <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
-                    <td style="padding: 0.5rem 0.7rem; font-weight: 700; color: #E8E4DA;">PORTIA</td>
-                    <td style="padding: 0.5rem 0.7rem; color: #9AA3AE;">Forensic & Legal Rhetoric</td>
-                    <td style="padding: 0.5rem 0.7rem; color: #4FB3A9;">1,620 / 6,557</td>
-                    <td style="padding: 0.5rem 0.7rem; color: #E8A33D;">0.247</td>
-                    <td style="padding: 0.5rem 0.7rem; color: #9AA3AE;">980 (60.5%)</td>
-                    <td style="padding: 0.5rem 0.7rem; color: #4FB3A9;">9.10 bits</td>
-                    <td style="padding: 0.5rem 0.7rem; color: #9AA3AE;">72.5</td>
-                  </tr>
-                  <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
-                    <td style="padding: 0.5rem 0.7rem; font-weight: 700; color: #E8E4DA;">ROSALIND</td>
-                    <td style="padding: 0.5rem 0.7rem; color: #9AA3AE;">Playful Pastoral Wit</td>
-                    <td style="padding: 0.5rem 0.7rem; color: #4FB3A9;">2,390 / 11,886</td>
-                    <td style="padding: 0.5rem 0.7rem; color: #E8A33D;">0.201</td>
-                    <td style="padding: 0.5rem 0.7rem; color: #9AA3AE;">1,295 (54.2%)</td>
-                    <td style="padding: 0.5rem 0.7rem; color: #4FB3A9;">8.85 bits</td>
-                    <td style="padding: 0.5rem 0.7rem; color: #9AA3AE;">88.1</td>
-                  </tr>
-                  <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
-                    <td style="padding: 0.5rem 0.7rem; font-weight: 700; color: #E8E4DA;">IAGO</td>
-                    <td style="padding: 0.5rem 0.7rem; color: #9AA3AE;">Machiavellian Duplicity</td>
-                    <td style="padding: 0.5rem 0.7rem; color: #4FB3A9;">2,950 / 16,428</td>
-                    <td style="padding: 0.5rem 0.7rem; color: #E8A33D;">0.180</td>
-                    <td style="padding: 0.5rem 0.7rem; color: #9AA3AE;">1,520 (51.5%)</td>
-                    <td style="padding: 0.5rem 0.7rem; color: #4FB3A9;">8.76 bits</td>
-                    <td style="padding: 0.5rem 0.7rem; color: #9AA3AE;">91.4</td>
-                  </tr>
-                  <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
-                    <td style="padding: 0.5rem 0.7rem; font-weight: 700; color: #E8E4DA;">PROSPERO</td>
-                    <td style="padding: 0.5rem 0.7rem; color: #9AA3AE;">Theurgic Incantation</td>
-                    <td style="padding: 0.5rem 0.7rem; color: #4FB3A9;">2,140 / 9,250</td>
-                    <td style="padding: 0.5rem 0.7rem; color: #E8A33D;">0.231</td>
-                    <td style="padding: 0.5rem 0.7rem; color: #9AA3AE;">1,180 (55.1%)</td>
-                    <td style="padding: 0.5rem 0.7rem; color: #4FB3A9;">9.05 bits</td>
-                    <td style="padding: 0.5rem 0.7rem; color: #9AA3AE;">79.6</td>
+                  <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04); background: rgba(79, 179, 169, 0.08);">
+                    <td style="padding: 0.5rem 0.7rem; font-weight: 700; color: #4FB3A9;">Adapted Elder-H (25% Replay)</td>
+                    <td style="padding: 0.5rem 0.7rem; color: #4FB3A9; font-weight: 700;">50 / 244 (20.5%)</td>
+                    <td style="padding: 0.5rem 0.7rem; color: #4FB3A9;">[15.49%, 26.63%]</td>
+                    <td style="padding: 0.5rem 0.7rem; color: #4FB3A9;">1 / 200 (0.5%)</td>
+                    <td style="padding: 0.5rem 0.7rem; color: #4FB3A9;">[0.09%, 2.78%]</td>
+                    <td style="padding: 0.5rem 0.7rem; color: #4FB3A9; font-weight: 700;">0 / 200 (0.0%)</td>
                   </tr>
                 </tbody>
               </table>
             </div>
-
-            <!-- Pairwise Jensen-Shannon Divergence Matrix -->
-            <div style="margin-top: 1.2rem; border-top: 1px solid rgba(255, 255, 255, 0.06); padding-top: 1.0rem;">
-              <div style="font-size: 0.92rem; font-weight: 700; color: #E8E4DA; margin-bottom: 0.3rem;">
-                Pairwise Speaker Jensen-Shannon Divergence Matrix (bits)
-              </div>
-              <div style="font-size: 0.78rem; color: #9AA3AE; margin-bottom: 0.8rem;">
-                Symmetric bounded divergence JSD(P || Q) measuring stylistic distance between character token distributions
-              </div>
-              <div style="overflow-x: auto;">
-                <table style="width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 0.78rem;">
-                  <thead>
-                    <tr style="border-bottom: 1px solid #2A333F; color: #9AA3AE; text-align: left; background: rgba(0, 0, 0, 0.2);">
-                      <th style="padding: 0.5rem 0.6rem;">SPEAKER</th>
-                      <th style="padding: 0.5rem 0.6rem;">HAMLET</th>
-                      <th style="padding: 0.5rem 0.6rem;">FALSTAFF</th>
-                      <th style="padding: 0.5rem 0.6rem;">PORTIA</th>
-                      <th style="padding: 0.5rem 0.6rem;">ROSALIND</th>
-                      <th style="padding: 0.5rem 0.6rem;">IAGO</th>
-                      <th style="padding: 0.5rem 0.6rem;">PROSPERO</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
-                      <td style="padding: 0.5rem 0.6rem; font-weight: 700; color: #E8E4DA;">HAMLET</td>
-                      <td style="padding: 0.5rem 0.6rem; color: #4FB3A9;">0.000</td>
-                      <td style="padding: 0.5rem 0.6rem; color: #E8A33D;">0.312</td>
-                      <td style="padding: 0.5rem 0.6rem; color: #9AA3AE;">0.245</td>
-                      <td style="padding: 0.5rem 0.6rem; color: #9AA3AE;">0.268</td>
-                      <td style="padding: 0.5rem 0.6rem; color: #4FB3A9;">0.185</td>
-                      <td style="padding: 0.5rem 0.6rem; color: #9AA3AE;">0.274</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
-                      <td style="padding: 0.5rem 0.6rem; font-weight: 700; color: #E8E4DA;">FALSTAFF</td>
-                      <td style="padding: 0.5rem 0.6rem; color: #E8A33D;">0.312</td>
-                      <td style="padding: 0.5rem 0.6rem; color: #4FB3A9;">0.000</td>
-                      <td style="padding: 0.5rem 0.6rem; color: #E8A33D;">0.358</td>
-                      <td style="padding: 0.5rem 0.6rem; color: #9AA3AE;">0.294</td>
-                      <td style="padding: 0.5rem 0.6rem; color: #9AA3AE;">0.278</td>
-                      <td style="padding: 0.5rem 0.6rem; color: #D9564A;">0.428</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
-                      <td style="padding: 0.5rem 0.6rem; font-weight: 700; color: #E8E4DA;">PORTIA</td>
-                      <td style="padding: 0.5rem 0.6rem; color: #9AA3AE;">0.245</td>
-                      <td style="padding: 0.5rem 0.6rem; color: #E8A33D;">0.358</td>
-                      <td style="padding: 0.5rem 0.6rem; color: #4FB3A9;">0.000</td>
-                      <td style="padding: 0.5rem 0.6rem; color: #9AA3AE;">0.231</td>
-                      <td style="padding: 0.5rem 0.6rem; color: #9AA3AE;">0.252</td>
-                      <td style="padding: 0.5rem 0.6rem; color: #9AA3AE;">0.286</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
-                      <td style="padding: 0.5rem 0.6rem; font-weight: 700; color: #E8E4DA;">ROSALIND</td>
-                      <td style="padding: 0.5rem 0.6rem; color: #9AA3AE;">0.268</td>
-                      <td style="padding: 0.5rem 0.6rem; color: #9AA3AE;">0.294</td>
-                      <td style="padding: 0.5rem 0.6rem; color: #9AA3AE;">0.231</td>
-                      <td style="padding: 0.5rem 0.6rem; color: #4FB3A9;">0.000</td>
-                      <td style="padding: 0.5rem 0.6rem; color: #9AA3AE;">0.262</td>
-                      <td style="padding: 0.5rem 0.6rem; color: #E8A33D;">0.315</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
-                      <td style="padding: 0.5rem 0.6rem; font-weight: 700; color: #E8E4DA;">IAGO</td>
-                      <td style="padding: 0.5rem 0.6rem; color: #4FB3A9;">0.185</td>
-                      <td style="padding: 0.5rem 0.6rem; color: #9AA3AE;">0.278</td>
-                      <td style="padding: 0.5rem 0.6rem; color: #9AA3AE;">0.252</td>
-                      <td style="padding: 0.5rem 0.6rem; color: #9AA3AE;">0.262</td>
-                      <td style="padding: 0.5rem 0.6rem; color: #4FB3A9;">0.000</td>
-                      <td style="padding: 0.5rem 0.6rem; color: #9AA3AE;">0.289</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
-                      <td style="padding: 0.5rem 0.6rem; font-weight: 700; color: #E8E4DA;">PROSPERO</td>
-                      <td style="padding: 0.5rem 0.6rem; color: #9AA3AE;">0.274</td>
-                      <td style="padding: 0.5rem 0.6rem; color: #D9564A;">0.428</td>
-                      <td style="padding: 0.5rem 0.6rem; color: #9AA3AE;">0.286</td>
-                      <td style="padding: 0.5rem 0.6rem; color: #E8A33D;">0.315</td>
-                      <td style="padding: 0.5rem 0.6rem; color: #9AA3AE;">0.289</td>
-                      <td style="padding: 0.5rem 0.6rem; color: #4FB3A9;">0.000</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
+          </div>
           </div>
         </div>
 
