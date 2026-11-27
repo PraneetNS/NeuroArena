@@ -25,6 +25,35 @@ function strictStatic404Plugin() {
         }
         next();
       });
+    },
+    configurePreviewServer(server: any) {
+      server.middlewares.use((req: any, res: any, next: any) => {
+        const rawUrl = (req.url || '').split('?')[0];
+        if (rawUrl.startsWith('/assets/')) {
+          res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        }
+        const match = rawUrl.match(/\.([a-zA-Z0-9_-]+)$/);
+        if (match) {
+          const ext = match[1].toLowerCase();
+          if (ext !== 'html' && ext !== 'htm') {
+            const distPath = path.resolve(__dirname, 'dist', '.' + rawUrl);
+            if (!fs.existsSync(distPath)) {
+              res.statusCode = 404;
+              res.setHeader('Content-Type', 'text/plain');
+              res.end(`404 Not Found: Static asset ${rawUrl} does not exist`);
+              return;
+            }
+            if (ext === 'bin') res.setHeader('Content-Type', 'application/octet-stream');
+            else if (ext === 'wasm') res.setHeader('Content-Type', 'application/wasm');
+            else if (ext === 'ktx2') res.setHeader('Content-Type', 'image/ktx2');
+            else if (ext === 'glb') res.setHeader('Content-Type', 'model/gltf-binary');
+            else if (ext === 'json') res.setHeader('Content-Type', 'application/json');
+            else if (ext === 'gz') res.setHeader('Content-Type', 'application/gzip');
+            else if (ext === 'br') res.setHeader('Content-Type', 'application/octet-stream');
+          }
+        }
+        next();
+      });
     }
   };
 }
