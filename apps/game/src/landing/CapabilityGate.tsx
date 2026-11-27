@@ -387,17 +387,47 @@ export const CapabilityGate: React.FC<CapabilityGateProps> = ({
             </div>
           )}
 
-          {/* Tested Browsers Disclaimer */}
+          {/* Tested Browsers & Detected Platform Disclaimer */}
           <div
             style={{
               fontSize: '11px',
               fontFamily: 'var(--na-font-mono, monospace)',
               color: 'var(--na-muted, #7E8B9B)',
               borderTop: '1px solid var(--na-line, #1E2735)',
-              paddingTop: '8px'
+              paddingTop: '8px',
+              lineHeight: 1.6
             }}
           >
-            <strong>Tested Configurations:</strong> Google Chrome 130+, Google Chrome 131+ (Windows 11 with NVIDIA GeForce RTX 3050 Laptop GPU / Direct3D 12).
+            <div>
+              <strong>Detected Environment:</strong>{' '}
+              {typeof navigator !== 'undefined' ? navigator.userAgent : 'Unknown Environment'}
+            </div>
+            <div>
+              <strong>Compatibility Status:</strong>{' '}
+              {(() => {
+                const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+                const isTestedChrome =
+                  (ua.includes('Chrome/157') || ua.includes('Chrome/158')) &&
+                  ua.includes('Windows') &&
+                  (audit.details.adapterDevice?.includes('RTX 3050') || audit.details.adapterDevice?.includes('Direct3D12') || audit.details.adapterVendor?.includes('NVIDIA'));
+
+                if (isTestedChrome) {
+                  return (
+                    <span style={{ color: 'var(--na-accent-cool, #4FB3A9)' }}>
+                      Tested &amp; Verified (Google Chrome 157/158 on Windows 11 with NVIDIA GeForce RTX 3050 Laptop GPU)
+                    </span>
+                  );
+                }
+                return (
+                  <span style={{ color: 'var(--na-accent, #E8A33D)' }}>
+                    untested (feature detection active; verify WebGPU and Cross-Origin Isolation indicators above)
+                  </span>
+                );
+              })()}
+            </div>
+            <div style={{ marginTop: '2px', color: 'var(--na-muted, #7E8B9B)' }}>
+              <em>Note:</em> Only configurations actually run and measured in local verification are marked tested (Google Chrome 157/158 on Windows 11, NVIDIA RTX 3050 Laptop GPU). All other browsers and operating systems are untested.
+            </div>
           </div>
         </div>
 

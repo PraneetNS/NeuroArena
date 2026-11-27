@@ -31,6 +31,14 @@ export const ASSET_MANIFEST: Record<string, AssetManifestEntry> = {
     contentType: 'application/octet-stream',
     description: 'The Elder 12,000-step trained checkpoint binary (bpe1024-v2 FP16 weights + NACP header)'
   },
+  '/assets/elder_austen_tuned.bin': {
+    path: '/assets/elder_austen_tuned.bin',
+    bytes: 1881942,
+    minBytes: 1500000,
+    sha256: '00a02d12347f5ed42c010ace17ec3c0361db4a2420b410a74d8847cdace62f29',
+    contentType: 'application/octet-stream',
+    description: 'The Elder Austen domain-adapted checkpoint binary (bpe1024-v2 FP16 weights + NACP header)'
+  },
   '/data/bpe_1024.json': {
     path: '/data/bpe_1024.json',
     bytes: 34361,
