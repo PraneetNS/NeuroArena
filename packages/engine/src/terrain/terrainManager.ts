@@ -77,6 +77,22 @@ export class TerrainManager {
     this.initWorker();
   }
 
+  /**
+   * Updates terrain material with streamed high-resolution textures.
+   */
+  public updateTextures(textures: TerrainTextures): void {
+    const oldMaterial = this.material;
+    this.material = createTerrainMaterial(textures);
+    for (const chunk of this.chunks.values()) {
+      if (chunk.mesh) {
+        chunk.mesh.material = this.material;
+      }
+    }
+    try {
+      oldMaterial.dispose();
+    } catch {}
+  }
+
   private initWorker(): void {
     try {
       this.worker = new Worker(new URL('./terrainWorker.js', import.meta.url), {

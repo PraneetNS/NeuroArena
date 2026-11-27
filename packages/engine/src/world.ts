@@ -14,7 +14,7 @@
 import * as THREE from 'three/webgpu';
 import { Player } from './player.js';
 import { TerrainManager, QualityTier } from './terrain/terrainManager.js';
-import { loadTerrainTextures } from './terrain/textureLoader.js';
+import { loadTerrainTextures, createStarterTextures } from './terrain/textureLoader.js';
 import { FreeFlyCamera } from './camera/freeFlyCamera.js';
 import { EnvironmentManager, EnvironmentStats } from './environment/environmentManager.js';
 import { OracleStone } from './entities/oracleStone.js';
@@ -238,14 +238,27 @@ export class World {
   }
 
   /**
-   * Initializes the 2 km x 2 km procedural terrain with CC0 KTX2 textures.
+   * Initializes the 2 km x 2 km procedural terrain with staged loading:
+   * Starter procedural textures load instantly so the player character is immediately
+   * controllable, while full KTX2 textures stream asynchronously in the background.
    */
   public async loadTerrain(qualityTier: QualityTier = 'high'): Promise<void> {
     try {
-      const textures = await loadTerrainTextures(this.renderer);
-      this.terrain = new TerrainManager(textures, qualityTier);
+      const starterTextures = createStarterTextures();
+      this.terrain = new TerrainManager(starterTextures, qualityTier);
       this.scene.add(this.terrain.group);
       this.setQualityTier(qualityTier);
+
+      // Stream high-resolution KTX2 textures asynchronously in background
+      loadTerrainTextures(this.renderer)
+        .then((textures) => {
+          if (this.terrain) {
+            this.terrain.updateTextures(textures);
+          }
+        })
+        .catch((err) => {
+          console.warn('KTX2 texture stream notice:', err);
+        });
     } catch (err) {
       console.error('Failed to load terrain system:', err);
     }

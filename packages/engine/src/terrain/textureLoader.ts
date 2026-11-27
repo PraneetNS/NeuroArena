@@ -64,9 +64,26 @@ export async function loadTerrainTextures(
 }
 
 /**
+ * Creates instant procedural starter textures for immediate first-frame playability.
+ * High-resolution KTX2 textures can then stream in the background without blocking player control.
+ */
+export function createStarterTextures(): TerrainTextures {
+  return {
+    grassDiffuse: createFallbackTexture('grass_diffuse'),
+    grassNormal: createFallbackTexture('grass_normal'),
+    dirtDiffuse: createFallbackTexture('dirt_diffuse'),
+    dirtNormal: createFallbackTexture('dirt_normal'),
+    rockDiffuse: createFallbackTexture('rock_diffuse'),
+    rockNormal: createFallbackTexture('rock_normal'),
+    sandDiffuse: createFallbackTexture('sand_diffuse'),
+    sandNormal: createFallbackTexture('sand_normal')
+  };
+}
+
+/**
  * Creates high-quality procedural fallback DataTexture if KTX2 network fetch fails.
  */
-function createFallbackTexture(name: string): THREE.DataTexture {
+export function createFallbackTexture(name: string): THREE.DataTexture {
   const size = 64;
   const data = new Uint8Array(size * size * 4);
   const isNormal = name.includes('normal');
