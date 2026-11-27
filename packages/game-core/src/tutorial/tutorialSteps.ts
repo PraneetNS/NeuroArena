@@ -317,7 +317,8 @@ export const TUTORIAL_STEPS: TutorialStepDef[] = [
     completionTrigger: 'loom_bigram_beaten',
     validateCompletion: (event: TutorialEvent) => {
       const loss = event.payload?.valLoss ?? event.payload?.bigramLoss ?? 99;
-      return loss <= 4.001;
+      const unigramLoss = event.payload?.unigramLoss ?? 5.832;
+      return loss < unigramLoss;
     },
     expectedDurationSec: 180
   },
@@ -354,7 +355,8 @@ export const TUTORIAL_STEPS: TutorialStepDef[] = [
     completionTrigger: 'scout_trigram_beaten',
     validateCompletion: (event: TutorialEvent) => {
       const loss = event.payload?.valLoss ?? 99;
-      return loss <= 3.959;
+      const targetTrigramLoss = event.payload?.targetTrigramLoss ?? 4.445;
+      return loss <= targetTrigramLoss;
     },
     expectedDurationSec: 240
   },

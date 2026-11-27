@@ -1,5 +1,4 @@
 import React, { useState, useMemo } from 'react';
-import { NGRAM_CANONICAL_GATES } from '@na/ml-core';
 
 export interface LoomModalProps {
   isOpen: boolean;
@@ -11,75 +10,78 @@ export interface LoomModalProps {
 
 // Measured Experiment Table (n=1..5 x {25k, 100k, 400k, 1.2M, full TRAIN} + Scout 3000 steps)
 export const MEASURED_EXPERIMENT_TABLE = [
-  { size: '25k', tokens: 25000, n: 1, valLossTok: 6.013, valLossChar: 2.602, seenFrac: '97.69%', entries: '1,024', mem: '4.1 KB', bestNgram: 'No' },
-  { size: '25k', tokens: 25000, n: 2, valLossTok: 5.602, valLossChar: 2.4239, seenFrac: '51.44%', entries: '11,394', mem: '360.1 KB', bestNgram: 'Yes (5.602)' },
-  { size: '25k', tokens: 25000, n: 3, valLossTok: 6.522, valLossChar: 2.8223, seenFrac: '14.12%', entries: '19,000', mem: '949.8 KB', bestNgram: 'No (Sparsity blowup)' },
-  { size: '25k', tokens: 25000, n: 4, valLossTok: 6.817, valLossChar: 2.95, seenFrac: '3.13%', entries: '22,603', mem: '1.61 MB', bestNgram: 'No' },
-  { size: '25k', tokens: 25000, n: 5, valLossTok: 6.904, valLossChar: 2.9874, seenFrac: '0.79%', entries: '23,915', mem: '2.13 MB', bestNgram: 'No' },
+  { size: '25k', tokens: 25000, n: 1, knValLossTok: 6.045, knValLossChar: 2.6157, naiveValLossTok: 6.013, naiveValLossChar: 2.6020, valLossTok: 6.045, valLossChar: 2.6157, seenFrac: '97.69%', entries: '1,024', mem: '8.1 KB', bestNgram: 'No' },
+  { size: '25k', tokens: 25000, n: 2, knValLossTok: 5.467, knValLossChar: 2.3655, naiveValLossTok: 5.602, naiveValLossChar: 2.4239, valLossTok: 5.467, valLossChar: 2.3655, seenFrac: '51.44%', entries: '11,394', mem: '362.1 KB', bestNgram: 'Yes (5.467)' },
+  { size: '25k', tokens: 25000, n: 3, knValLossTok: 5.494, knValLossChar: 2.3771, naiveValLossTok: 6.522, naiveValLossChar: 2.8223, valLossTok: 5.494, valLossChar: 2.3771, seenFrac: '14.12%', entries: '19,000', mem: '1.28 MB', bestNgram: 'No (KN: 5.494 / Naive: 6.522)' },
+  { size: '25k', tokens: 25000, n: 4, knValLossTok: 5.505, knValLossChar: 2.3819, naiveValLossTok: 6.818, naiveValLossChar: 2.9500, valLossTok: 5.505, valLossChar: 2.3819, seenFrac: '3.13%', entries: '22,603', mem: '2.19 MB', bestNgram: 'No' },
+  { size: '25k', tokens: 25000, n: 5, knValLossTok: 5.506, knValLossChar: 2.3827, naiveValLossTok: 6.904, naiveValLossChar: 2.9874, valLossTok: 5.506, valLossChar: 2.3827, seenFrac: '0.79%', entries: '23,915', mem: '3.16 MB', bestNgram: 'No' },
 
-  { size: '100k', tokens: 100000, n: 1, valLossTok: 5.862, valLossChar: 2.5364, seenFrac: '99.79%', entries: '1,024', mem: '4.1 KB', bestNgram: 'No' },
-  { size: '100k', tokens: 100000, n: 2, valLossTok: 4.795, valLossChar: 2.0748, seenFrac: '76.85%', entries: '27,217', mem: '854.5 KB', bestNgram: 'Yes (4.795)' },
-  { size: '100k', tokens: 100000, n: 3, valLossTok: 5.633, valLossChar: 2.4376, seenFrac: '35.59%', entries: '62,544', mem: '2.74 MB', bestNgram: 'No' },
-  { size: '100k', tokens: 100000, n: 4, valLossTok: 6.399, valLossChar: 2.769, seenFrac: '13.72%', entries: '80,181', mem: '5.58 MB', bestNgram: 'No' },
-  { size: '100k', tokens: 100000, n: 5, valLossTok: 6.773, valLossChar: 2.9307, seenFrac: '4.49%', entries: '87,905', mem: '7.69 MB', bestNgram: 'No' },
+  { size: '100k', tokens: 100000, n: 1, knValLossTok: 5.868, knValLossChar: 2.5391, naiveValLossTok: 5.862, naiveValLossChar: 2.5364, valLossTok: 5.868, valLossChar: 2.5391, seenFrac: '99.79%', entries: '1,024', mem: '8.1 KB', bestNgram: 'No' },
+  { size: '100k', tokens: 100000, n: 2, knValLossTok: 4.722, knValLossChar: 2.0433, naiveValLossTok: 4.795, naiveValLossChar: 2.0748, valLossTok: 4.722, valLossChar: 2.0433, seenFrac: '76.85%', entries: '27,217', mem: '856.5 KB', bestNgram: 'No' },
+  { size: '100k', tokens: 100000, n: 3, knValLossTok: 4.575, knValLossChar: 1.9796, naiveValLossTok: 5.633, naiveValLossChar: 2.4376, valLossTok: 4.575, valLossChar: 1.9796, seenFrac: '35.59%', entries: '62,544', mem: '3.57 MB', bestNgram: 'Yes (4.575)' },
+  { size: '100k', tokens: 100000, n: 4, knValLossTok: 4.619, knValLossChar: 1.9987, naiveValLossTok: 6.399, naiveValLossChar: 2.7690, valLossTok: 4.619, valLossChar: 1.9987, seenFrac: '13.72%', entries: '80,181', mem: '7.49 MB', bestNgram: 'No' },
+  { size: '100k', tokens: 100000, n: 5, knValLossTok: 4.645, knValLossChar: 2.0098, naiveValLossTok: 6.773, naiveValLossChar: 2.9307, valLossTok: 4.645, valLossChar: 2.0098, seenFrac: '4.49%', entries: '87,905', mem: '11.36 MB', bestNgram: 'No' },
 
-  { size: '400k', tokens: 400000, n: 1, valLossTok: 5.778, valLossChar: 2.5004, seenFrac: '100%', entries: '1,024', mem: '4.1 KB', bestNgram: 'No' },
-  { size: '400k', tokens: 400000, n: 2, valLossTok: 4.322, valLossChar: 1.8703, seenFrac: '89.42%', entries: '54,308', mem: '1.66 MB', bestNgram: 'Yes (4.322)' },
-  { size: '400k', tokens: 400000, n: 3, valLossTok: 4.837, valLossChar: 2.093, seenFrac: '55.06%', entries: '189,529', mem: '7.44 MB', bestNgram: 'No' },
-  { size: '400k', tokens: 400000, n: 4, valLossTok: 5.833, valLossChar: 2.5241, seenFrac: '26.83%', entries: '281,482', mem: '18.67 MB', bestNgram: 'No' },
-  { size: '400k', tokens: 400000, n: 5, valLossTok: 6.519, valLossChar: 2.8208, seenFrac: '11.15%', entries: '329,379', mem: '27.96 MB', bestNgram: 'No' },
+  { size: '400k', tokens: 400000, n: 1, knValLossTok: 5.779, knValLossChar: 2.5004, naiveValLossTok: 5.778, naiveValLossChar: 2.5004, valLossTok: 5.779, valLossChar: 2.5004, seenFrac: '100.00%', entries: '1,024', mem: '8.1 KB', bestNgram: 'No' },
+  { size: '400k', tokens: 400000, n: 2, knValLossTok: 4.323, knValLossChar: 1.8705, naiveValLossTok: 4.322, naiveValLossChar: 1.8703, valLossTok: 4.323, valLossChar: 1.8705, seenFrac: '89.42%', entries: '54,308', mem: '1.66 MB', bestNgram: 'No' },
+  { size: '400k', tokens: 400000, n: 3, knValLossTok: 4.040, knValLossChar: 1.7481, naiveValLossTok: 4.837, naiveValLossChar: 2.0930, valLossTok: 4.040, valLossChar: 1.7481, seenFrac: '55.06%', entries: '189,529', mem: '9.10 MB', bestNgram: 'Yes (4.040)' },
+  { size: '400k', tokens: 400000, n: 4, knValLossTok: 4.086, knValLossChar: 1.7680, naiveValLossTok: 5.833, naiveValLossChar: 2.5241, valLossTok: 4.086, valLossChar: 1.7680, seenFrac: '26.83%', entries: '281,482', mem: '24.45 MB', bestNgram: 'No' },
+  { size: '400k', tokens: 400000, n: 5, knValLossTok: 4.139, knValLossChar: 1.7908, naiveValLossTok: 6.519, naiveValLossChar: 2.8208, valLossTok: 4.139, valLossChar: 1.7908, seenFrac: '11.15%', entries: '329,379', mem: '40.85 MB', bestNgram: 'No' },
 
-  { size: '1.2M', tokens: 1200000, n: 1, valLossTok: 5.763, valLossChar: 2.4939, seenFrac: '100%', entries: '1,024', mem: '4.1 KB', bestNgram: 'No' },
-  { size: '1.2M', tokens: 1200000, n: 2, valLossTok: 4.066, valLossChar: 1.7595, seenFrac: '95.21%', entries: '85,568', mem: '2.62 MB', bestNgram: 'Yes (4.066)' },
-  { size: '1.2M', tokens: 1200000, n: 3, valLossTok: 4.204, valLossChar: 1.8192, seenFrac: '69.68%', entries: '423,862', mem: '15.55 MB', bestNgram: 'No' },
-  { size: '1.2M', tokens: 1200000, n: 4, valLossTok: 5.187, valLossChar: 2.2447, seenFrac: '40.71%', entries: '734,112', mem: '46.54 MB', bestNgram: 'No' },
-  { size: '1.2M', tokens: 1200000, n: 5, valLossTok: 6.093, valLossChar: 2.6365, seenFrac: '20.66%', entries: '924,492', mem: '75.92 MB', bestNgram: 'No' },
+  { size: '1.2M', tokens: 1200000, n: 1, knValLossTok: 5.763, knValLossChar: 2.4939, naiveValLossTok: 5.763, naiveValLossChar: 2.4939, valLossTok: 5.763, valLossChar: 2.4939, seenFrac: '100.00%', entries: '1,024', mem: '8.1 KB', bestNgram: 'No' },
+  { size: '1.2M', tokens: 1200000, n: 2, knValLossTok: 4.086, knValLossChar: 1.7678, naiveValLossTok: 4.066, naiveValLossChar: 1.7595, valLossTok: 4.086, valLossChar: 1.7678, seenFrac: '95.21%', entries: '85,568', mem: '2.62 MB', bestNgram: 'No' },
+  { size: '1.2M', tokens: 1200000, n: 3, knValLossTok: 3.658, knValLossChar: 1.5827, naiveValLossTok: 4.204, naiveValLossChar: 1.8192, valLossTok: 3.658, valLossChar: 1.5827, seenFrac: '69.68%', entries: '423,862', mem: '18.16 MB', bestNgram: 'Yes (3.658)' },
+  { size: '1.2M', tokens: 1200000, n: 4, knValLossTok: 3.669, knValLossChar: 1.5875, naiveValLossTok: 5.188, naiveValLossChar: 2.2447, valLossTok: 3.669, valLossChar: 1.5875, seenFrac: '40.71%', entries: '734,112', mem: '59.48 MB', bestNgram: 'No' },
+  { size: '1.2M', tokens: 1200000, n: 5, knValLossTok: 3.731, knValLossChar: 1.6144, naiveValLossTok: 6.093, naiveValLossChar: 2.6365, valLossTok: 3.731, valLossChar: 1.6144, seenFrac: '20.66%', entries: '924,492', mem: '109.53 MB', bestNgram: 'No' },
 
-  { size: 'full TRAIN', tokens: 2080093, n: 1, valLossTok: 5.758, valLossChar: 2.4917, seenFrac: '100%', entries: '1,024', mem: '4.1 KB', bestNgram: 'No' },
-  { size: 'full TRAIN', tokens: 2080093, n: 2, valLossTok: 4.001, valLossChar: 1.7311, seenFrac: '96.87%', entries: '104,337', mem: '3.19 MB', bestNgram: 'No' },
-  { size: 'full TRAIN', tokens: 2080093, n: 3, valLossTok: 3.959, valLossChar: 1.7131, seenFrac: '75.88%', entries: '626,679', mem: '22.31 MB', bestNgram: 'Yes (3.959)' },
-  { size: 'full TRAIN', tokens: 2080093, n: 4, valLossTok: 4.904, valLossChar: 2.1219, seenFrac: '47.11%', entries: '1,183,285', mem: '73.29 MB', bestNgram: 'No (Sparsity surge)' },
-  { size: 'full TRAIN', tokens: 2080093, n: 5, valLossTok: 5.891, valLossChar: 2.5489, seenFrac: '25.42%', entries: '1,551,768', mem: '125.20 MB', bestNgram: 'No (Sparsity surge)' }
+  { size: 'full TRAIN', tokens: 2080093, n: 1, knValLossTok: 5.758, knValLossChar: 2.4917, naiveValLossTok: 5.758, naiveValLossChar: 2.4917, valLossTok: 5.758, valLossChar: 2.4917, seenFrac: '100.00%', entries: '1,024', mem: '8.1 KB', bestNgram: 'No' },
+  { size: 'full TRAIN', tokens: 2080093, n: 2, knValLossTok: 4.018, knValLossChar: 1.7387, naiveValLossTok: 4.001, naiveValLossChar: 1.7311, valLossTok: 4.018, valLossChar: 1.7387, seenFrac: '96.87%', entries: '104,337', mem: '3.19 MB', bestNgram: 'No' },
+  { size: 'full TRAIN', tokens: 2080093, n: 3, knValLossTok: 3.529, knValLossChar: 1.5269, naiveValLossTok: 3.959, naiveValLossChar: 1.7131, valLossTok: 3.529, valLossChar: 1.5269, seenFrac: '75.88%', entries: '626,679', mem: '25.49 MB', bestNgram: 'Yes (3.529)' },
+  { size: 'full TRAIN', tokens: 2080093, n: 4, knValLossTok: 3.517, knValLossChar: 1.5219, naiveValLossTok: 4.904, naiveValLossChar: 2.1219, valLossTok: 3.517, valLossChar: 1.5219, seenFrac: '47.11%', entries: '1,183,285', mem: '92.42 MB', bestNgram: 'Plateau (3.517)' },
+  { size: 'full TRAIN', tokens: 2080093, n: 5, knValLossTok: 3.579, knValLossChar: 1.5488, naiveValLossTok: 5.891, naiveValLossChar: 2.5489, valLossTok: 3.579, valLossChar: 1.5488, seenFrac: '25.42%', entries: '1,551,768', mem: '179.37 MB', bestNgram: 'Plateau (3.579)' }
 ];
 
 export const SCOUT_COMPARISON_DATA = [
-  { size: '25k', bestNgramLoss: 5.602, bestNgramModel: 'Bigram (N=2)', scoutLoss: 4.652, winner: 'Scout (-0.95 nats)', note: 'Neural embeddings share priors even on tiny data' },
-  { size: '100k', bestNgramLoss: 4.795, bestNgramModel: 'Bigram (N=2)', scoutLoss: 3.518, winner: 'Scout (-1.28 nats)', note: 'Scout learns basic syntax & vocabulary clustering' },
-  { size: '400k', bestNgramLoss: 4.322, bestNgramModel: 'Bigram (N=2)', scoutLoss: 3.064, winner: 'Scout (-1.26 nats)', note: 'Attention routes information across multi-word clauses' },
-  { size: '1.2M', bestNgramLoss: 4.066, bestNgramModel: 'Bigram (N=2)', scoutLoss: 2.981, winner: 'Scout (-1.08 nats)', note: 'Approaches 64-token continuous context horizon' },
-  { size: 'full TRAIN', bestNgramLoss: 3.959, bestNgramModel: 'Trigram (N=3)', scoutLoss: 2.925, winner: 'Scout (-1.03 nats)', note: 'Crossover is universal: Scout wins across all data budgets' }
+  { size: '25k', bestNgramLoss: 5.467, bestNgramModel: 'KN Bigram (N=2)', scoutLoss: 4.652, winner: 'Scout (-0.81 nats)', note: 'Neural embeddings share priors even on tiny data' },
+  { size: '100k', bestNgramLoss: 4.575, bestNgramModel: 'KN Trigram (N=3)', scoutLoss: 3.518, winner: 'Scout (-1.06 nats)', note: 'Scout learns basic syntax & vocabulary clustering' },
+  { size: '400k', bestNgramLoss: 4.040, bestNgramModel: 'KN Trigram (N=3)', scoutLoss: 3.064, winner: 'Scout (-0.98 nats)', note: 'Attention routes information across multi-word clauses' },
+  { size: '1.2M', bestNgramLoss: 3.658, bestNgramModel: 'KN Trigram (N=3)', scoutLoss: 2.981, winner: 'Scout (-0.68 nats)', note: 'Approaches 64-token continuous context horizon' },
+  { size: 'full TRAIN', bestNgramLoss: 3.517, bestNgramModel: 'KN 4-Gram (N=4)', scoutLoss: 2.925, winner: 'Scout (-0.59 nats)', note: 'Crossover is universal: Scout wins across all data budgets' }
 ];
 
-// Canonical Head-to-Head token-by-token excerpt (Antony and Cleopatra held-out VAL)
+// Canonical Head-to-Head token-by-token excerpt (Antony and Cleopatra Act I, Scene I held-out VAL, 504 scored tokens)
 export const HEAD_TO_HEAD_DATA = {
   excerpt: `CLEOPATRA:\nIf it be love indeed, tell me how much.\n\nANTONY:\nThere's beggary in the love that can be reckon'd.`,
-  meanDiff: 1.027, // Trigram loss - Elder loss
-  elderWinRate: '74.6% (47/63 tokens)',
-  trigramWinRate: '25.4% (16/63 tokens)',
+  meanDiff: 0.838, // Trigram loss (3.452) - Elder loss (2.614)
+  elderWinRate: '75.2% (379/504 tokens)',
+  trigramWinRate: '24.8% (125/504 tokens)',
+  ci95: '[0.702, 0.974]',
+  matchedMeanDiff: 0.114, // T=2 context: Elder (3.338) vs Trigram (3.452)
+  matchedWinRate: '47.0% (Trigram won 53.0%)',
   prompt: 'CLEOPATRA:\nIf it be love indeed, ',
   elderContinuation: 'CLEOPATRA:\nIf it be love indeed, ‘I am not Troilus.’\n\nCLEOPATRA',
   trigramContinuation: 'CLEOPATRA:\nIf it be love indeed, _Singing._]\n    Toby.\n\nContent,\nAnd',
   sampleTokens: [
-    { tok: 'LE', elder: 3.190, ngram: 5.094, delta: 1.904, winner: 'Elder' },
-    { tok: 'O', elder: 0.169, ngram: 1.702, delta: 1.533, winner: 'Elder' },
-    { tok: 'P', elder: 0.006, ngram: 3.397, delta: 3.391, winner: 'Elder' },
-    { tok: 'AT', elder: 0.005, ngram: 5.065, delta: 5.060, winner: 'Elder' },
-    { tok: 'R', elder: 0.002, ngram: 3.030, delta: 3.028, winner: 'Elder' },
-    { tok: 'A', elder: 0.014, ngram: 4.867, delta: 4.853, winner: 'Elder' },
-    { tok: ':', elder: 11.455, ngram: 9.451, delta: -2.004, winner: 'Trigram' },
-    { tok: '\n', elder: 0.207, ngram: 6.931, delta: 6.724, winner: 'Elder' },
-    { tok: 'If', elder: 4.764, ngram: 3.381, delta: -1.383, winner: 'Trigram' },
-    { tok: ' it', elder: 2.616, ngram: 2.923, delta: 0.307, winner: 'Elder' },
-    { tok: ' be', elder: 0.645, ngram: 0.881, delta: 0.236, winner: 'Elder' },
-    { tok: ' love', elder: 6.954, ngram: 9.538, delta: 2.584, winner: 'Elder' },
-    { tok: ' in', elder: 5.982, ngram: 7.188, delta: 1.206, winner: 'Elder' },
-    { tok: 'de', elder: 3.324, ngram: 3.022, delta: -0.302, winner: 'Trigram' },
-    { tok: 'ed', elder: 0.023, ngram: 0.086, delta: 0.063, winner: 'Elder' },
-    { tok: ',', elder: 0.201, ngram: 1.120, delta: 0.919, winner: 'Elder' },
-    { tok: ' tell', elder: 6.545, ngram: 11.229, delta: 4.684, winner: 'Elder' },
-    { tok: ' me', elder: 0.362, ngram: 0.894, delta: 0.532, winner: 'Elder' },
-    { tok: ' how', elder: 2.784, ngram: 3.296, delta: 0.512, winner: 'Elder' },
-    { tok: ' much', elder: 2.919, ngram: 7.872, delta: 4.953, winner: 'Elder' }
+    { tok: 'H', elder: 1.954, ngram: 2.621, delta: 0.668, winner: 'Elder' },
+    { tok: 'I', elder: 4.895, ngram: 3.276, delta: -1.62, winner: 'Trigram' },
+    { tok: 'LO', elder: 3.489, ngram: 1.645, delta: -1.845, winner: 'Trigram' },
+    { tok: '.', elder: 2.970, ngram: 3.392, delta: 0.421, winner: 'Elder' },
+    { tok: '\n', elder: 0.001, ngram: 0.000, delta: -0.001, winner: 'Trigram' },
+    { tok: 'N', elder: 3.158, ngram: 4.220, delta: 1.062, winner: 'Elder' },
+    { tok: 'ay', elder: 0.468, ngram: 1.615, delta: 1.147, winner: 'Elder' },
+    { tok: ',', elder: 0.012, ngram: 0.038, delta: 0.026, winner: 'Elder' },
+    { tok: ' but', elder: 3.572, ngram: 3.128, delta: -0.444, winner: 'Trigram' },
+    { tok: ' this', elder: 4.863, ngram: 4.478, delta: -0.385, winner: 'Trigram' },
+    { tok: ' d', elder: 4.878, ngram: 4.957, delta: 0.079, winner: 'Elder' },
+    { tok: 'ot', elder: 4.694, ngram: 5.297, delta: 0.603, winner: 'Elder' },
+    { tok: 'age', elder: 0.929, ngram: 2.209, delta: 1.280, winner: 'Elder' },
+    { tok: ' of', elder: 1.977, ngram: 2.583, delta: 0.606, winner: 'Elder' },
+    { tok: ' our', elder: 4.668, ngram: 2.948, delta: -1.720, winner: 'Trigram' },
+    { tok: ' g', elder: 4.075, ngram: 4.076, delta: 0.001, winner: 'Elder' },
+    { tok: 'en', elder: 1.063, ngram: 0.807, delta: -0.257, winner: 'Trigram' },
+    { tok: 'er', elder: 0.040, ngram: 0.046, delta: 0.007, winner: 'Elder' },
+    { tok: 'al', elder: 0.048, ngram: 0.258, delta: 0.210, winner: 'Elder' },
+    { tok: '’', elder: 3.403, ngram: 3.579, delta: 0.176, winner: 'Elder' }
   ]
 };
 
@@ -113,8 +115,8 @@ export const LoomModal: React.FC<LoomModalProps> = ({
     setIsWeaving(true);
     setTimeout(() => {
       setIsWeaving(false);
-      // If Bigram selected and loss is under bigram gate, trigger quest event
-      if (selectedOrder === 2 && activeStats.valLossTok < NGRAM_CANONICAL_GATES.bigram + 0.001) {
+      // If Bigram selected and loss beats the vault unigram baseline, trigger quest event
+      if (selectedOrder === 2 && activeStats.valLossTok < 5.832) {
         onBeatBigramGate?.(activeStats.valLossTok);
       }
     }, 450);
@@ -563,28 +565,51 @@ export const LoomModal: React.FC<LoomModalProps> = ({
                 </div>
               </div>
 
-              {/* Chart C: Validation Loss vs N */}
+              {/* Chart C: Validation Loss vs N (KN vs Naive Dual Curve) */}
               <div style={{ backgroundColor: 'var(--na-surface)', padding: '16px', borderRadius: 'var(--na-radius-sm)', border: '1px solid var(--na-line)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--na-text)' }}>
-                  (c) Validation Cross-Entropy Loss vs N
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--na-text)' }}>
+                    (c) Validation Cross-Entropy Loss vs N: Kneser-Ney vs Naive Add-k
+                  </div>
+                  <div style={{ display: 'flex', gap: '14px', fontSize: '10px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                      <div style={{ width: '10px', height: '10px', backgroundColor: 'var(--na-accent)', borderRadius: '2px' }} />
+                      <span style={{ color: 'var(--na-text)' }}>Kneser-Ney (Interpolated)</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                      <div style={{ width: '10px', height: '10px', backgroundColor: 'var(--na-danger)', borderRadius: '2px' }} />
+                      <span style={{ color: 'var(--na-muted)' }}>Naive Table (Add-k)</span>
+                    </div>
+                  </div>
                 </div>
-                <div style={{ height: '180px', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-around', paddingBottom: '10px', borderBottom: '1px solid var(--na-line)' }}>
+
+                <div style={{ height: '190px', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-around', paddingBottom: '10px', borderBottom: '1px solid var(--na-line)' }}>
                   {[
-                    { n: 1, loss: 5.758, height: 125, color: 'var(--na-muted)' },
-                    { n: 2, loss: 4.001, height: 86, color: 'var(--na-accent-cool)' },
-                    { n: 3, loss: 3.959, height: 84, color: 'var(--na-success)' },
-                    { n: 4, loss: 4.904, height: 104, color: 'var(--na-warning)' },
-                    { n: 5, loss: 5.891, height: 128, color: 'var(--na-danger)' }
+                    { n: 1, kn: 5.758, naive: 5.758, knH: 125, naiveH: 125 },
+                    { n: 2, kn: 4.018, naive: 4.001, knH: 87, naiveH: 86 },
+                    { n: 3, kn: 3.529, naive: 3.959, knH: 76, naiveH: 85 },
+                    { n: 4, kn: 3.517, naive: 4.904, knH: 75, naiveH: 106 },
+                    { n: 5, kn: 3.579, naive: 5.891, knH: 77, naiveH: 128 }
                   ].map((b, i) => (
                     <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ fontSize: '10px', fontFamily: 'var(--na-font-mono)', color: b.color, fontWeight: 700 }}>{b.loss.toFixed(3)}</span>
-                      <div style={{ width: '32px', height: `${b.height}px`, backgroundColor: b.color, borderRadius: '2px 2px 0 0' }} />
+                      <div style={{ display: 'flex', gap: '6px', alignItems: 'flex-end' }}>
+                        {/* KN Bar */}
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px' }}>
+                          <span style={{ fontSize: '9px', fontFamily: 'var(--na-font-mono)', color: 'var(--na-accent)', fontWeight: 700 }}>{b.kn.toFixed(3)}</span>
+                          <div style={{ width: '22px', height: `${b.knH}px`, backgroundColor: 'var(--na-accent)', borderRadius: '2px 2px 0 0' }} />
+                        </div>
+                        {/* Naive Bar */}
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px' }}>
+                          <span style={{ fontSize: '9px', fontFamily: 'var(--na-font-mono)', color: b.n >= 4 ? 'var(--na-danger)' : 'var(--na-muted)', fontWeight: 600 }}>{b.naive.toFixed(3)}</span>
+                          <div style={{ width: '22px', height: `${b.naiveH}px`, backgroundColor: b.n >= 4 ? 'var(--na-danger)' : 'var(--na-muted)', borderRadius: '2px 2px 0 0', opacity: 0.8 }} />
+                        </div>
+                      </div>
                       <span style={{ fontSize: '10px', fontFamily: 'var(--na-font-mono)', color: 'var(--na-text)' }}>N={b.n}</span>
                     </div>
                   ))}
                 </div>
                 <div style={{ fontSize: '11px', color: 'var(--na-muted)', lineHeight: 1.5 }}>
-                  <strong style={{ color: 'var(--na-accent)' }}>The Core Lesson:</strong> Loss plunges from N=1 to N=3 (3.959 minimum), then turns <strong style={{ color: 'var(--na-danger)' }}>sharply upward</strong> at 4 and 5 due to statistical sparsity!
+                  <strong style={{ color: 'var(--na-accent)' }}>Plain Finding:</strong> The Kneser-Ney curve <strong style={{ color: 'var(--na-success)' }}>plateaus</strong> past N=3 (3.529 at N=3, 3.517 at N=4, 3.579 at N=5), whereas the Naive Add-k curve <strong style={{ color: 'var(--na-danger)' }}>explodes catastrophically</strong> past N=3 (surge to 5.891) due to 74.6% unseen context sparsity.
                 </div>
               </div>
             </div>
@@ -723,12 +748,12 @@ export const LoomModal: React.FC<LoomModalProps> = ({
                   <tr style={{ backgroundColor: 'var(--na-raised)', borderBottom: '1px solid var(--na-line)', textAlign: 'left', color: 'var(--na-muted)' }}>
                     <th style={{ padding: '8px 12px' }}>Budget</th>
                     <th style={{ padding: '8px 12px' }}>Order N</th>
-                    <th style={{ padding: '8px 12px' }}>Val Loss (tok)</th>
-                    <th style={{ padding: '8px 12px' }}>Val Loss (char)</th>
+                    <th style={{ padding: '8px 12px' }}>KN Val Loss (tok / char)</th>
+                    <th style={{ padding: '8px 12px' }}>Naive Val Loss (tok / char)</th>
                     <th style={{ padding: '8px 12px' }}>VAL Seen %</th>
                     <th style={{ padding: '8px 12px' }}>Entries</th>
                     <th style={{ padding: '8px 12px' }}>Memory</th>
-                    <th style={{ padding: '8px 12px' }}>Optimal N-Gram</th>
+                    <th style={{ padding: '8px 12px' }}>Behavior / Optimal</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -742,12 +767,16 @@ export const LoomModal: React.FC<LoomModalProps> = ({
                     >
                       <td style={{ padding: '6px 12px', color: 'var(--na-text)' }}>{r.size}</td>
                       <td style={{ padding: '6px 12px', color: 'var(--na-text)', fontWeight: 700 }}>N={r.n}</td>
-                      <td style={{ padding: '6px 12px', color: r.n >= 4 ? 'var(--na-danger)' : 'var(--na-text)' }}>{r.valLossTok.toFixed(3)}</td>
-                      <td style={{ padding: '6px 12px', color: 'var(--na-muted)' }}>{r.valLossChar.toFixed(4)}</td>
+                      <td style={{ padding: '6px 12px', color: 'var(--na-accent)', fontWeight: 700 }}>
+                        {r.knValLossTok.toFixed(3)} <span style={{ fontSize: '10px', color: 'var(--na-muted)' }}>({r.knValLossChar.toFixed(4)})</span>
+                      </td>
+                      <td style={{ padding: '6px 12px', color: r.n >= 4 ? 'var(--na-danger)' : 'var(--na-muted)' }}>
+                        {r.naiveValLossTok.toFixed(3)} <span style={{ fontSize: '10px', color: 'var(--na-muted)' }}>({r.naiveValLossChar.toFixed(4)})</span>
+                      </td>
                       <td style={{ padding: '6px 12px', color: 'var(--na-accent-cool)' }}>{r.seenFrac}</td>
                       <td style={{ padding: '6px 12px', color: 'var(--na-muted)' }}>{r.entries}</td>
                       <td style={{ padding: '6px 12px', color: 'var(--na-muted)' }}>{r.mem}</td>
-                      <td style={{ padding: '6px 12px', color: r.bestNgram.startsWith('Yes') ? 'var(--na-success)' : 'var(--na-faint)', fontWeight: r.bestNgram.startsWith('Yes') ? 700 : 400 }}>
+                      <td style={{ padding: '6px 12px', color: r.bestNgram.startsWith('Yes') ? 'var(--na-success)' : r.bestNgram.includes('blowup') ? 'var(--na-danger)' : 'var(--na-muted)', fontWeight: r.bestNgram.startsWith('Yes') ? 700 : 400 }}>
                         {r.bestNgram}
                       </td>
                     </tr>

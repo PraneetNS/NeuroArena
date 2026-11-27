@@ -130,7 +130,7 @@ export class TutorialBot {
       },
       {
         stepId: 'loom_build_bigram',
-        event: { type: 'loom_bigram_beaten', payload: { valLoss: 4.001, bigramLoss: 4.001 } },
+        event: { type: 'loom_bigram_beaten', payload: { valLoss: 4.614, bigramLoss: 4.614, unigramLoss: 5.832 } },
         simulatedDelayMs: 60
       },
       {
@@ -140,7 +140,7 @@ export class TutorialBot {
       },
       {
         stepId: 'workbench_train_scout',
-        event: { type: 'scout_trigram_beaten', payload: { valLoss: 2.925 } },
+        event: { type: 'scout_trigram_beaten', payload: { valLoss: 2.925, targetTrigramLoss: 4.445 } },
         simulatedDelayMs: 80
       },
       {

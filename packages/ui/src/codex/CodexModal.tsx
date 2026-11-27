@@ -1224,21 +1224,24 @@ export const CodexModal: React.FC<CodexModalProps> = ({
               {currentEntry.id === 'ngram' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--na-space-3)' }}>
                   <div style={{ fontSize: 'var(--na-text-xs)', color: 'var(--na-text-secondary)' }}>
-                    Empirical validation loss and table footprint across orders 1..5 on BPE-1024:
+                    Empirical validation loss across orders 1..5 on BPE-1024 (KN vs Naive table):
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 'var(--na-space-2)' }}>
                     {[
-                      { order: '1-Gram', loss: '5.758', ppl: '316.7', entries: '1,024', mem: '4.1 KB' },
-                      { order: '2-Gram', loss: '4.001', ppl: '54.7', entries: '104k', mem: '3.19 MB' },
-                      { order: '3-Gram', loss: '3.959', ppl: '52.4', entries: '627k', mem: '22.3 MB' },
-                      { order: '4-Gram', loss: '4.904', ppl: '134.8', entries: '1.18M', mem: '73.3 MB' },
-                      { order: '5-Gram', loss: '5.891', ppl: '361.8', entries: '1.55M', mem: '125.2 MB' }
+                      { order: '1-Gram', knLoss: '5.758', naiveLoss: '5.758', ppl: '316.8', mem: '8.1 KB' },
+                      { order: '2-Gram', knLoss: '4.018', naiveLoss: '4.001', ppl: '55.6', mem: '3.19 MB' },
+                      { order: '3-Gram', knLoss: '3.522', naiveLoss: '3.959', ppl: '33.8', mem: '25.5 MB' },
+                      { order: '4-Gram', knLoss: '3.517', naiveLoss: '4.904', ppl: '33.7', mem: '92.4 MB' },
+                      { order: '5-Gram', knLoss: '3.579', naiveLoss: '5.891', ppl: '35.8', mem: '179.4 MB' }
                     ].map((row, idx) => (
                       <div key={idx} style={{ backgroundColor: 'var(--na-raised)', padding: '10px 8px', borderRadius: 'var(--na-radius-sm)', border: `1px solid ${idx === 2 ? 'var(--na-accent)' : 'var(--na-line)'}`, textAlign: 'center' }}>
                         <div style={{ fontSize: '11px', fontWeight: 600, color: idx === 2 ? 'var(--na-accent)' : 'var(--na-text)' }}>{row.order}</div>
-                        <div style={{ fontSize: '15px', fontFamily: 'var(--na-font-mono)', fontWeight: 700, color: idx >= 3 ? 'var(--na-danger)' : 'var(--na-text)', marginTop: '4px' }}>
-                          {row.loss}
+                        <div style={{ fontSize: '13px', fontFamily: 'var(--na-font-mono)', fontWeight: 700, color: 'var(--na-success)', marginTop: '4px' }}>
+                          KN: {row.knLoss}
+                        </div>
+                        <div style={{ fontSize: '11px', fontFamily: 'var(--na-font-mono)', color: idx >= 3 ? 'var(--na-danger)' : 'var(--na-muted)', marginTop: '2px' }}>
+                          Add-k: {row.naiveLoss}
                         </div>
                         <div style={{ fontSize: '10px', color: 'var(--na-muted)', marginTop: '2px' }}>PPL: {row.ppl}</div>
                         <div style={{ fontSize: '9px', color: 'var(--na-faint)', marginTop: '2px' }}>{row.mem}</div>
@@ -1246,7 +1249,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({
                     ))}
                   </div>
                   <div style={{ fontSize: '10px', color: 'var(--na-muted)', fontStyle: 'italic' }}>
-                    Note: Trigram (3.959) is the empirical minimum on this corpus; 4-gram and 5-gram surge upward due to statistical sparsity.
+                    Note: KN smooths missing contexts and plateaus (3.52 nats); naive tables explode upward past N=3 (5.891 nats) due to context sparsity.
                   </div>
                 </div>
               )}
@@ -1342,7 +1345,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({
                     Validation Perplexity benchmark on Shakespeare (|V| = 1,024):
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--na-space-3)' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'var(--na-space-3)' }}>
                     <div style={{ backgroundColor: 'var(--na-raised)', padding: '10px', borderRadius: 'var(--na-radius-sm)', border: '1px solid var(--na-line)' }}>
                       <div style={{ fontSize: '10px', color: 'var(--na-muted)', textTransform: 'uppercase' }}>Uniform Random</div>
                       <div style={{ fontSize: '18px', fontFamily: 'var(--na-font-mono)', color: 'var(--na-danger)', fontWeight: 700, marginTop: '2px' }}>
@@ -1352,19 +1355,27 @@ export const CodexModal: React.FC<CodexModalProps> = ({
                     </div>
 
                     <div style={{ backgroundColor: 'var(--na-raised)', padding: '10px', borderRadius: 'var(--na-radius-sm)', border: '1px solid var(--na-line)' }}>
-                      <div style={{ fontSize: '10px', color: 'var(--na-muted)', textTransform: 'uppercase' }}>Trigram (Best N-Gram)</div>
+                      <div style={{ fontSize: '10px', color: 'var(--na-muted)', textTransform: 'uppercase' }}>KN Trigram</div>
                       <div style={{ fontSize: '18px', fontFamily: 'var(--na-font-mono)', color: 'var(--na-warning)', fontWeight: 700, marginTop: '2px' }}>
-                        PPL 52.4
+                        PPL 33.8
                       </div>
-                      <div style={{ fontSize: '10px', color: 'var(--na-muted)', marginTop: '2px' }}>Loss: 3.959 nats</div>
+                      <div style={{ fontSize: '10px', color: 'var(--na-muted)', marginTop: '2px' }}>Loss: 3.522 nats</div>
+                    </div>
+
+                    <div style={{ backgroundColor: 'var(--na-raised)', padding: '10px', borderRadius: 'var(--na-radius-sm)', border: '1px solid var(--na-line)' }}>
+                      <div style={{ fontSize: '10px', color: 'var(--na-muted)', textTransform: 'uppercase' }}>Scout (3k Steps)</div>
+                      <div style={{ fontSize: '18px', fontFamily: 'var(--na-font-mono)', color: 'var(--na-accent-cool)', fontWeight: 700, marginTop: '2px' }}>
+                        PPL 18.6
+                      </div>
+                      <div style={{ fontSize: '10px', color: 'var(--na-muted)', marginTop: '2px' }}>Loss: 2.925 nats</div>
                     </div>
 
                     <div style={{ backgroundColor: 'var(--na-raised)', padding: '10px', borderRadius: 'var(--na-radius-sm)', border: '1px solid var(--na-accent)' }}>
-                      <div style={{ fontSize: '10px', color: 'var(--na-accent)', textTransform: 'uppercase' }}>Elder-H Transformer</div>
+                      <div style={{ fontSize: '10px', color: 'var(--na-accent)', textTransform: 'uppercase' }}>Elder-H (12k Steps)</div>
                       <div style={{ fontSize: '18px', fontFamily: 'var(--na-font-mono)', color: 'var(--na-accent)', fontWeight: 700, marginTop: '2px' }}>
-                        PPL 10.2
+                        PPL 27.6
                       </div>
-                      <div style={{ fontSize: '10px', color: 'var(--na-accent-cool)', marginTop: '2px' }}>Loss: 2.325 nats</div>
+                      <div style={{ fontSize: '10px', color: 'var(--na-accent-cool)', marginTop: '2px' }}>Loss: 3.319 nats</div>
                     </div>
                   </div>
                 </div>

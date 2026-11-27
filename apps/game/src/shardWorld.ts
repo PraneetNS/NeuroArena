@@ -15,7 +15,8 @@ import {
   ScanResult,
   LensRule,
   DEFAULT_LENS_RULES,
-  evaluateLensRule
+  evaluateLensRule,
+  extractWord3Grams
 } from '@na/game-core';
 
 export interface SweepSummary {
@@ -767,8 +768,19 @@ export class ShardWorld {
           let skipped = 0;
           let tokensAdded = 0;
 
+          const vaultState = this.vault.getState();
+          const vault3GramsCache = new Set<string>();
+          for (const entry of vaultState.entries) {
+            if (entry.status !== 'discard') {
+              const entryGrams = extractWord3Grams(entry.text);
+              for (const g of entryGrams) {
+                vault3GramsCache.add(g);
+              }
+            }
+          }
+
           for (const shard of this.sweepCandidateShards) {
-            const scan = scanShard(shard, this.vault.getState());
+            const scan = scanShard(shard, vaultState, vault3GramsCache);
             const passes = evaluateLensRule(scan.signals, this.activeRule);
             if (passes) {
               const entry = this.vault.harvest(shard);
@@ -776,6 +788,8 @@ export class ShardWorld {
                 collected++;
                 tokensAdded += Math.max(1, Math.round(shard.text.length / 2.338));
                 this.triggerHarvest(shard, playerPos);
+                const newGrams = extractWord3Grams(shard.text);
+                for (const g of newGrams) vault3GramsCache.add(g);
               } else {
                 skipped++; // Vault at maximum page capacity
               }

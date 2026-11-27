@@ -23,6 +23,7 @@ export interface NGramWorkerRequest {
   promptText?: string;
   maxTokens?: number;
   temperature?: number;
+  mode?: 'kn' | 'naive';
 }
 
 export interface NGramWorkerResponse {
@@ -48,21 +49,21 @@ self.onmessage = (e: MessageEvent<NGramWorkerRequest>) => {
         buildTimeMs: Math.round(ms)
       });
     } else if (req.type === 'predict' && req.context) {
-      const pred = engine.predict(req.context, req.topK ?? 5, req.order ?? 5);
+      const pred = engine.predict(req.context, req.topK ?? 5, req.order ?? 5, req.mode ?? 'kn');
       self.postMessage({
         id: req.id,
         type: 'predict',
         prediction: pred
       });
     } else if (req.type === 'valLoss' && req.n !== undefined && req.valTokens) {
-      const res = engine.valLoss(req.n, req.valTokens, req.charsPerToken ?? 2.311);
+      const res = engine.valLoss(req.n, req.valTokens, req.charsPerToken ?? 2.3107, req.mode ?? 'kn');
       self.postMessage({
         id: req.id,
         type: 'valLoss',
         valLossResult: res
       });
     } else if (req.type === 'generate' && req.promptText) {
-      const gen = engine.generate(req.promptText, req.n ?? 3, req.maxTokens ?? 30, req.temperature ?? 0.8);
+      const gen = engine.generate(req.promptText, req.n ?? 3, req.maxTokens ?? 30, req.temperature ?? 0.8, req.mode ?? 'kn');
       self.postMessage({
         id: req.id,
         type: 'generate',

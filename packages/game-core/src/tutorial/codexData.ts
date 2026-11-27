@@ -383,9 +383,9 @@ export const CODEX_ENTRIES: Record<CodexConceptId, CodexEntryDef> = {
     unlockedAtStep: 'loom_build_bigram',
     paragraphs: [
       'As context length n increases, the number of possible token combinations explodes as |V|^n. Because human language is vast, almost all valid phrases never appear in the training corpus—a catastrophic statistical reality called sparsity.',
-      'On our full 2.08M training corpus, 96.9% of bigrams appear, but only 75.9% of trigrams, 47.1% of 4-grams, and 25.4% of 5-grams are ever seen. Validation loss drops from unigram (5.758) to trigram (3.959), but surges to 4.904 at 4-gram and 5.891 at 5-gram due to missing contexts.'
+      'Without backoff, naive Add-k models suffer catastrophic sparsity past n=3: on our 2.08M training corpus, 96.87% of bigrams appear, but only 75.88% of trigrams, 47.11% of 4-grams, and 25.42% of 5-grams are observed on validation text, causing naive loss to explode from 3.959 (n=3) to 4.904 (n=4) and 5.891 (n=5). In contrast, Interpolated Kneser-Ney smooths missing contexts and plateaus gracefully: 3.529 (n=3) to 3.517 (n=4) and 3.579 (n=5).'
     ],
-    formulaPlain: 'VAL_Seen_Fraction: 1-gram = 100% → 3-gram = 75.88% → 5-gram = 25.42%',
+    formulaPlain: 'VAL_Seen_Fraction: 1-gram = 100% → 3-gram = 75.88% → 5-gram = 25.42% ; Naive_Loss: 3.959 → 5.891 vs KN_Loss: 3.529 → 3.579',
     widgetType: 'sparsity_widget'
   },
 
@@ -396,9 +396,9 @@ export const CODEX_ENTRIES: Record<CodexConceptId, CodexEntryDef> = {
     unlockedAtStep: 'loom_unseen_context',
     paragraphs: [
       'When an n-gram model encounters an unseen context, naive maximum likelihood estimates assign zero probability, yielding infinite loss. Smoothing redistributes probability mass to unobserved events, while backoff cascades to shorter histories.',
-      'In the Loom, Add-k smoothing (k=0.02 for trigrams) guarantees finite evaluation loss matching canonical gates. For prompt generation, Stupid Backoff penalizes unseen contexts by α = 0.4 per fallback step until an observed sub-history is found.'
+      'Interpolated Kneser-Ney (KN) calculates lower-order continuation counts rather than raw frequencies, subtracting absolute discounts (D_1..D_5 tuned on held-out text) and interpolating residual mass backwards. In the Loom, this allows the fraying display to show exactly what percentage of probability mass is contributed by each order.'
     ],
-    formulaPlain: 'S(w | w_{i-1}) = Count(w_{i-1}, w) / Count(w_{i-1}) if seen, else α · S(w) ; α = 0.4',
+    formulaPlain: 'P_KN(w | u) = max(c(u, w) - D, 0) / c(u) + λ(u) · P_KN(w | u[1..]) ; λ(u) = (D / c(u)) · |{w : c(u, w) > 0}|',
     widgetType: 'smoothing_widget'
   },
 
@@ -408,10 +408,10 @@ export const CODEX_ENTRIES: Record<CodexConceptId, CodexEntryDef> = {
     category: 'Evaluation // Information Theory',
     unlockedAtStep: 'workbench_train_scout',
     paragraphs: [
-      'Perplexity is the exponentiated cross-entropy loss, representing the effective number of equally likely tokens the model is choosing between at each step. Lower perplexity indicates greater predictive confidence and understanding.',
-      'Uniform random guessing over 1,024 tokens yields a perplexity of 1,024 (loss 6.932 nats). The unigram baseline drops perplexity to 316.7 (5.758 nats), bigram to 54.7 (4.001 nats), trigram to 52.4 (3.959 nats), Scout to 18.6 (2.925 nats), and Elder-H to 10.2 (2.325 nats).'
+      'Perplexity is the exponentiated cross-entropy loss (PPL = exp(loss)), representing the effective branching factor—the number of equally likely tokens the model is choosing between at each step. Lower perplexity indicates greater predictive confidence.',
+      'On the bpe1024-v2 Shakespeare general validation set (4 whole works, 214,980 tokens), uniform random guessing yields PPL 1,024.0 (loss 6.932 nats). The unigram baseline drops perplexity to 316.8 (5.758 nats), bigram to 55.6 (4.018 nats), Kneser-Ney trigram to 33.8 (3.522 nats), Scout to 18.6 (2.925 nats), and Elder-H (12,000 steps) to 27.6 (3.319 nats).'
     ],
-    formulaPlain: 'Perplexity = exp(Loss_nats) ; PPL(Uniform) = 1024 → PPL(Trigram) = 52.4 → PPL(Elder) = 10.2',
+    formulaPlain: 'Perplexity = exp(Loss_nats) ; PPL: Uniform=1024.0 → Unigram=316.8 → Bigram=55.6 → Trigram_KN=33.8 → Scout=18.6 → Elder-H=27.6',
     widgetType: 'perplexity_widget'
   },
 

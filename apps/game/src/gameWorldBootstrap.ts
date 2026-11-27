@@ -331,25 +331,33 @@ export class NeuroArenaGame {
     this.uiContainer.appendChild(this.shardHudContainer);
     this.shardHudRoot = ReactDOM.createRoot(this.shardHudContainer);
 
+    let syncTimeout: any = null;
+    const syncVaultToDataset = () => {
+      const stream = this.vaultManager.vaultToTokenStream(this.tokenizer);
+      this.dataset.setText(stream.rawText);
+      if (typeof (this.tokenizer as any).buildVocab === 'function') {
+        this.tokenizer.buildVocab(this.dataset.rawText);
+      }
+      this.curatorModal.setHarvestedShards(
+        this.vaultManager.getState().entries.map(e => ({
+          id: e.shardId,
+          title: `Shard ${e.shardId}`,
+          category: 'dataset',
+          sector: e.regionId || 'Unknown',
+          text: e.text
+        }))
+      );
+    };
+
     this.shardWorld = new ShardWorld(
       this.world.scene,
       this.vaultManager,
       (x, z) => getTerrainHeight(x, z),
       (shard: Shard) => {
         this.audio.playShardCollect();
-        // Sync kept tokens into active dataset
-        const stream = this.vaultManager.vaultToTokenStream(this.tokenizer);
-        this.dataset.setText(stream.rawText);
-        this.tokenizer.buildVocab(this.dataset.rawText);
-        this.curatorModal.setHarvestedShards(
-          this.vaultManager.getState().entries.map(e => ({
-            id: e.shardId,
-            title: `Shard ${e.shardId}`,
-            category: 'dataset',
-            sector: e.regionId || 'Unknown',
-            text: e.text
-          }))
-        );
+        // Debounce vocabulary sync across multi-shard sweeps
+        clearTimeout(syncTimeout);
+        syncTimeout = setTimeout(syncVaultToDataset, 100);
         this.updateHUD();
         this.director.handleEvent({
           type: 'shard_harvested',
@@ -1167,6 +1175,15 @@ export class NeuroArenaGame {
           this.campScene?.onTrainingFinished();
           this.renderCampOverlay();
           this.director.handleEvent({ type: 'model_trained', payload: this.latestStepStats });
+          if (this.latestStepStats) {
+            this.director.handleEvent({
+              type: 'scout_trigram_beaten',
+              payload: {
+                valLoss: this.latestStepStats.valLoss,
+                targetTrigramLoss: 4.445
+              }
+            });
+          }
         }
       }
     });
@@ -1464,7 +1481,7 @@ export class NeuroArenaGame {
           this.audio.playCheckpointUnlocked();
           this.director.handleEvent({
             type: 'loom_bigram_beaten',
-            payload: { valLoss, bigramLoss: valLoss }
+            payload: { valLoss, bigramLoss: valLoss, unigramLoss: 5.832 }
           });
         },
         onTrigramFrayed: (unseenContext: string) => {

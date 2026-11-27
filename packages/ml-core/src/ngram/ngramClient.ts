@@ -64,7 +64,7 @@ export class NGramClient {
     return this.localEngine.build(tokens, maxOrder);
   }
 
-  public async predict(context: number[], topK = 5, order = 5): Promise<PredictionResult> {
+  public async predict(context: number[], topK = 5, order = 5, mode: 'kn' | 'naive' = 'kn'): Promise<PredictionResult> {
     if (this.worker) {
       const id = ++this.messageId;
       return new Promise((resolve, reject) => {
@@ -72,16 +72,17 @@ export class NGramClient {
           resolve: (res) => resolve(res.prediction),
           reject
         });
-        this.worker!.postMessage({ id, type: 'predict', context, topK, order });
+        this.worker!.postMessage({ id, type: 'predict', context, topK, order, mode });
       });
     }
-    return this.localEngine.predict(context, topK, order);
+    return this.localEngine.predict(context, topK, order, mode);
   }
 
   public async valLoss(
     n: number,
     valTokens: Uint16Array,
-    charsPerToken = 2.311
+    charsPerToken = 2.3107,
+    mode: 'kn' | 'naive' = 'kn'
   ): Promise<{ valLossPerToken: number; valLossPerChar: number }> {
     if (this.worker) {
       const id = ++this.messageId;
@@ -90,17 +91,18 @@ export class NGramClient {
           resolve: (res) => resolve(res.valLossResult),
           reject
         });
-        this.worker!.postMessage({ id, type: 'valLoss', n, valTokens, charsPerToken });
+        this.worker!.postMessage({ id, type: 'valLoss', n, valTokens, charsPerToken, mode });
       });
     }
-    return this.localEngine.valLoss(n, valTokens, charsPerToken);
+    return this.localEngine.valLoss(n, valTokens, charsPerToken, mode);
   }
 
   public async generate(
     promptText: string,
     n = 3,
     maxTokens = 30,
-    temperature = 0.8
+    temperature = 0.8,
+    mode: 'kn' | 'naive' = 'kn'
   ): Promise<{ text: string; tokens: number[]; backoffEvents: any[] }> {
     if (this.worker) {
       const id = ++this.messageId;
@@ -109,10 +111,10 @@ export class NGramClient {
           resolve: (res) => resolve(res.generation),
           reject
         });
-        this.worker!.postMessage({ id, type: 'generate', promptText, n, maxTokens, temperature });
+        this.worker!.postMessage({ id, type: 'generate', promptText, n, maxTokens, temperature, mode });
       });
     }
-    return this.localEngine.generate(promptText, n, maxTokens, temperature);
+    return this.localEngine.generate(promptText, n, maxTokens, temperature, mode);
   }
 
   public async getMemoryStats(n: number): Promise<MemoryStats> {

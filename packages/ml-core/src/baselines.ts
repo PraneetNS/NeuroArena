@@ -8,6 +8,8 @@
 import {
   NGRAM_CANONICAL_GATES,
   NGRAM_CANONICAL_GATES_PER_CHAR,
+  NGRAM_NAIVE_GATES,
+  NGRAM_NAIVE_GATES_PER_CHAR,
   NGramEngine,
   computeCanonicalGates
 } from './ngram/ngramEngine.js';
@@ -15,22 +17,24 @@ import {
 export {
   NGRAM_CANONICAL_GATES,
   NGRAM_CANONICAL_GATES_PER_CHAR,
+  NGRAM_NAIVE_GATES,
+  NGRAM_NAIVE_GATES_PER_CHAR,
   NGramEngine,
   computeCanonicalGates
 };
 
 export const BASELINES = {
   uniform: 6.9315, // ln(1024)
-  unigram: NGRAM_CANONICAL_GATES.unigram, // Empirical unigram val loss with add-1 smoothing on bpe1024-v2 (2.4921 / char)
-  bigram: NGRAM_CANONICAL_GATES.bigram,   // Empirical bigram val loss with add-0.1 smoothing on bpe1024-v2 (1.7314 / char)
-  trigram: NGRAM_CANONICAL_GATES.trigram  // Empirical trigram val loss with add-0.02 smoothing on bpe1024-v2 (1.7133 / char)
+  unigram: NGRAM_CANONICAL_GATES.unigram, // 5.758 nats/token (2.4921 / char)
+  bigram: NGRAM_CANONICAL_GATES.bigram,   // 4.017 nats/token (1.7386 / char)
+  trigram: NGRAM_CANONICAL_GATES.trigram  // 3.522 nats/token (1.5241 / char, exact 3.5218)
 } as const;
 
 export const BASELINES_PER_CHAR = {
   uniform: 2.9998,
-  unigram: NGRAM_CANONICAL_GATES_PER_CHAR.unigram,
-  bigram: NGRAM_CANONICAL_GATES_PER_CHAR.bigram,
-  trigram: NGRAM_CANONICAL_GATES_PER_CHAR.trigram
+  unigram: NGRAM_CANONICAL_GATES_PER_CHAR.unigram, // 2.4921 nats/char
+  bigram: NGRAM_CANONICAL_GATES_PER_CHAR.bigram,   // 1.7386 nats/char
+  trigram: NGRAM_CANONICAL_GATES_PER_CHAR.trigram  // 1.5241 nats/char
 } as const;
 
 export type BaselineType = keyof typeof BASELINES;

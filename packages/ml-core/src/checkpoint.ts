@@ -264,8 +264,14 @@ export async function loadElderCheckpoint(
     try {
       const fs = await import('fs');
       const path = await import('path');
-      const resolvedPath = path.resolve(process.cwd(), 'apps/game/public', assetPath.replace(/^\//, ''));
-      const buf = fs.readFileSync(resolvedPath);
+      let candidate = path.resolve(process.cwd(), 'apps/game/public', assetPath.replace(/^\//, ''));
+      if (!fs.existsSync(candidate)) {
+        candidate = path.resolve(process.cwd(), '../../apps/game/public', assetPath.replace(/^\//, ''));
+      }
+      if (!fs.existsSync(candidate)) {
+        candidate = path.resolve('D:/NeuroArena/apps/game/public', assetPath.replace(/^\//, ''));
+      }
+      const buf = fs.readFileSync(candidate);
       bytes = new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength);
     } catch (e: any) {
       throw new Error(`Failed to read Elder checkpoint from disk: ${e?.message}`);
