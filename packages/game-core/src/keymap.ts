@@ -122,6 +122,14 @@ export const KEYMAP: Record<string, KeyBinding> = {
     description: 'Open Neural Observatory instruments',
     category: 'interface'
   },
+  loom: {
+    action: 'loom',
+    code: 'KeyL',
+    keyLabel: 'L',
+    gamepadGlyph: '(D-Pad Down)',
+    description: 'Open The Loom N-Gram instrument',
+    category: 'interface'
+  },
   oracle: {
     action: 'oracle',
     code: 'KeyR',

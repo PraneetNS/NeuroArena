@@ -117,6 +117,36 @@ export class TutorialBot {
         stepId: 'reward_unlocked',
         event: { type: 'codex_opened', payload: { entryId: 'baseline' } },
         simulatedDelayMs: 30
+      },
+      {
+        stepId: 'fen_beacon',
+        event: { type: 'fen_arrived', payload: { distance: 10 } },
+        simulatedDelayMs: 40
+      },
+      {
+        stepId: 'fen_harvest_150k',
+        event: { type: 'shard_harvested', payload: { cleanTokens: 152000, keptCount: 160 } },
+        simulatedDelayMs: 50
+      },
+      {
+        stepId: 'loom_build_bigram',
+        event: { type: 'loom_bigram_beaten', payload: { valLoss: 4.001, bigramLoss: 4.001 } },
+        simulatedDelayMs: 60
+      },
+      {
+        stepId: 'loom_unseen_context',
+        event: { type: 'loom_context_frayed', payload: { frayed: true, unseenContext: 'shall never yield' } },
+        simulatedDelayMs: 40
+      },
+      {
+        stepId: 'workbench_train_scout',
+        event: { type: 'scout_trigram_beaten', payload: { valLoss: 2.925 } },
+        simulatedDelayMs: 80
+      },
+      {
+        stepId: 'fen_observatory_unlocked',
+        event: { type: 'observatory_entered' },
+        simulatedDelayMs: 40
       }
     ];
 
@@ -136,7 +166,7 @@ export class TutorialBot {
       const stepDuration = performance.now() - stepStart;
       timings.push({ stepId: item.stepId, durationMs: stepDuration });
 
-      if (current.id === item.stepId && nextStep.id === item.stepId && item.stepId !== 'reward_unlocked') {
+      if (current.id === item.stepId && nextStep.id === item.stepId && item.stepId !== 'fen_observatory_unlocked') {
         softLocks.push(`Soft-lock detected: step ${item.stepId} failed to complete on trigger ${item.event.type}`);
       } else {
         completed.push(item.stepId);

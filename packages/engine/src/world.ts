@@ -18,6 +18,7 @@ import { loadTerrainTextures, createStarterTextures } from './terrain/textureLoa
 import { FreeFlyCamera } from './camera/freeFlyCamera.js';
 import { EnvironmentManager, EnvironmentStats } from './environment/environmentManager.js';
 import { OracleStone } from './entities/oracleStone.js';
+import { LoomStructure } from './entities/loomStructure.js';
 
 export interface WorldOptions {
   powerPreference?: GPUPowerPreference | string;
@@ -56,6 +57,7 @@ export class World {
   public freeFlyCamera: FreeFlyCamera;
   public isFreeFly = false;
   public oracleStone: OracleStone | null = null;
+  public loomStructure: LoomStructure | null = null;
 
   // Camera Orbit parameters for Third-Person
   public cameraAngleY = 0;
@@ -297,6 +299,15 @@ export class World {
     return this.oracleStone;
   }
 
+  public setupLoomStructure(position = new THREE.Vector3(-180, 14.5, -120)): LoomStructure {
+    if (this.loomStructure) {
+      this.scene.remove(this.loomStructure.group);
+    }
+    this.loomStructure = new LoomStructure(position);
+    this.scene.add(this.loomStructure.group);
+    return this.loomStructure;
+  }
+
   public setDpr(dpr: number): void {
     this.renderer.setPixelRatio(dpr);
     this.onResize();
@@ -444,6 +455,14 @@ export class World {
     // 4. Update Oracle Stone
     if (this.oracleStone) {
       this.oracleStone.update(dt, pos);
+    }
+
+    // 5. Update Loom Structure (Region 1: The Fen)
+    if (this.loomStructure) {
+      this.loomStructure.update(dt);
+      if (pos) {
+        this.loomStructure.checkProximity(pos);
+      }
     }
 
     // 4. Update FPS

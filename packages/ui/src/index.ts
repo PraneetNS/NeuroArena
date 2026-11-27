@@ -59,4 +59,7 @@ export * from './character/CharacterDevModal.js';
 // The Oracle Autoregressive Generator & Branching Modal
 export * from './oracle/OracleModal.js';
 
+// The Loom N-Gram Instrument (Region 1: The Fen)
+export * from './loom/LoomModal.js';
+
 

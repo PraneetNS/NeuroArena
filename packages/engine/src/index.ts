@@ -6,6 +6,7 @@ export * from './entities/terminal.js';
 export * from './entities/companion.js';
 export * from './entities/lumen.js';
 export * from './entities/oracleStone.js';
+export * from './entities/loomStructure.js';
 export * from './terrain/noise.js';
 export * from './terrain/terrainChunk.js';
 export * from './terrain/terrainManager.js';

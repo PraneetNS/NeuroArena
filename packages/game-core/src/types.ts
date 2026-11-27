@@ -40,7 +40,7 @@ export interface RegionDef {
   description: string;
   themeColor: number;
   themeHex: string;
-  silhouette: 'crystal' | 'rune' | 'spire' | 'prism' | 'star';
+  silhouette: 'crystal' | 'rune' | 'spire' | 'prism' | 'star' | 'loom';
   targetQuota: number;
 }
 

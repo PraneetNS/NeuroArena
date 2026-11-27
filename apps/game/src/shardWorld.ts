@@ -101,6 +101,14 @@ const REGION_CONFIGS: Record<string, RegionVisualConfig> = {
     createGeometry: () => new THREE.OctahedronGeometry(0.72, 0),
     fontSpec: '600 19px "Segoe UI Symbol", monospace',
     phrases: ['∇W · L = softmax(z)', '∀x ∈ Ω: P(x) > 0', '᚛ᚉᚑᚅᚈ᚜ ᚨᚱᚲ', 'Ψ(r,t) = e^{i(k·r)}']
+  },
+  the_fen: {
+    name: 'The Fen',
+    color: 0x3dcf8e, // Moss green
+    colorHex: '#3dcf8e',
+    createGeometry: () => new THREE.CylinderGeometry(0.35, 0.35, 1.5, 6),
+    fontSpec: '600 19px "IBM Plex Mono", monospace',
+    phrases: ['Warp & Weft', 'Count tables', 'Unseen context', 'N-Gram Loom']
   }
 };
 

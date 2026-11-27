@@ -5,18 +5,32 @@
  * Evaluates validation loss per token (cross-entropy in nats) and per character (loss / charsPerToken).
  */
 
+import {
+  NGRAM_CANONICAL_GATES,
+  NGRAM_CANONICAL_GATES_PER_CHAR,
+  NGramEngine,
+  computeCanonicalGates
+} from './ngram/ngramEngine.js';
+
+export {
+  NGRAM_CANONICAL_GATES,
+  NGRAM_CANONICAL_GATES_PER_CHAR,
+  NGramEngine,
+  computeCanonicalGates
+};
+
 export const BASELINES = {
   uniform: 6.9315, // ln(1024)
-  unigram: 5.758,  // Empirical unigram val loss with add-1 smoothing on bpe1024-v2 (2.4921 / char)
-  bigram: 4.001,   // Empirical bigram val loss with add-0.1 smoothing on bpe1024-v2 (1.7314 / char)
-  trigram: 3.959   // Empirical trigram val loss with add-0.02 smoothing on bpe1024-v2 (1.7133 / char)
+  unigram: NGRAM_CANONICAL_GATES.unigram, // Empirical unigram val loss with add-1 smoothing on bpe1024-v2 (2.4921 / char)
+  bigram: NGRAM_CANONICAL_GATES.bigram,   // Empirical bigram val loss with add-0.1 smoothing on bpe1024-v2 (1.7314 / char)
+  trigram: NGRAM_CANONICAL_GATES.trigram  // Empirical trigram val loss with add-0.02 smoothing on bpe1024-v2 (1.7133 / char)
 } as const;
 
 export const BASELINES_PER_CHAR = {
   uniform: 2.9998,
-  unigram: 2.4921,
-  bigram: 1.7314,
-  trigram: 1.7133
+  unigram: NGRAM_CANONICAL_GATES_PER_CHAR.unigram,
+  bigram: NGRAM_CANONICAL_GATES_PER_CHAR.bigram,
+  trigram: NGRAM_CANONICAL_GATES_PER_CHAR.trigram
 } as const;
 
 export type BaselineType = keyof typeof BASELINES;

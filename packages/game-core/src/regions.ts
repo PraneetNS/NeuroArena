@@ -111,6 +111,25 @@ export const REGIONS: RegionDef[] = [
     themeColor: 0x06b6d4,
     themeHex: '#06b6d4',
     silhouette: 'star'
+  },
+  {
+    id: 'the_fen',
+    name: 'The Fen',
+    center: { x: -180, z: -120 },
+    radius: 260,
+    targetQuota: 300,
+    qualityMix: {
+      clean: 0.86,
+      duplicate: 0.05,
+      ocr_noise: 0.05,
+      boilerplate: 0.04,
+      leaked_val: 0.0,
+      off_domain: 0.0
+    },
+    description: 'A sodden expanse of moss and dark silt where count-based threads entangle and fray.',
+    themeColor: 0x3b6e4e,
+    themeHex: '#3b6e4e',
+    silhouette: 'loom'
   }
 ];
 

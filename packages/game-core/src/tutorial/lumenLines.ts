@@ -96,6 +96,42 @@ export const LUMEN_DIALOGUE: Record<string, LumenLine> = {
     text: 'The mathematical currents can be treacherous. I have brought a tuned checkpoint for you.',
     subtext: 'Accept this gift whenever you wish to proceed forward smoothly.',
     hint: 'Click Claim Checkpoint to load Lumen’s verified model weights.'
+  },
+
+  fen_beacon: {
+    text: 'A beacon flickers north toward the Fen. A mechanical Loom rests among the dark reeds.',
+    subtext: 'Follow the light column to discover count-based language modeling.',
+    hint: 'Head northwest toward the beacon coordinates [-180, -120] to find the Loom.'
+  },
+
+  fen_harvest_150k: {
+    text: 'Collect at least 150,000 clean tokens using your Lens rules to feed the Loom.',
+    subtext: 'N-grams demand vast corpora: counts vanish without sufficient volume.',
+    hint: 'Sweep shards in the Fen while filtering out boilerplate and noise with the Lens.'
+  },
+
+  loom_build_bigram: {
+    text: 'Weave your vault into a bigram model. Beat the 4.001 loss gate to master pairs.',
+    subtext: 'Adjacent tokens form syntax, lowering loss well below unigrams.',
+    hint: 'Select Bigram (N=2) in the Loom and click Weave to evaluate on validation text.'
+  },
+
+  loom_unseen_context: {
+    text: 'Test the trigram on a novel sequence. Watch the thread fray when counts vanish.',
+    subtext: 'Discrete tables cannot bridge unseen combinations—they must fall back.',
+    hint: 'Type an unusual three-word prompt into the Loom to observe backoff and thread fraying.'
+  },
+
+  workbench_train_scout: {
+    text: 'Where counts fray, neural vectors bridge. Train Scout to beat the 3.959 trigram gate.',
+    subtext: 'Continuous embeddings share knowledge across related tokens.',
+    hint: 'Open the Workbench with {KEY_WORKBENCH} and train Scout to surpass the trigram baseline.'
+  },
+
+  fen_observatory_unlocked: {
+    text: 'The Fen Observatory stands open. Vault Tier II unlocked for deeper exploration.',
+    subtext: 'Observe attention heads routing information across continuous space.',
+    hint: 'Press {KEY_OBSERVATORY} or enter the Observatory to inspect the neural model.'
   }
 };
 

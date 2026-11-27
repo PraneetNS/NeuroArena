@@ -20,4 +20,6 @@ export * from './assetManifest.js';
 export * from './assetLoader.js';
 export * from './dialogue.js';
 export * from './austen.js';
+export * from './ngram/ngramEngine.js';
+export * from './ngram/ngramClient.js';
 

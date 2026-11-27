@@ -32,7 +32,13 @@ export type CodexConceptId =
   | 'fine_tuning'
   | 'replay_buffer'
   | 'catastrophic_forgetting'
-  | 'domain_shift';
+  | 'domain_shift'
+  | 'ngram'
+  | 'context'
+  | 'sparsity'
+  | 'smoothing_backoff'
+  | 'perplexity'
+  | 'why_neural_nets_generalize';
 
 export interface CodexEntryDef {
   id: CodexConceptId;
@@ -61,7 +67,13 @@ export interface CodexEntryDef {
     | 'fine_tuning_widget'
     | 'replay_widget'
     | 'forgetting_widget'
-    | 'domain_shift_widget';
+    | 'domain_shift_widget'
+    | 'ngram_widget'
+    | 'context_widget'
+    | 'sparsity_widget'
+    | 'smoothing_widget'
+    | 'perplexity_widget'
+    | 'generalization_widget';
 }
 
 export const CODEX_ENTRIES: Record<CodexConceptId, CodexEntryDef> = {
@@ -336,5 +348,83 @@ export const CODEX_ENTRIES: Record<CodexConceptId, CodexEntryDef> = {
     ],
     formulaPlain: 'P&P_Fragmentation(≥4 tokens) = 17.47% ; Untuned_Base = 4.418 vs Adapted = 2.556',
     widgetType: 'domain_shift_widget'
+  },
+
+  ngram: {
+    id: 'ngram',
+    title: 'The N-Gram Language Model',
+    category: 'Foundations // Count-Based Models',
+    unlockedAtStep: 'fen_beacon',
+    paragraphs: [
+      'An N-Gram model approximates language by assuming the probability of token w depends solely on the preceding n-1 tokens. Probabilities are estimated by tallying co-occurrence frequencies directly from a text corpus.',
+      'In NeuroArena, the Loom builds discrete tables for orders 1 through 5 over the 1,024-token vocabulary. Moving from unigram (5.758 nats) to bigram (4.001 nats) and trigram (3.959 nats) drastically improves syntax by capturing local pairings.'
+    ],
+    formulaPlain: 'P(w_i | w_{i-n+1} ... w_{i-1}) = Count(w_{i-n+1} ... w_i) / Count(w_{i-n+1} ... w_{i-1})',
+    widgetType: 'ngram_widget'
+  },
+
+  context: {
+    id: 'context',
+    title: 'The Context Window',
+    category: 'Architecture // Sequence Length',
+    unlockedAtStep: 'fen_beacon',
+    paragraphs: [
+      'Context defines how much history a model inspects when predicting the next token. An order-n model has a rigid context length of exactly n-1 tokens. An order-2 model sees 1 token of past text, while an order-5 model sees 4 tokens.',
+      'While expanding context allows models to capture grammatical clauses and phrases, count tables scale exponentially with context length. In contrast, neural transformers can sustain 64 to 2,048 tokens of context without combinatorial explosion.'
+    ],
+    formulaPlain: 'Context_Length = n - 1 ; Context_Space = |V|^{n-1} = 1024^{n-1}',
+    widgetType: 'context_widget'
+  },
+
+  sparsity: {
+    id: 'sparsity',
+    title: 'The Curse of Sparsity',
+    category: 'Foundations // Statistical Limits',
+    unlockedAtStep: 'loom_build_bigram',
+    paragraphs: [
+      'As context length n increases, the number of possible token combinations explodes as |V|^n. Because human language is vast, almost all valid phrases never appear in the training corpus—a catastrophic statistical reality called sparsity.',
+      'On our full 2.08M training corpus, 96.9% of bigrams appear, but only 75.9% of trigrams, 47.1% of 4-grams, and 25.4% of 5-grams are ever seen. Validation loss drops from unigram (5.758) to trigram (3.959), but surges to 4.904 at 4-gram and 5.891 at 5-gram due to missing contexts.'
+    ],
+    formulaPlain: 'VAL_Seen_Fraction: 1-gram = 100% → 3-gram = 75.88% → 5-gram = 25.42%',
+    widgetType: 'sparsity_widget'
+  },
+
+  smoothing_backoff: {
+    id: 'smoothing_backoff',
+    title: 'Smoothing and Backoff',
+    category: 'Foundations // Probability Adjustments',
+    unlockedAtStep: 'loom_unseen_context',
+    paragraphs: [
+      'When an n-gram model encounters an unseen context, naive maximum likelihood estimates assign zero probability, yielding infinite loss. Smoothing redistributes probability mass to unobserved events, while backoff cascades to shorter histories.',
+      'In the Loom, Add-k smoothing (k=0.02 for trigrams) guarantees finite evaluation loss matching canonical gates. For prompt generation, Stupid Backoff penalizes unseen contexts by α = 0.4 per fallback step until an observed sub-history is found.'
+    ],
+    formulaPlain: 'S(w | w_{i-1}) = Count(w_{i-1}, w) / Count(w_{i-1}) if seen, else α · S(w) ; α = 0.4',
+    widgetType: 'smoothing_widget'
+  },
+
+  perplexity: {
+    id: 'perplexity',
+    title: 'Perplexity & Cross-Entropy',
+    category: 'Evaluation // Information Theory',
+    unlockedAtStep: 'workbench_train_scout',
+    paragraphs: [
+      'Perplexity is the exponentiated cross-entropy loss, representing the effective number of equally likely tokens the model is choosing between at each step. Lower perplexity indicates greater predictive confidence and understanding.',
+      'Uniform random guessing over 1,024 tokens yields a perplexity of 1,024 (loss 6.932 nats). The unigram baseline drops perplexity to 316.7 (5.758 nats), bigram to 54.7 (4.001 nats), trigram to 52.4 (3.959 nats), Scout to 18.6 (2.925 nats), and Elder-H to 10.2 (2.325 nats).'
+    ],
+    formulaPlain: 'Perplexity = exp(Loss_nats) ; PPL(Uniform) = 1024 → PPL(Trigram) = 52.4 → PPL(Elder) = 10.2',
+    widgetType: 'perplexity_widget'
+  },
+
+  why_neural_nets_generalize: {
+    id: 'why_neural_nets_generalize',
+    title: 'Why Neural Networks Generalize',
+    category: 'Architecture // Representations',
+    unlockedAtStep: 'workbench_train_scout',
+    paragraphs: [
+      'Count-based n-gram models treat every token as an isolated orthogonal dimension: seeing "the king commands" provides zero statistical evidence for "the monarch commands". When word combinations shift, count tables fail immediately.',
+      'Neural networks embed discrete tokens into continuous vector spaces where semantically related words cluster together. Multi-head self-attention routes information dynamically across sequences, allowing neural models like Scout and Elder-H to generalize smoothly across novel texts.'
+    ],
+    formulaPlain: 'Representation: N-Gram = One-Hot Orthogonal ∈ R^{1024} vs Neural = Dense Continuous Vector ∈ R^d',
+    widgetType: 'generalization_widget'
   }
 };

@@ -262,5 +262,118 @@ export const TUTORIAL_STEPS: TutorialStepDef[] = [
       return event.type === 'codex_opened';
     },
     expectedDurationSec: 120
+  },
+
+  {
+    id: 'fen_beacon',
+    section: 'loom',
+    title: 'Beacon to the Fen',
+    mentorLineKey: 'fen_beacon',
+    hintLineKey: 'fen_beacon',
+    highlightTarget: {
+      type: 'world',
+      id: 'loom-structure-fen',
+      position: [-180, 2, -120],
+      label: 'The Loom [Fen]'
+    },
+    completionTrigger: 'fen_arrived',
+    validateCompletion: (event: TutorialEvent) => {
+      return event.type === 'fen_arrived';
+    },
+    expectedDurationSec: 180
+  },
+
+  {
+    id: 'fen_harvest_150k',
+    section: 'loom',
+    title: 'Curating the Fen Corpus',
+    mentorLineKey: 'fen_harvest_150k',
+    hintLineKey: 'fen_harvest_150k',
+    highlightTarget: {
+      type: 'world',
+      id: 'shard-fen-cluster',
+      position: [-185, 1, -125],
+      label: 'Fen Shards (≥150k tokens)'
+    },
+    completionTrigger: 'shard_harvested',
+    validateCompletion: (event: TutorialEvent, _state: TutorialState) => {
+      const cleanTokens = event.payload?.cleanTokens ?? event.payload?.keptCount ?? 0;
+      return cleanTokens >= 150000 || cleanTokens >= 150;
+    },
+    expectedDurationSec: 240
+  },
+
+  {
+    id: 'loom_build_bigram',
+    section: 'loom',
+    title: 'Weave the Bigram',
+    mentorLineKey: 'loom_build_bigram',
+    hintLineKey: 'loom_build_bigram',
+    highlightTarget: {
+      type: 'ui',
+      id: 'loom-weave-bigram-btn',
+      label: 'Weave Bigram (N=2)'
+    },
+    completionTrigger: 'loom_bigram_beaten',
+    validateCompletion: (event: TutorialEvent) => {
+      const loss = event.payload?.valLoss ?? event.payload?.bigramLoss ?? 99;
+      return loss <= 4.001;
+    },
+    expectedDurationSec: 180
+  },
+
+  {
+    id: 'loom_unseen_context',
+    section: 'loom',
+    title: 'The Frayed Thread',
+    mentorLineKey: 'loom_unseen_context',
+    hintLineKey: 'loom_unseen_context',
+    highlightTarget: {
+      type: 'ui',
+      id: 'loom-prompt-input',
+      label: 'Unseen Trigram Prompt'
+    },
+    completionTrigger: 'loom_context_frayed',
+    validateCompletion: (event: TutorialEvent) => {
+      return event.payload?.frayed === true;
+    },
+    expectedDurationSec: 180
+  },
+
+  {
+    id: 'workbench_train_scout',
+    section: 'workbench',
+    title: 'Awaken the Scout',
+    mentorLineKey: 'workbench_train_scout',
+    hintLineKey: 'workbench_train_scout',
+    highlightTarget: {
+      type: 'ui',
+      id: 'workbench-start-training-btn',
+      label: 'Train Scout Model'
+    },
+    completionTrigger: 'scout_trigram_beaten',
+    validateCompletion: (event: TutorialEvent) => {
+      const loss = event.payload?.valLoss ?? 99;
+      return loss <= 3.959;
+    },
+    expectedDurationSec: 240
+  },
+
+  {
+    id: 'fen_observatory_unlocked',
+    section: 'evaluation',
+    title: 'The Fen Observatory',
+    mentorLineKey: 'fen_observatory_unlocked',
+    hintLineKey: 'fen_observatory_unlocked',
+    highlightTarget: {
+      type: 'ui',
+      id: 'hud-observatory-btn',
+      label: 'Observatory [O]'
+    },
+    completionTrigger: 'observatory_entered',
+    validateCompletion: (event: TutorialEvent) => {
+      return event.type === 'observatory_entered';
+    },
+    expectedDurationSec: 120
   }
 ];

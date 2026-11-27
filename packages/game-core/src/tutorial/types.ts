@@ -15,9 +15,15 @@ export type TutorialStepId =
   | 'camp_mentors_note'
   | 'apply_fix_retrain'
   | 'evaluator_inspection'
-  | 'reward_unlocked';
+  | 'reward_unlocked'
+  | 'fen_beacon'
+  | 'fen_harvest_150k'
+  | 'loom_build_bigram'
+  | 'loom_unseen_context'
+  | 'workbench_train_scout'
+  | 'fen_observatory_unlocked';
 
-export type TutorialSectionId = 'harvest' | 'cleaning' | 'workbench' | 'training' | 'evaluation';
+export type TutorialSectionId = 'harvest' | 'cleaning' | 'workbench' | 'training' | 'evaluation' | 'loom';
 
 export type HighlightTargetType = 'world' | 'ui' | 'node';
 
@@ -44,7 +50,13 @@ export type TutorialEventType =
   | 'model_prompted'
   | 'codex_opened'
   | 'oracle_communed'
-  | 'mentor_checkpoint_claimed';
+  | 'mentor_checkpoint_claimed'
+  | 'fen_arrived'
+  | 'loom_opened'
+  | 'loom_bigram_beaten'
+  | 'loom_context_frayed'
+  | 'scout_trigram_beaten'
+  | 'observatory_entered';
 
 export interface TutorialEvent {
   type: TutorialEventType;

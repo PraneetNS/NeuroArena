@@ -46,7 +46,8 @@ import {
   ObservatoryModal,
   BenchmarkModal,
   CharacterDevModal,
-  OracleModal
+  OracleModal,
+  LoomModal
 } from '@na/ui';
 import '@na/ui/styles';
 import {
@@ -156,6 +157,9 @@ export class NeuroArenaGame {
   private oracleContainer: HTMLElement;
   private oracleRoot: ReactDOM.Root;
   private isOracleOpen = false;
+  private loomContainer: HTMLElement;
+  private loomRoot: ReactDOM.Root;
+  private isLoomOpen = false;
   private oracleKvModel: any = null;
   private oracleTokenizer: any = null;
   private isOraclePrewarmed = false;
@@ -375,8 +379,16 @@ export class NeuroArenaGame {
     this.uiContainer.appendChild(this.oracleContainer);
     this.oracleRoot = ReactDOM.createRoot(this.oracleContainer);
 
+    this.loomContainer = document.createElement('div');
+    this.loomContainer.id = 'app-loom-container';
+    this.uiContainer.appendChild(this.loomContainer);
+    this.loomRoot = ReactDOM.createRoot(this.loomContainer);
+
     // Setup diegetic Oracle Stone in Open World
     this.world.setupOracleStone(new THREE.Vector3(12, 1.2, 18));
+
+    // Setup diegetic Loom Structure in Region 1: The Fen
+    this.world.setupLoomStructure(new THREE.Vector3(-180, 14.5, -120));
 
     // Attach global debug, benchmark, and photo spot APIs
     if (typeof window !== 'undefined') {
@@ -393,6 +405,8 @@ export class NeuroArenaGame {
       (window as any).worldState = this.shardWorld.worldState;
       (window as any).__tutorialDirector = this.director;
       (window as any).__tutorialBot = new TutorialBot(this.director);
+      (window as any).toggleLoom = (open?: boolean) => this.toggleLoom(open);
+      (window as any).loom = this.world.loomStructure;
       (window as any).__runTutorialBot = async (fuzzMode = false) => {
         if (fuzzMode) {
           const fuzzReport = await (window as any).__tutorialBot.runFuzzMode(50);
@@ -671,6 +685,12 @@ export class NeuroArenaGame {
         return;
       }
 
+      // The Loom toggle on KeyL (matches KEYMAP.loom)
+      if (e.code === KEYMAP.loom.code) {
+        this.toggleLoom();
+        return;
+      }
+
       // Character Dev Studio toggle on KeyK
       if (e.code === 'KeyK') {
         if (this.isCharacterDevOpen) {
@@ -717,6 +737,8 @@ export class NeuroArenaGame {
         this.isVaultOpen ||
         this.isCodexOpen ||
         this.isObservatoryOpen ||
+        this.isOracleOpen ||
+        this.isLoomOpen ||
         this.isWorkbenchOpen ||
         this.isBenchmarkOpen;
 
@@ -830,6 +852,12 @@ export class NeuroArenaGame {
   }
 
   private handleInteraction(): void {
+    if (this.world.loomStructure?.isPlayerNearby) {
+      this.audio.playTerminalInteract();
+      this.toggleLoom(true);
+      return;
+    }
+
     if (this.world.oracleStone?.isPlayerNearby) {
       this.audio.playOracleCommune();
       this.toggleOracle(true);
@@ -1238,6 +1266,9 @@ export class NeuroArenaGame {
     if (this.isOracleOpen) {
       this.toggleOracle(false);
     }
+    if (this.isLoomOpen) {
+      this.toggleLoom(false);
+    }
   }
 
   public setPhotoSpot(spotId: string, qualityTier?: QualityTier): void {
@@ -1409,6 +1440,44 @@ export class NeuroArenaGame {
     );
   }
 
+  public toggleLoom(open?: boolean): void {
+    const nextState = open !== undefined ? open : !this.isLoomOpen;
+    if (nextState !== this.isLoomOpen) {
+      if (nextState) {
+        this.audio.playUIOpen();
+        this.director.handleEvent({ type: 'loom_opened' });
+      } else {
+        this.audio.playUIClose();
+      }
+    }
+    this.isLoomOpen = nextState;
+    this.renderLoom();
+  }
+
+  private renderLoom(): void {
+    this.loomRoot.render(
+      React.createElement(LoomModal, {
+        isOpen: this.isLoomOpen,
+        onClose: () => this.toggleLoom(false),
+        vaultTokens: this.vaultManager.vaultToTokenStream(this.tokenizer).tokens,
+        onBeatBigramGate: (valLoss: number) => {
+          this.audio.playCheckpointUnlocked();
+          this.director.handleEvent({
+            type: 'loom_bigram_beaten',
+            payload: { valLoss, bigramLoss: valLoss }
+          });
+        },
+        onTrigramFrayed: (unseenContext: string) => {
+          this.audio.playAnomalyDetect();
+          this.director.handleEvent({
+            type: 'loom_context_frayed',
+            payload: { frayed: true, unseenContext, order: 3 }
+          });
+        }
+      })
+    );
+  }
+
   private renderLumenSubtitles(): void {
     this.lumenSubtitlesRoot.render(
       React.createElement(LumenSubtitles, {
@@ -1566,6 +1635,7 @@ export class NeuroArenaGame {
       this.isVaultOpen ||
       this.isCodexOpen ||
       this.isObservatoryOpen ||
+      this.isLoomOpen ||
       this.isBenchmarkOpen ||
       this.isCharacterDevOpen;
     if (!isModalOpen && !this.world.isFreeFly) {
@@ -1579,6 +1649,12 @@ export class NeuroArenaGame {
     const tutState = this.director.getState();
     this.lumen.setMood(tutState.lumenMood);
     this.lumen.pointAt(tutState.lumenTargetPos || null);
+
+    // Region 1 / Fen arrival proximity detection
+    const distToFen = Math.hypot(this.player.position.x - (-180), this.player.position.z - (-120));
+    if (distToFen <= 50) {
+      this.director.handleEvent({ type: 'fen_arrived' });
+    }
 
     // 3. Update ShardWorld instanced markers & interactions
     const prevTargetShard = this.lastInteractionState?.targetShard;

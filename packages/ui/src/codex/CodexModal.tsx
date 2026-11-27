@@ -1219,6 +1219,187 @@ export const CodexModal: React.FC<CodexModalProps> = ({
                   </div>
                 </div>
               )}
+
+              {/* Widget: N-Gram Language Model */}
+              {currentEntry.id === 'ngram' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--na-space-3)' }}>
+                  <div style={{ fontSize: 'var(--na-text-xs)', color: 'var(--na-text-secondary)' }}>
+                    Empirical validation loss and table footprint across orders 1..5 on BPE-1024:
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 'var(--na-space-2)' }}>
+                    {[
+                      { order: '1-Gram', loss: '5.758', ppl: '316.7', entries: '1,024', mem: '4.1 KB' },
+                      { order: '2-Gram', loss: '4.001', ppl: '54.7', entries: '104k', mem: '3.19 MB' },
+                      { order: '3-Gram', loss: '3.959', ppl: '52.4', entries: '627k', mem: '22.3 MB' },
+                      { order: '4-Gram', loss: '4.904', ppl: '134.8', entries: '1.18M', mem: '73.3 MB' },
+                      { order: '5-Gram', loss: '5.891', ppl: '361.8', entries: '1.55M', mem: '125.2 MB' }
+                    ].map((row, idx) => (
+                      <div key={idx} style={{ backgroundColor: 'var(--na-raised)', padding: '10px 8px', borderRadius: 'var(--na-radius-sm)', border: `1px solid ${idx === 2 ? 'var(--na-accent)' : 'var(--na-line)'}`, textAlign: 'center' }}>
+                        <div style={{ fontSize: '11px', fontWeight: 600, color: idx === 2 ? 'var(--na-accent)' : 'var(--na-text)' }}>{row.order}</div>
+                        <div style={{ fontSize: '15px', fontFamily: 'var(--na-font-mono)', fontWeight: 700, color: idx >= 3 ? 'var(--na-danger)' : 'var(--na-text)', marginTop: '4px' }}>
+                          {row.loss}
+                        </div>
+                        <div style={{ fontSize: '10px', color: 'var(--na-muted)', marginTop: '2px' }}>PPL: {row.ppl}</div>
+                        <div style={{ fontSize: '9px', color: 'var(--na-faint)', marginTop: '2px' }}>{row.mem}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ fontSize: '10px', color: 'var(--na-muted)', fontStyle: 'italic' }}>
+                    Note: Trigram (3.959) is the empirical minimum on this corpus; 4-gram and 5-gram surge upward due to statistical sparsity.
+                  </div>
+                </div>
+              )}
+
+              {/* Widget: Context Window */}
+              {currentEntry.id === 'context' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--na-space-3)' }}>
+                  <div style={{ fontSize: 'var(--na-text-xs)', color: 'var(--na-text-secondary)' }}>
+                    Context history vs combinatorial state space (|V| = 1,024):
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    {[
+                      { model: 'Unigram (N=1)', ctx: '0 tokens (memoryless)', space: '1', coverage: '100% covered' },
+                      { model: 'Bigram (N=2)', ctx: '1 past token', space: '1,024 contexts', coverage: '96.87% seen' },
+                      { model: 'Trigram (N=3)', ctx: '2 past tokens', space: '1,048,576 contexts', coverage: '75.88% seen' },
+                      { model: '4-Gram (N=4)', ctx: '3 past tokens', space: '1.07 × 10⁹ contexts', coverage: '47.11% seen' },
+                      { model: '5-Gram (N=5)', ctx: '4 past tokens', space: '1.10 × 10¹² contexts', coverage: '25.42% seen' }
+                    ].map((row, idx) => (
+                      <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 12px', backgroundColor: 'var(--na-raised)', borderRadius: 'var(--na-radius-sm)', border: '1px solid var(--na-line)', fontSize: '11px', fontFamily: 'var(--na-font-mono)' }}>
+                        <span style={{ color: 'var(--na-text)', fontWeight: 600 }}>{row.model}</span>
+                        <span style={{ color: 'var(--na-muted)' }}>{row.ctx}</span>
+                        <span style={{ color: 'var(--na-accent-cool)' }}>{row.coverage}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Widget: The Curse of Sparsity */}
+              {currentEntry.id === 'sparsity' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--na-space-3)' }}>
+                  <div style={{ fontSize: 'var(--na-text-xs)', color: 'var(--na-text-secondary)' }}>
+                    Empirical fraction of validation n-grams observed during training (Full Corpus):
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {[
+                      { order: 'Unigram (N=1)', frac: 1.00, text: '100.0% (Zero unobserved vocabulary)' },
+                      { order: 'Bigram (N=2)', frac: 0.9687, text: '96.87% seen (3.13% unseen)' },
+                      { order: 'Trigram (N=3)', frac: 0.7588, text: '75.88% seen (24.12% unseen)' },
+                      { order: '4-Gram (N=4)', frac: 0.4711, text: '47.11% seen (52.89% unseen)' },
+                      { order: '5-Gram (N=5)', frac: 0.2542, text: '25.42% seen (74.58% unseen)' }
+                    ].map((s, idx) => (
+                      <div key={idx} style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontFamily: 'var(--na-font-mono)' }}>
+                          <span style={{ color: 'var(--na-text)' }}>{s.order}</span>
+                          <span style={{ color: s.frac < 0.5 ? 'var(--na-danger)' : s.frac < 0.8 ? 'var(--na-warning)' : 'var(--na-accent)' }}>
+                            {s.text}
+                          </span>
+                        </div>
+                        <div style={{ height: '6px', backgroundColor: 'var(--na-line)', borderRadius: '3px', overflow: 'hidden' }}>
+                          <div
+                            style={{
+                              width: `${s.frac * 100}%`,
+                              height: '100%',
+                              backgroundColor: s.frac < 0.5 ? 'var(--na-danger)' : s.frac < 0.8 ? 'var(--na-warning)' : 'var(--na-accent)',
+                              transition: 'width 0.3s'
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Widget: Smoothing & Backoff */}
+              {currentEntry.id === 'smoothing_backoff' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--na-space-3)' }}>
+                  <div style={{ fontSize: 'var(--na-text-xs)', color: 'var(--na-text-secondary)' }}>
+                    Stupid Backoff cascade simulation on unseen context (penalty α = 0.4):
+                  </div>
+
+                  <div style={{ padding: '12px', backgroundColor: 'var(--na-raised)', borderRadius: 'var(--na-radius-sm)', border: '1px solid var(--na-line)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', fontFamily: 'var(--na-font-mono)' }}>
+                      <span style={{ color: 'var(--na-danger)' }}>✖ 3-Gram:</span>
+                      <span style={{ color: 'var(--na-muted)' }}>Context ["shall", "never"] + Target ["yield"] unseen (Count = 0)</span>
+                    </div>
+                    <div style={{ paddingLeft: '16px', borderLeft: '2px dashed var(--na-warning)', display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '11px', fontFamily: 'var(--na-font-mono)' }}>
+                      <div style={{ color: 'var(--na-warning)' }}>↳ Frayed! Applying backoff factor α = 0.4</div>
+                      <div style={{ color: 'var(--na-text)' }}>✔ 2-Gram fallback: Context ["never"] + Target ["yield"] (Count = 12, P = 0.042)</div>
+                      <div style={{ color: 'var(--na-accent)' }}>Effective Score = 0.4 × 0.042 = 0.0168</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Widget: Perplexity */}
+              {currentEntry.id === 'perplexity' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--na-space-3)' }}>
+                  <div style={{ fontSize: 'var(--na-text-xs)', color: 'var(--na-text-secondary)' }}>
+                    Validation Perplexity benchmark on Shakespeare (|V| = 1,024):
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--na-space-3)' }}>
+                    <div style={{ backgroundColor: 'var(--na-raised)', padding: '10px', borderRadius: 'var(--na-radius-sm)', border: '1px solid var(--na-line)' }}>
+                      <div style={{ fontSize: '10px', color: 'var(--na-muted)', textTransform: 'uppercase' }}>Uniform Random</div>
+                      <div style={{ fontSize: '18px', fontFamily: 'var(--na-font-mono)', color: 'var(--na-danger)', fontWeight: 700, marginTop: '2px' }}>
+                        PPL 1,024.0
+                      </div>
+                      <div style={{ fontSize: '10px', color: 'var(--na-muted)', marginTop: '2px' }}>Loss: 6.932 nats</div>
+                    </div>
+
+                    <div style={{ backgroundColor: 'var(--na-raised)', padding: '10px', borderRadius: 'var(--na-radius-sm)', border: '1px solid var(--na-line)' }}>
+                      <div style={{ fontSize: '10px', color: 'var(--na-muted)', textTransform: 'uppercase' }}>Trigram (Best N-Gram)</div>
+                      <div style={{ fontSize: '18px', fontFamily: 'var(--na-font-mono)', color: 'var(--na-warning)', fontWeight: 700, marginTop: '2px' }}>
+                        PPL 52.4
+                      </div>
+                      <div style={{ fontSize: '10px', color: 'var(--na-muted)', marginTop: '2px' }}>Loss: 3.959 nats</div>
+                    </div>
+
+                    <div style={{ backgroundColor: 'var(--na-raised)', padding: '10px', borderRadius: 'var(--na-radius-sm)', border: '1px solid var(--na-accent)' }}>
+                      <div style={{ fontSize: '10px', color: 'var(--na-accent)', textTransform: 'uppercase' }}>Elder-H Transformer</div>
+                      <div style={{ fontSize: '18px', fontFamily: 'var(--na-font-mono)', color: 'var(--na-accent)', fontWeight: 700, marginTop: '2px' }}>
+                        PPL 10.2
+                      </div>
+                      <div style={{ fontSize: '10px', color: 'var(--na-accent-cool)', marginTop: '2px' }}>Loss: 2.325 nats</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Widget: Why Neural Nets Generalize */}
+              {currentEntry.id === 'why_neural_nets_generalize' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--na-space-3)' }}>
+                  <div style={{ fontSize: 'var(--na-text-xs)', color: 'var(--na-text-secondary)' }}>
+                    Atomic Discrete Counts vs Continuous Semantic Embeddings:
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--na-space-3)' }}>
+                    <div style={{ backgroundColor: 'var(--na-raised)', padding: '12px', borderRadius: 'var(--na-radius-sm)', border: '1px solid var(--na-danger)' }}>
+                      <div style={{ fontSize: '11px', color: 'var(--na-danger)', fontWeight: 600 }}>N-Gram Discrete Tables</div>
+                      <div style={{ fontSize: '11px', fontFamily: 'var(--na-font-mono)', color: 'var(--na-text)', marginTop: '6px', lineHeight: 1.5 }}>
+                        ["the", "king"] → seen 482x<br />
+                        ["the", "monarch"] → unseen (0x)<br />
+                        Cosine overlap: <span style={{ color: 'var(--na-danger)' }}>0.000</span> (orthogonal)<br />
+                        Result: Backoff & high loss
+                      </div>
+                    </div>
+
+                    <div style={{ backgroundColor: 'var(--na-raised)', padding: '12px', borderRadius: 'var(--na-radius-sm)', border: '1px solid var(--na-accent)' }}>
+                      <div style={{ fontSize: '11px', color: 'var(--na-accent)', fontWeight: 600 }}>Neural Continuous Space</div>
+                      <div style={{ fontSize: '11px', fontFamily: 'var(--na-font-mono)', color: 'var(--na-text)', marginTop: '6px', lineHeight: 1.5 }}>
+                        emb("king") · emb("monarch")<br />
+                        Cosine similarity: <span style={{ color: 'var(--na-accent)' }}>0.864</span><br />
+                        Shared weights in attention & MLP<br />
+                        Result: Effortless generalization
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
